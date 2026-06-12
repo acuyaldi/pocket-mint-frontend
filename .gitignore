@@ -26,3 +26,13 @@ Thumbs.db
 # IDE‑generated cache files
 *.sst
 *.meta
+
+# Next.js build artefacts – never commit
+/apps/frontend/.next/
+/apps/frontend/.next/**
+
+# (optionally) ignore other generated caches
+/apps/frontend/.next/dev/**
+
+# You can also ignore the whole folder generically:
+# **/.next/
