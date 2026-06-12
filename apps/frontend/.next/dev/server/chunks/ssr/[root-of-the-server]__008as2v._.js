@@ -464,6 +464,11 @@ __turbopack_context__.s([
     ()=>DashboardPage
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/Documents/Dev/pocket-mint/apps/frontend/node_modules/next/dist/server/route-modules/app-page/vendored/rsc/react-jsx-dev-runtime.js [app-rsc] (ecmascript)");
+(()=>{
+    const e = new Error("Cannot find module '@/features/transactions/hooks/useTransactions'");
+    e.code = 'MODULE_NOT_FOUND';
+    throw e;
+})();
 var __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$components$2f$dashboard$2f$stat$2d$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/Documents/Dev/pocket-mint/apps/frontend/components/dashboard/stat-card.tsx [app-rsc] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$components$2f$dashboard$2f$transaction$2d$table$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/Documents/Dev/pocket-mint/apps/frontend/components/dashboard/transaction-table.tsx [app-rsc] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$components$2f$dashboard$2f$dashboard$2d$header$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/Documents/Dev/pocket-mint/apps/frontend/components/dashboard/dashboard-header.tsx [app-rsc] (ecmascript)");
@@ -484,153 +489,67 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2
 ;
 ;
 ;
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-const STATS = {
-    balance: {
-        value: 24_750_000,
-        trend: 8.2,
-        subtitle: "Dari bulan lalu"
-    },
-    income: {
-        value: 12_500_000,
-        trend: 12.5,
-        subtitle: "Juni 2026"
-    },
-    expense: {
-        value: 4_320_000,
-        trend: -3.1,
-        subtitle: "Juni 2026"
-    }
-};
-const TRANSACTIONS = [
-    {
-        id: "t1",
-        date: "2026-06-12",
-        description: "Gaji Bulanan",
-        category: "Pendapatan",
-        type: "income",
-        amount: 8_500_000,
-        status: "completed"
-    },
-    {
-        id: "t2",
-        date: "2026-06-11",
-        description: "Belanja Supermarket",
-        category: "Kebutuhan",
-        type: "expense",
-        amount: 450_000,
-        status: "completed"
-    },
-    {
-        id: "t3",
-        date: "2026-06-11",
-        description: "Freelance Design Project",
-        category: "Pendapatan",
-        type: "income",
-        amount: 2_000_000,
-        status: "completed"
-    },
-    {
-        id: "t4",
-        date: "2026-06-10",
-        description: "Tagihan Listrik PLN",
-        category: "Utilitas",
-        type: "expense",
-        amount: 320_000,
-        status: "completed"
-    },
-    {
-        id: "t5",
-        date: "2026-06-10",
-        description: "Transfer ke Rekening Tabungan",
-        category: "Tabungan",
-        type: "transfer",
-        amount: 2_000_000,
-        status: "completed"
-    },
-    {
-        id: "t6",
-        date: "2026-06-09",
-        description: "Netflix & Spotify",
-        category: "Hiburan",
-        type: "expense",
-        amount: 118_000,
-        status: "completed"
-    },
-    {
-        id: "t7",
-        date: "2026-06-09",
-        description: "Dividen Saham BBCA",
-        category: "Investasi",
-        type: "income",
-        amount: 750_000,
-        status: "completed"
-    },
-    {
-        id: "t8",
-        date: "2026-06-08",
-        description: "Ojek Online",
-        category: "Transportasi",
-        type: "expense",
-        amount: 45_000,
-        status: "completed"
-    },
-    {
-        id: "t9",
-        date: "2026-06-08",
-        description: "Makan Siang Kantin",
-        category: "Makanan",
-        type: "expense",
-        amount: 35_000,
-        status: "completed"
-    },
-    {
-        id: "t10",
-        date: "2026-06-07",
-        description: "Cicilan KPR",
-        category: "Properti",
-        type: "expense",
-        amount: 1_500_000,
-        status: "pending"
-    },
-    {
-        id: "t11",
-        date: "2026-06-07",
-        description: "Bonus Proyek Q2",
-        category: "Pendapatan",
-        type: "income",
-        amount: 1_250_000,
-        status: "completed"
-    },
-    {
-        id: "t12",
-        date: "2026-06-06",
-        description: "Gym Membership",
-        category: "Kesehatan",
-        type: "expense",
-        amount: 250_000,
-        status: "completed"
-    }
-];
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+;
+// Utility to format currency (short version)
 function formatCurrencyShort(amount) {
     if (amount >= 1_000_000) {
         return `Rp ${(amount / 1_000_000).toFixed(1)}jt`;
     }
-    return new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
         minimumFractionDigits: 0
     }).format(amount);
 }
 function DashboardPage() {
-    const savingsRate = Math.round((STATS.income.value - STATS.expense.value) / STATS.income.value * 100);
+    const { data: transactions = [], isLoading, isError } = useTransactions();
+    // Calculate totals only when data is available
+    const income = transactions.filter((t)=>t.type === 'INCOME').reduce((sum, t)=>sum + t.amount, 0);
+    const expense = transactions.filter((t)=>t.type === 'EXPENSE').reduce((sum, t)=>sum + t.amount, 0);
+    const balance = income - expense;
+    const savingsRate = income ? Math.round((income - expense) / income * 100) : 0;
+    // Skeleton for stat cards (3 columns)
+    const renderStatCardSkeleton = ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
+            children: [
+                1,
+                2,
+                3
+            ].map((i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "h-32 bg-muted rounded-lg animate-pulse"
+                }, i, false, {
+                    fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
+                    lineNumber: 40,
+                    columnNumber: 9
+                }, this))
+        }, void 0, false, {
+            fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
+            lineNumber: 38,
+            columnNumber: 5
+        }, this);
+    // Skeleton for transaction table
+    const renderTableSkeleton = ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "space-y-2",
+            children: [
+                ...Array(5)
+            ].map((_, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "h-10 bg-muted rounded animate-pulse"
+                }, i, false, {
+                    fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
+                    lineNumber: 49,
+                    columnNumber: 9
+                }, this))
+        }, void 0, false, {
+            fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
+            lineNumber: 47,
+            columnNumber: 5
+        }, this);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "min-h-screen bg-background",
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$components$2f$dashboard$2f$dashboard$2d$header$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["DashboardHeader"], {}, void 0, false, {
                 fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                lineNumber: 169,
+                lineNumber: 56,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -646,7 +565,7 @@ function DashboardPage() {
                                         children: "Ringkasan Keuangan"
                                     }, void 0, false, {
                                         fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                        lineNumber: 176,
+                                        lineNumber: 62,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -654,13 +573,13 @@ function DashboardPage() {
                                         children: "Selamat datang kembali! Ini ringkasan keuangan Anda bulan ini."
                                     }, void 0, false, {
                                         fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                        lineNumber: 179,
+                                        lineNumber: 65,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                lineNumber: 175,
+                                lineNumber: 61,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["Button"], {
@@ -673,72 +592,72 @@ function DashboardPage() {
                                         className: "size-4"
                                     }, void 0, false, {
                                         fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                        lineNumber: 184,
+                                        lineNumber: 75,
                                         columnNumber: 13
                                     }, this),
                                     "Ekspor Laporan"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                lineNumber: 183,
+                                lineNumber: 69,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                        lineNumber: 174,
+                        lineNumber: 60,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
                         "aria-label": "Ringkasan statistik keuangan",
-                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        children: isLoading ? renderStatCardSkeleton() : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$components$2f$dashboard$2f$stat$2d$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["StatCard"], {
                                     title: "Total Saldo",
-                                    value: formatCurrencyShort(STATS.balance.value),
-                                    subtitle: STATS.balance.subtitle,
-                                    trend: STATS.balance.trend,
+                                    value: formatCurrencyShort(balance),
+                                    subtitle: "Dari bulan lalu",
+                                    trend: (balance - 0) / (balance || 1) * 100,
                                     icon: __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$wallet$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Wallet$3e$__["Wallet"],
                                     variant: "balance"
                                 }, void 0, false, {
                                     fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                    lineNumber: 192,
-                                    columnNumber: 13
+                                    lineNumber: 86,
+                                    columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$components$2f$dashboard$2f$stat$2d$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["StatCard"], {
                                     title: "Total Pemasukan",
-                                    value: formatCurrencyShort(STATS.income.value),
-                                    subtitle: STATS.income.subtitle,
-                                    trend: STATS.income.trend,
+                                    value: formatCurrencyShort(income),
+                                    subtitle: "Juni 2026",
+                                    trend: income ? 0 : 0,
                                     icon: __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$trending$2d$up$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__TrendingUp$3e$__["TrendingUp"],
                                     variant: "income"
                                 }, void 0, false, {
                                     fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                    lineNumber: 200,
-                                    columnNumber: 13
+                                    lineNumber: 94,
+                                    columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$components$2f$dashboard$2f$stat$2d$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["StatCard"], {
                                     title: "Total Pengeluaran",
-                                    value: formatCurrencyShort(STATS.expense.value),
-                                    subtitle: STATS.expense.subtitle,
-                                    trend: STATS.expense.trend,
+                                    value: formatCurrencyShort(expense),
+                                    subtitle: "Juni 2026",
+                                    trend: expense ? -0 : 0,
                                     icon: __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$trending$2d$down$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__TrendingDown$3e$__["TrendingDown"],
                                     variant: "expense"
                                 }, void 0, false, {
                                     fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                    lineNumber: 208,
-                                    columnNumber: 13
+                                    lineNumber: 102,
+                                    columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                            lineNumber: 191,
-                            columnNumber: 11
+                            lineNumber: 85,
+                            columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                        lineNumber: 190,
+                        lineNumber: 81,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["Card"], {
@@ -757,7 +676,7 @@ function DashboardPage() {
                                                     children: "Tingkat Tabungan Bulan Ini"
                                                 }, void 0, false, {
                                                     fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                                    lineNumber: 224,
+                                                    lineNumber: 119,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -765,13 +684,13 @@ function DashboardPage() {
                                                     children: "(Pendapatan - Pengeluaran) / Pendapatan"
                                                 }, void 0, false, {
                                                     fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                                    lineNumber: 225,
+                                                    lineNumber: 122,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                            lineNumber: 223,
+                                            lineNumber: 118,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -783,18 +702,18 @@ function DashboardPage() {
                                                 }
                                             }, void 0, false, {
                                                 fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                                lineNumber: 229,
+                                                lineNumber: 127,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                            lineNumber: 228,
+                                            lineNumber: 126,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                    lineNumber: 222,
+                                    lineNumber: 117,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -805,18 +724,18 @@ function DashboardPage() {
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                    lineNumber: 235,
+                                    lineNumber: 133,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                            lineNumber: 221,
+                            lineNumber: 116,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                        lineNumber: 220,
+                        lineNumber: 115,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -836,24 +755,21 @@ function DashboardPage() {
                                                         children: "Riwayat Transaksi"
                                                     }, void 0, false, {
                                                         fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                                        lineNumber: 247,
+                                                        lineNumber: 145,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["CardDescription"], {
                                                         className: "text-sm mt-0.5",
-                                                        children: [
-                                                            TRANSACTIONS.length,
-                                                            " transaksi tercatat di bulan ini"
-                                                        ]
-                                                    }, void 0, true, {
+                                                        children: isLoading ? 'Memuat transaksi...' : `${transactions.length} transaksi tercatat di bulan ini`
+                                                    }, void 0, false, {
                                                         fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                                        lineNumber: 248,
+                                                        lineNumber: 148,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                                lineNumber: 246,
+                                                lineNumber: 144,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -870,13 +786,13 @@ function DashboardPage() {
                                                                 className: "size-3.5"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                                                lineNumber: 255,
+                                                                lineNumber: 160,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                                        lineNumber: 253,
+                                                        lineNumber: 153,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["Button"], {
@@ -888,65 +804,65 @@ function DashboardPage() {
                                                             className: "size-4"
                                                         }, void 0, false, {
                                                             fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                                            lineNumber: 258,
+                                                            lineNumber: 168,
                                                             columnNumber: 21
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                                        lineNumber: 257,
+                                                        lineNumber: 162,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                                lineNumber: 252,
+                                                lineNumber: 152,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                        lineNumber: 245,
+                                        lineNumber: 143,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                    lineNumber: 244,
+                                    lineNumber: 142,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$components$2f$ui$2f$separator$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["Separator"], {}, void 0, false, {
                                     fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                    lineNumber: 263,
+                                    lineNumber: 173,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["CardContent"], {
                                     className: "pt-5",
-                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$components$2f$dashboard$2f$transaction$2d$table$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["TransactionTable"], {
-                                        transactions: TRANSACTIONS
+                                    children: isLoading ? renderTableSkeleton() : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$components$2f$dashboard$2f$transaction$2d$table$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["TransactionTable"], {
+                                        transactions: transactions
                                     }, void 0, false, {
                                         fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                        lineNumber: 265,
-                                        columnNumber: 15
+                                        lineNumber: 175,
+                                        columnNumber: 52
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                                    lineNumber: 264,
+                                    lineNumber: 174,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                            lineNumber: 243,
+                            lineNumber: 141,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                        lineNumber: 242,
+                        lineNumber: 140,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                lineNumber: 171,
+                lineNumber: 58,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("footer", {
@@ -959,7 +875,7 @@ function DashboardPage() {
                             children: "© 2026 Pocket Mint — Kelola Keuangan Lebih Cerdas"
                         }, void 0, false, {
                             fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                            lineNumber: 275,
+                            lineNumber: 184,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Documents$2f$Dev$2f$pocket$2d$mint$2f$apps$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -967,24 +883,24 @@ function DashboardPage() {
                             children: "Dibangun dengan Next.js & Shadcn/ui"
                         }, void 0, false, {
                             fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                            lineNumber: 278,
+                            lineNumber: 187,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                    lineNumber: 274,
+                    lineNumber: 183,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-                lineNumber: 273,
+                lineNumber: 182,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/Documents/Dev/pocket-mint/apps/frontend/app/page.tsx",
-        lineNumber: 168,
+        lineNumber: 55,
         columnNumber: 5
     }, this);
 }

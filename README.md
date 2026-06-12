@@ -117,6 +117,7 @@ All endpoints are served under the base path **/api/v1**.
 | **PUT** | `/api/v1/transactions/:id` | Update an existing transaction. | `{ description?, amount?, date? }` | Updated transaction object |
 | **DELETE** | `/api/v1/transactions/:id` | Delete a transaction by its ID. | – | `{ success: true }` |
 | **GET** | `/api/v1/transactions/:id` | Retrieve a single transaction. | – | Transaction object |
+| **GET** | `/api/v1/accounts` | Retrieve a list of accounts (optionally filtered by userId). | – | `[{ id, name, type, balance, userId, ... }, …]` |
 
 ### Example: Fetch Transactions (client side)
 ```ts

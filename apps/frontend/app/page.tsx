@@ -1,167 +1,56 @@
-import { StatCard } from "@/components/dashboard/stat-card";
-import { TransactionTable, Transaction } from "@/components/dashboard/transaction-table";
-import { DashboardHeader } from "@/components/dashboard/dashboard-header";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import {
-  Wallet,
-  TrendingUp,
-  TrendingDown,
-  MoreHorizontal,
-  Download,
-  ArrowRight,
-} from "lucide-react";
+'use client';
+import { useTransactions } from '../src/features/transactions/hooks/useTransactions';
+import { StatCard } from '@/components/dashboard/stat-card';
+import { TransactionTable } from '@/components/dashboard/transaction-table';
+import { DashboardHeader } from '@/components/dashboard/dashboard-header';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Wallet, TrendingUp, TrendingDown, MoreHorizontal, Download, ArrowRight } from 'lucide-react';
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const STATS = {
-  balance: {
-    value: 24_750_000,
-    trend: 8.2,
-    subtitle: "Dari bulan lalu",
-  },
-  income: {
-    value: 12_500_000,
-    trend: 12.5,
-    subtitle: "Juni 2026",
-  },
-  expense: {
-    value: 4_320_000,
-    trend: -3.1,
-    subtitle: "Juni 2026",
-  },
-};
-
-const TRANSACTIONS: Transaction[] = [
-  {
-    id: "t1",
-    date: "2026-06-12",
-    description: "Gaji Bulanan",
-    category: "Pendapatan",
-    type: "income",
-    amount: 8_500_000,
-    status: "completed",
-  },
-  {
-    id: "t2",
-    date: "2026-06-11",
-    description: "Belanja Supermarket",
-    category: "Kebutuhan",
-    type: "expense",
-    amount: 450_000,
-    status: "completed",
-  },
-  {
-    id: "t3",
-    date: "2026-06-11",
-    description: "Freelance Design Project",
-    category: "Pendapatan",
-    type: "income",
-    amount: 2_000_000,
-    status: "completed",
-  },
-  {
-    id: "t4",
-    date: "2026-06-10",
-    description: "Tagihan Listrik PLN",
-    category: "Utilitas",
-    type: "expense",
-    amount: 320_000,
-    status: "completed",
-  },
-  {
-    id: "t5",
-    date: "2026-06-10",
-    description: "Transfer ke Rekening Tabungan",
-    category: "Tabungan",
-    type: "transfer",
-    amount: 2_000_000,
-    status: "completed",
-  },
-  {
-    id: "t6",
-    date: "2026-06-09",
-    description: "Netflix & Spotify",
-    category: "Hiburan",
-    type: "expense",
-    amount: 118_000,
-    status: "completed",
-  },
-  {
-    id: "t7",
-    date: "2026-06-09",
-    description: "Dividen Saham BBCA",
-    category: "Investasi",
-    type: "income",
-    amount: 750_000,
-    status: "completed",
-  },
-  {
-    id: "t8",
-    date: "2026-06-08",
-    description: "Ojek Online",
-    category: "Transportasi",
-    type: "expense",
-    amount: 45_000,
-    status: "completed",
-  },
-  {
-    id: "t9",
-    date: "2026-06-08",
-    description: "Makan Siang Kantin",
-    category: "Makanan",
-    type: "expense",
-    amount: 35_000,
-    status: "completed",
-  },
-  {
-    id: "t10",
-    date: "2026-06-07",
-    description: "Cicilan KPR",
-    category: "Properti",
-    type: "expense",
-    amount: 1_500_000,
-    status: "pending",
-  },
-  {
-    id: "t11",
-    date: "2026-06-07",
-    description: "Bonus Proyek Q2",
-    category: "Pendapatan",
-    type: "income",
-    amount: 1_250_000,
-    status: "completed",
-  },
-  {
-    id: "t12",
-    date: "2026-06-06",
-    description: "Gym Membership",
-    category: "Kesehatan",
-    type: "expense",
-    amount: 250_000,
-    status: "completed",
-  },
-];
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
+// Utility to format currency (short version)
 function formatCurrencyShort(amount: number) {
   if (amount >= 1_000_000) {
     return `Rp ${(amount / 1_000_000).toFixed(1)}jt`;
   }
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
     minimumFractionDigits: 0,
   }).format(amount);
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function DashboardPage() {
-  const savingsRate = Math.round(
-    ((STATS.income.value - STATS.expense.value) / STATS.income.value) * 100
+  const { data, isLoading, isError } = useTransactions();
+  const transactions = data ?? [];
+
+  // Calculate totals only when data is available
+  const income = transactions
+    .filter((t) => t.type === 'INCOME')
+    .reduce((sum, t) => sum + t.amount, 0);
+  const expense = transactions
+    .filter((t) => t.type === 'EXPENSE')
+    .reduce((sum, t) => sum + t.amount, 0);
+  const balance = income - expense;
+
+  const savingsRate = income ? Math.round(((income - expense) / income) * 100) : 0;
+
+  // Skeleton for stat cards (3 columns)
+  const renderStatCardSkeleton = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="h-32 bg-muted rounded-lg animate-pulse" />
+      ))}
+    </div>
+  );
+
+  // Skeleton for transaction table
+  const renderTableSkeleton = () => (
+    <div className="space-y-2">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="h-10 bg-muted rounded animate-pulse" />
+      ))}
+    </div>
   );
 
   return (
@@ -169,8 +58,7 @@ export default function DashboardPage() {
       <DashboardHeader />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-
-        {/* ── Page Title ── */}
+        {/* Page Title */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-foreground">
@@ -180,51 +68,63 @@ export default function DashboardPage() {
               Selamat datang kembali! Ini ringkasan keuangan Anda bulan ini.
             </p>
           </div>
-          <Button id="export-report-btn" variant="outline" size="sm" className="gap-2 self-start sm:self-auto">
+          <Button
+            id="export-report-btn"
+            variant="outline"
+            size="sm"
+            className="gap-2 self-start sm:self-auto"
+          >
             <Download className="size-4" />
             Ekspor Laporan
           </Button>
         </div>
 
-        {/* ── Stat Cards ── */}
+        {/* Stat Cards */}
         <section aria-label="Ringkasan statistik keuangan">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <StatCard
-              title="Total Saldo"
-              value={formatCurrencyShort(STATS.balance.value)}
-              subtitle={STATS.balance.subtitle}
-              trend={STATS.balance.trend}
-              icon={Wallet}
-              variant="balance"
-            />
-            <StatCard
-              title="Total Pemasukan"
-              value={formatCurrencyShort(STATS.income.value)}
-              subtitle={STATS.income.subtitle}
-              trend={STATS.income.trend}
-              icon={TrendingUp}
-              variant="income"
-            />
-            <StatCard
-              title="Total Pengeluaran"
-              value={formatCurrencyShort(STATS.expense.value)}
-              subtitle={STATS.expense.subtitle}
-              trend={STATS.expense.trend}
-              icon={TrendingDown}
-              variant="expense"
-            />
-          </div>
+          {isLoading ? (
+            renderStatCardSkeleton()
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <StatCard
+                title="Total Saldo"
+                value={formatCurrencyShort(balance)}
+                subtitle="Dari bulan lalu"
+                trend={((balance - 0) / (balance || 1)) * 100}
+                icon={Wallet}
+                variant="balance"
+              />
+              <StatCard
+                title="Total Pemasukan"
+                value={formatCurrencyShort(income)}
+                subtitle="Juni 2026"
+                trend={income ? 0 : 0}
+                icon={TrendingUp}
+                variant="income"
+              />
+              <StatCard
+                title="Total Pengeluaran"
+                value={formatCurrencyShort(expense)}
+                subtitle="Juni 2026"
+                trend={expense ? -0 : 0}
+                icon={TrendingDown}
+                variant="expense"
+              />
+            </div>
+          )}
         </section>
 
-        {/* ── Savings Rate Banner ── */}
+        {/* Savings Rate Banner */}
         <Card className="border-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent shadow-sm">
           <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm font-semibold text-foreground">Tingkat Tabungan Bulan Ini</span>
-                <span className="text-xs text-muted-foreground">(Pendapatan - Pengeluaran) / Pendapatan</span>
+                <span className="text-sm font-semibold text-foreground">
+                  Tingkat Tabungan Bulan Ini
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  (Pendapatan - Pengeluaran) / Pendapatan
+                </span>
               </div>
-              {/* Progress bar */}
               <div className="h-2 bg-muted rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-primary to-indigo-400 rounded-full transition-all duration-700"
@@ -238,23 +138,35 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* ── Transaction History ── */}
+        {/* Transaction History */}
         <section aria-label="Riwayat transaksi">
           <Card className="border-0 shadow-sm">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-lg font-bold">Riwayat Transaksi</CardTitle>
+                  <CardTitle className="text-lg font-bold">
+                    Riwayat Transaksi
+                  </CardTitle>
                   <CardDescription className="text-sm mt-0.5">
-                    {TRANSACTIONS.length} transaksi tercatat di bulan ini
+                    {isLoading ? 'Memuat transaksi...' : `${transactions.length} transaksi tercatat di bulan ini`}
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button id="view-all-transactions-btn" variant="ghost" size="sm" className="gap-1.5 text-xs text-primary hover:text-primary">
+                  <Button
+                    id="view-all-transactions-btn"
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 text-xs text-primary hover:text-primary"
+                  >
                     Lihat Semua
                     <ArrowRight className="size-3.5" />
                   </Button>
-                  <Button id="transaction-options-btn" variant="ghost" size="icon" className="size-8">
+                  <Button
+                    id="transaction-options-btn"
+                    variant="ghost"
+                    size="icon"
+                    className="size-8"
+                  >
                     <MoreHorizontal className="size-4" />
                   </Button>
                 </div>
@@ -262,11 +174,10 @@ export default function DashboardPage() {
             </CardHeader>
             <Separator />
             <CardContent className="pt-5">
-              <TransactionTable transactions={TRANSACTIONS} />
+              {isLoading ? renderTableSkeleton() : <TransactionTable transactions={transactions} />}
             </CardContent>
           </Card>
         </section>
-
       </main>
 
       {/* Footer */}
