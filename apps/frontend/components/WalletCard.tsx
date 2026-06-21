@@ -19,7 +19,6 @@ import { useDeleteWallet } from "@/src/features/wallets/hooks/useWallets";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const ASSET_TYPES = ["CASH", "BANK", "E_WALLET"];
 const DEBT_TYPES = ["CREDIT_CARD", "LOAN_PAYLATER"];
 
 const WALLET_ICON_MAP: Record<string, LucideIcon> = {
@@ -60,7 +59,7 @@ function getUtilizationColor(pct: number): string {
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
-export function WalletCard({ wallet, variant = "full", onEdit }: WalletCardProps) {
+export function WalletCard({ wallet, onEdit }: WalletCardProps) {
   const Icon = WALLET_ICON_MAP[wallet.type] ?? Banknote;
   const isDebt = isDebtWallet(wallet.type);
   const typeLabel = TYPE_LABELS[wallet.type] ?? wallet.type;
@@ -115,7 +114,7 @@ export function WalletCard({ wallet, variant = "full", onEdit }: WalletCardProps
     } finally {
       setIsDeleting(false);
     }
-  }, [wallet.id, deleteWallet]);
+  }, [wallet.id, deleteWallet, setShowDeleteModal]);
 
   return (
     <div
@@ -130,7 +129,7 @@ export function WalletCard({ wallet, variant = "full", onEdit }: WalletCardProps
       {/* ── Top row: icon + name + kebab ── */}
       <div className="flex items-center gap-2" style={{ marginBottom: "12px" }}>
         <div
-          className="flex items-center justify-center flex-shrink-0"
+className="flex items-center justify-center shrink-0"
           style={{
             width: "32px",
             height: "32px",

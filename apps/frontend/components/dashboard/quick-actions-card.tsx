@@ -28,7 +28,7 @@ export function QuickActionsCard({ onAddTransaction, onExport }: QuickActionsCar
         borderRadius: "8px",
         padding: "16px",
       }}
-      className="transition-all duration-300 hover:border-[#38BDF8]"
+      className="transition-all duration-300 hover:`border-brand"
     >
       <div className="flex items-center gap-2" style={{ marginBottom: "16px" }}>
         <span
@@ -59,7 +59,7 @@ export function QuickActionsCard({ onAddTransaction, onExport }: QuickActionsCar
           >
             <Icon className="size-5 group-hover:scale-110 transition-transform" style={{ color }} />
             <span
-              className="text-center leading-tight transition-colors group-hover:text-[#F8FAFC]"
+              className="text-center leading-tight transition-colors group-hover:text-text-primary"
               style={{ fontFamily: "var(--font-inter)", fontSize: "11px", color: "#94A3B8" }}
             >
               {label}

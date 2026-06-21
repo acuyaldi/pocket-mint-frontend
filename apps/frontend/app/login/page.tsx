@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { login } from "@/app/actions/auth";
 import { Wallet, Eye, EyeOff, Loader2 } from "lucide-react";
+import { PocketMintLogo } from "@/components/Logo";
 
 /* ── Net-worth counter animation (Option A) ───────────────────── */
 function useCountUp(target: number, duration = 2000) {
@@ -82,7 +83,7 @@ export default function LoginPage() {
       return "border-[#EF4444] shadow-[0_0_0_2px_rgba(239,68,68,0.12)]";
     }
     if (focused) {
-      return "border-[#38BDF8] shadow-[0_0_0_2px_rgba(56,189,248,0.12)]";
+      return "`border-brand shadow-[0_0_0_2px_rgba(56,189,248,0.12)]";
     }
     if (filled) {
       return "border-[#334155]";
@@ -95,7 +96,7 @@ export default function LoginPage() {
       {/* ── Left Panel: Brand ────────────────────────────────────── */}
       {/* Mobile: collapsed header */}
       <div className="lg:hidden flex items-center gap-3 px-6 py-4" style={{ backgroundColor: "#1E293B", borderBottom: "1px solid #334155" }}>
-        <Wallet className="size-5 flex-shrink-0" style={{ color: "#38BDF8" }} />
+        <Wallet className="size-5 shrink-0" style={{ color: "#38BDF8" }} />
         <span
           className="text-lg font-semibold"
           style={{ fontFamily: "var(--font-hanken)", color: "#F8FAFC" }}
@@ -134,15 +135,7 @@ export default function LoginPage() {
         <div className="relative z-10 flex flex-col justify-center flex-1 px-12 xl:px-16">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-8">
-            <div className="p-2.5 rounded-lg" style={{ backgroundColor: "rgba(56, 189, 248, 0.1)", border: "1px solid rgba(56, 189, 248, 0.2)" }}>
-              <Wallet className="size-6" style={{ color: "#38BDF8" }} />
-            </div>
-            <span
-              className="text-2xl font-bold"
-              style={{ fontFamily: "var(--font-hanken)", color: "#F8FAFC" }}
-            >
-              Pocket Mint
-            </span>
+            <PocketMintLogo />
           </div>
 
           {/* Tagline */}
@@ -163,7 +156,7 @@ export default function LoginPage() {
               {formatNetWorth(netWorth)}
             </div>
             <div
-              className="text-[11px] tracking-[0.1em] uppercase"
+              className="text-[11px] tracking-widest uppercase"
               style={{
                 fontFamily: "var(--font-inter)",
                 color: "#64748B",
@@ -204,7 +197,7 @@ export default function LoginPage() {
 
           {/* Heading */}
           <h1
-            className="text-[32px] leading-[40px] font-semibold mb-2"
+            className="text-[32px] leading-10 font-semibold mb-2"
             style={{ fontFamily: "var(--font-hanken)", color: "#F8FAFC" }}
           >
             Selamat datang kembali
@@ -234,7 +227,7 @@ export default function LoginPage() {
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
                 onChange={(e) => setEmailFilled(e.target.value.length > 0)}
-                className={`w-full h-12 px-4 rounded-[4px] text-base outline-none transition-[border-color,box-shadow] duration-150 ease-out ${inputClasses(
+                className={`w-full h-12 px-4 rounded-lg text-base outline-none transition-[border-color,box-shadow] duration-150 ease-out ${inputClasses(
                   emailFocused,
                   emailFilled,
                   false
@@ -265,7 +258,7 @@ export default function LoginPage() {
                   onChange={(e) =>
                     setPasswordFilled(e.target.value.length > 0)
                   }
-                  className={`w-full h-12 px-4 pr-12 rounded-[4px] text-base outline-none transition-[border-color,box-shadow] duration-150 ease-out ${inputClasses(
+                  className={`w-full h-12 px-4 pr-12 rounded-lg text-base outline-none transition-[border-color,box-shadow] duration-150 ease-out ${inputClasses(
                     passwordFocused,
                     passwordFilled,
                     !!error
@@ -299,7 +292,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full h-12 rounded-[4px] text-base font-medium transition-all duration-150 ease-out flex items-center justify-center gap-2 ${
+              className={`w-full h-12 rounded-lg text-base font-medium transition-all duration-150 ease-out flex items-center justify-center gap-2 ${
                 loading
                   ? "cursor-not-allowed"
                   : "hover:opacity-90 active:opacity-80"

@@ -7,7 +7,6 @@ import {
   ArrowLeftRight,
   Wallet,
   CalendarClock,
-  BarChart2,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -23,7 +22,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 h-[60px] z-20 flex items-center justify-around"
+      className="lg:hidden fixed bottom-0 left-0 right-0 h-15 z-20 flex items-center justify-around"
       style={{
         paddingBottom: "env(safe-area-inset-bottom)",
         backgroundColor: "#0F172A",

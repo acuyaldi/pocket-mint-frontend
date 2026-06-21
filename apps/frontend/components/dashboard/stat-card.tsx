@@ -60,7 +60,7 @@ export function StatCard({
           position: "relative",
           overflow: "hidden",
         }}
-        className="group h-full transition-all duration-300 hover:border-[#38BDF8]"
+        className="group h-full transition-all duration-300 hover:`border-brand"
       >
         {/* Gradient accent bar on top */}
         <div

@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Bell, Plus } from "lucide-react";
+import { Bell } from "lucide-react";
 
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -18,9 +18,6 @@ interface TopBarProps {
 }
 
 export function TopBar({
-  userName = "User",
-  userEmail = "user@pocketmint.com",
-  onAddTransaction,
 }: TopBarProps) {
   const pathname = usePathname();
 
@@ -29,17 +26,11 @@ export function TopBar({
       ([href]) => pathname === href || pathname.startsWith(href + "/")
     )?.[1] ?? "Pocket Mint";
 
-  const initials = userName
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
 
   return (
     <header
       className="flex items-center justify-between sticky top-0 z-40"
-      style={{ padding: "20px", borderBottom: "1px solid #334155", backgroundColor: "#0F172A" }}
+      style={{ height: "56px", padding: "0 20px", borderBottom: "1px solid #1E293B", backgroundColor: "#0F172A" }}
     >
       {/* Left: Page Title + subtitle */}
       <div>

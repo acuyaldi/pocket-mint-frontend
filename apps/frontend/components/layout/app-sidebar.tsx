@@ -12,6 +12,7 @@ import {
   LogOut,
   Loader2,
 } from "lucide-react";
+import { PocketMintLogo } from "../Logo";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -56,28 +57,9 @@ export function AppSidebar({
       {/* Logo */}
       <div
         className="flex items-center gap-2.5"
-        style={{ padding: "12px 16px", borderBottom: "1px solid #334155" }}
+        style={{ height: "56px", padding: "0 16px", borderBottom: "1px solid #1E293B", color: "#F8FAFC" }}
       >
-        <div
-          className="flex items-center justify-center flex-shrink-0"
-          style={{
-            width: "32px",
-            height: "32px",
-            borderRadius: "8px",
-            backgroundColor: "rgba(var(--brand-rgb), 0.1)",
-          }}
-        >
-          <Wallet
-            className="size-5 flex-shrink-0"
-            style={{ color: "#38BDF8" }}
-          />
-        </div>
-        <span
-          className="text-[14px] font-semibold tracking-tight"
-          style={{ fontFamily: "var(--font-hanken)", color: "#F8FAFC" }}
-        >
-          Pocket Mint
-        </span>
+        <PocketMintLogo />
       </div>
 
       {/* Nav Items */}
@@ -105,7 +87,7 @@ export function AppSidebar({
                   : "2px solid transparent",
               }}
             >
-              <Icon className="size-[18px] flex-shrink-0" />
+              <Icon className="size-4.5rink-0" />
               <span>{item.label}</span>
             </Link>
           );
@@ -117,7 +99,7 @@ export function AppSidebar({
         <div className="flex items-center gap-3">
           {/* Avatar */}
           <div
-            className="size-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
+            className="size-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
             style={{
               backgroundColor: "rgba(56, 189, 248, 0.08)",
               color: "#38BDF8",
@@ -147,7 +129,7 @@ export function AppSidebar({
           <button
             onClick={handleLogout}
             disabled={loggingOut}
-            className="text-muted-foreground hover:text-destructive transition-colors duration-150 disabled:opacity-50 flex-shrink-0"
+            className="text-muted-foreground hover:text-destructive transition-colors duration-150 disabled:opacity-50 shrink-0"
             title="Keluar"
           >
             {loggingOut ? (

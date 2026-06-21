@@ -22,12 +22,25 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import type { WalletCategory, AssetSubType, DebtSubType } from "../page";
+import type { WalletCategory, AssetSubType, DebtSubType } from "@/src/types/wallet";
 
 interface CreateWalletModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (data: any) => void;
+  onSuccess: (data: CreateWalletFormData) => void;
+}
+
+interface CreateWalletFormData {
+  name: string;
+  category: WalletCategory;
+  color: string;
+  icon: string;
+  balance?: number;
+  subType?: AssetSubType;
+  creditLimit?: number;
+  outstanding?: number;
+  interestRate?: number;
+  adminFee?: number;
 }
 
 const PAYLATER_PRESETS: Record<string, { interestRate: number; adminFee: number }> = {
@@ -56,11 +69,6 @@ const parseRupiahToNumber = (value: string): number => {
   return cleaned ? parseInt(cleaned, 10) : 0;
 };
 
-const formatRpVisual = (value: string): string => {
-  if (!value) return "";
-  const num = value.replace(/[^0-9]/g, "");
-  return new Intl.NumberFormat("id-ID").format(parseInt(num || "0", 10));
-};
 
 const colorPresets = [
   { hex: "#10B981", class: "bg-emerald-500" },
@@ -223,7 +231,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
           </div>
 
           {/* Scrollable content section */}
-          <div className="p-6 space-y-5 overflow-y-auto pr-2 max-h-[calc(85vh-140px)] min-h-[350px] scroll-smooth">
+          <div className="p-6 space-y-5 overflow-y-auto pr-2 max-h-[calc(85vh-140px)] min-h-87.5 scroll-smooth">
             
             {/* SECTION 1: CLASSIFICATION */}
             <div className="space-y-4">
@@ -236,7 +244,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                   className={cn(
                     "relative flex items-center justify-center gap-3 p-4 rounded-xl transition-all duration-200 border-2",
                     classification === "asset"
-                      ? "border-[#38BDF8]"
+                      ? "`border-brand"
                       : "border-[#334155]"
                   )}
                   style={{
@@ -256,7 +264,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                   className={cn(
                     "relative flex items-center justify-center gap-3 p-4 rounded-xl transition-all duration-200 border-2",
                     classification === "debt"
-                      ? "border-[#38BDF8]"
+                      ? "`border-brand"
                       : "border-[#334155]"
                   )}
                   style={{
@@ -309,7 +317,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                         className={cn(
                           "flex flex-col items-center justify-center gap-2 p-3 rounded-xl transition-all duration-200 border-2",
                           isActive
-                            ? "border-[#38BDF8]"
+                            ? "`border-brand"
                             : "border-[#334155]"
                         )}
                         style={{
@@ -348,7 +356,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                         className={cn(
                           "flex flex-col items-center justify-center gap-2 p-3 rounded-xl transition-all duration-200 border-2",
                           isActive
-                            ? "border-[#38BDF8]"
+                            ? "border-brand"
                             : "border-[#334155]"
                         )}
                         style={{
@@ -392,7 +400,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                           className={cn(
                             "px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-200 border-2",
                             isActive
-                              ? "border-[#38BDF8]"
+                              ? "`border-brand"
                               : "border-[#334155]"
                           )}
                           style={{
@@ -584,7 +592,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                   style={{ backgroundColor: customColor ? undefined : "#1E293B" }}
                   aria-label="Custom color picker"
                 >
-                  <Plus className={cn("size-4", customColor ? "text-[#0F172A]" : "text-[#94A3B8]")} />
+                  <Plus className={cn("size-4", customColor ? "text-[#0F172A]" : "text-text-secondary")} />
                 </button>
 
                 {/* Hidden native color input */}

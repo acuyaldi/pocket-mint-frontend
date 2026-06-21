@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
-  Wallet,
   TrendingUp,
   PieChart,
   Shield,
@@ -17,6 +16,7 @@ import {
 } from "lucide-react";
 import { motion, useInView, type Variants } from "framer-motion";
 import { useRef } from "react";
+import { PocketMintLogo } from "@/components/Logo";
 
 /* ──────────────────────────────────────────────
    Animation variants
@@ -123,21 +123,18 @@ export default function LandingPage() {
     <div className="min-h-screen overflow-x-hidden" style={{ backgroundColor: "#0F172A", color: "#F8FAFC" }}>
       {/* ── Animated background blobs ── */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 right-0 size-[700px] rounded-full blur-[140px] animate-pulse" style={{ backgroundColor: "rgba(56,189,248,0.04)" }} />
-        <div className="absolute top-1/2 -left-40 size-[550px] rounded-full blur-[140px] animate-pulse delay-1000" style={{ backgroundColor: "rgba(56,189,248,0.04)" }} />
-        <div className="absolute bottom-0 right-1/3 size-[450px] rounded-full blur-[140px] animate-pulse delay-2000" style={{ backgroundColor: "rgba(56,189,248,0.03)" }} />
+        <div className="absolute -top-40 right-0 size-175 rounded-full blur-[140px] animate-pulse" style={{ backgroundColor: "rgba(56,189,248,0.04)" }} />
+        <div className="absolute top-1/2 -left-40 size-175 rounded-full blur-[140px] animate-pulse delay-1000" style={{ backgroundColor: "rgba(56,189,248,0.04)" }} />
+        <div className="absolute bottom-0 right-1/3 size-112 rounded-full blur-[140px] animate-pulse delay-2000" style={{ backgroundColor: "rgba(56,189,248,0.03)" }} />
       </div>
 
       {/* ── Navbar ── */}
       <nav className="sticky top-0 z-50 backdrop-blur-xl" style={{ backgroundColor: "rgba(15,23,42,0.8)", borderBottom: "1px solid #334155" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl" style={{ backgroundColor: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.2)" }}>
-              <Wallet className="size-5" style={{ color: "#38BDF8" }} />
-            </div>
-            <span className="text-lg font-bold tracking-tight" style={{ color: "#F8FAFC", fontFamily: "var(--font-hanken)" }}>
-              Pocket Mint
-            </span>
+               <PocketMintLogo />
+          
+
           </div>
           <div className="flex items-center gap-3">
             <Link href="/login">
@@ -240,7 +237,7 @@ export default function LandingPage() {
         >
           {trustBadges.map((badge) => (
             <div key={badge} className="flex items-center gap-2">
-              <CheckCircle2 className="size-[18px] shrink-0" style={{ color: "#10B981" }} />
+              <CheckCircle2 className="size-4.5 shrink-0" style={{ color: "#10B981" }} />
               <span>{badge}</span>
             </div>
           ))}
@@ -433,12 +430,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl" style={{ backgroundColor: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.2)" }}>
-                <Wallet className="size-5" style={{ color: "#38BDF8" }} />
-              </div>
-              <span className="text-lg font-bold tracking-tight" style={{ color: "#F8FAFC", fontFamily: "var(--font-hanken)" }}>
-                Pocket Mint
-              </span>
+              <PocketMintLogo  />
             </div>
             <p className="text-sm" style={{ color: "#64748B", fontFamily: "var(--font-inter)" }}>
               © 2026 Pocket Mint — Kelola Keuangan Lebih Cerdas

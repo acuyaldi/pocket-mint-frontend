@@ -12,7 +12,7 @@ import { useWallets } from "@/src/features/wallets/hooks/useWallets";
 import { Transaction } from "@/src/types/transaction";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
-import { PAGE_SIZE, fadeUp } from "./components/constants";
+import { PAGE_SIZE } from "./components/constants";
 import type { DateRangeFilter } from "./components/constants";
 import { TransactionHeader } from "./components/TransactionHeader";
 import { TransactionStats } from "./components/TransactionStats";
@@ -40,7 +40,7 @@ export default function TransactionsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) router.replace("/login");
     })();
-  }, []);
+  }, [router, supabase.auth]);
 
   // ── Filter state ─────────────────────────────────────────────────────────
   const [dateFilter, setDateFilter] = useState<DateRangeFilter>("30d");

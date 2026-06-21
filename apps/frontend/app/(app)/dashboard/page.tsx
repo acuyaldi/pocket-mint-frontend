@@ -302,7 +302,7 @@ export default function DashboardPage() {
                 {i > 0 && <div style={{ height: "1px", backgroundColor: "#334155" }} />}
                 <div className="flex items-center" style={{ padding: "16px 0" }}>
                   <div
-                    className="flex items-center justify-center flex-shrink-0"
+className="flex items-center justify-center shrink-0"
                     style={{
                       width: "32px",
                       height: "32px",
@@ -323,7 +323,7 @@ export default function DashboardPage() {
                       {t.categoryId ?? "Uncategorized"}
                     </div>
                   </div>
-                  <div className="text-right flex-shrink-0 ml-2">
+<div className="text-right shrink-0 ml-2">
                     <div style={{ fontFamily: "var(--font-inter)", fontSize: "14px", fontWeight: 600, color: t.type === "EXPENSE" ? "#EF4444" : "#10B981" }}>
                       {t.type === "EXPENSE" ? "-" : "+"}{formatRupiah(t.amount)}
                     </div>

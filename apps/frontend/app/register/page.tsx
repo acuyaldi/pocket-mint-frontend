@@ -53,7 +53,7 @@ export default function RegisterPage() {
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 size-96 rounded-full blur-3xl animate-pulse" style={{ backgroundColor: "rgba(56,189,248,0.1)" }} />
           <div className="absolute -bottom-40 -left-40 size-96 rounded-full blur-3xl animate-pulse delay-1000" style={{ backgroundColor: "rgba(16,185,129,0.1)" }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[500px] rounded-full blur-3xl animate-pulse delay-2000" style={{ backgroundColor: "rgba(56,189,248,0.05)" }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-125 rounded-full blur-3xl animate-pulse delay-2000" style={{ backgroundColor: "rgba(56,189,248,0.05)" }} />
         </div>
 
         {/* Content */}
@@ -96,7 +96,7 @@ export default function RegisterPage() {
             ].map((text) => (
               <div key={text} className="flex items-center gap-3" style={{ color: "#F8FAFC" }}>
                 <div
-                  className="size-10 rounded-xl flex items-center justify-center flex-shrink-0"
+className="size-10 rounded-xl flex items-center justify-center shrink-0"
                   style={{
                     backgroundColor: "rgba(16,185,129,0.1)",
                     border: "1px solid rgba(16,185,129,0.2)",

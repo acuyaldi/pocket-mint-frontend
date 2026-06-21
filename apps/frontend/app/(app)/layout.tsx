@@ -9,7 +9,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <AppSidebar />
 
       {/* Main content area */}
-      <div className="flex flex-col flex-1 min-h-screen lg:ml-[var(--sidebar-width)]">
+      <div className="flex flex-col flex-1 min-h-screen lg:ml-(--sidebar-width)">
         {/* Top Bar */}
         <TopBar />
 

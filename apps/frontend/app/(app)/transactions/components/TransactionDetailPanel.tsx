@@ -45,7 +45,7 @@ export function TransactionDetailPanel({ tx, onClose, onEdit, onDelete }: Transa
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="fixed top-0 right-0 h-screen overflow-y-auto z-[51] flex flex-col"
+            className="fixed top-0 right-0 h-screen overflow-y-auto z-51 flex flex-col"
             style={{
               width: 320,
               backgroundColor: "#1E293B",

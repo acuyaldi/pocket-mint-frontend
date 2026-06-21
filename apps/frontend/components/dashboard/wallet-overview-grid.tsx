@@ -1,7 +1,6 @@
 "use client";
 
 import type { Wallet } from "@/src/types/wallet";
-import { useMemo } from "react";
 import { Landmark, CreditCard, Receipt, Banknote, Smartphone, LucideIcon } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
@@ -11,15 +10,6 @@ interface WalletOverviewGridProps {
   onAddWallet?: () => void;
 }
 
-function getWalletIcon(type: string): LucideIcon {
-  switch (type) {
-    case "BANK": return Landmark;
-    case "E_WALLET": return Smartphone;
-    case "CREDIT_CARD": return CreditCard;
-    case "LOAN_PAYLATER": return Receipt;
-    default: return Banknote;
-  }
-}
 
 const WALLET_ICON_MAP: Record<string, LucideIcon> = {
   CASH: Banknote,
@@ -29,7 +19,6 @@ const WALLET_ICON_MAP: Record<string, LucideIcon> = {
   LOAN_PAYLATER: Receipt,
 };
 
-const ASSET_TYPES = ["CASH", "BANK", "E_WALLET"];
 
 // ── Individual wallet card ──────────────────────────────────────────────────────
 function WalletCard({ wallet }: { wallet: Wallet }) {
@@ -52,7 +41,7 @@ function WalletCard({ wallet }: { wallet: Wallet }) {
         {/* Top section: icon + name + type */}
         <div className="flex items-center gap-2" style={{ marginBottom: "8px" }}>
           <div
-            className="flex items-center justify-center flex-shrink-0"
+className="flex items-center justify-center shrink-0"
             style={{
               width: "32px",
               height: "32px",
@@ -93,7 +82,7 @@ function WalletCard({ wallet }: { wallet: Wallet }) {
       {/* Top section: icon + name + type */}
       <div className="flex items-center gap-2" style={{ marginBottom: "8px" }}>
         <div
-          className="flex items-center justify-center flex-shrink-0"
+className="flex items-center justify-center shrink-0"
           style={{
             width: "32px",
             height: "32px",

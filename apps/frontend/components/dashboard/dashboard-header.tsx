@@ -3,9 +3,10 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { logout } from "@/app/actions/auth";
-import { Bell, Wallet, LogOut, Loader2, Mail, ChevronDown } from "lucide-react";
+import { Bell,  LogOut, Loader2, Mail, ChevronDown } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { PocketMintLogo } from "../Logo";
 
 interface DashboardHeaderProps {
   userName?: string;
@@ -77,13 +78,9 @@ export function DashboardHeader({
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <div className="p-2 rounded-xl" style={{ backgroundColor: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.2)" }}>
-              <Wallet className="size-5" style={{ color: "#38BDF8" }} />
-            </div>
+            <PocketMintLogo  />
             <div>
-              <h1 className="text-base font-bold tracking-tight" style={{ color: "#F8FAFC", fontFamily: "var(--font-hanken)" }}>
-                Pocket Mint
-              </h1>
+              
               <p className="text-[10px] leading-none hidden sm:block" style={{ color: "#64748B", fontFamily: "var(--font-inter)" }}>
                 {currentTime}
               </p>
@@ -105,7 +102,7 @@ export function DashboardHeader({
               style={{ color: "#94A3B8" }}
               aria-label="Notifikasi"
             >
-              <Bell className="size-[18px]" />
+              <Bell className="size-4.5" />
               <span className="absolute top-1.5 right-1.5 size-2 rounded-full" style={{ backgroundColor: "#EF4444" }} />
             </Button>
 

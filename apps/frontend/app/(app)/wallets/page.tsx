@@ -3,8 +3,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
-  SlidersHorizontal,
-  ChevronDown,
   Plus,
   ShieldCheck,
   AlertTriangle,
@@ -72,7 +70,7 @@ function ConnectAccountCard({ onClick }: { onClick: () => void }) {
     <motion.div
       variants={fadeUp}
       onClick={onClick}
-      className="rounded-2xl p-4 flex flex-col items-center justify-center gap-3 min-h-[170px] cursor-pointer group transition-all duration-300"
+      className="rounded-2xl p-4 flex flex-col items-center justify-center gap-3 min-h-42.5 cursor-pointer group transition-all duration-300"
       style={{
         border: "2px dashed #334155",
         backgroundColor: "transparent",

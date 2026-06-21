@@ -1,7 +1,6 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, ShoppingBag, ArrowUpRight, RefreshCcw } from "lucide-react";
+import {  ShoppingBag, ArrowUpRight, RefreshCcw } from "lucide-react";
 import Link from "next/link";
 import type { Transaction } from "@/components/dashboard/transaction-table";
 import { formatCurrency } from "@/lib/utils";
@@ -105,7 +104,7 @@ export function RecentTransactionsCard({
                   {/* Left: icon + name + meta */}
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div
-                      className="flex items-center justify-center flex-shrink-0"
+className="flex items-center justify-center shrink-0"
                       style={{
                         width: "32px",
                         height: "32px",
@@ -126,7 +125,7 @@ export function RecentTransactionsCard({
                   </div>
 
                   {/* Right: amount */}
-                  <div className="text-right flex-shrink-0 ml-3">
+<div className="text-right shrink-0 ml-3">
                     <p style={{ fontFamily: "var(--font-inter)", fontSize: "14px", fontWeight: 600, color: cfg.amountColor }}>
                       {cfg.prefix}{formatCurrency(tx.amount)}
                     </p>
