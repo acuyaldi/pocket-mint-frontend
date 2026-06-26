@@ -19,19 +19,19 @@ export function WalletSparkline({ walletId, isDebt }: WalletSparklineProps) {
     return (
       <div
         className="w-full rounded-b-lg"
-        style={{ height: 48, background: "linear-gradient(90deg, #1E293B 0%, #334155 50%, #1E293B 100%)", animation: "pulse 1.6s ease-in-out infinite" }}
+        style={{ height: 48, background: "linear-gradient(90deg, #0e0e0e 0%, #262626 50%, #0e0e0e 100%)", animation: "pulse 1.6s ease-in-out infinite" }}
       />
     );
   }
 
   if (!data || data.length < 2) return null;
 
-  const strokeColor = isDebt ? "#EF4444" : "#10B981";
+  const strokeColor = isDebt ? "#ffb4ab" : "#4ade80";
   const gradientId = `sparkline-gradient-${walletId}`;
 
   return (
-    <div className="w-full" style={{ height: 48 }}>
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="mt-2">
+      <ResponsiveContainer width="100%" height={48}>
         <AreaChart data={data} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">

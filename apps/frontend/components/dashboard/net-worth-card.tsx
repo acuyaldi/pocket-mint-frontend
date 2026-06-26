@@ -22,10 +22,10 @@ export function NetWorthHero({
     <div
       className="w-full"
       style={{
-        backgroundColor: "#1E293B",
-        border: "1px solid #334155",
+        backgroundColor: "#0e0e0e",
+        border: "1px solid #262626",
         borderRadius: "8px",
-        padding: "16px",
+        padding: "20px",
       }}
     >
       {/* Label */}
@@ -33,26 +33,27 @@ export function NetWorthHero({
         className="block uppercase font-semibold"
         style={{
           fontFamily: "var(--font-inter)",
-          fontSize: "11px",
+          fontSize: "10px",
           fontWeight: 600,
-          color: "#64748B",
-          letterSpacing: "0.05em",
+          color: "#bccabb",
+          letterSpacing: "0.1em",
         }}
       >
-        Net Worth
+        TOTAL NET WORTH
       </span>
 
       {/* Amount */}
       {isLoading ? (
-        <div className="h-10 w-48 rounded animate-pulse mt-2" style={{ backgroundColor: "#334155" }} />
+        <div className="h-10 w-48 rounded animate-pulse mt-2" style={{ backgroundColor: "#262626" }} />
       ) : (
         <p
           style={{
             fontFamily: "var(--font-hanken)",
-            fontSize: "40px",
-            fontWeight: 600,
-            color: "#38BDF8",
-            lineHeight: 1.1,
+            fontSize: "48px",
+            fontWeight: 700,
+            color: "#4ade80",
+            lineHeight: 1,
+            letterSpacing: "-0.02em",
             marginTop: "8px",
           }}
         >
@@ -67,13 +68,13 @@ export function NetWorthHero({
           style={{
             marginTop: "12px",
             borderRadius: "9999px",
-            padding: "3px 10px",
-            backgroundColor: trendPercent >= 0 ? "rgba(16, 185, 129, 0.15)" : "rgba(239, 68, 68, 0.15)",
-            border: trendPercent >= 0 ? "1px solid #10B981" : "1px solid #EF4444",
-            fontFamily: "var(--font-inter)",
+            padding: "3px 8px",
+            backgroundColor: trendPercent >= 0 ? "rgba(74, 222, 128, 0.12)" : "rgba(255, 180, 171, 0.12)",
+            border: trendPercent >= 0 ? "1px solid #4ade80" : "1px solid #ffb4ab",
+            fontFamily: "var(--font-mono)",
             fontSize: "11px",
             fontWeight: 600,
-            color: trendPercent >= 0 ? "#10B981" : "#EF4444",
+            color: trendPercent >= 0 ? "#4ade80" : "#ffb4ab",
           }}
         >
           <TrendingUp className="size-3" />
@@ -82,22 +83,22 @@ export function NetWorthHero({
       )}
 
       {/* Meta items row */}
-      <div className="flex items-center gap-7" style={{ marginTop: "16px" }}>
+      <div className="flex items-center gap-7" style={{ paddingTop: "12px" }}>
         {/* Total Aset */}
         <div>
           <p
             className="uppercase font-semibold"
             style={{
               fontFamily: "var(--font-inter)",
-              fontSize: "11px",
+              fontSize: "10px",
               fontWeight: 600,
-              color: "#64748B",
+          color: "#bccabb",
               letterSpacing: "0.05em",
             }}
           >
             Total Aset
           </p>
-          <p style={{ fontFamily: "var(--font-inter)", fontSize: "14px", fontWeight: 500, color: "#F8FAFC", marginTop: "4px" }}>
+          <p style={{ fontFamily: "var(--font-heading)", fontSize: "15px", fontWeight: 600, color: "#e5e2e1", marginTop: "4px" }}>
             {formatCurrency(totalAssets)}
           </p>
         </div>
@@ -108,15 +109,15 @@ export function NetWorthHero({
             className="uppercase font-semibold"
             style={{
               fontFamily: "var(--font-inter)",
-              fontSize: "11px",
+              fontSize: "10px",
               fontWeight: 600,
-              color: "#64748B",
+          color: "#bccabb",
               letterSpacing: "0.05em",
             }}
           >
             Total Utang
           </p>
-          <p style={{ fontFamily: "var(--font-inter)", fontSize: "14px", fontWeight: 500, color: "#EF4444", marginTop: "4px" }}>
+          <p style={{ fontFamily: "var(--font-heading)", fontSize: "15px", fontWeight: 600, color: "#ffb4ab", marginTop: "4px" }}>
             {formatCurrency(totalDebts)}
           </p>
         </div>
@@ -127,15 +128,15 @@ export function NetWorthHero({
             className="uppercase font-semibold"
             style={{
               fontFamily: "var(--font-inter)",
-              fontSize: "11px",
+              fontSize: "10px",
               fontWeight: 600,
-              color: "#64748B",
+          color: "#bccabb",
               letterSpacing: "0.05em",
             }}
           >
             Net Savings
           </p>
-          <p style={{ fontFamily: "var(--font-inter)", fontSize: "14px", fontWeight: 500, color: (totalAssets - totalDebts) >= 0 ? "#F8FAFC" : "#EF4444", marginTop: "4px" }}>
+          <p style={{ fontFamily: "var(--font-heading)", fontSize: "15px", fontWeight: 600, color: (totalAssets - totalDebts) >= 0 ? "#e5e2e1" : "#ffb4ab", marginTop: "4px" }}>
             {formatCurrency(totalAssets - totalDebts)}
           </p>
         </div>

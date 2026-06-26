@@ -1,26 +1,22 @@
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { TopBar } from "@/components/layout/top-bar";
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { FAB } from "@/components/ui/fab";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: "#0F172A" }}>
-      {/* Desktop Sidebar */}
+    <div className="flex min-h-screen w-full bg-[#131313] text-[#e5e2e1] overflow-x-hidden">
       <AppSidebar />
 
-      {/* Main content area */}
-      <div className="flex flex-col flex-1 min-h-screen lg:ml-(--sidebar-width)">
-        {/* Top Bar */}
+      <main className="flex-1 min-w-0 overflow-y-auto p-6 md:p-8">
         <TopBar />
-
-        {/* Page content */}
-        <main className="flex-1 w-full" style={{ padding: "24px 32px 32px" }}>
+        <div className="flex flex-col flex-1 min-h-screen">
           {children}
-        </main>
-      </div>
+        </div>
+      </main>
 
-      {/* Mobile Bottom Nav */}
       <BottomNav />
+      <FAB />
     </div>
   );
 }

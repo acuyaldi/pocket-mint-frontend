@@ -47,23 +47,21 @@ export function AppSidebar({
 
   return (
     <aside
-      className="hidden lg:flex flex-col fixed left-0 top-0 h-full"
+      className="hidden lg:flex flex-col flex-shrink-0 w-[240px] h-full bg-surface"
       style={{
-        width: "var(--sidebar-width)",
-        backgroundColor: "#0F172A",
-        borderRight: "1px solid #334155",
+        borderRight: "1px solid #262626",
       }}
     >
       {/* Logo */}
       <div
         className="flex items-center gap-2.5"
-        style={{ height: "56px", padding: "0 16px", borderBottom: "1px solid #1E293B", color: "#F8FAFC" }}
+        style={{ height: "56px", padding: "16px 20px", borderBottom: "1px solid #1a1a1a", color: "#e5e2e1" }}
       >
         <PocketMintLogo />
       </div>
 
       {/* Nav Items */}
-      <nav className="flex-1 py-4 overflow-y-auto">
+      <nav className="flex-1 py-2 overflow-y-auto">
         {NAV_ITEMS.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
@@ -74,20 +72,20 @@ export function AppSidebar({
               href={item.href}
               className="flex items-center gap-2.5 transition-all duration-150"
               style={{
-                padding: "10px 20px",
+                padding: "8px 20px",
                 fontFamily: "var(--font-inter)",
-                fontSize: "14px",
+                fontSize: "13px",
                 fontWeight: "500",
-                color: isActive ? "#38BDF8" : "#94A3B8",
+                color: isActive ? "#4ade80" : "#bccabb",
                 backgroundColor: isActive
-                  ? "rgba(56, 189, 248, 0.08)"
+                  ? "rgba(74, 222, 128, 0.08)"
                   : "transparent",
                 borderRight: isActive
-                  ? "2px solid #38BDF8"
+                  ? "2px solid #4ade80"
                   : "2px solid transparent",
               }}
             >
-              <Icon className="size-4.5rink-0" />
+              <Icon className="size-4 shrink-0" />
               <span>{item.label}</span>
             </Link>
           );
@@ -95,15 +93,15 @@ export function AppSidebar({
       </nav>
 
       {/* User info - pinned bottom */}
-      <div className="px-4 py-4" style={{ borderTop: "1px solid #334155" }}>
+      <div className="px-4 py-3" style={{ borderTop: "1px solid #1a1a1a" }}>
         <div className="flex items-center gap-3">
           {/* Avatar */}
           <div
-            className="size-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
+            className="size-[28px] rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
             style={{
-              backgroundColor: "rgba(56, 189, 248, 0.08)",
-              color: "#38BDF8",
-              fontFamily: "var(--font-hanken)",
+              backgroundColor: "rgba(74, 222, 128, 0.15)",
+              color: "#4ade80",
+              fontFamily: "var(--font-heading)",
             }}
           >
             {initials}
@@ -112,14 +110,14 @@ export function AppSidebar({
           {/* Name + Email */}
           <div className="flex-1 min-w-0">
             <p
-              className="text-[12px] font-medium truncate"
-              style={{ fontFamily: "var(--font-inter)", color: "#F8FAFC" }}
+              className="text-[13px] font-medium truncate"
+              style={{ fontFamily: "var(--font-sans)", color: "#e5e2e1" }}
             >
               {userName}
             </p>
             <p
-              className="text-[11px] truncate"
-              style={{ fontFamily: "var(--font-inter)", color: "#94A3B8" }}
+              className="text-[10px] truncate"
+              style={{ fontFamily: "var(--font-sans)", color: "#bccabb" }}
             >
               {userEmail}
             </p>

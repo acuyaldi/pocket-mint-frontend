@@ -22,11 +22,11 @@ export function BottomNav() {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 h-15 z-20 flex items-center justify-around"
+      className="lg:hidden fixed bottom-0 left-0 right-0 h-14 z-20 flex items-center justify-around"
       style={{
         paddingBottom: "env(safe-area-inset-bottom)",
-        backgroundColor: "#0F172A",
-        borderTop: "1px solid #334155",
+        backgroundColor: "#131313",
+        borderTop: "1px solid #262626",
       }}
     >
       {NAV_ITEMS.map((item) => {
@@ -39,13 +39,13 @@ export function BottomNav() {
             href={item.href}
             className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors duration-150"
             style={{
-              color: isActive ? "#38BDF8" : "#94A3B8",
+              color: isActive ? "#4ade80" : "#bccabb",
               fontWeight: "500",
             }}
           >
-            <Icon className="size-5" />
+            <Icon className="size-[18px]" />
             <span
-              className="text-[10px] leading-tight"
+              className="text-[10px] leading-none"
               style={{ fontFamily: "var(--font-inter)" }}
             >
               {item.label}

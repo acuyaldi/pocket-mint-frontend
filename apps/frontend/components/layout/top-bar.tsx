@@ -8,17 +8,14 @@ const PAGE_TITLES: Record<string, string> = {
   "/transactions": "Transaksi",
   "/wallets": "Wallets",
   "/cicilan": "Cicilan",
-  
 };
 
 interface TopBarProps {
   userName?: string;
   userEmail?: string;
-  onAddTransaction?: () => void;
 }
 
-export function TopBar({
-}: TopBarProps) {
+export function TopBar({}: TopBarProps) {
   const pathname = usePathname();
 
   const title =
@@ -29,45 +26,41 @@ export function TopBar({
 
   return (
     <header
-      className="flex items-center justify-between sticky top-0 z-40"
-      style={{ height: "56px", padding: "0 20px", borderBottom: "1px solid #1E293B", backgroundColor: "#0F172A" }}
+      className="flex justify-between items-center w-full mb-6 border-b border-[#1a1a1a] pb-4"
     >
       {/* Left: Page Title + subtitle */}
       <div>
         <h2
-          className="text-[15px] font-semibold tracking-tight"
-          style={{ color: "#F8FAFC", fontFamily: "var(--font-hanken)" }}
+          className="text-[18px] font-semibold tracking-tight"
+          style={{ color: "#e5e2e1", fontFamily: "var(--font-heading)" }}
         >
           {title}
         </h2>
-        <p className="text-[11px]" style={{ color: "#94A3B8", fontFamily: "var(--font-inter)" }}>
+        <p className="text-[11px]" style={{ color: "#bccabb", fontFamily: "var(--font-sans)" }}>
           Welcome back! Here&rsquo;s your financial summary.
         </p>
       </div>
 
-      {/* Right: Export button + bell icon + FAB */}
-      <div className="flex items-center gap-3">
-        {/* Bell icon */}
+      {/* Right: Bell */}
+      <div className="flex items-center gap-2">
+        {/* Notification Bell */}
         <button
           className="relative flex items-center justify-center rounded-lg transition-colors"
           style={{ width: "32px", height: "32px" }}
           aria-label="Notifikasi"
         >
-          <Bell className="size-5" style={{ color: "#64748B" }} />
-          {/* Badge */}
+          <Bell className="size-5" style={{ color: "#bccabb" }} />
           <span
             className="absolute top-0.5 right-0.5 size-4 rounded-full flex items-center justify-center text-[10px] font-bold"
-          style={{
-            backgroundColor: "#38BDF8",
-            color: "#0F172A",
-            fontFamily: "var(--font-jetbrains)",
-          }}
+            style={{
+              backgroundColor: "#4ade80",
+              color: "#003919",
+              fontFamily: "var(--font-mono)",
+            }}
           >
             3
           </span>
         </button>
-
-       
       </div>
     </header>
   );

@@ -23,38 +23,38 @@ function InstallmentRow({ item }: { item: Installment }) {
   );
 
   return (
-    <div className="space-y-2" style={{ padding: "8px 0" }}>
+    <div className="space-y-1" style={{ padding: "10px 12px", borderRadius: "6px", backgroundColor: "#0e0e0e" }}>
       {/* Top row: name + counter */}
       <div className="flex items-center justify-between">
-        <span style={{ fontFamily: "var(--font-inter)", fontSize: "13px", fontWeight: 500, color: "#F8FAFC" }}>
+        <span style={{ fontFamily: "var(--font-heading)", fontSize: "13px", fontWeight: 600, color: "#e5e2e1" }}>
           {item.walletName}
         </span>
-        <span style={{ fontFamily: "var(--font-inter)", fontSize: "11px", color: "#94A3B8" }}>
+        <span style={{ fontFamily: "var(--font-sans)", fontSize: "11px", color: "#bccabb" }}>
           {item.currentTerm}/{item.installmentMonths}
         </span>
       </div>
 
       {/* Subtitle */}
-      <p style={{ fontFamily: "var(--font-inter)", fontSize: "12px", color: "#94A3B8" }}>
+      <p style={{ fontFamily: "var(--font-sans)", fontSize: "11px", color: "#bccabb" }}>
         {formatCurrency(Math.round(item.monthlyAmount))}/bulan · {item.walletType === "CREDIT_CARD" ? "Credit Card" : "Paylater"}
       </p>
 
       {/* Progress bar */}
-      <div style={{ height: "4px", backgroundColor: "#334155", borderRadius: "9999px", overflow: "hidden" }}>
+      <div style={{ height: "3px", backgroundColor: "#262626", borderRadius: "9999px", overflow: "hidden", marginTop: "6px" }}>
         <div
           style={{
             width: `${percent}%`,
             height: "100%",
             borderRadius: "9999px",
-            backgroundColor: percent >= 80 ? "#EF4444" : percent >= 30 ? "#F59E0B" : "#10B981",
+            backgroundColor: percent >= 80 ? "#ffb4ab" : percent >= 30 ? "#facc15" : "#4ade80",
           }}
         />
       </div>
 
       {/* Footer row */}
       <div className="flex items-center justify-between">
-        <span style={{ fontFamily: "var(--font-inter)", fontSize: "12px", color: "#94A3B8" }}>{percent}% lunas</span>
-        <span style={{ fontFamily: "var(--font-inter)", fontSize: "12px", color: "#94A3B8" }}>{item.installmentMonths - item.currentTerm} cicilan lagi</span>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "#bccabb" }}>{percent}% lunas</span>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "#bccabb" }}>{item.installmentMonths - item.currentTerm} cicilan lagi</span>
       </div>
     </div>
   );
@@ -67,7 +67,7 @@ export function ActiveInstallmentsWidget() {
 
   return (
     <div
-      style={{ backgroundColor: "#1E293B", border: "1px solid #334155", borderRadius: "8px", padding: "16px" }}
+      style={{ backgroundColor: "#0e0e0e", border: "1px solid #262626", borderRadius: "8px", padding: "16px 20px" }}
     >
       {/* Header */}
       <div className="flex items-center justify-between" style={{ marginBottom: "12px" }}>
@@ -75,17 +75,17 @@ export function ActiveInstallmentsWidget() {
           className="uppercase font-semibold"
           style={{
             fontFamily: "var(--font-inter)",
-            fontSize: "11px",
+            fontSize: "10px",
             fontWeight: 600,
-            color: "#64748B",
-            letterSpacing: "0.05em",
+            color: "#bccabb",
+            letterSpacing: "0.08em",
           }}
         >
           Cicilan Aktif
         </span>
         {installments.length > 0 && (
           <Link href="/cicilan">
-            <span style={{ fontFamily: "var(--font-inter)", fontSize: "11px", fontWeight: 600, color: "#38BDF8" }}>
+            <span style={{ fontFamily: "var(--font-sans)", fontSize: "11px", fontWeight: 600, color: "#4ade80" }}>
               Lihat semua \u2192
             </span>
           </Link>
@@ -95,21 +95,18 @@ export function ActiveInstallmentsWidget() {
       {isLoading ? (
         <div className="space-y-3">
           {[1, 2].map((i) => (
-            <div key={i} className="h-24 rounded animate-pulse" style={{ backgroundColor: "#334155" }} />
+            <div key={i} className="h-24 rounded animate-pulse" style={{ backgroundColor: "#262626" }} />
           ))}
         </div>
       ) : installments.length === 0 ? (
-        <p style={{ fontFamily: "var(--font-inter)", fontSize: "14px", color: "#94A3B8", textAlign: "center", padding: "24px 0" }}>
+        <p style={{ fontFamily: "var(--font-sans)", fontSize: "14px", color: "#bccabb", textAlign: "center", padding: "24px 0" }}>
           Tidak ada cicilan aktif \ud83c\udf89
         </p>
       ) : (
-        <div>
+        <div className="flex flex-col" style={{ gap: "8px" }}>
           {displayItems.map((item, index) => (
             <div key={item.id}>
               <InstallmentRow item={item} />
-              {index < displayItems.length - 1 && (
-                <div style={{ height: "1px", backgroundColor: "#334155", marginTop: "8px" }} />
-              )}
             </div>
           ))}
         </div>

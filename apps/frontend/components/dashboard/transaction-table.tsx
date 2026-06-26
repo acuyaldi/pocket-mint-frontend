@@ -29,41 +29,41 @@ const typeConfig = {
     icon: ArrowUpRight,
     label: "Pemasukan",
     iconClass: "",
-    iconStyle: { color: "#10B981" },
+    iconStyle: { color: "#4ade80" },
     amountClass: "",
-    amountStyle: { color: "#10B981" },
-    badgeStyle: { backgroundColor: "rgba(16, 185, 129, 0.15)", border: "1px solid #10B981", color: "#10B981" },
+    amountStyle: { color: "#4ade80" },
+    badgeStyle: { backgroundColor: "rgba(74,222,128,0.12)", border: "1px solid #4ade80", color: "#4ade80" },
     prefix: "+",
-    iconBg: "rgba(16, 185, 129, 0.1)",
+    iconBg: "rgba(74,222,128,0.12)",
   },
   expense: {
     icon: ArrowDownLeft,
     label: "Pengeluaran",
     iconClass: "",
-    iconStyle: { color: "#EF4444" },
+    iconStyle: { color: "#ffb4ab" },
     amountClass: "",
-    amountStyle: { color: "#EF4444" },
-    badgeStyle: { backgroundColor: "rgba(239, 68, 68, 0.15)", border: "1px solid #EF4444", color: "#EF4444" },
+    amountStyle: { color: "#ffb4ab" },
+    badgeStyle: { backgroundColor: "rgba(255,180,171,0.12)", border: "1px solid #ffb4ab", color: "#ffb4ab" },
     prefix: "-",
-    iconBg: "rgba(239, 68, 68, 0.1)",
+    iconBg: "rgba(255,180,171,0.12)",
   },
   transfer: {
     icon: RefreshCcw,
     label: "Transfer",
     iconClass: "",
-    iconStyle: { color: "#38BDF8" },
+    iconStyle: { color: "#4ade80" },
     amountClass: "",
-    amountStyle: { color: "#38BDF8" },
-    badgeStyle: { backgroundColor: "rgba(56, 189, 248, 0.15)", border: "1px solid #38BDF8", color: "#38BDF8" },
+    amountStyle: { color: "#4ade80" },
+    badgeStyle: { backgroundColor: "rgba(74,222,128,0.12)", border: "1px solid #4ade80", color: "#4ade80" },
     prefix: "",
-    iconBg: "rgba(56, 189, 248, 0.1)",
+    iconBg: "rgba(74,222,128,0.12)",
   },
 };
 
 const statusConfig = {
-  completed: { label: "Selesai", style: { backgroundColor: "rgba(16, 185, 129, 0.15)", border: "1px solid #10B981", color: "#10B981" } },
+  completed: { label: "Selesai", style: { backgroundColor: "rgba(74,222,128,0.12)", border: "1px solid #4ade80", color: "#4ade80" } },
   pending: { label: "Tertunda", style: { backgroundColor: "rgba(245, 158, 11, 0.15)", border: "1px solid #F59E0B", color: "#F59E0B" } },
-  failed: { label: "Gagal", style: { backgroundColor: "rgba(239, 68, 68, 0.15)", border: "1px solid #EF4444", color: "#EF4444" } },
+  failed: { label: "Gagal", style: { backgroundColor: "rgba(255,180,171,0.12)", border: "1px solid #ffb4ab", color: "#ffb4ab" } },
 };
 
 
@@ -127,19 +127,19 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         {/* Search */}
         <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4" style={{ color: "#64748B" }} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4" style={{ color: "#3d4a3e" }} />
           <Input
             id="transaction-search"
             placeholder="Cari transaksi\u2026"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 h-9 text-sm"
-            style={{ backgroundColor: "#1E293B", border: "1px solid #334155", color: "#F8FAFC" }}
+            style={{ backgroundColor: "#0e0e0e", border: "1px solid #262626", color: "#e5e2e1" }}
           />
         </div>
       
         {/* Filter Buttons */}
-        <div className="flex items-center gap-1" style={{ backgroundColor: "#1E293B", border: "1px solid #334155", borderRadius: "8px", padding: "4px" }}>
+        <div className="flex items-center gap-1" style={{ backgroundColor: "#0e0e0e", border: "1px solid #262626", borderRadius: "8px", padding: "4px" }}>
           {FILTER_BUTTONS.map((btn) => (
             <Button
               key={btn.value}
@@ -148,11 +148,11 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
               size="sm"
               className="h-7 text-xs font-medium rounded-md transition-all"
               style={typeFilter === btn.value ? {
-                backgroundColor: "#38BDF8",
-                color: "#0F172A",
+                backgroundColor: "#4ade80",
+                color: "#131313",
               } : {
                 backgroundColor: "transparent",
-                color: "#94A3B8",
+                color: "#bccabb",
               }}
               onClick={() => setTypeFilter(btn.value)}
             >
@@ -163,22 +163,22 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
       </div>
 
       {/* Table */}
-      <div style={{ borderRadius: "8px", border: "1px solid #334155", overflow: "hidden" }}>
+      <div style={{ borderRadius: "8px", border: "1px solid #262626", overflow: "hidden" }}>
         <Table>
           <TableHeader>
-            <TableRow style={{ backgroundColor: "#1E293B" }}>
-              <TableHead style={{ fontFamily: "var(--font-inter)", fontSize: "11px", fontWeight: 600, color: "#64748B" }} className="w-32">Tanggal</TableHead>
-              <TableHead style={{ fontFamily: "var(--font-inter)", fontSize: "11px", fontWeight: 600, color: "#64748B" }}>Deskripsi</TableHead>
-              <TableHead style={{ fontFamily: "var(--font-inter)", fontSize: "11px", fontWeight: 600, color: "#64748B" }} className="hidden md:table-cell">Kategori</TableHead>
-              <TableHead style={{ fontFamily: "var(--font-inter)", fontSize: "11px", fontWeight: 600, color: "#64748B" }} className="hidden sm:table-cell">Tipe</TableHead>
-              <TableHead style={{ fontFamily: "var(--font-inter)", fontSize: "11px", fontWeight: 600, color: "#64748B" }} className="hidden lg:table-cell">Status</TableHead>
-              <TableHead style={{ fontFamily: "var(--font-inter)", fontSize: "11px", fontWeight: 600, color: "#64748B" }} className="text-right">Jumlah</TableHead>
+            <TableRow style={{ backgroundColor: "#0e0e0e" }}>
+              <TableHead style={{ fontFamily: "var(--font-inter)", fontSize: "11px", fontWeight: 600, color: "#3d4a3e" }} className="w-32">Tanggal</TableHead>
+              <TableHead style={{ fontFamily: "var(--font-inter)", fontSize: "11px", fontWeight: 600, color: "#3d4a3e" }}>Deskripsi</TableHead>
+              <TableHead style={{ fontFamily: "var(--font-inter)", fontSize: "11px", fontWeight: 600, color: "#3d4a3e" }} className="hidden md:table-cell">Kategori</TableHead>
+              <TableHead style={{ fontFamily: "var(--font-inter)", fontSize: "11px", fontWeight: 600, color: "#3d4a3e" }} className="hidden sm:table-cell">Tipe</TableHead>
+              <TableHead style={{ fontFamily: "var(--font-inter)", fontSize: "11px", fontWeight: 600, color: "#3d4a3e" }} className="hidden lg:table-cell">Status</TableHead>
+              <TableHead style={{ fontFamily: "var(--font-inter)", fontSize: "11px", fontWeight: 600, color: "#3d4a3e" }} className="text-right">Jumlah</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-10 text-sm" style={{ color: "#94A3B8" }}>
+                <TableCell colSpan={6} className="text-center py-10 text-sm" style={{ color: "#bccabb" }}>
                   Tidak ada transaksi yang ditemukan.
                 </TableCell>
               </TableRow>
@@ -194,10 +194,10 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
                     key={tx.id}
                     className="transition-colors cursor-pointer"
                     style={{
-                      backgroundColor: idx % 2 === 0 ? "#0F172A" : "#1E293B",
+                      backgroundColor: idx % 2 === 0 ? "#131313" : "#0e0e0e",
                     }}
                   >
-                    <TableCell style={{ fontFamily: "var(--font-inter)", fontSize: "14px", color: "#94A3B8" }} className="whitespace-nowrap">
+                    <TableCell style={{ fontFamily: "var(--font-inter)", fontSize: "14px", color: "#bccabb" }} className="whitespace-nowrap">
                       {formatDate(tx.date)}
                     </TableCell>
                     <TableCell>
@@ -213,11 +213,11 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
                         >
                           <Icon className="size-3.5" style={tConfig.iconStyle} />
                         </div>
-                        <span style={{ fontFamily: "var(--font-inter)", fontSize: "14px", fontWeight: 400, color: "#F8FAFC" }} className="truncate max-w-[180px]">{tx.description}</span>
+                        <span style={{ fontFamily: "var(--font-inter)", fontSize: "14px", fontWeight: 400, color: "#e5e2e1" }} className="truncate max-w-[180px]">{tx.description}</span>
                       </div>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
-                      <span style={{ fontFamily: "var(--font-inter)", fontSize: "14px", color: "#94A3B8" }}>{typeof tx.category === "string" ? tx.category : tx.category?.name ?? "-"}</span>
+                      <span style={{ fontFamily: "var(--font-inter)", fontSize: "14px", color: "#bccabb" }}>{typeof tx.category === "string" ? tx.category : tx.category?.name ?? "-"}</span>
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">
                       <span
@@ -275,14 +275,14 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
             onClick={loadMore}
             variant="outline"
             size="sm"
-            style={{ border: "1px solid #334155", backgroundColor: "#1E293B", color: "#94A3B8" }}
+            style={{ border: "1px solid #262626", backgroundColor: "#0e0e0e", color: "#bccabb" }}
           >
             Muat Lebih Banyak ({filtered.length - visibleCount} tersisa)
           </Button>
         </div>
       )}
 
-      <p style={{ fontFamily: "var(--font-inter)", fontSize: "12px", color: "#94A3B8" }} className="text-right">
+      <p style={{ fontFamily: "var(--font-inter)", fontSize: "12px", color: "#bccabb" }} className="text-right">
         Menampilkan {Math.min(visibleCount, filtered.length)} dari {transactions.length} transaksi
       </p>
     </div>

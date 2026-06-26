@@ -49,8 +49,8 @@ export function TransactionFilters(props: TransactionFiltersProps) {
       <div
         className="flex flex-wrap items-center gap-3"
         style={{
-          backgroundColor: "#1E293B",
-          border: "1px solid #334155",
+          backgroundColor: "#0e0e0e",
+          border: "1px solid #262626",
           borderRadius: 8,
           padding: "16px 20px",
         }}
@@ -61,7 +61,7 @@ export function TransactionFilters(props: TransactionFiltersProps) {
             value={pendingDate}
             onChange={(e) => onPendingDateChange(e.target.value as DateRangeFilter)}
             className="w-full h-9 px-3 pr-8 rounded text-sm appearance-none cursor-pointer outline-none"
-            style={{ backgroundColor: "#0F172A", border: "1px solid #334155", color: "#F8FAFC", borderRadius: 4, fontSize: 14 }}
+            style={{ backgroundColor: "#131313", border: "1px solid #262626", color: "#e5e2e1", borderRadius: 4, fontSize: 14 }}
           >
             <option value="7d">Last 7 Days</option>
             <option value="30d">Last 30 Days</option>
@@ -71,7 +71,7 @@ export function TransactionFilters(props: TransactionFiltersProps) {
             <option value="all">All Time</option>
             <option value="custom">Custom</option>
           </select>
-          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 pointer-events-none" style={{ color: "#64748B" }} />
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 pointer-events-none" style={{ color: "#3d4a3e" }} />
         </div>
 
         {/* Wallet */}
@@ -80,14 +80,14 @@ export function TransactionFilters(props: TransactionFiltersProps) {
             value={pendingWallet}
             onChange={(e) => onPendingWalletChange(e.target.value)}
             className="w-full h-9 px-3 pr-8 rounded text-sm appearance-none cursor-pointer outline-none"
-            style={{ backgroundColor: "#0F172A", border: "1px solid #334155", color: "#F8FAFC", borderRadius: 4, fontSize: 14 }}
+            style={{ backgroundColor: "#131313", border: "1px solid #262626", color: "#e5e2e1", borderRadius: 4, fontSize: 14 }}
           >
             <option value="all">All Wallets</option>
             {wallets.map((w) => (
               <option key={w.id} value={w.id}>{w.name}</option>
             ))}
           </select>
-          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 pointer-events-none" style={{ color: "#64748B" }} />
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 pointer-events-none" style={{ color: "#3d4a3e" }} />
         </div>
 
         {/* Category */}
@@ -96,14 +96,14 @@ export function TransactionFilters(props: TransactionFiltersProps) {
             value={pendingCategory}
             onChange={(e) => onPendingCategoryChange(e.target.value)}
             className="w-full h-9 px-3 pr-8 rounded text-sm appearance-none cursor-pointer outline-none"
-            style={{ backgroundColor: "#0F172A", border: "1px solid #334155", color: "#F8FAFC", borderRadius: 4, fontSize: 14 }}
+            style={{ backgroundColor: "#131313", border: "1px solid #262626", color: "#e5e2e1", borderRadius: 4, fontSize: 14 }}
           >
             <option value="all">All Categories</option>
             {uniqueCategories.map((cat) => (
               <option key={cat} value={cat}>{cat}</option>
             ))}
           </select>
-          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 pointer-events-none" style={{ color: "#64748B" }} />
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 pointer-events-none" style={{ color: "#3d4a3e" }} />
         </div>
 
         {/* Type */}
@@ -112,21 +112,21 @@ export function TransactionFilters(props: TransactionFiltersProps) {
             value={pendingType}
             onChange={(e) => onPendingTypeChange(e.target.value)}
             className="w-full h-9 px-3 pr-8 rounded text-sm appearance-none cursor-pointer outline-none"
-            style={{ backgroundColor: "#0F172A", border: "1px solid #334155", color: "#F8FAFC", borderRadius: 4, fontSize: 14 }}
+            style={{ backgroundColor: "#131313", border: "1px solid #262626", color: "#e5e2e1", borderRadius: 4, fontSize: 14 }}
           >
             <option value="all">All Types</option>
             <option value="income">Income</option>
             <option value="expense">Expense</option>
             <option value="transfer">Transfer</option>
           </select>
-          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 pointer-events-none" style={{ color: "#64748B" }} />
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 pointer-events-none" style={{ color: "#3d4a3e" }} />
         </div>
 
         {/* Apply Filters */}
         <button
           onClick={onApply}
           className="flex items-center gap-2 h-9 px-4 rounded text-sm font-medium cursor-pointer transition-colors"
-          style={{ backgroundColor: "#334155", color: "#F8FAFC", border: "1px solid #475569", borderRadius: 4, fontSize: 13, fontWeight: 500 }}
+          style={{ backgroundColor: "#2a2a2a", color: "#e5e2e1", border: "1px solid #262626", borderRadius: 4, fontSize: 13, fontWeight: 500 }}
         >
           <Filter className="size-3.5" />
           Apply Filters
@@ -148,15 +148,15 @@ export function TransactionFilters(props: TransactionFiltersProps) {
               value={pendingCustomFrom}
               onChange={(e) => onPendingCustomFromChange(e.target.value)}
               className="h-9 text-sm"
-              style={{ backgroundColor: "#334155", border: "1px solid #334155", color: "#F8FAFC" }}
+              style={{ backgroundColor: "#0a0a0a", border: "1px solid #262626", color: "#e5e2e1" }}
             />
-            <span style={{ color: "#64748B" }}>—</span>
+            <span style={{ color: "#3d4a3e" }}>—</span>
             <Input
               type="date"
               value={pendingCustomTo}
               onChange={(e) => onPendingCustomToChange(e.target.value)}
               className="h-9 text-sm"
-              style={{ backgroundColor: "#334155", border: "1px solid #334155", color: "#F8FAFC" }}
+              style={{ backgroundColor: "#0a0a0a", border: "1px solid #262626", color: "#e5e2e1" }}
             />
           </motion.div>
         )}

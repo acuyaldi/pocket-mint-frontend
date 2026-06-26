@@ -52,9 +52,9 @@ function isDebtWallet(type: string): boolean {
 }
 
 function getUtilizationColor(pct: number): string {
-  if (pct >= 80) return "#EF4444";
-  if (pct >= 30) return "#F59E0B";
-  return "#10B981";
+  if (pct >= 80) return "#ffb4ab";
+  if (pct >= 30) return "#facc15";
+  return "#4ade80";
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -74,8 +74,8 @@ export function WalletCard({ wallet, onEdit }: WalletCardProps) {
       : 0;
   const utilColor = getUtilizationColor(utilization);
 
-  const iconBg = isDebt ? "rgba(239,68,68,0.1)" : "rgba(56,189,248,0.1)";
-  const iconColor = isDebt ? "#EF4444" : "#38BDF8";
+  const iconBg = isDebt ? "rgba(255,180,171,0.1)" : "rgba(74,222,128,0.1)";
+  const iconColor = isDebt ? "#ffb4ab" : "#4ade80";
 
   // ── Kebab menu state ──
   const [showMenu, setShowMenu] = useState(false);
@@ -119,8 +119,8 @@ export function WalletCard({ wallet, onEdit }: WalletCardProps) {
   return (
     <div
       style={{
-        background: "#1E293B",
-        border: "1px solid #334155",
+        background: "#0e0e0e",
+        border: "1px solid #262626",
         borderRadius: "8px",
         padding: "16px",
         position: "relative",
@@ -129,32 +129,32 @@ export function WalletCard({ wallet, onEdit }: WalletCardProps) {
       {/* ── Top row: icon + name + kebab ── */}
       <div className="flex items-center gap-2" style={{ marginBottom: "12px" }}>
         <div
-className="flex items-center justify-center shrink-0"
+          className="flex items-center justify-center shrink-0"
           style={{
             width: "32px",
             height: "32px",
             borderRadius: "8px",
             backgroundColor: iconBg,
-            border: "1px solid #334155",
+            border: "1px solid #262626",
           }}
         >
           <Icon className="size-4" style={{ color: iconColor }} />
         </div>
         <span
           style={{
-            fontFamily: "var(--font-inter)",
+            fontFamily: "var(--font-sans)",
             fontSize: "14px",
             fontWeight: 500,
-            color: "#F8FAFC",
+            color: "#e5e2e1",
           }}
         >
           {wallet.name}
         </span>
         <span
           style={{
-            fontFamily: "var(--font-inter)",
+            fontFamily: "var(--font-sans)",
             fontSize: "12px",
-            color: "#94A3B8",
+            color: "#bccabb",
             marginLeft: "auto",
           }}
         >
@@ -170,18 +170,18 @@ className="flex items-center justify-center shrink-0"
               width: "28px",
               height: "28px",
               borderRadius: "6px",
-              color: "#64748B",
+              color: "#bccabb",
               backgroundColor: "transparent",
               border: "none",
               cursor: "pointer",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#334155";
-              e.currentTarget.style.color = "#F8FAFC";
+              e.currentTarget.style.backgroundColor = "#2a2a2a";
+              e.currentTarget.style.color = "#e5e2e1";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = "transparent";
-              e.currentTarget.style.color = "#64748B";
+              e.currentTarget.style.color = "#bccabb";
             }}
           >
             <MoreVertical className="size-4" />
@@ -195,8 +195,8 @@ className="flex items-center justify-center shrink-0"
                 top: "32px",
                 right: "0",
                 width: "130px",
-                backgroundColor: "#334155",
-                border: "1px solid #475569",
+                backgroundColor: "#0e0e0e",
+                border: "1px solid #262626",
                 borderRadius: "8px",
                 zIndex: 50,
                 overflow: "hidden",
@@ -211,13 +211,13 @@ className="flex items-center justify-center shrink-0"
                 style={{
                   padding: "9px 14px",
                   fontSize: "13px",
-                  color: "#F8FAFC",
+                  color: "#e5e2e1",
                   backgroundColor: "transparent",
                   border: "none",
                   cursor: "pointer",
-                  fontFamily: "var(--font-inter)",
+                  fontFamily: "var(--font-sans)",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#475569")}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2a2a2a")}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
               >
                 <Pencil className="size-3.5" />
@@ -232,13 +232,13 @@ className="flex items-center justify-center shrink-0"
                 style={{
                   padding: "9px 14px",
                   fontSize: "13px",
-                  color: "#EF4444",
+                  color: "#ffb4ab",
                   backgroundColor: "transparent",
                   border: "none",
                   cursor: "pointer",
-                  fontFamily: "var(--font-inter)",
+                  fontFamily: "var(--font-sans)",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#475569")}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2a2a2a")}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
               >
                 <Trash2 className="size-3.5" />
@@ -257,9 +257,9 @@ className="flex items-center justify-center shrink-0"
             style={{
               fontSize: "11px",
               fontWeight: 600,
-              color: "#64748B",
+              color: "#bccabb",
               letterSpacing: "0.05em",
-              fontFamily: "var(--font-inter)",
+              fontFamily: "var(--font-sans)",
               marginBottom: "4px",
             }}
           >
@@ -267,10 +267,10 @@ className="flex items-center justify-center shrink-0"
           </p>
           <p
             style={{
-              fontFamily: "var(--font-hanken)",
+              fontFamily: "var(--font-heading)",
               fontSize: "20px",
               fontWeight: 600,
-              color: "#F8FAFC",
+              color: "#e5e2e1",
             }}
           >
             {formatCurrency(wallet.balance)}
@@ -291,9 +291,9 @@ className="flex items-center justify-center shrink-0"
               style={{
                 fontSize: "11px",
                 fontWeight: 600,
-                color: "#64748B",
+                color: "#bccabb",
                 letterSpacing: "0.05em",
-                fontFamily: "var(--font-inter)",
+                fontFamily: "var(--font-sans)",
               }}
             >
               Outstanding
@@ -303,9 +303,9 @@ className="flex items-center justify-center shrink-0"
               style={{
                 fontSize: "11px",
                 fontWeight: 600,
-                color: "#64748B",
+                color: "#bccabb",
                 letterSpacing: "0.05em",
-                fontFamily: "var(--font-inter)",
+                fontFamily: "var(--font-sans)",
               }}
             >
               Remaining
@@ -319,20 +319,20 @@ className="flex items-center justify-center shrink-0"
           >
             <span
               style={{
-                fontFamily: "var(--font-hanken)",
+                fontFamily: "var(--font-heading)",
                 fontSize: "20px",
                 fontWeight: 600,
-                color: "#EF4444",
+                color: "#ffb4ab",
               }}
             >
               {formatCurrency(outstanding)}
             </span>
             <span
               style={{
-                fontFamily: "var(--font-hanken)",
+                fontFamily: "var(--font-heading)",
                 fontSize: "20px",
                 fontWeight: 600,
-                color: "#F8FAFC",
+                color: "#e5e2e1",
               }}
             >
               {formatCurrency(remaining)}
@@ -343,7 +343,7 @@ className="flex items-center justify-center shrink-0"
           <div
             style={{
               height: "4px",
-              backgroundColor: "#334155",
+              backgroundColor: "#262626",
               borderRadius: "9999px",
               overflow: "hidden",
             }}
@@ -364,16 +364,16 @@ className="flex items-center justify-center shrink-0"
           >
             <span
               style={{
-                fontFamily: "var(--font-inter)",
+                fontFamily: "var(--font-sans)",
                 fontSize: "12px",
-                color: "#94A3B8",
+                color: "#bccabb",
               }}
             >
               Utilization
             </span>
             <span
               style={{
-                fontFamily: "var(--font-inter)",
+                fontFamily: "var(--font-mono)",
                 fontSize: "12px",
                 fontWeight: 600,
                 color: utilColor,
@@ -387,7 +387,7 @@ className="flex items-center justify-center shrink-0"
 
       {/* ── Sparkline (asset wallets only, both variants) ── */}
       {!isDebt && (
-        <div style={{ marginTop: "14px", borderTop: "1px solid #334155", paddingTop: "14px", marginLeft: "-16px", marginRight: "-16px", marginBottom: "-16px" }}>
+        <div style={{ marginTop: "14px", borderTop: "1px solid #262626", paddingTop: "14px", marginLeft: "-16px", marginRight: "-16px", marginBottom: "-16px" }}>
           <WalletSparkline walletId={wallet.id} isDebt={false} />
         </div>
       )}
@@ -409,8 +409,8 @@ className="flex items-center justify-center shrink-0"
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              backgroundColor: "#1E293B",
-              border: "1px solid #334155",
+              backgroundColor: "#0e0e0e",
+              border: "1px solid #262626",
               borderRadius: "8px",
               padding: "20px",
               maxWidth: "360px",
@@ -422,8 +422,8 @@ className="flex items-center justify-center shrink-0"
               style={{
                 fontSize: "15px",
                 fontWeight: 600,
-                color: "#F8FAFC",
-                fontFamily: "var(--font-hanken)",
+                color: "#e5e2e1",
+                fontFamily: "var(--font-heading)",
                 marginBottom: "8px",
               }}
             >
@@ -432,9 +432,9 @@ className="flex items-center justify-center shrink-0"
             <p
               style={{
                 fontSize: "13px",
-                color: "#94A3B8",
+                color: "#bccabb",
                 lineHeight: 1.5,
-                fontFamily: "var(--font-inter)",
+                fontFamily: "var(--font-sans)",
                 marginBottom: "20px",
               }}
             >
@@ -444,13 +444,13 @@ className="flex items-center justify-center shrink-0"
               <button
                 onClick={() => { if (!isDeleting) setShowDeleteModal(false); }}
                 style={{
-                  border: "1px solid #334155",
-                  color: "#94A3B8",
+                  border: "1px solid #262626",
+                  color: "#bccabb",
                   backgroundColor: "transparent",
                   padding: "7px 14px",
                   borderRadius: "4px",
                   fontSize: "13px",
-                  fontFamily: "var(--font-inter)",
+                  fontFamily: "var(--font-sans)",
                   cursor: "pointer",
                 }}
               >
@@ -460,13 +460,13 @@ className="flex items-center justify-center shrink-0"
                 onClick={handleDeleteConfirm}
                 disabled={isDeleting}
                 style={{
-                  backgroundColor: "#EF4444",
-                  color: "white",
+                  backgroundColor: "#ffb4ab",
+                  color: "#690005",
                   fontWeight: 500,
                   padding: "7px 14px",
                   borderRadius: "4px",
                   fontSize: "13px",
-                  fontFamily: "var(--font-inter)",
+                  fontFamily: "var(--font-sans)",
                   border: "none",
                   cursor: isDeleting ? "not-allowed" : "pointer",
                   opacity: isDeleting ? 0.7 : 1,

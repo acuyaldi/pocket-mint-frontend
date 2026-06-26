@@ -68,7 +68,7 @@ export function DashboardHeader({
     : "U";
 
   return (
-    <header className="backdrop-blur-lg sticky top-0 z-50" style={{ backgroundColor: "rgba(15,23,42,0.8)", borderBottom: "1px solid #334155" }}>
+    <header className="backdrop-blur-lg sticky top-0 z-50" style={{ backgroundColor: "rgba(19,19,19,0.8)", borderBottom: "1px solid #262626" }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Brand */}
@@ -81,7 +81,7 @@ export function DashboardHeader({
             <PocketMintLogo  />
             <div>
               
-              <p className="text-[10px] leading-none hidden sm:block" style={{ color: "#64748B", fontFamily: "var(--font-inter)" }}>
+              <p className="text-[10px] leading-none hidden sm:block" style={{ color: "#bccabb", fontFamily: "var(--font-sans)" }}>
                 {currentTime}
               </p>
             </div>
@@ -99,7 +99,7 @@ export function DashboardHeader({
               variant="ghost"
               size="icon"
               className="relative size-9 transition-all duration-200"
-              style={{ color: "#94A3B8" }}
+              style={{ color: "#bccabb" }}
               aria-label="Notifikasi"
             >
               <Bell className="size-4.5" />
@@ -109,7 +109,7 @@ export function DashboardHeader({
             <Separator
               orientation="vertical"
               className="h-6"
-              style={{ backgroundColor: "#334155" }}
+              style={{ backgroundColor: "#262626" }}
             />
 
             {/* User Dropdown */}
@@ -118,17 +118,17 @@ export function DashboardHeader({
                 onClick={() => setIsOpen((prev) => !prev)}
                 className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-all duration-200 focus:outline-none cursor-pointer"
               >
-                <span className="hidden sm:block text-xs font-medium" style={{ color: "#94A3B8", fontFamily: "var(--font-inter)" }}>
+                <span className="hidden sm:block text-xs font-medium" style={{ color: "#bccabb", fontFamily: "var(--font-sans)" }}>
                   {userName || "User"}
                 </span>
-                <div className="size-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: "#38BDF8", color: "#0F172A", boxShadow: "0 4px 14px rgba(56,189,248,0.3)" }}>
+                <div className="size-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: "rgba(74,222,128,0.15)", color: "#4ade80" }}>
                   {initials}
                 </div>
                 <ChevronDown
                   className={`size-3.5 transition-transform duration-200 hidden sm:block ${
                     isOpen ? "rotate-180" : ""
                   }`}
-                  style={{ color: "#94A3B8" }}
+                  style={{ color: "#bccabb" }}
                 />
               </button>
 
@@ -140,22 +140,22 @@ export function DashboardHeader({
                     exit={{ opacity: 0, y: 8, scale: 0.95 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
                     className="absolute right-0 mt-2 w-64 rounded-xl shadow-2xl overflow-hidden z-50"
-                    style={{ backgroundColor: "#1E293B", border: "1px solid #334155" }}
+                    style={{ backgroundColor: "#0e0e0e", border: "1px solid #262626" }}
                   >
                     {/* User Info */}
                     <div className="px-4 py-3">
-                      <p className="text-sm font-semibold" style={{ color: "#F8FAFC", fontFamily: "var(--font-hanken)" }}>
+                      <p className="text-sm font-semibold" style={{ color: "#e5e2e1", fontFamily: "var(--font-heading)" }}>
                         {userName || "User"}
                       </p>
                       <div className="flex items-center gap-1.5 mt-1">
-                        <Mail className="size-3" style={{ color: "#64748B" }} />
-                        <p className="text-xs truncate" style={{ color: "#64748B", fontFamily: "var(--font-inter)" }}>
+                        <Mail className="size-3" style={{ color: "#bccabb" }} />
+                        <p className="text-xs truncate" style={{ color: "#bccabb", fontFamily: "var(--font-sans)" }}>
                           {userEmail}
                         </p>
                       </div>
                     </div>
 
-                    <Separator style={{ backgroundColor: "#334155" }} />
+                    <Separator style={{ backgroundColor: "#262626" }} />
 
                     {/* Logout Button */}
                     <div className="p-1.5">
@@ -163,7 +163,7 @@ export function DashboardHeader({
                         onClick={handleLogout}
                         disabled={loggingOut}
                         className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors duration-200 disabled:opacity-50 cursor-pointer"
-                        style={{ color: "#EF4444" }}
+                        style={{ color: "#ffb4ab" }}
                       >
                         {loggingOut ? (
                           <Loader2 className="size-4 animate-spin" />

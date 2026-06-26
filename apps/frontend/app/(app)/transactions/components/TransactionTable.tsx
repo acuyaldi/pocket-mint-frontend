@@ -22,7 +22,7 @@ function renderTableSkeleton() {
   return (
     <div className="space-y-2">
       {[...Array(8)].map((_, i) => (
-        <div key={i} className="h-12 rounded-lg animate-pulse" style={{ backgroundColor: "#334155" }} />
+        <div key={i} className="h-12 rounded-lg animate-pulse" style={{ backgroundColor: "#2a2a2a" }} />
       ))}
     </div>
   );
@@ -42,19 +42,19 @@ export function TransactionTable({
   return (
     <motion.section variants={fadeUp} aria-label="Transaction table">
       {/* Search bar above table */}
-      <div style={{ padding: "12px 16px", borderBottom: "1px solid #334155", backgroundColor: "#1E293B", borderRadius: "8px 8px 0 0" }}>
+      <div style={{ padding: "12px 16px", borderBottom: "1px solid #262626", backgroundColor: "#0e0e0e", borderRadius: "8px 8px 0 0" }}>
         <div className="relative" style={{ width: 320 }}>
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4" style={{ color: "#64748B" }} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4" style={{ color: "#3d4a3e" }} />
           <input
             placeholder="Search transactions..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             className="h-9 w-full rounded text-sm outline-none"
             style={{
-              backgroundColor: "#0F172A",
-              border: "1px solid #334155",
+              backgroundColor: "#131313",
+              border: "1px solid #262626",
               padding: "8px 16px 8px 36px",
-              color: "#94A3B8",
+              color: "#bccabb",
               fontSize: 14,
               borderRadius: 4,
             }}
@@ -63,8 +63,8 @@ export function TransactionTable({
       </div>
       <div
         style={{
-          backgroundColor: "#1E293B",
-          border: "1px solid #334155",
+          backgroundColor: "#0e0e0e",
+          border: "1px solid #262626",
           borderTop: "none",
           borderRadius: "0 0 8px 8px",
           overflow: "hidden",
@@ -78,12 +78,12 @@ export function TransactionTable({
             <div
               className="flex items-center"
               style={{
-                backgroundColor: "#0F172A",
-                borderBottom: "1px solid #334155",
+                backgroundColor: "#131313",
+                borderBottom: "1px solid #262626",
                 padding: "12px 20px",
                 fontSize: 11,
                 fontWeight: 600,
-                color: "#64748B",
+                color: "#3d4a3e",
                 letterSpacing: "0.05em",
                 textTransform: "uppercase",
               }}
@@ -97,7 +97,7 @@ export function TransactionTable({
 
             {/* Table Rows */}
             {filteredTransactions.length === 0 ? (
-              <div className="py-14 text-center text-sm" style={{ color: "#94A3B8" }}>
+              <div className="py-14 text-center text-sm" style={{ color: "#bccabb" }}>
                 No transactions found.
               </div>
             ) : (
@@ -112,10 +112,10 @@ export function TransactionTable({
                     className="flex items-center cursor-pointer transition-colors"
                     style={{
                       padding: "14px 20px",
-                      borderBottom: "1px solid #1E293B",
+                      borderBottom: "1px solid #1a1a1a",
                     }}
                     onClick={() => onRowClick(tx)}
-                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#243044"; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#2a2a2a"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                   >
                     {/* Transaction cell */}
@@ -126,19 +126,19 @@ export function TransactionTable({
                           width: 36,
                           height: 36,
                           borderRadius: 8,
-                          backgroundColor: "#0F172A",
-                          border: "1px solid #334155",
+                          backgroundColor: "#131313",
+                          border: "1px solid #262626",
                           flexShrink: 0,
                         }}
                       >
-                        <Icon className="size-4.5" style={{ color: "#64748B" }} />
+                        <Icon className="size-4.5" style={{ color: "#3d4a3e" }} />
                       </div>
                       <div className="min-w-0">
-                        <div className="truncate" style={{ fontSize: 14, fontWeight: 500, color: "#F8FAFC" }}>
+                        <div className="truncate" style={{ fontSize: 14, fontWeight: 500, color: "#e5e2e1" }}>
                           {tx.description ?? "Untitled"}
                         </div>
                         {tx.note && (
-                          <div className="truncate" style={{ fontSize: 12, color: "#94A3B8", marginTop: 1 }}>
+                          <div className="truncate" style={{ fontSize: 12, color: "#bccabb", marginTop: 1 }}>
                             {tx.note}
                           </div>
                         )}
@@ -162,12 +162,12 @@ export function TransactionTable({
                     </div>
 
                     {/* Date */}
-                    <div style={{ width: 140, fontSize: 14, color: "#94A3B8" }}>
+                    <div style={{ width: 140, fontSize: 14, color: "#bccabb" }}>
                       {formatDate(tx.date)}
                     </div>
 
                     {/* Wallet */}
-                    <div style={{ width: 160, fontSize: 14, color: "#94A3B8" }}>
+                    <div style={{ width: 160, fontSize: 14, color: "#bccabb" }}>
                       {tx.wallet ? tx.wallet.name : "—"}
                     </div>
 
@@ -177,8 +177,8 @@ export function TransactionTable({
                         <span
                           className="inline-block"
                           style={{
-                            backgroundColor: "#334155",
-                            color: "#F8FAFC",
+                            backgroundColor: "#2a2a2a",
+                            color: "#e5e2e1",
                             borderRadius: 9999,
                             fontSize: 12,
                             fontWeight: 500,
@@ -188,7 +188,7 @@ export function TransactionTable({
                           {tx.category.name}
                         </span>
                       ) : (
-                        <span style={{ color: "#64748B", fontSize: 14 }}>—</span>
+                        <span style={{ color: "#3d4a3e", fontSize: 14 }}>—</span>
                       )}
                     </div>
 
@@ -207,8 +207,8 @@ export function TransactionTable({
               style={{
                 padding: "12px 20px",
                 fontSize: 13,
-                color: "#64748B",
-                borderTop: "1px solid #334155",
+                color: "#3d4a3e",
+                borderTop: "1px solid #262626",
               }}
             >
               <span>
@@ -222,15 +222,15 @@ export function TransactionTable({
                   style={{
                     width: 32,
                     height: 32,
-                    backgroundColor: "#1E293B",
-                    border: "1px solid #334155",
+                    backgroundColor: "#0e0e0e",
+                    border: "1px solid #262626",
                     borderRadius: 4,
                     opacity: currentPage === 1 ? 0.4 : 1,
                   }}
                 >
-                  <ChevronLeft className="size-4" style={{ color: "#94A3B8" }} />
+                  <ChevronLeft className="size-4" style={{ color: "#bccabb" }} />
                 </button>
-                <span className="tabular-nums" style={{ fontSize: 13, color: "#94A3B8" }}>
+                <span className="tabular-nums" style={{ fontSize: 13, color: "#bccabb" }}>
                   {currentPage} / {totalPages}
                 </span>
                 <button
@@ -240,13 +240,13 @@ export function TransactionTable({
                   style={{
                     width: 32,
                     height: 32,
-                    backgroundColor: "#1E293B",
-                    border: "1px solid #334155",
+                    backgroundColor: "#0e0e0e",
+                    border: "1px solid #262626",
                     borderRadius: 4,
                     opacity: currentPage === totalPages ? 0.4 : 1,
                   }}
                 >
-                  <ChevronRight className="size-4" style={{ color: "#94A3B8" }} />
+                  <ChevronRight className="size-4" style={{ color: "#bccabb" }} />
                 </button>
               </div>
             </div>

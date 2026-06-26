@@ -1,53 +1,53 @@
 ---
-name: Midnight Executive
+name: Pro-Fintech Dark
 colors:
-  surface: '#0b1326'
-  surface-dim: '#0b1326'
-  surface-bright: '#31394d'
-  surface-container-lowest: '#060e20'
-  surface-container-low: '#131b2e'
-  surface-container: '#171f33'
-  surface-container-high: '#222a3d'
-  surface-container-highest: '#2d3449'
-  on-surface: '#dae2fd'
-  on-surface-variant: '#c5c6cd'
-  inverse-surface: '#dae2fd'
-  inverse-on-surface: '#283044'
-  outline: '#8f9097'
-  outline-variant: '#45474c'
-  surface-tint: '#bcc7de'
-  primary: '#bcc7de'
-  on-primary: '#263143'
-  primary-container: '#1e293b'
-  on-primary-container: '#8590a6'
-  inverse-primary: '#545f73'
-  secondary: '#7bd0ff'
-  on-secondary: '#00354a'
-  secondary-container: '#00a6e0'
-  on-secondary-container: '#00374d'
-  tertiary: '#b9c8de'
-  on-tertiary: '#233143'
-  tertiary-container: '#1b2a3b'
-  on-tertiary-container: '#8291a6'
+  surface: '#131313'
+  surface-dim: '#131313'
+  surface-bright: '#3a3939'
+  surface-container-lowest: '#0e0e0e'
+  surface-container-low: '#1c1b1b'
+  surface-container: '#201f1f'
+  surface-container-high: '#2a2a2a'
+  surface-container-highest: '#353534'
+  on-surface: '#e5e2e1'
+  on-surface-variant: '#bccabb'
+  inverse-surface: '#e5e2e1'
+  inverse-on-surface: '#313030'
+  outline: '#869486'
+  outline-variant: '#3d4a3e'
+  surface-tint: '#4de082'
+  primary: '#6bfb9a'
+  on-primary: '#003919'
+  primary-container: '#4ade80'
+  on-primary-container: '#005e2d'
+  inverse-primary: '#006d36'
+  secondary: '#bcc7de'
+  on-secondary: '#263143'
+  secondary-container: '#3e495d'
+  on-secondary-container: '#aeb9d0'
+  tertiary: '#ffd9c1'
+  on-tertiary: '#4f2500'
+  tertiary-container: '#ffb47f'
+  on-tertiary-container: '#794418'
   error: '#ffb4ab'
   on-error: '#690005'
   error-container: '#93000a'
   on-error-container: '#ffdad6'
-  primary-fixed: '#d8e3fb'
-  primary-fixed-dim: '#bcc7de'
-  on-primary-fixed: '#111c2d'
-  on-primary-fixed-variant: '#3c475a'
-  secondary-fixed: '#c4e7ff'
-  secondary-fixed-dim: '#7bd0ff'
-  on-secondary-fixed: '#001e2c'
-  on-secondary-fixed-variant: '#004c69'
-  tertiary-fixed: '#d4e4fa'
-  tertiary-fixed-dim: '#b9c8de'
-  on-tertiary-fixed: '#0d1c2d'
-  on-tertiary-fixed-variant: '#39485a'
-  background: '#0b1326'
-  on-background: '#dae2fd'
-  surface-variant: '#2d3449'
+  primary-fixed: '#6dfe9c'
+  primary-fixed-dim: '#4de082'
+  on-primary-fixed: '#00210c'
+  on-primary-fixed-variant: '#005227'
+  secondary-fixed: '#d8e3fb'
+  secondary-fixed-dim: '#bcc7de'
+  on-secondary-fixed: '#111c2d'
+  on-secondary-fixed-variant: '#3c475a'
+  tertiary-fixed: '#ffdcc6'
+  tertiary-fixed-dim: '#ffb784'
+  on-tertiary-fixed: '#301400'
+  on-tertiary-fixed-variant: '#6c3a0f'
+  background: '#131313'
+  on-background: '#e5e2e1'
+  surface-variant: '#353534'
 typography:
   display-lg:
     fontFamily: Hanken Grotesk
@@ -60,37 +60,30 @@ typography:
     fontSize: 32px
     fontWeight: '600'
     lineHeight: 40px
-    letterSpacing: -0.01em
   headline-lg-mobile:
     fontFamily: Hanken Grotesk
-    fontSize: 28px
+    fontSize: 24px
     fontWeight: '600'
-    lineHeight: 36px
+    lineHeight: 32px
   title-md:
     fontFamily: Hanken Grotesk
     fontSize: 20px
-    fontWeight: '600'
+    fontWeight: '500'
     lineHeight: 28px
   body-lg:
-    fontFamily: Inter
-    fontSize: 18px
-    fontWeight: '400'
-    lineHeight: 28px
-  body-md:
     fontFamily: Inter
     fontSize: 16px
     fontWeight: '400'
     lineHeight: 24px
-  label-md:
+  body-sm:
     fontFamily: Inter
     fontSize: 14px
-    fontWeight: '500'
+    fontWeight: '400'
     lineHeight: 20px
-    letterSpacing: 0.01em
-  label-sm:
-    fontFamily: Inter
+  label-mono:
+    fontFamily: JetBrains Mono
     fontSize: 12px
-    fontWeight: '600'
+    fontWeight: '500'
     lineHeight: 16px
     letterSpacing: 0.05em
 rounded:
@@ -107,65 +100,58 @@ spacing:
   md: 16px
   lg: 24px
   xl: 40px
+  container-max: 1280px
   gutter: 20px
-  margin-mobile: 16px
-  margin-desktop: 64px
 ---
 
 ## Brand & Style
+The design system is engineered for high-stakes financial environments, prioritizing clarity, precision, and a premium "pro" aesthetic. It utilizes a **High-Contrast Modern** style, leaning into the sophistication of deep blacks and the energy of vibrant mint accents. 
 
-This design system is engineered for a high-stakes fintech environment where trust and precision are paramount. The aesthetic is rooted in **Modern Corporate** minimalism with a distinct **Dark Mode** first approach. It leverages deep indigo and navy foundations to evoke the stability of traditional banking, while utilizing electric accents to signal technological speed and innovation.
-
-The UI should feel expansive and calm, using generous negative space to reduce cognitive load during complex financial tasks. Visual interest is generated through subtle tonal shifts and sharp typography rather than decorative elements. The goal is an interface that feels like a premium, private wealth management tool—quiet, efficient, and authoritative.
+The brand personality is authoritative yet forward-thinking. It evokes a sense of security and technological edge through sharp execution and controlled use of color. The interface focuses on "data-density without clutter," using depth and contrast rather than excessive decoration to guide the user's eye.
 
 ## Colors
+The palette is rooted in a "Deep Black" (#000000) foundation to maximize OLED efficiency and provide the highest possible contrast for data visualization. 
 
-The palette is anchored by "Midnight Navy," a deep, desaturated blue that serves as the primary canvas. 
-
-- **Primary Canvas:** Use `#0F172A` for global backgrounds and `#1E293B` for primary surfaces and containers.
-- **Action Accent:** `#38BDF8` (Electric Cyan) is reserved strictly for primary calls-to-action, active states, and critical data points.
-- **Data & Typography:** Use a scale of cool greys derived from the navy base. Primary text should be high-contrast white (`#F8FAFC`), while secondary metadata uses `#94A3B8`.
-- **Semantic Colors:** Success states should use a forest green (`#10B981`), and error states a crisp crimson (`#EF4444`), both adjusted for high legibility against dark backgrounds.
+- **Primary:** "Pocket Mint" (#4ade80) is reserved for growth, success, primary actions, and brand identification.
+- **Surface Strategy:** We use a tiered gray system (Slate and Charcoal) to create a sense of physical layering. Higher elevation components use lighter shades of dark gray to "lift" off the pure black background.
+- **Functional Colors:** Red is used sparingly for risk/loss, while the Mint remains the hero color for all positive interactions.
 
 ## Typography
+The typography system balances the precision of developer-centric tools with the approachability of a modern fintech app.
 
-The system utilizes a dual-font approach to balance character with utility. **Hanken Grotesk** is used for headlines and currency displays to provide a clean, contemporary edge with its sharp terminals. **Inter** is used for all functional body text and UI labels due to its exceptional legibility at small sizes and high x-height.
-
-Numeric data (account balances, stock prices) should prioritize tabular lining figures to ensure vertical alignment in lists. Large displays should use slight negative letter-spacing to maintain a "tight" professional appearance.
+- **Headlines:** Uses **Hanken Grotesk** for a sharp, contemporary look that feels professional and technical.
+- **Body:** **Inter** provides maximum legibility for financial statements and dense data tables.
+- **Data Labels:** **JetBrains Mono** is utilized for transaction IDs, numerical data, and timestamps to emphasize the "pro-fintech" technical nature of the platform.
 
 ## Layout & Spacing
+The design system employs a **12-column fluid grid** for desktop and a **4-column grid** for mobile. 
 
-The layout operates on a strict **8px grid system**. 
-
-- **Desktop:** A 12-column fluid grid with 64px side margins. Content should be grouped in cards that span 3, 4, or 6 columns.
-- **Mobile:** A 4-column grid with 16px side margins.
-- **Spacing Logic:** Use `md` (16px) for internal component padding and `lg` (24px) for spacing between distinct sections or cards. 
-
-Information density should be kept moderate. Avoid "cramming" data; use the `xl` (40px) vertical spacing to separate high-level summary modules from granular transaction lists.
+A strict **4px baseline grid** governs all vertical rhythm. Large margins (24px+) are used on the edges of the screen to create a "contained" feel that mirrors premium terminal software. Data-dense areas (like portfolios or watchlists) should use the `sm` (8px) and `md` (16px) tokens to keep information compact but readable.
 
 ## Elevation & Depth
+In this high-contrast dark mode, depth is communicated through **Tonal Layering** rather than traditional shadows.
 
-Depth in this dark-themed system is communicated through **Tonal Layering** rather than traditional shadows. Shadows are difficult to perceive on near-black backgrounds, so we elevate elements by lightening their fill color.
+1.  **Level 0 (Floor):** Pure Black (#000000) for the main application background.
+2.  **Level 1 (Cards):** Deep Charcoal (#0a0a0a) with a subtle 1px border (#262626).
+3.  **Level 2 (Modals/Popovers):** Slate Gray (#111111) with a sharper, more visible border.
 
-- **Level 0 (Background):** `#0F172A` - The lowest floor.
-- **Level 1 (Cards/Surface):** `#1E293B` - Standard containers for content.
-- **Level 2 (Dropdowns/Modals):** `#334155` - Floating elements that require immediate attention.
-
-To define boundaries without adding visual noise, use a **Low-Contrast Outline**. Apply a 1px border of `#334155` to all Level 1 cards. For active or focused states, transition the border color to the Primary Accent (`#38BDF8`) with a subtle outer glow (0px 0px 8px).
+Shadows are used only on Level 2 and 3 components, appearing as a subtle, large-radius "glow" of deep black to create a silhouette against lower layers, never as a light-source shadow.
 
 ## Shapes
-
-The shape language is disciplined and geometric, utilizing a **Soft (0.25rem)** base. This subtle rounding removes the harshness of a purely "brutalist" sharp corner while maintaining a serious, institutional feel.
+This design system uses a **Soft (0.25rem)** roundedness profile. This specific radius strikes a balance between the aggressive "sharpness" of institutional trading platforms and the friendliness of consumer fintech. 
 
 - **Buttons & Inputs:** Use the base 4px (0.25rem) radius.
-- **Content Cards:** Use `rounded-lg` (8px / 0.5rem) to differentiate large structural containers from smaller components.
-- **Status Pills:** Use a full "Pill" radius for status indicators (e.g., "Completed," "Pending") to distinguish them from interactive buttons.
+- **Cards & Containers:** Use the `rounded-lg` 8px (0.5rem) radius for a more structural appearance.
+- **Status Pills:** Use a full pill-shape for high-contrast distinction from interactive buttons.
 
 ## Components
 
-- **Buttons:** Primary buttons use a solid `#38BDF8` fill with dark navy text. Secondary buttons use an outlined style with the accent color. Ghost buttons for low-priority actions use the tertiary text color.
-- **Input Fields:** Backgrounds should be a shade darker than the card they sit on. Use a 1px border (`#334155`). On focus, the border shifts to the primary accent.
-- **Cards:** Use Level 1 surfacing (`#1E293B`) with an 8px corner radius. No shadow; use a subtle 1px border for definition.
-- **Chips/Badges:** Small, high-radius elements used for categories. Use a low-opacity version of the accent color (e.g., `#38BDF8` at 15% opacity) as the background to keep them subtle.
-- **Lists:** Transaction lists should use "Inter" for all text. The amount should be bolded. Use thin dividers (`#334155`) with 16px of vertical padding between items.
-- **Data Visualizations:** Charts and graphs must use the accent blue as the primary data line. Use a gradient area fill below lines that fades from the accent color to transparent.
+- **Buttons:** 
+  - *Primary:* Solid Mint background with Black text for maximum impact. 
+  - *Secondary:* Ghost style with a Mint border and Mint text.
+  - *Tertiary:* All-white text on a transparent background for low-priority actions.
+- **Input Fields:** Dark background (#0a0a0a) with a subtle border. On focus, the border transitions to Mint with a subtle outer glow.
+- **Cards:** Used to group financial data. They should never have a background lighter than #111111 to maintain the dark-mode aesthetic.
+- **Chips/Badges:** For status updates (e.g., "Market Open"). These use a low-opacity Mint background with high-opacity Mint text.
+- **Lists:** Transaction lists should use thin, #1a1a1a dividers. Hover states for list items should use a subtle highlight of #111111.
+- **Data Visualization:** Line charts and bars should use the Primary Mint for positive trends and a muted "Rose" or "Coral" for negative trends, ensuring they pop against the deep black background.

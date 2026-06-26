@@ -21,24 +21,24 @@ function getTxConfig(type: string) {
   const t = type.toLowerCase();
   if (t === "income") {
     return {
-      iconBg: "rgba(16, 185, 129, 0.1)",
-      iconColor: "#10B981",
-      amountColor: "#10B981",
+      iconBg: "rgba(74, 222, 128, 0.1)",
+      iconColor: "#4ade80",
+      amountColor: "#4ade80",
       prefix: "+",
     };
   }
   if (t === "expense") {
     return {
-      iconBg: "rgba(239, 68, 68, 0.1)",
-      iconColor: "#EF4444",
-      amountColor: "#EF4444",
+      iconBg: "rgba(255, 180, 171, 0.1)",
+      iconColor: "#ffb4ab",
+      amountColor: "#ffb4ab",
       prefix: "-",
     };
   }
   return {
-    iconBg: "rgba(56, 189, 248, 0.1)",
-    iconColor: "#38BDF8",
-    amountColor: "#38BDF8",
+    iconBg: "rgba(74, 222, 128, 0.1)",
+    iconColor: "#4ade80",
+    amountColor: "#4ade80",
     prefix: "",
   };
 }
@@ -53,7 +53,7 @@ export function RecentTransactionsCard({
 
   return (
     <div
-      style={{ backgroundColor: "#1E293B", border: "1px solid #334155", borderRadius: "8px", padding: "16px" }}
+      style={{ backgroundColor: "#0e0e0e", border: "1px solid #262626", borderRadius: "8px", padding: "16px 20px" }}
     >
       {/* Header */}
       <div className="flex items-center justify-between" style={{ marginBottom: "12px" }}>
@@ -61,16 +61,16 @@ export function RecentTransactionsCard({
           className="uppercase font-semibold"
           style={{
             fontFamily: "var(--font-inter)",
-            fontSize: "11px",
+            fontSize: "10px",
             fontWeight: 600,
-            color: "#64748B",
-            letterSpacing: "0.05em",
+            color: "#bccabb",
+            letterSpacing: "0.08em",
           }}
         >
           Transaksi Terbaru
         </span>
         <Link href="/transactions">
-          <span style={{ fontFamily: "var(--font-inter)", fontSize: "11px", fontWeight: 600, color: "#38BDF8" }}>
+          <span style={{ fontFamily: "var(--font-sans)", fontSize: "11px", fontWeight: 600, color: "#4ade80" }}>
             Lihat semua \u2192
           </span>
         </Link>
@@ -79,11 +79,11 @@ export function RecentTransactionsCard({
       {isLoading ? (
         <div className="space-y-2">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-10 rounded animate-pulse" style={{ backgroundColor: "#334155" }} />
+            <div key={i} className="h-10 rounded animate-pulse" style={{ backgroundColor: "#262626" }} />
           ))}
         </div>
       ) : recent.length === 0 ? (
-        <p style={{ fontFamily: "var(--font-inter)", fontSize: "14px", color: "#94A3B8", textAlign: "center", padding: "24px 0" }}>No transactions yet.</p>
+        <p style={{ fontFamily: "var(--font-sans)", fontSize: "14px", color: "#bccabb", textAlign: "center", padding: "24px 0" }}>No transactions yet.</p>
       ) : (
         <div>
           {recent.map((tx, index) => {
@@ -100,11 +100,11 @@ export function RecentTransactionsCard({
 
             return (
               <div key={tx.id}>
-                <div className="flex items-center justify-between" style={{ padding: "16px 0" }}>
+                <div className="flex items-center justify-between" style={{ padding: "8px 0" }}>
                   {/* Left: icon + name + meta */}
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div
-className="flex items-center justify-center shrink-0"
+                      className="flex items-center justify-center shrink-0"
                       style={{
                         width: "32px",
                         height: "32px",
@@ -112,27 +112,27 @@ className="flex items-center justify-center shrink-0"
                         backgroundColor: cfg.iconBg,
                       }}
                     >
-                      <Icon className="size-4" style={{ color: cfg.iconColor }} />
+                      <Icon className="size-3.5" style={{ color: cfg.iconColor }} />
                     </div>
                     <div className="min-w-0">
-                      <p style={{ fontFamily: "var(--font-inter)", fontSize: "14px", fontWeight: 400, color: "#F8FAFC" }} className="truncate">
+                      <p style={{ fontFamily: "var(--font-sans)", fontSize: "13px", fontWeight: 500, color: "#e5e2e1" }} className="truncate">
                         {tx.description ?? "Untitled"}
                       </p>
-                      <p style={{ fontFamily: "var(--font-inter)", fontSize: "12px", color: "#94A3B8" }}>
+                      <p style={{ fontFamily: "var(--font-sans)", fontSize: "11px", color: "#bccabb", marginTop: "1px" }}>
                         {date} \u00b7 {category}
                       </p>
                     </div>
                   </div>
 
-                  {/* Right: amount */}
-<div className="text-right shrink-0 ml-3">
-                    <p style={{ fontFamily: "var(--font-inter)", fontSize: "14px", fontWeight: 600, color: cfg.amountColor }}>
+                  {/* Right: amount + wallet — jangan flex-shrink */}
+                  <div className="flex flex-col items-end flex-shrink-0">
+                    <p style={{ fontFamily: "var(--font-mono)", fontSize: "13px", fontWeight: 500, color: cfg.amountColor }}>
                       {cfg.prefix}{formatCurrency(tx.amount)}
                     </p>
                   </div>
                 </div>
                 {index < recent.length - 1 && (
-                  <div style={{ height: "1px", backgroundColor: "#334155" }} />
+                  <div style={{ height: "1px", backgroundColor: "#262626" }} />
                 )}
               </div>
             );

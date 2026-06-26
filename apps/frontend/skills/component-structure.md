@@ -59,7 +59,7 @@ components/               ← komponen shared antar fitur
 - State form ada di dalam modal, bukan di parent
 
 ## Design System
-- SELALU gunakan warna dari design system (lihat WEB_DESIGN_GUIDELINES.md)
+- SELALU gunakan warna dari design system (lihat design.md)
 - JANGAN hardcode warna di luar token yang sudah didefinisikan
 - Gunakan lucide-react untuk semua ikon
 - JANGAN install UI library tambahan (shadcn, MUI, Chakra, dll)
