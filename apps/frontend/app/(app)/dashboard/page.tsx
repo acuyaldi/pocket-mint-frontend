@@ -6,11 +6,9 @@ import { useTransactions, useCreateTransaction } from "@/src/features/transactio
 import { useWallets } from "@/src/features/wallets/hooks/useWallets";
 import { WalletCard } from "@/components/WalletCard";
 import { formatCurrency } from "@/lib/utils";
+import { isDebtWallet } from "@/src/types/wallet";
 import { TrendingUp, ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { AddTransactionModal } from "@/app/(app)/transactions/components/AddTransactionModal";
-
-const ASSET_TYPES = ["BANK_ACCOUNT", "E_WALLET", "CASH", "SAVINGS", "INVESTMENT", "CRYPTO"];
-const DEBT_TYPES = ["CREDIT_CARD", "LOAN", "PAYLATER"];
 
 export default function DashboardPage() {
   const { data, isLoading } = useTransactions();
@@ -50,8 +48,8 @@ export default function DashboardPage() {
   }, []);
 
   const { totalAssets, totalDebts, netWorth } = useMemo(() => {
-    const assets = wallets.filter((w) => ASSET_TYPES.includes(w.type)).reduce((s, w) => s + w.balance, 0);
-    const debts = wallets.filter((w) => DEBT_TYPES.includes(w.type)).reduce((s, w) => s + Math.abs(w.balance), 0);
+    const assets = wallets.filter((w) => !isDebtWallet(w.type)).reduce((s, w) => s + w.balance, 0);
+    const debts = wallets.filter((w) => isDebtWallet(w.type)).reduce((s, w) => s + Math.abs(w.balance), 0);
     return { totalAssets: assets, totalDebts: debts, netWorth: assets - debts };
   }, [wallets]);
 
@@ -73,7 +71,7 @@ export default function DashboardPage() {
 
   return (
     <div className="w-full min-h-full flex flex-col gap-6 select-none overflow-x-hidden text-foreground">
-      <div className="w-full max-w-7xl mx-auto flex flex-col gap-6">
+      <div className="w-full flex flex-col gap-6">
 
         {/* ── HERO: Net Worth Summary — full width ── */}
         <section className="relative overflow-hidden rounded-xl p-8 group bg-card border border-border">
