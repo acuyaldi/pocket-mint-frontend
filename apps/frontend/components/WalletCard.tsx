@@ -13,13 +13,12 @@ import {
   Trash2,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import type { Wallet } from "@/src/types/wallet";
+import { isDebtWallet, type Wallet } from "@/src/types/wallet";
 import { WalletSparkline } from "@/components/dashboard/WalletSparkline";
 import { useDeleteWallet } from "@/src/features/wallets/hooks/useWallets";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const DEBT_TYPES = ["CREDIT_CARD", "LOAN_PAYLATER"];
 const INSTALLMENT_TYPES = ["LOAN_PAYLATER"];
 
 const WALLET_ICON_MAP: Record<string, LucideIcon> = {
@@ -48,14 +47,12 @@ interface WalletCardProps {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-function isDebtWallet(type: string): boolean {
-  return DEBT_TYPES.includes(type);
+// Utilization threshold color as classes (mid-range yellow #facc15 has no token)
+function utilBarClass(pct: number): string {
+  return pct >= 80 ? "bg-destructive" : pct >= 30 ? "bg-[#facc15]" : "bg-primary";
 }
-
-function getUtilizationColor(pct: number): string {
-  if (pct >= 80) return "#ffb4ab";
-  if (pct >= 30) return "#facc15";
-  return "#4ade80";
+function utilTextClass(pct: number): string {
+  return pct >= 80 ? "text-destructive" : pct >= 30 ? "text-[#facc15]" : "text-primary";
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -73,15 +70,15 @@ export function WalletCard({ wallet, onEdit }: WalletCardProps) {
     isDebt && creditLimit > 0
       ? Math.min(Math.round((outstanding / creditLimit) * 100), 100)
       : 0;
-  const utilColor = getUtilizationColor(utilization);
 
   const isInstallment = INSTALLMENT_TYPES.includes(wallet.type);
-  const iconBg = isInstallment
-    ? "rgba(255,183,132,0.1)"
+  const accentBorder = isInstallment
+    ? "border-l-[#ffb784]"
     : isDebt
-    ? "rgba(255,180,171,0.1)"
-    : "rgba(74,222,128,0.1)";
-  const iconColor = isInstallment ? "#ffb784" : isDebt ? "#ffb4ab" : "#4ade80";
+    ? "border-l-destructive"
+    : "border-l-primary";
+  const iconBg = isInstallment ? "bg-[#ffb784]/10" : isDebt ? "bg-destructive/10" : "bg-primary/10";
+  const iconColor = isInstallment ? "text-[#ffb784]" : isDebt ? "text-destructive" : "text-primary";
 
   // ── Kebab menu state ──
   const [showMenu, setShowMenu] = useState(false);
@@ -123,113 +120,37 @@ export function WalletCard({ wallet, onEdit }: WalletCardProps) {
   }, [wallet.id, deleteWallet, setShowDeleteModal]);
 
   return (
-    <div
-      style={{
-        background: "#0e0e0e",
-        border: "1px solid #262626",
-        borderRadius: "8px",
-        borderLeft: isInstallment
-          ? "4px solid #ffb784"
-          : isDebt
-          ? "4px solid #ffb4ab"
-          : "4px solid #4ade80",
-        padding: "16px",
-        position: "relative",
-      }}
-    >
+    <div className={`relative bg-card border border-border rounded-xl p-4 border-l-4 ${accentBorder}`}>
       {/* ── Top row: icon + name + kebab ── */}
-      <div className="flex items-center gap-2" style={{ marginBottom: "12px" }}>
-        <div
-          className="flex items-center justify-center shrink-0"
-          style={{
-            width: "32px",
-            height: "32px",
-            borderRadius: "8px",
-            backgroundColor: iconBg,
-            border: "1px solid #262626",
-          }}
-        >
-          <Icon className="size-4" style={{ color: iconColor }} />
+      <div className="flex items-center gap-2 mb-3">
+        <div className={`flex items-center justify-center shrink-0 size-8 rounded-lg border border-border ${iconBg}`}>
+          <Icon className={`size-4 ${iconColor}`} />
         </div>
-        <span
-          style={{
-            fontFamily: "var(--font-sans)",
-            fontSize: "14px",
-            fontWeight: 500,
-            color: "#e5e2e1",
-          }}
-        >
+        <span className="text-sm font-medium text-foreground font-sans">
           {wallet.name}
         </span>
-        <span
-          style={{
-            fontFamily: "var(--font-sans)",
-            fontSize: "12px",
-            color: "#bccabb",
-            marginLeft: "auto",
-          }}
-        >
+        <span className="text-xs text-muted-foreground font-sans ml-auto">
           {typeLabel}
         </span>
 
         {/* Kebab menu button */}
-        <div ref={menuRef} style={{ position: "relative" }}>
+        <div ref={menuRef} className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="flex items-center justify-center transition-colors"
-            style={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "6px",
-              color: "#bccabb",
-              backgroundColor: "transparent",
-              border: "none",
-              cursor: "pointer",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#2a2a2a";
-              e.currentTarget.style.color = "#e5e2e1";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-              e.currentTarget.style.color = "#bccabb";
-            }}
+            className="flex items-center justify-center size-7 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
           >
             <MoreVertical className="size-4" />
           </button>
 
           {/* Dropdown menu */}
           {showMenu && (
-            <div
-              style={{
-                position: "absolute",
-                top: "32px",
-                right: "0",
-                width: "130px",
-                backgroundColor: "#0e0e0e",
-                border: "1px solid #262626",
-                borderRadius: "8px",
-                zIndex: 50,
-                overflow: "hidden",
-              }}
-            >
+            <div className="absolute top-8 right-0 w-[130px] bg-card border border-border rounded-lg z-50 overflow-hidden">
               <button
                 onClick={() => {
                   setShowMenu(false);
                   onEdit?.(wallet);
                 }}
-                className="flex items-center gap-2 w-full transition-colors"
-                style={{
-                  padding: "9px 14px",
-                  fontSize: "13px",
-                  color: "#e5e2e1",
-                  backgroundColor: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  fontFamily: "var(--font-sans)",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2a2a2a")}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                className="flex items-center gap-2 w-full px-3.5 py-2 text-[13px] text-foreground hover:bg-accent transition-colors cursor-pointer font-sans"
               >
                 <Pencil className="size-3.5" />
                 Edit wallet
@@ -239,18 +160,7 @@ export function WalletCard({ wallet, onEdit }: WalletCardProps) {
                   setShowMenu(false);
                   setShowDeleteModal(true);
                 }}
-                className="flex items-center gap-2 w-full transition-colors"
-                style={{
-                  padding: "9px 14px",
-                  fontSize: "13px",
-                  color: "#ffb4ab",
-                  backgroundColor: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  fontFamily: "var(--font-sans)",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2a2a2a")}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                className="flex items-center gap-2 w-full px-3.5 py-2 text-[13px] text-destructive hover:bg-accent transition-colors cursor-pointer font-sans"
               >
                 <Trash2 className="size-3.5" />
                 Hapus wallet
@@ -263,27 +173,10 @@ export function WalletCard({ wallet, onEdit }: WalletCardProps) {
       {/* ── ASSET ── */}
       {!isDebt && (
         <>
-          <p
-            className="uppercase"
-            style={{
-              fontSize: "11px",
-              fontWeight: 600,
-              color: "#bccabb",
-              letterSpacing: "0.05em",
-              fontFamily: "var(--font-sans)",
-              marginBottom: "4px",
-            }}
-          >
+          <p className="uppercase text-[11px] font-semibold text-muted-foreground tracking-[0.05em] font-sans mb-1">
             Available Balance
           </p>
-          <p
-            style={{
-              fontFamily: "var(--font-heading)",
-              fontSize: "20px",
-              fontWeight: 600,
-              color: "#e5e2e1",
-            }}
-          >
+          <p className="text-xl font-semibold text-foreground font-heading">
             {formatCurrency(wallet.balance)}
           </p>
         </>
@@ -293,103 +186,35 @@ export function WalletCard({ wallet, onEdit }: WalletCardProps) {
       {isDebt && (
         <>
           {/* Labels */}
-          <div
-            className="flex items-center justify-between"
-            style={{ marginBottom: "4px" }}
-          >
-            <span
-              className="uppercase"
-              style={{
-                fontSize: "11px",
-                fontWeight: 600,
-                color: "#bccabb",
-                letterSpacing: "0.05em",
-                fontFamily: "var(--font-sans)",
-              }}
-            >
+          <div className="flex items-center justify-between mb-1">
+            <span className="uppercase text-[11px] font-semibold text-muted-foreground tracking-[0.05em] font-sans">
               Outstanding
             </span>
-            <span
-              className="uppercase"
-              style={{
-                fontSize: "11px",
-                fontWeight: 600,
-                color: "#bccabb",
-                letterSpacing: "0.05em",
-                fontFamily: "var(--font-sans)",
-              }}
-            >
+            <span className="uppercase text-[11px] font-semibold text-muted-foreground tracking-[0.05em] font-sans">
               Remaining
             </span>
           </div>
 
           {/* Values */}
-          <div
-            className="flex items-center justify-between"
-            style={{ marginBottom: "12px" }}
-          >
-            <span
-              style={{
-                fontFamily: "var(--font-heading)",
-                fontSize: "20px",
-                fontWeight: 600,
-                color: "#ffb4ab",
-              }}
-            >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xl font-semibold text-destructive font-heading">
               {formatCurrency(outstanding)}
             </span>
-            <span
-              style={{
-                fontFamily: "var(--font-heading)",
-                fontSize: "20px",
-                fontWeight: 600,
-                color: "#e5e2e1",
-              }}
-            >
+            <span className="text-xl font-semibold text-foreground font-heading">
               {formatCurrency(remaining)}
             </span>
           </div>
 
           {/* Utilization bar */}
-          <div
-            style={{
-              height: "4px",
-              backgroundColor: "#262626",
-              borderRadius: "9999px",
-              overflow: "hidden",
-            }}
-          >
+          <div className="h-1 bg-border rounded-full overflow-hidden">
             <div
-              style={{
-                height: "100%",
-                borderRadius: "9999px",
-                backgroundColor: utilColor,
-                width: `${utilization}%`,
-                transition: "width 0.6s ease",
-              }}
+              className={`h-full rounded-full transition-[width] duration-500 ${utilBarClass(utilization)}`}
+              style={{ width: `${utilization}%` }}
             />
           </div>
-          <div
-            className="flex items-center justify-between"
-            style={{ marginTop: "6px" }}
-          >
-            <span
-              style={{
-                fontFamily: "var(--font-sans)",
-                fontSize: "12px",
-                color: "#bccabb",
-              }}
-            >
-              Utilization
-            </span>
-            <span
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "12px",
-                fontWeight: 600,
-                color: utilColor,
-              }}
-            >
+          <div className="flex items-center justify-between mt-1.5">
+            <span className="text-xs text-muted-foreground font-sans">Utilization</span>
+            <span className={`text-xs font-semibold font-mono ${utilTextClass(utilization)}`}>
               {utilization}%
             </span>
           </div>
@@ -398,7 +223,7 @@ export function WalletCard({ wallet, onEdit }: WalletCardProps) {
 
       {/* ── Sparkline (asset wallets only, both variants) ── */}
       {!isDebt && (
-        <div style={{ marginTop: "14px", borderTop: "1px solid #262626", paddingTop: "14px", marginLeft: "-16px", marginRight: "-16px", marginBottom: "-16px" }}>
+        <div className="mt-3.5 border-t border-border pt-3.5 -mx-4 -mb-4">
           <WalletSparkline walletId={wallet.id} isDebt={false} />
         </div>
       )}
@@ -406,82 +231,30 @@ export function WalletCard({ wallet, onEdit }: WalletCardProps) {
       {/* ── Delete Confirmation Modal ── */}
       {showDeleteModal && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0,0,0,0.6)",
-            zIndex: 100,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center"
           onClick={() => { if (!isDeleting) setShowDeleteModal(false); }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: "#0e0e0e",
-              border: "1px solid #262626",
-              borderRadius: "8px",
-              padding: "20px",
-              maxWidth: "360px",
-              width: "100%",
-              margin: "0 16px",
-            }}
+            className="bg-card border border-border rounded-lg p-5 max-w-[360px] w-full mx-4"
           >
-            <h3
-              style={{
-                fontSize: "15px",
-                fontWeight: 600,
-                color: "#e5e2e1",
-                fontFamily: "var(--font-heading)",
-                marginBottom: "8px",
-              }}
-            >
+            <h3 className="text-[15px] font-semibold text-foreground font-heading mb-2">
               Hapus wallet?
             </h3>
-            <p
-              style={{
-                fontSize: "13px",
-                color: "#bccabb",
-                lineHeight: 1.5,
-                fontFamily: "var(--font-sans)",
-                marginBottom: "20px",
-              }}
-            >
+            <p className="text-[13px] text-muted-foreground font-sans mb-5 leading-normal">
               {wallet.name} akan dihapus permanen. Riwayat transaksi yang terhubung tidak akan ikut terhapus.
             </p>
             <div className="flex items-center justify-end gap-2">
               <button
                 onClick={() => { if (!isDeleting) setShowDeleteModal(false); }}
-                style={{
-                  border: "1px solid #262626",
-                  color: "#bccabb",
-                  backgroundColor: "transparent",
-                  padding: "7px 14px",
-                  borderRadius: "4px",
-                  fontSize: "13px",
-                  fontFamily: "var(--font-sans)",
-                  cursor: "pointer",
-                }}
+                className="border border-border text-muted-foreground px-3.5 py-[7px] rounded text-[13px] font-sans cursor-pointer"
               >
                 Batal
               </button>
               <button
                 onClick={handleDeleteConfirm}
                 disabled={isDeleting}
-                style={{
-                  backgroundColor: "#ffb4ab",
-                  color: "#690005",
-                  fontWeight: 500,
-                  padding: "7px 14px",
-                  borderRadius: "4px",
-                  fontSize: "13px",
-                  fontFamily: "var(--font-sans)",
-                  border: "none",
-                  cursor: isDeleting ? "not-allowed" : "pointer",
-                  opacity: isDeleting ? 0.7 : 1,
-                }}
+                className="bg-destructive text-destructive-foreground font-medium px-3.5 py-[7px] rounded text-[13px] font-sans disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isDeleting ? "Menghapus..." : "Hapus"}
               </button>

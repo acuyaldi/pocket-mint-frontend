@@ -9,9 +9,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <AppSidebar />
 
       <main className="flex-1 min-w-0 overflow-y-auto p-6 md:p-8">
-        <TopBar />
-        <div className="flex flex-col flex-1 min-h-screen">
-          {children}
+        <div className="w-full max-w-7xl mx-auto flex flex-col">
+          <TopBar />
+          <div className="flex flex-col flex-1 min-h-screen">
+            {children}
+          </div>
         </div>
       </main>
 

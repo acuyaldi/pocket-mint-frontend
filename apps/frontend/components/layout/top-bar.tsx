@@ -4,7 +4,7 @@ import { Bell, Search, User } from "lucide-react";
 
 export function TopBar() {
   return (
-    <header className="flex items-center gap-4 w-full mb-6 border-b border-[#1a1a1a] pb-4">
+    <header className="flex items-center gap-4 w-full mb-6 border-b border-border pb-4">
       {/* Search bar */}
       <div className="flex-1 relative">
         <Search
