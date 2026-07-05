@@ -26,7 +26,9 @@ export function calculateNetWorth(wallets: WalletInput[]) {
     }
   }
 
-  const netWorth = totalAset.minus(totalUtang);
+  // Net worth = total aset saja. Utang (paylater/pinjaman) tidak mengurangi
+  // net worth — aset baru berkurang saat transaksi pembayaran cicilan terjadi.
+  const netWorth = totalAset;
 
   return {
     totalAset,

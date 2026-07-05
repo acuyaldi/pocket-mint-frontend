@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { isDebtWallet, type Wallet } from "@/src/types/wallet";
-import { WalletSparkline } from "@/components/dashboard/WalletSparkline";
+import { WalletSparkline } from "@/components/WalletSparkline";
 import { useDeleteWallet } from "@/src/features/wallets/hooks/useWallets";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -144,17 +144,19 @@ export function WalletCard({ wallet, onEdit }: WalletCardProps) {
 
           {/* Dropdown menu */}
           {showMenu && (
-            <div className="absolute top-8 right-0 w-[130px] bg-card border border-border rounded-lg z-50 overflow-hidden">
-              <button
-                onClick={() => {
-                  setShowMenu(false);
-                  onEdit?.(wallet);
-                }}
-                className="flex items-center gap-2 w-full px-3.5 py-2 text-[13px] text-foreground hover:bg-accent transition-colors cursor-pointer font-sans"
-              >
-                <Pencil className="size-3.5" />
-                Edit wallet
-              </button>
+            <div className="absolute top-8 right-0 min-w-32.5 whitespace-nowrap bg-card border border-border rounded-lg z-50 overflow-hidden">
+              {onEdit && (
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    onEdit(wallet);
+                  }}
+                  className="flex items-center gap-2 w-full px-3.5 py-2 text-[13px] text-foreground hover:bg-accent transition-colors cursor-pointer font-sans"
+                >
+                  <Pencil className="size-3.5" />
+                  Edit wallet
+                </button>
+              )}
               <button
                 onClick={() => {
                   setShowMenu(false);

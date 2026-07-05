@@ -29,7 +29,7 @@ No test scripts exist in either app despite the root README mentioning Jest/Supe
 
 ## Where the real rules live
 
-`apps/frontend/AGENTS.md` and `apps/backend/AGENTS.md` import per-subtree convention docs (design tokens, financial precision, Prisma usage, API design, component structure) via `apps/frontend/skills/*.md` and `apps/backend/.agents/skills/*/SKILL.md` respectively. Those referenced files are currently being reorganized/deleted from the working tree — if an import target is missing, don't invent its contents; ask what replaced it (likely a `.claude/skills/` equivalent).
+`apps/frontend/AGENTS.md` imports the frontend convention docs from `apps/frontend/skills/`: `design.md` (design tokens), `ui-system.skill.md` (layout/component rules), `financial-logic.skill.md` (wallet/net-worth/installment business rules — applies to backend work too). `.claude/skills/` holds invocable skills (`dev`, `new-feature`). The old `apps/backend/.agents/skills/` docs and `apps/backend/AGENTS.md` were deleted in the reorg — recover from git history if ever needed, don't reinvent them.
 
 Root `.clinerules` has the same project context, read by Cline (not Claude Code) — useful background/history if the AGENTS.md chains above are incomplete.
 

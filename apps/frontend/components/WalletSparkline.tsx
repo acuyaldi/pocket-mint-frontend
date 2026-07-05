@@ -1,7 +1,7 @@
 "use client";
 
 import { AreaChart, Area, ResponsiveContainer } from "recharts";
-import { useWalletSparkline, SparklinePoint } from "@/src/features/wallets/hooks/useSparkline";
+import { useWalletSparkline } from "@/src/features/wallets/hooks/useSparkline";
 
 interface WalletSparklineProps {
   walletId: string;

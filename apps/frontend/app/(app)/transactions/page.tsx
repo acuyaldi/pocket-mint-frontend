@@ -14,7 +14,6 @@ import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { PAGE_SIZE } from "./components/constants";
 import type { DateRangeFilter } from "./components/constants";
-import { TransactionHeader } from "./components/TransactionHeader";
 import { TransactionStats } from "./components/TransactionStats";
 import { TransactionFilters } from "./components/TransactionFilters";
 import { TransactionTable } from "./components/TransactionTable";
@@ -125,7 +124,7 @@ export default function TransactionsPage() {
   const handleAddSubmit = useCallback(async (d: AddTransactionData) => {
     setIsCreating(true);
     try { await createTransaction.mutateAsync(d); setIsAddModalOpen(false); }
-    catch (e) { console.error(e); }
+    catch (e) { console.error(e); throw e; } // let the modal surface the message
     finally { setIsCreating(false); }
   }, [createTransaction]);
 
