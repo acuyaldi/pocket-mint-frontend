@@ -14,7 +14,6 @@ import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { PAGE_SIZE } from "./components/constants";
 import type { DateRangeFilter } from "./components/constants";
-import { TransactionHeader } from "./components/TransactionHeader";
 import { TransactionStats } from "./components/TransactionStats";
 import { TransactionFilters } from "./components/TransactionFilters";
 import { TransactionTable } from "./components/TransactionTable";

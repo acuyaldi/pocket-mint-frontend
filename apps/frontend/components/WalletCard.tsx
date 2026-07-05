@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { isDebtWallet, type Wallet } from "@/src/types/wallet";
-import { WalletSparkline } from "@/components/dashboard/WalletSparkline";
+import { WalletSparkline } from "@/components/WalletSparkline";
 import { useDeleteWallet } from "@/src/features/wallets/hooks/useWallets";
 
 // ── Constants ──────────────────────────────────────────────────────────────────

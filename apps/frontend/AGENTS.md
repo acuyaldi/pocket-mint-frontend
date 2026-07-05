@@ -12,3 +12,11 @@ Heed deprecation notices.
 <!-- BEGIN:api-design -->
 @skills/design.md
 <!-- END:api-design -->
+
+<!-- BEGIN:ui-system -->
+@skills/ui-system.skill.md
+<!-- END:ui-system -->
+
+<!-- BEGIN:financial-logic -->
+@skills/financial-logic.skill.md
+<!-- END:financial-logic -->
