@@ -59,8 +59,10 @@ export const useDeleteWallet = () => {
   const queryClient = useQueryClient();
 
   return useMutation<{ id: string }, Error, string>({
+    // force=true: user already confirmed in the delete modal; backend otherwise
+    // rejects wallets that have transaction history (409)
     mutationFn: (walletId) =>
-      api.delete<{ status: string; data: { id: string } }>(`/wallets/${walletId}`).then((res) => res.data.data),
+      api.delete<{ status: string; data: { id: string } }>(`/wallets/${walletId}?force=true`).then((res) => res.data.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wallets'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });

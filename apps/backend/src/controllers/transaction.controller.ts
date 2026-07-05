@@ -84,6 +84,54 @@ export class TransactionController {
     }
   }
 
+  // GET /api/v1/transactions/summary?month=YYYY-MM
+  // Monthly P&L: income, expenses, netSavings for the given calendar month
+  // (defaults to current month). Filters on `date`, same as getAll.
+  static async summary(
+    req: Request<unknown, unknown, unknown, { month?: string }>,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const userId = (req as any).userId as string;
+
+      // month param is YYYY-MM; fall back to current month when absent/invalid
+      const match = /^(\d{4})-(\d{2})$/.exec(req.query.month ?? '');
+      const { startDate, endDate, month, year } = getMonthRange(match?.[2], match?.[1]);
+
+      const sums = await prisma.transaction.groupBy({
+        by: ['type'],
+        where: {
+          userId,
+          type: { in: ['INCOME', 'EXPENSE'] },
+          date: { gte: startDate, lte: endDate },
+        },
+        _sum: { amount: true },
+      });
+
+      const sumFor = (t: string) => {
+        const row = sums.find((s) => s.type === t);
+        return row?._sum.amount ? parseFloat(row._sum.amount.toString()) : 0;
+      };
+
+      const income = sumFor('INCOME');
+      const expenses = sumFor('EXPENSE');
+
+      sendSuccess(
+        res,
+        {
+          income,
+          expenses,
+          netSavings: income - expenses,
+          month: `${year}-${String(month).padStart(2, '0')}`,
+        },
+        'Monthly summary'
+      );
+    } catch (err) {
+      next(err);
+    }
+  }
+
   // GET /api/v1/transactions/all — no month filter, returns everything
   static async getAllTime(
     req: Request<unknown, unknown, unknown, ListTransactionQuery>,

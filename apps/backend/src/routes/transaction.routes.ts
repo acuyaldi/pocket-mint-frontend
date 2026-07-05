@@ -10,6 +10,9 @@ transactionRouter.get('/', TransactionController.getAll);
 // GET /api/v1/transactions/all — no month filter
 transactionRouter.get('/all', TransactionController.getAllTime);
 
+// GET /api/v1/transactions/summary?month=YYYY-MM — monthly P&L
+transactionRouter.get('/summary', apiKeyAuth, TransactionController.summary);
+
 transactionRouter.put('/:id', apiKeyAuth, TransactionController.update);
 transactionRouter.delete('/:id', TransactionController.delete);
 
