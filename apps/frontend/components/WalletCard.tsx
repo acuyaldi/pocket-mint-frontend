@@ -144,7 +144,7 @@ export function WalletCard({ wallet, onEdit }: WalletCardProps) {
 
           {/* Dropdown menu */}
           {showMenu && (
-            <div className="absolute top-8 right-0 w-[130px] bg-card border border-border rounded-lg z-50 overflow-hidden">
+            <div className="absolute top-8 right-0 min-w-32.5 whitespace-nowrap bg-card border border-border rounded-lg z-50 overflow-hidden">
               {onEdit && (
                 <button
                   onClick={() => {

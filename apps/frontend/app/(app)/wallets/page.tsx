@@ -40,7 +40,9 @@ function computeAggregates(wallets: Wallet[]) {
 
   const totalAssets = assets.reduce((s, w) => s + w.balance, 0);
   const totalDebts = debts.reduce((s, w) => s + Math.abs(w.balance), 0);
-  const netWorth = totalAssets - totalDebts;
+  // Net worth = assets only; debt is outstanding to pay later, it reduces
+  // net worth only when the repayment transaction leaves an asset wallet
+  const netWorth = totalAssets;
   const totalCreditLimit = debts.reduce((s, w) => s + (w.creditLimit ?? 0), 0);
   const debtRatio = totalCreditLimit > 0 ? (totalDebts / totalCreditLimit) * 100 : 0;
 
@@ -135,7 +137,6 @@ export default function WalletsPage() {
         // Modal collects admin fee as % of principal
         adminFee: d.adminFee,
         ...(d.adminFee !== undefined && { adminFeeType: "PERCENT" as const }),
-        color: d.color,
         icon: d.icon,
       });
     } catch (err) {
