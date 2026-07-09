@@ -8,8 +8,6 @@ import {
   ArrowLeftRight,
   Wallet,
   CalendarClock,
-  Target,
-  Plus,
   User,
 } from "lucide-react";
 import { PocketMintLogo } from "../Logo";
@@ -32,7 +30,6 @@ const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Wallets", href: "/wallets", icon: Wallet },
   { label: "Transactions", href: "/transactions", icon: ArrowLeftRight },
-  { label: "Goals", href: "/goals", icon: Target },
   { label: "Installments", href: "/cicilan", icon: CalendarClock },
 ];
 
@@ -96,17 +93,8 @@ function SidebarContent() {
         </nav>
       </div>
 
-      {/* Bottom: add transaction + help + account */}
+      {/* Bottom: account */}
       <div className="flex shrink-0 flex-col gap-1">
-        <button
-          onClick={() => window.dispatchEvent(new Event("fab-add-transaction"))}
-          className="flex cursor-pointer items-center justify-start gap-2 rounded-md py-2 text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          aria-label="Add transaction"
-        >
-          <Plus className="size-5 shrink-0" />
-          <SidebarLabel className="font-semibold">Add Transaction</SidebarLabel>
-        </button>
-
         {/* ponytail: Help link removed — /help route doesn't exist yet; re-add when it ships */}
 
         <DropdownMenu>
