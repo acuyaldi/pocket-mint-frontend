@@ -2,8 +2,10 @@
 
 import { useMemo, useState, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { useTransactions, useCreateTransaction } from "@/src/features/transactions/hooks/useTransactions";
+import { useTransactions, useCreateTransaction, useMonthlySummary } from "@/src/features/transactions/hooks/useTransactions";
 import { useWallets } from "@/src/features/wallets/hooks/useWallets";
+import { useGoals, goalProgress, isGoalComplete } from "@/src/features/goals/hooks/useGoals";
+import { useInstallments } from "@/src/features/installments/hooks/useInstallments";
 import { WalletCard } from "@/components/WalletCard";
 import { formatCurrency } from "@/lib/utils";
 import { isDebtWallet } from "@/src/types/wallet";
@@ -47,13 +49,31 @@ export default function DashboardPage() {
     return { totalAssets: assets, totalDebts: debts, netWorth: assets };
   }, [wallets]);
 
-  const { income, expense } = useMemo(() => {
-    const inc = transactions.filter((t) => t.type === "INCOME").reduce((s, t) => s + t.amount, 0);
-    const exp = transactions.filter((t) => t.type === "EXPENSE").reduce((s, t) => s + t.amount, 0);
-    return { income: inc, expense: exp };
-  }, [transactions]);
+  // Monthly P&L from the backend summary endpoint (current calendar month)
+  const { data: summary } = useMonthlySummary();
+  const income = summary?.income ?? 0;
+  const expense = summary?.expenses ?? 0;
+  const netSavings = summary?.netSavings ?? 0;
 
-  const netSavings = income - expense;
+  // Next major goal: closest deadline among incomplete goals, else highest progress
+  const { data: goalsData } = useGoals();
+  const nextGoal = useMemo(() => {
+    const goals = goalsData ?? [];
+    const active = goals.filter((g) => !isGoalComplete(g));
+    const pool = active.length > 0 ? active : goals;
+    if (pool.length === 0) return null;
+    const withDeadline = pool.filter((g) => g.deadline);
+    if (withDeadline.length > 0) {
+      return [...withDeadline].sort(
+        (a, b) => new Date(a.deadline!).getTime() - new Date(b.deadline!).getTime(),
+      )[0];
+    }
+    return [...pool].sort((a, b) => goalProgress(b) - goalProgress(a))[0];
+  }, [goalsData]);
+
+  // Most recent active installment for the Cicilan Aktif widget
+  const { data: activeInstallments } = useInstallments("ACTIVE");
+  const activeInstallment = activeInstallments?.[0] ?? null;
   const maxPnl = Math.max(income, expense, 1);
   const incomeBarPct = Math.round((income / maxPnl) * 100);
   const expenseBarPct = Math.round((expense / maxPnl) * 100);
@@ -301,22 +321,38 @@ export default function DashboardPage() {
             {/* Savings Goal bento */}
             <div className="relative overflow-hidden rounded-xl p-6 bg-muted border border-border">
               <div className="relative z-10">
-                <p className="text-[11px] uppercase tracking-widest font-semibold mb-1 text-muted-foreground font-mono">
-                  Next Major Goal
-                </p>
-                <h4 className="text-base font-bold mb-4 text-foreground font-heading">
-                  Vacation Fund
-                </h4>
-                <div className="flex justify-between text-[11px] font-semibold mb-1.5 text-muted-foreground">
-                  <span>Rp 4.200.000 saved</span>
-                  <span className="text-foreground">Rp 5.000.000</span>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground font-mono">
+                    Next Major Goal
+                  </p>
+                  <Link
+                    href="/goals"
+                    className="text-[12px] font-semibold transition-opacity hover:opacity-75 text-primary"
+                  >
+                    Lihat semua →
+                  </Link>
                 </div>
-                <div className="h-1.5 rounded-full overflow-hidden bg-border">
-                  <div className="h-full rounded-full bg-primary w-[84%] shadow-[0_0_8px_rgba(74,222,128,0.4)]" />
-                </div>
-              </div>
-              <div className="absolute -right-4 -bottom-4 opacity-5 pointer-events-none select-none leading-none text-[120px]">
-                ✈
+                {nextGoal ? (
+                  <>
+                    <h4 className="text-base font-bold mb-4 text-foreground font-heading">
+                      {nextGoal.name}
+                    </h4>
+                    <div className="flex justify-between text-[11px] font-semibold mb-1.5 text-muted-foreground font-mono">
+                      <span>{formatCurrency(nextGoal.savedAmount)} saved</span>
+                      <span className="text-foreground">{formatCurrency(nextGoal.targetAmount)}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full overflow-hidden bg-border">
+                      <div
+                        className="h-full rounded-full bg-primary shadow-[0_0_8px_rgba(74,222,128,0.4)] transition-all duration-700"
+                        style={{ width: `${goalProgress(nextGoal)}%` }}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <Link href="/goals" className="block py-3 text-sm text-muted-foreground hover:opacity-75">
+                    Belum ada goal — buat target tabungan pertamamu →
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -334,26 +370,44 @@ export default function DashboardPage() {
                 </Link>
               </div>
 
-              <p className="text-base font-semibold mb-0.5 text-foreground font-heading">
-                Kredivo
-              </p>
-              <p className="text-[12px] mb-3 text-muted-foreground">
-                Cicilan laptop · Rp 350.000/bln
-              </p>
+              {activeInstallment ? (
+                <>
+                  <p className="text-base font-semibold mb-0.5 text-foreground font-heading">
+                    {activeInstallment.walletName}
+                  </p>
+                  <p className="text-[12px] mb-3 text-muted-foreground">
+                    {activeInstallment.description || "Cicilan"} ·{" "}
+                    <span className="font-mono">{formatCurrency(activeInstallment.monthlyAmount)}/bln</span>
+                  </p>
 
-              <div className="h-1.5 rounded-full overflow-hidden mb-2 bg-border">
-                <div className="h-full rounded-full transition-all duration-700 bg-primary w-[25%]" />
-              </div>
+                  <div className="h-1.5 rounded-full overflow-hidden mb-2 bg-border">
+                    <div
+                      className="h-full rounded-full transition-all duration-700 bg-primary"
+                      style={{
+                        width: `${Math.min(100, Math.round((activeInstallment.currentTerm / activeInstallment.installmentMonths) * 100))}%`,
+                      }}
+                    />
+                  </div>
 
-              <div className="flex items-center justify-between">
-                <span className="text-[12px] text-muted-foreground">25% lunas</span>
-                <span className="text-[12px] text-muted-foreground">9 cicilan lagi</span>
-              </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] text-muted-foreground font-mono">
+                      {Math.min(100, Math.round((activeInstallment.currentTerm / activeInstallment.installmentMonths) * 100))}% lunas
+                    </span>
+                    <span className="text-[12px] text-muted-foreground">
+                      {activeInstallment.installmentMonths - activeInstallment.currentTerm} cicilan lagi
+                    </span>
+                  </div>
 
-              <div className="flex items-center justify-between mt-3">
-                <span className="text-[12px] text-primary font-mono">3 / 12</span>
-                <span className="text-[12px] text-[#3d4a3e]">bulan berjalan</span>
-              </div>
+                  <div className="flex items-center justify-between mt-3">
+                    <span className="text-[12px] text-primary font-mono">
+                      {activeInstallment.currentTerm} / {activeInstallment.installmentMonths}
+                    </span>
+                    <span className="text-[12px] text-[#3d4a3e]">bulan berjalan</span>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm py-2 text-muted-foreground">Tidak ada cicilan aktif</p>
+              )}
             </div>
           </div>
         </div>

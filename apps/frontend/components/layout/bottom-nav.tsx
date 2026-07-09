@@ -7,14 +7,15 @@ import {
   ArrowLeftRight,
   Wallet,
   CalendarClock,
+  Target,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Wallets", href: "/wallets", icon: Wallet },
+  { label: "Goals", href: "/goals", icon: Target },
   { label: "Cicilan", href: "/cicilan", icon: CalendarClock },
-    { label: "Transaksi", href: "/transactions", icon: ArrowLeftRight },
-
+  { label: "Transaksi", href: "/transactions", icon: ArrowLeftRight },
 ];
 
 export function BottomNav() {

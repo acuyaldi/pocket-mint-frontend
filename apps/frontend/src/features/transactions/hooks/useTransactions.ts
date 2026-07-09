@@ -23,6 +23,35 @@ export const useTransactions = () => {
   });
 };
 
+export interface MonthlySummary {
+  income: number;
+  expenses: number;
+  netSavings: number;
+  month: string; // YYYY-MM
+}
+
+/**
+ * Monthly P&L from the backend, scoped to the current calendar month.
+ * Month key comes from new Date(), so the query naturally rolls over.
+ */
+export const useMonthlySummary = () => {
+  const now = new Date();
+  const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  return useQuery<MonthlySummary, Error>({
+    // 'transactions' prefix: invalidated automatically by tx mutations
+    queryKey: ['transactions', 'summary', month],
+    queryFn: async () => {
+      const response = await api.get<{ status: string; data: MonthlySummary }>(
+        '/transactions/summary',
+        { params: { month } }
+      );
+      return response.data.data;
+    },
+    staleTime: STALE_TIME,
+  });
+};
+
 /**
  * Update an existing transaction by ID.
  * Invalidates the transactions query on success so the list auto-refreshes.

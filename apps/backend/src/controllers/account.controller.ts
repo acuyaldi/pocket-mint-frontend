@@ -1,9 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../lib/prisma';
 import { sendSuccess, sendError } from '../utils/response';
+import { getUserNetWorth } from '../utils/financial';
 
 const VALID_WALLET_TYPES = ['CASH', 'BANK', 'E_WALLET', 'CREDIT_CARD', 'LOAN_PAYLATER'];
 const DEBT_TYPES = ['CREDIT_CARD', 'LOAN_PAYLATER'];
+
+/** Serialized net worth snapshot, recomputed after every wallet mutation. */
+async function netWorthSnapshot(userId: string) {
+  const { totalAset, totalUtang, netWorth } = await getUserNetWorth(userId);
+  return {
+    totalAset: parseFloat(totalAset.toString()),
+    totalUtang: parseFloat(totalUtang.toString()),
+    netWorth: parseFloat(netWorth.toString()),
+  };
+}
 
 /**
  * GET /api/v1/wallets
@@ -64,6 +75,9 @@ export const createWallet = async (req: Request, res: Response, next: NextFuncti
     if (type && !VALID_WALLET_TYPES.includes(type)) {
       return sendError(res, `type must be one of: ${VALID_WALLET_TYPES.join(', ')}`, 400);
     }
+    if (DEBT_TYPES.includes(type) && (creditLimit === undefined || Number(creditLimit) <= 0)) {
+      return sendError(res, 'creditLimit is required for DEBT wallets (CREDIT_CARD, LOAN_PAYLATER)', 400);
+    }
 
     const wallet = await prisma.wallet.create({
       data: {
@@ -80,7 +94,7 @@ export const createWallet = async (req: Request, res: Response, next: NextFuncti
       },
     });
 
-    sendSuccess(res, wallet, 'Wallet created successfully', 201);
+    sendSuccess(res, { ...wallet, netWorth: await netWorthSnapshot(userId) }, 'Wallet created successfully', 201);
   } catch (err) {
     if ((err as { code?: string }).code === 'P2003') {
       return sendError(res, 'Invalid userId (user not found)', 400);
@@ -118,7 +132,7 @@ export const updateWallet = async (req: Request<{ id: string }>, res: Response, 
       },
     });
 
-    sendSuccess(res, wallet, 'Wallet updated successfully');
+    sendSuccess(res, { ...wallet, netWorth: await netWorthSnapshot(wallet.userId) }, 'Wallet updated successfully');
   } catch (err) {
     if ((err as { code?: string }).code === 'P2025') {
       return sendError(res, `Wallet with id ${req.params.id} not found`, 404);
@@ -129,15 +143,21 @@ export const updateWallet = async (req: Request<{ id: string }>, res: Response, 
 
 /**
  * DELETE /api/v1/wallets/:id
- * Delete a wallet (cascades related transactions' walletId to null).
+ * Hard delete with transaction check: refuses when the wallet has transaction
+ * history unless ?force=true (frontend confirm modal sends force).
  */
 export const deleteWallet = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
 
-    await prisma.wallet.delete({ where: { id } });
+    const txCount = await prisma.transaction.count({ where: { walletId: id } });
+    if (txCount > 0 && req.query.force !== 'true') {
+      return sendError(res, `Wallet has ${txCount} transactions. Pass ?force=true to delete anyway.`, 409);
+    }
 
-    sendSuccess(res, { id }, `Wallet ${id} deleted successfully`);
+    const deleted = await prisma.wallet.delete({ where: { id } });
+
+    sendSuccess(res, { id, netWorth: await netWorthSnapshot(deleted.userId) }, `Wallet ${id} deleted successfully`);
   } catch (err) {
     if ((err as { code?: string }).code === 'P2025') {
       return sendError(res, `Wallet with id ${req.params.id} not found`, 404);
