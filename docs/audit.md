@@ -56,7 +56,7 @@ Pocket Mint frontend is a **single Next.js App-Router application**, not a micro
 
 | Component | File | Renders / notes |
 |-----------|------|-----------------|
-| `AppSidebar` | [components/layout/app-sidebar.tsx](../apps/frontend/components/layout/app-sidebar.tsx) | Desktop rail. Uses `Sidebar` primitives (`components/ui/sidebar.tsx`), `PocketMintLogo`, 5× `SidebarLink` nav (Dashboard/Wallets/Transactions/Goals/Installments) and an `AccountMenuItems` dropdown. |
+| `AppSidebar` | [components/layout/app-sidebar.tsx](../apps/frontend/components/layout/app-sidebar.tsx) | Desktop rail. Uses `Sidebar` primitives (`components/ui/sidebar.tsx`), `PocketMintLogo`, 5× `SidebarLink` nav (Dashboard/Wallets/Transactions/Goals/Installments), an **Add Transaction** button that dispatches the `fab-add-transaction` window event, and an `AccountMenuItems` dropdown. The account entry label is **dynamic**: it reads the Supabase session client-side (`createClient().auth.getUser()`) and shows `user_metadata.full_name` → `user_metadata.name` → `email`, falling back to the static `"Account"` while loading or when signed out. |
 | `BottomNav` | [components/layout/bottom-nav.tsx](../apps/frontend/components/layout/bottom-nav.tsx) | Mobile only (`md:hidden`). Same 5 nav items mirrored via `DockMorph` (`components/ui/dock-morph.tsx`) + `AccountMenuItems`. |
 | `AccountMenuItems` | [components/layout/account-menu.tsx](../apps/frontend/components/layout/account-menu.tsx) | Shared dropdown body used by both sidebar and bottom nav. |
 
@@ -174,8 +174,13 @@ Pocket Mint frontend is a **single Next.js App-Router application**, not a micro
 | Element | Source |
 |---|---|
 | `Button`, `Input`, `Card/CardContent/CardHeader/CardTitle` | `components/ui/*` |
-| Change-password form + strength meter | local state (no backend wiring yet — simulated `setTimeout`) |
-| Icons | `lucide-react` (`CheckCircle2, KeyRound, Loader2, ShieldCheck`) |
+| Auth session | `createClient().auth.getUser()` client-side; redirects to `/login` when signed out. Reads `app_metadata.provider` to branch the UI. |
+| Account Identity card | Readonly `Input` fields (Email + Name/Username) shown for **every** login method, sourced from `email` / `user_metadata.full_name`\|`name`. |
+| Change-password form + strength meter | local state (no backend wiring yet — simulated `setTimeout`). **Rendered only for `provider === "email"`** (manual register). |
+| Google Auth notice | **`provider === "google"`** hides the change-password form and shows a high-contrast `warning`-token notice: *"Password cannot be changed because you are logged in using Google Auth."* |
+| Icons | `lucide-react` (`CheckCircle2, Info, KeyRound, Loader2, ShieldCheck, UserRound`) |
+
+**Conditional login logic:** `provider = user.app_metadata.provider` splits the page — Google users get readonly identity + notice (no password form), email users get readonly identity + the working change-password form.
 
 **Cross-feature:** none.
 
@@ -200,7 +205,7 @@ app/layout.tsx  ──  <html><body> · fonts · QueryProvider (React Query)
     ├── /transactions  → transactions/page.tsx   + Stats, BreakdownChart, Filters, Table,
     │                                               DetailPanel, Add/Edit/Delete modals
     ├── /cicilan       → cicilan/page.tsx         + HeroCard, InstallmentList, RightSidebar (*.tsx)
-    └── /profile       → profile/page.tsx         + change-password form
+    └── /profile       → profile/page.tsx         + identity card + conditional change-password form (email) / Google Auth notice (google)
 ```
 
 **Shared building blocks** (used across pages): `components/WalletCard.tsx`, `components/Logo.tsx` (`PocketMintLogo`), `components/ui/{button,input,card,dialog,dropdown-menu,sidebar,tooltip,separator,dock-morph}.tsx`, `components/layout/{app-sidebar,bottom-nav,account-menu}.tsx`, `components/WalletSparkline.tsx`.
