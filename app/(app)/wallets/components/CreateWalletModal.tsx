@@ -106,16 +106,17 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
   // Visual identity
   const [walletIcon, setWalletIcon] = useState<"landmark" | "creditcard" | "coins" | "wallet" | "handshake">("wallet");
 
+  // Active-selection tint: primary token at 8% (theme-safe, no raw hex).
+  const activeTint = "color-mix(in srgb, var(--color-primary) 8%, transparent)";
+
+  // Input-mask formatter: thousand separators ONLY (e.g. "10.000.000").
+  // The "Rp" prefix is a static adornment on each field, so this must NOT emit
+  // it too — otherwise the input shows a duplicated "Rp Rp".
   const formatRupiahVisual = (value: string): string => {
     if (!value) return "";
     const rawNumber = value.replace(/\D/g, "");
     if (!rawNumber) return "";
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(Number(rawNumber)).replace("IDR", "Rp").trim();
+    return new Intl.NumberFormat("id-ID").format(Number(rawNumber));
   };
 
   const handlePaylaterProviderSelect = (providerName: string) => {
@@ -199,18 +200,20 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
       }
     }}>
       <DialogContent 
-        className="max-w-2xl text-white sm:max-w-2xl p-0 overflow-hidden max-h-[85vh] flex flex-col"
+        className="max-w-2xl text-foreground sm:max-w-2xl p-0 overflow-hidden max-h-[85vh] flex flex-col"
         style={{ backgroundColor: "var(--color-popover)", border: "1px solid var(--color-border)" }}
       >
-        <form onSubmit={handleSubmit} className="flex flex-col">
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
           {/* Header */}
           <div className="px-6 py-5 shrink-0" style={{ borderBottom: "1px solid var(--color-border)", backgroundColor: "var(--color-card)" }}>
             <DialogTitle className="text-base font-semibold" style={{ color: "var(--color-foreground)", fontFamily: "var(--font-hanken)" }}>Create New Wallet</DialogTitle>
             <DialogDescription className="text-sm mt-1" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>Define your wallet identity and configure its settings.</DialogDescription>
           </div>
 
-          {/* Scrollable content section */}
-          <div className="p-6 space-y-5 overflow-y-auto pr-2 max-h-[calc(85vh-140px)] scroll-smooth">
+          {/* Scrollable content section — flex-1 + min-h-0 lets it consume the
+              space between the sticky header and footer, so the footer never
+              gets clipped regardless of header/footer height. */}
+          <div className="p-6 space-y-5 overflow-y-auto pr-2 flex-1 min-h-0 scroll-smooth">
             
             {/* SECTION 1: CLASSIFICATION */}
             <div className="space-y-4">
@@ -227,7 +230,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                       : "border-border"
                   )}
                   style={{
-                    backgroundColor: classification === "asset" ? "rgba(0,109,54,0.08)" : "var(--color-card)",
+                    backgroundColor: classification === "asset" ? activeTint : "var(--color-card)",
                     color: classification === "asset" ? "var(--color-primary)" : "var(--color-muted-foreground)",
                     borderColor: classification === "asset" ? "var(--color-primary)" : "var(--color-border)",
                   }}
@@ -247,7 +250,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                       : "border-border"
                   )}
                   style={{
-                    backgroundColor: classification === "debt" ? "rgba(0,109,54,0.08)" : "var(--color-card)",
+                    backgroundColor: classification === "debt" ? activeTint : "var(--color-card)",
                     color: classification === "debt" ? "var(--color-primary)" : "var(--color-muted-foreground)",
                     borderColor: classification === "debt" ? "var(--color-primary)" : "var(--color-border)",
                   }}
@@ -300,7 +303,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                             : "border-border"
                         )}
                         style={{
-                          backgroundColor: isActive ? "rgba(0,109,54,0.08)" : "var(--color-card)",
+                          backgroundColor: isActive ? activeTint : "var(--color-card)",
                           color: isActive ? "var(--color-primary)" : "var(--color-muted-foreground)",
                           borderColor: isActive ? "var(--color-primary)" : "var(--color-border)",
                         }}
@@ -339,7 +342,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                             : "border-border"
                         )}
                         style={{
-                          backgroundColor: isActive ? "rgba(0,109,54,0.08)" : "var(--color-card)",
+                          backgroundColor: isActive ? activeTint : "var(--color-card)",
                           color: isActive ? "var(--color-primary)" : "var(--color-muted-foreground)",
                           borderColor: isActive ? "var(--color-primary)" : "var(--color-border)",
                         }}
@@ -383,7 +386,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                               : "border-border"
                           )}
                           style={{
-                            backgroundColor: isActive ? "rgba(0,109,54,0.08)" : "var(--color-card)",
+                            backgroundColor: isActive ? activeTint : "var(--color-card)",
                             color: isActive ? "var(--color-primary)" : "var(--color-muted-foreground)",
                             borderColor: isActive ? "var(--color-primary)" : "var(--color-border)",
                           }}
@@ -429,7 +432,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                 >
                   <label className="text-[11px] font-bold tracking-widest uppercase mb-3" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>Initial Balance</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold select-none" style={{ color: "var(--color-muted-foreground)" }}>Rp</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold select-none font-mono" style={{ color: "var(--color-muted-foreground)" }}>Rp</span>
                     <Input
                       type="text"
                       inputMode="numeric"
@@ -439,7 +442,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                         const raw = e.target.value.replace(/\D/g, "");
                         setInitialBalance(raw ? formatRupiahVisual(raw) : "");
                       }}
-                      className="h-11 pl-10 pr-4" style={{ backgroundColor: "var(--color-card)", border: "1px solid var(--color-border)", color: "var(--color-foreground)" }}
+                      className="h-11 pl-10 pr-4 font-mono" style={{ backgroundColor: "var(--color-card)", border: "1px solid var(--color-border)", color: "var(--color-foreground)" }}
                     />
                   </div>
                 </motion.div>
@@ -458,7 +461,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                   >
                     <label className="text-[11px] font-bold tracking-widest uppercase mb-3" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>Credit Limit</label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold select-none" style={{ color: "var(--color-muted-foreground)" }}>Rp</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold select-none font-mono" style={{ color: "var(--color-muted-foreground)" }}>Rp</span>
                       <Input
                         type="text"
                         inputMode="numeric"
@@ -468,7 +471,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                           const raw = e.target.value.replace(/\D/g, "");
                           setCreditLimit(raw ? formatRupiahVisual(raw) : "");
                         }}
-                        className="h-11 pl-10 pr-4" style={{ backgroundColor: "var(--color-card)", border: "1px solid var(--color-border)", color: "var(--color-foreground)" }}
+                        className="h-11 pl-10 pr-4 font-mono" style={{ backgroundColor: "var(--color-card)", border: "1px solid var(--color-border)", color: "var(--color-foreground)" }}
                       />
                     </div>
                   </motion.div>
@@ -481,7 +484,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                   >
                     <label className="text-[11px] font-bold tracking-widest uppercase mb-3" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>Current Outstanding</label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold select-none" style={{ color: "var(--color-muted-foreground)" }}>Rp</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold select-none font-mono" style={{ color: "var(--color-muted-foreground)" }}>Rp</span>
                       <Input 
                         type="text" 
                         inputMode="numeric" 
@@ -491,7 +494,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                           const raw = e.target.value.replace(/\D/g, "");
                           setCurrentOutstanding(raw ? formatRupiahVisual(raw) : "");
                         }}
-                        className="h-11 pl-10 pr-4" style={{ backgroundColor: "var(--color-card)", border: "1px solid var(--color-border)", color: "var(--color-foreground)" }} 
+                        className="h-11 pl-10 pr-4 font-mono" style={{ backgroundColor: "var(--color-card)", border: "1px solid var(--color-border)", color: "var(--color-foreground)" }} 
                       />
                     </div>
                   </motion.div>
@@ -515,7 +518,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                               max="100"
                               value={interestRate}
                               onChange={(e) => setInterestRate(e.target.value)}
-                              className="h-11" style={{ backgroundColor: "var(--color-card)", border: "1px solid var(--color-border)", color: "var(--color-foreground)" }}
+                              className="h-11 font-mono" style={{ backgroundColor: "var(--color-card)", border: "1px solid var(--color-border)", color: "var(--color-foreground)" }}
                             />
                           </div>
                           <div>
@@ -527,7 +530,7 @@ export default function CreateWalletModal({ isOpen, onClose, onSuccess }: Create
                               max="100"
                               value={adminFee}
                               onChange={(e) => setAdminFee(e.target.value)}
-                              className="h-11" style={{ backgroundColor: "var(--color-card)", border: "1px solid var(--color-border)", color: "var(--color-foreground)" }}
+                              className="h-11 font-mono" style={{ backgroundColor: "var(--color-card)", border: "1px solid var(--color-border)", color: "var(--color-foreground)" }}
                             />
                           </div>
                         </div>
