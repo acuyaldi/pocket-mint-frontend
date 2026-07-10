@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { syncUserToBackend } from "@/lib/auth/sync-user";
+import { resolveUserName, syncUserToBackend } from "@/lib/auth/sync-user";
 
 // ─── Helpers ─────────────────────────────────────────────────────
 /** Resolve the request origin (protocol + host) for OAuth redirect URLs. */
@@ -26,10 +26,21 @@ export async function login(formData: FormData) {
     password: formData.get("password") as string,
   };
 
-  const { error } = await supabase.auth.signInWithPassword(data);
+  const { data: authData, error } = await supabase.auth.signInWithPassword(data);
 
   if (error) {
     return { error: error.message };
+  }
+
+  // Self-heal: ensure the backend has this user. Covers accounts that missed
+  // sync at signup (e.g. backend DB was down) — /users/sync is idempotent, so
+  // known users are a no-op and unknown ones get provisioned before requests.
+  if (authData.user?.email) {
+    await syncUserToBackend({
+      supabaseId: authData.user.id,
+      email: authData.user.email,
+      name: resolveUserName(authData.user),
+    });
   }
 
   revalidatePath("/", "layout");
