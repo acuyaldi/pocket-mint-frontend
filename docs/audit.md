@@ -58,8 +58,8 @@ Pocket Mint frontend is a **single Next.js App-Router application**, not a micro
 
 | Component | File | Renders / notes |
 |-----------|------|-----------------|
-| `AppSidebar` | [components/layout/app-sidebar.tsx](../apps/frontend/components/layout/app-sidebar.tsx) | Desktop rail. Uses `Sidebar` primitives (`components/ui/sidebar.tsx`), `PocketMintLogo`, 5× `SidebarLink` nav (Dashboard/Wallets/Transactions/Goals/Installments), an **Add Transaction** button that dispatches the `fab-add-transaction` window event, and an `AccountMenuItems` dropdown. The account entry label is **dynamic**: it reads the Supabase session client-side (`createClient().auth.getUser()`) and shows `user_metadata.full_name` → `user_metadata.name` → `email`, falling back to the static `"Account"` while loading or when signed out. |
-| `BottomNav` | [components/layout/bottom-nav.tsx](../apps/frontend/components/layout/bottom-nav.tsx) | Mobile only (`md:hidden`). Same 5 nav items mirrored via `DockMorph` (`components/ui/dock-morph.tsx`) + `AccountMenuItems`. |
+| `AppSidebar` | [components/layout/app-sidebar.tsx](../apps/frontend/components/layout/app-sidebar.tsx) | Desktop rail. Uses `Sidebar` primitives (`components/ui/sidebar.tsx`), `PocketMintLogo`, 4× `SidebarLink` nav (Dashboard/Wallets/Transactions/Installments), an **Add Transaction** button that dispatches the `fab-add-transaction` window event, and an `AccountMenuItems` dropdown. The account entry label is **dynamic**: it reads the Supabase session client-side (`createClient().auth.getUser()`) and shows `user_metadata.full_name` → `user_metadata.name` → `email`, falling back to the static `"Account"` while loading or when signed out. |
+| `BottomNav` | [components/layout/bottom-nav.tsx](../apps/frontend/components/layout/bottom-nav.tsx) | Mobile only (`md:hidden`). Same 4 nav items mirrored via `DockMorph` (`components/ui/dock-morph.tsx`) + `AccountMenuItems`. |
 | `AccountMenuItems` | [components/layout/account-menu.tsx](../apps/frontend/components/layout/account-menu.tsx) | Shared dropdown body used by both sidebar and bottom nav. |
 
 ---
