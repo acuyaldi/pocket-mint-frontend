@@ -37,8 +37,8 @@ const productSignals = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto flex min-h-screen w-full max-w-[1440px] flex-col px-4 py-4 sm:px-6 lg:px-8">
+    <div className="min-h-dvh bg-background text-foreground">
+      <div className="mx-auto flex min-h-dvh w-full max-w-360 flex-col px-4 py-4 sm:px-6 lg:px-8">
         <header className="surface-card sticky top-4 z-20 flex items-center justify-between gap-3 rounded-2xl border border-white/70 px-4 py-3 backdrop-blur sm:px-6 sm:py-4">
           <PocketMintLogo />
           <div className="flex shrink-0 items-center gap-2">
@@ -46,7 +46,7 @@ export default function LandingPage() {
               href="/login"
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "hidden border-border/80 bg-white/70 px-4 sm:inline-flex"
+                "hidden border-border/80 bg-card/70 px-4 sm:inline-flex"
               )}
             >
               Sign In
@@ -64,42 +64,49 @@ export default function LandingPage() {
         </header>
 
         <main className="flex flex-1 flex-col justify-center py-8 lg:py-12">
-          <section className="surface-grid relative overflow-hidden rounded-[28px] border border-white/70 bg-white/64 px-6 py-8 sm:px-8 lg:px-10 lg:py-10">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,109,54,0.12),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(137,80,36,0.1),transparent_22%)]" />
+          <section className="surface-grid relative overflow-hidden rounded-[28px] border border-white/70 bg-card/64 px-6 py-8 duration-700 animate-in fade-in-0 sm:px-8 lg:px-10 lg:py-10">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle at top left, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 28%), radial-gradient(circle at bottom right, color-mix(in srgb, var(--color-warning) 10%, transparent), transparent 22%)",
+              }}
+            />
             <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_420px] lg:items-end">
               <div>
-                <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/12 bg-white/82 px-3 py-1.5 text-[11px] font-semibold tracking-[0.08em] text-primary">
+                <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/12 bg-card/85 px-3 py-1.5 text-[11px] font-semibold tracking-[0.08em] text-primary duration-700 animate-in fade-in-0 slide-in-from-bottom-2">
                   <ShieldCheck className="size-3.5" />
                   PRIVATE PERSONAL FINANCE TERMINAL
                 </div>
 
-                <h1 className="max-w-4xl font-heading text-4xl font-bold leading-[1.04] tracking-[-0.03em] text-foreground sm:text-5xl lg:text-[64px]">
+                <h1 className="max-w-4xl font-heading text-4xl font-bold leading-[1.04] tracking-[-0.03em] text-foreground duration-700 animate-in fade-in-0 slide-in-from-bottom-3 sm:text-5xl lg:text-[64px]">
                   Financial clarity for people juggling assets, debt, and
                   cicilan in one private workspace.
                 </h1>
 
-                <p className="mt-6 max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
+                <p className="mt-6 max-w-3xl text-base leading-7 text-muted-foreground duration-700 animate-in fade-in-0 slide-in-from-bottom-3 [animation-delay:120ms] sm:text-lg">
                   Pocket Mint is a premium personal finance workspace built for
                   people who need net worth, debt, and cicilan to stay clearly
                   readable — precise, private, and always under your control.
                 </p>
 
-                <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                <div className="mt-8 flex flex-col items-stretch gap-3 duration-700 animate-in fade-in-0 slide-in-from-bottom-3 [animation-delay:220ms] sm:flex-row sm:items-center">
                   <Link
                     href="/login"
                     className={cn(
                       buttonVariants({ size: "lg" }),
-                      "h-11 min-w-52 justify-between bg-primary px-4 text-primary-foreground hover:bg-primary/92"
+                      "group h-11 min-w-52 justify-between bg-primary px-4 text-primary-foreground hover:bg-primary/92"
                     )}
                   >
                     <span>Get Started</span>
-                    <ArrowRight className="size-4" />
+                    <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
                   </Link>
                   <Link
                     href="/login"
                     className={cn(
                       buttonVariants({ size: "lg", variant: "outline" }),
-                      "h-11 justify-center border-border/80 bg-white/70 px-6"
+                      "h-11 justify-center border-border/80 bg-card/70 px-6"
                     )}
                   >
                     Sign In
@@ -107,7 +114,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="surface-card rounded-[24px] border border-white/80 p-5">
+              <div className="surface-card rounded-[24px] border border-white/80 p-5 duration-700 animate-in fade-in-0 slide-in-from-bottom-4 [animation-delay:320ms]">
                 <p className="text-[11px] font-semibold tracking-[0.08em] text-muted-foreground">
                   SYSTEM SIGNALS
                 </p>
@@ -115,7 +122,7 @@ export default function LandingPage() {
                   {productSignals.map((signal) => (
                     <div
                       key={signal.label}
-                      className="rounded-2xl border border-border/80 bg-white/82 px-4 py-3"
+                      className="rounded-2xl border border-border/80 bg-card/85 px-4 py-3"
                     >
                       <p className="text-[11px] font-semibold tracking-[0.08em] text-muted-foreground">
                         {signal.label.toUpperCase()}
@@ -132,13 +139,14 @@ export default function LandingPage() {
 
           <section className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="grid gap-4 md:grid-cols-3">
-              {capabilityCards.map((card) => {
+              {capabilityCards.map((card, index) => {
                 const Icon = card.icon;
 
                 return (
                   <article
                     key={card.title}
-                    className="surface-card rounded-2xl border border-white/80 p-5"
+                    style={{ animationDelay: `${420 + index * 90}ms` }}
+                    className="surface-card rounded-2xl border border-white/80 p-5 transition-transform hover:-translate-y-0.5 fill-mode-both animation-duration-[700ms] animate-in fade-in-0 slide-in-from-bottom-4"
                   >
                     <div className="flex items-center gap-3">
                       <div className="rounded-xl border border-primary/12 bg-primary/10 p-2 text-primary">
@@ -156,7 +164,7 @@ export default function LandingPage() {
               })}
             </div>
 
-            <aside className="surface-card rounded-2xl border border-white/80 p-5">
+            <aside className="surface-card rounded-2xl border border-white/80 p-5 fill-mode-both animation-duration-[700ms] [animation-delay:690ms] animate-in fade-in-0 slide-in-from-bottom-4">
               <div className="flex items-center gap-2 text-primary">
                 <Webhook className="size-4" />
                 <p className="text-[11px] font-semibold tracking-[0.08em]">
