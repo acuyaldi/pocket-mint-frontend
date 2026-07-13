@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { syncUserToBackend } from "@/lib/auth/sync-user";
+import { resolveUserName, syncUserToBackend } from "@/lib/auth/sync-user";
 
 // ─── Helpers ─────────────────────────────────────────────────────
 /** Resolve the request origin (protocol + host) for OAuth redirect URLs. */
@@ -26,10 +26,20 @@ export async function login(formData: FormData) {
     password: formData.get("password") as string,
   };
 
-  const { error } = await supabase.auth.signInWithPassword(data);
+  const { data: authData, error } = await supabase.auth.signInWithPassword(data);
 
   if (error) {
     return { error: error.message };
+  }
+
+  // Self-heal: ensure the backend user row exists (idempotent). Covers accounts
+  // that deferred sync at signup (email confirmation) or missed it during an
+  // outage. Runs only with a valid session token — never blocks login on failure.
+  if (authData.session && authData.user) {
+    await syncUserToBackend({
+      accessToken: authData.session.access_token,
+      name: resolveUserName(authData.user),
+    });
   }
 
   revalidatePath("/", "layout");
@@ -56,12 +66,13 @@ export async function signup(formData: FormData) {
     return { error: error.message };
   }
 
-  // Sync user to backend Prisma database (non-blocking failure)
-  if (authData.user) {
+  // Sync to backend only once a session (access token) exists. When email
+  // confirmation is required, signUp returns no session — defer sync to the
+  // first authenticated login (handled by login()'s self-heal above).
+  if (authData.session && authData.user) {
     await syncUserToBackend({
-      supabaseId: authData.user.id,
-      email,
-      name,
+      accessToken: authData.session.access_token,
+      name: resolveUserName(authData.user),
     });
   }
 
