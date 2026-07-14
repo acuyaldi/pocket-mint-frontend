@@ -32,13 +32,12 @@ export async function login(formData: FormData) {
     return { error: error.message };
   }
 
-  // Self-heal: ensure the backend has this user. Covers accounts that missed
-  // sync at signup (e.g. backend DB was down) — /users/sync is idempotent, so
-  // known users are a no-op and unknown ones get provisioned before requests.
-  if (authData.user?.email) {
+  // Self-heal: ensure the backend user row exists (idempotent). Covers accounts
+  // that deferred sync at signup (email confirmation) or missed it during an
+  // outage. Runs only with a valid session token — never blocks login on failure.
+  if (authData.session && authData.user) {
     await syncUserToBackend({
-      supabaseId: authData.user.id,
-      email: authData.user.email,
+      accessToken: authData.session.access_token,
       name: resolveUserName(authData.user),
     });
   }
@@ -67,12 +66,13 @@ export async function signup(formData: FormData) {
     return { error: error.message };
   }
 
-  // Sync user to backend Prisma database (non-blocking failure)
-  if (authData.user) {
+  // Sync to backend only once a session (access token) exists. When email
+  // confirmation is required, signUp returns no session — defer sync to the
+  // first authenticated login (handled by login()'s self-heal above).
+  if (authData.session && authData.user) {
     await syncUserToBackend({
-      supabaseId: authData.user.id,
-      email,
-      name,
+      accessToken: authData.session.access_token,
+      name: resolveUserName(authData.user),
     });
   }
 

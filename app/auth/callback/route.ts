@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
     return NextResponse.redirect(
@@ -28,15 +28,11 @@ export async function GET(request: Request) {
   }
 
   // Ensure the OAuth user exists in the backend (they never hit signup()).
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (user?.email) {
+  // Uses the verified session token; backend derives identity from the JWT.
+  if (data.session && data.user) {
     await syncUserToBackend({
-      supabaseId: user.id,
-      email: user.email,
-      name: resolveUserName(user),
+      accessToken: data.session.access_token,
+      name: resolveUserName(data.user),
     });
   }
 
