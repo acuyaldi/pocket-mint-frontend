@@ -5,6 +5,7 @@ node_modules/
 # Next.js build output & Turbopack cache
 .next/
 out/
+tsconfig.tsbuildinfo
 
 # Production build
 build/
