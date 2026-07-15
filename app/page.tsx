@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 type ProductScreenProps = {
   src: string;
   alt: string;
+  crop: string;
   frameClassName: string;
   imageClassName: string;
   sizes: string;
@@ -16,6 +17,7 @@ type ProductScreenProps = {
 function ProductScreen({
   src,
   alt,
+  crop,
   frameClassName,
   imageClassName,
   sizes,
@@ -23,6 +25,7 @@ function ProductScreen({
 }: ProductScreenProps) {
   return (
     <div
+      data-crop={crop}
       className={cn(
         "relative overflow-hidden rounded-2xl border border-border bg-card shadow-[0_24px_60px_rgba(15,23,42,0.08)]",
         frameClassName
@@ -68,7 +71,7 @@ export default function LandingPage() {
 
           <div className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
             <Link
-              href="#dashboard"
+              href="#wallet"
               className="rounded-md transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
             >
               Fitur
@@ -101,40 +104,53 @@ export default function LandingPage() {
       <main>
         <section
           aria-labelledby="hero-title"
-          className="mx-auto grid min-h-[calc(100dvh-4rem)] w-full max-w-7xl items-center gap-10 px-5 py-12 md:px-8 lg:grid-cols-[0.88fr_1.12fr] lg:gap-14 lg:px-10 lg:py-14"
+          className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-7xl flex-col justify-center px-5 py-14 md:px-8 lg:px-10 lg:py-20"
         >
-          <div className="max-w-xl">
-            <p className="text-sm font-medium text-muted-foreground">
-              Private Financial Workspace
-            </p>
-            <h1
-              id="hero-title"
-              className="mt-5 max-w-lg text-5xl font-semibold leading-[1.02] tracking-[-0.045em] text-foreground sm:text-6xl"
-            >
-              Clarity Over Complexity
-            </h1>
-            <p className="mt-6 max-w-md text-base leading-7 text-muted-foreground sm:text-lg">
-              Pahami apa yang Anda miliki, kewajiban Anda, dan hal yang perlu
-              perhatian, tanpa distraksi.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/login" className={primaryAction}>
-                Mulai Sekarang
-              </Link>
-              <Link href="#dashboard" className={secondaryAction}>
-                Lihat Demo
-              </Link>
+          <div className="grid items-end gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Private Financial Workspace
+              </p>
+              <h1
+                id="hero-title"
+                className="mt-5 max-w-lg text-5xl font-semibold leading-[1.02] tracking-[-0.045em] text-foreground sm:text-6xl"
+              >
+                Clarity Over Complexity
+              </h1>
+            </div>
+            <div className="max-w-lg lg:justify-self-end">
+              <p className="max-w-md text-base leading-7 text-muted-foreground sm:text-lg">
+                Pahami apa yang Anda miliki, kewajiban Anda, dan hal yang perlu
+                perhatian, tanpa distraksi.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link href="/login" className={primaryAction}>
+                  Mulai Sekarang
+                </Link>
+                <Link href="#wallet" className={secondaryAction}>
+                  Lihat Demo
+                </Link>
+              </div>
             </div>
           </div>
 
-          <ProductScreen
-            src="/landing/dashboard.png"
-            alt="Dashboard Pocket Mint yang menampilkan posisi keuangan, dompet, dan aktivitas terbaru"
-            frameClassName="aspect-[893/925] w-full"
-            imageClassName="object-contain"
-            sizes="(max-width: 1023px) 100vw, 56vw"
-            preload
-          />
+          <div className="mt-12 lg:mt-14">
+            <ProductScreen
+              src="/landing/dashboard.png"
+              alt="Dashboard Pocket Mint dengan posisi keuangan, dompet, dan aktivitas terbaru"
+              crop="dashboard-overview"
+              frameClassName="aspect-[4/3] w-full sm:aspect-[16/10]"
+              imageClassName="origin-center -translate-x-[8%] object-cover object-[84%_32%] scale-[1.34]"
+              sizes="(max-width: 1279px) 100vw, 1200px"
+              preload
+            />
+            <div className="mt-5 flex items-baseline justify-between gap-5 border-b border-border pb-5">
+              <p className="text-sm font-semibold">Dashboard</p>
+              <p className="text-right text-sm text-muted-foreground">
+                Lihat posisi keuangan Anda dalam satu ringkasan.
+              </p>
+            </div>
+          </div>
         </section>
 
         <section
@@ -171,85 +187,79 @@ export default function LandingPage() {
         </section>
 
         <section
-          id="dashboard"
-          aria-labelledby="dashboard-title"
-          className="mx-auto grid w-full max-w-7xl scroll-mt-20 items-center gap-10 px-5 py-20 md:px-8 lg:grid-cols-[0.42fr_0.58fr] lg:px-10 lg:py-24"
+          id="wallet"
+          aria-labelledby="wallet-title"
+          className="mx-auto grid w-full max-w-7xl scroll-mt-20 items-center gap-10 px-5 py-20 md:px-8 lg:grid-cols-[1.35fr_0.65fr] lg:gap-16 lg:px-10 lg:py-28"
         >
-          <div className="max-w-sm">
+          <ProductScreen
+            src="/landing/wallet.png"
+            alt="Ringkasan Wallet Pocket Mint dan beberapa kartu dompet pertama"
+            crop="wallet-summary-cards"
+            frameClassName="aspect-[4/3] w-full sm:aspect-[3/2]"
+            imageClassName="origin-center -translate-x-[8%] object-cover object-[88%_24%] scale-[1.32]"
+            sizes="(max-width: 1023px) 100vw, 65vw"
+          />
+          <div className="max-w-sm lg:justify-self-end">
+            <p className="text-sm font-medium text-muted-foreground">01</p>
             <h2
-              id="dashboard-title"
-              className="text-3xl font-semibold tracking-[-0.035em] sm:text-4xl"
+              id="wallet-title"
+              className="mt-4 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl"
             >
-              Dashboard
+              Wallet
             </h2>
             <p className="mt-4 text-base leading-7 text-muted-foreground">
-              Lihat posisi keuangan Anda dalam satu ringkasan.
+              Semua aset dan kewajiban dalam satu ledger.
             </p>
           </div>
-          <ProductScreen
-            src="/landing/dashboard.png"
-            alt="Ringkasan Dashboard Pocket Mint dengan posisi keuangan, daftar dompet, dan aktivitas terbaru"
-            frameClassName="aspect-square w-full"
-            imageClassName="origin-top object-cover object-[78%_top] scale-[1.08]"
-            sizes="(max-width: 1023px) 100vw, 58vw"
-          />
         </section>
 
         <section
-          id="product-pair"
-          aria-label="Wallet dan Transaction"
+          id="transactions"
+          aria-labelledby="transaction-title"
           className="border-y border-border/70 bg-card"
         >
-          <div className="mx-auto grid w-full max-w-7xl gap-12 px-5 py-20 md:px-8 lg:grid-cols-2 lg:gap-6 lg:px-10 lg:py-24">
-            <article aria-labelledby="wallet-title">
-              <h2
-                id="wallet-title"
-                className="text-3xl font-semibold tracking-[-0.035em]"
-              >
-                Wallet
-              </h2>
-              <p className="mt-3 text-base leading-7 text-muted-foreground">
-                Semua aset dan kewajiban dalam satu ledger.
-              </p>
-              <ProductScreen
-                src="/landing/wallet.png"
-                alt="Wallet Pocket Mint yang menampilkan daftar aset dan kewajiban"
-                frameClassName="mt-8 aspect-[4/5] w-full"
-                imageClassName="object-cover object-[88%_42%] scale-[1.14]"
-                sizes="(max-width: 1023px) 100vw, 50vw"
-              />
-            </article>
-
-            <article aria-labelledby="transaction-title">
+          <div className="mx-auto grid w-full max-w-7xl scroll-mt-20 items-center gap-10 px-5 py-20 md:px-8 lg:grid-cols-[0.65fr_1.35fr] lg:gap-16 lg:px-10 lg:py-28">
+            <div className="max-w-sm">
+              <p className="text-sm font-medium text-muted-foreground">02</p>
               <h2
                 id="transaction-title"
-                className="text-3xl font-semibold tracking-[-0.035em]"
+                className="mt-4 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl"
               >
                 Transaction
               </h2>
-              <p className="mt-3 text-base leading-7 text-muted-foreground">
+              <p className="mt-4 text-base leading-7 text-muted-foreground">
                 Riwayat yang cepat dicari dan mudah diperbaiki.
               </p>
-              <ProductScreen
-                src="/landing/transaction.png"
-                alt="Transaction Pocket Mint dengan pencarian dan riwayat transaksi"
-                frameClassName="mt-8 aspect-[4/5] w-full"
-                imageClassName="object-cover object-[90%_34%] scale-[1.12]"
-                sizes="(max-width: 1023px) 100vw, 50vw"
-              />
-            </article>
+            </div>
+            <ProductScreen
+              src="/landing/transaction.png"
+              alt="Pencarian Transaction Pocket Mint dan beberapa baris transaksi pertama"
+              crop="transaction-search-rows"
+              frameClassName="aspect-[4/3] w-full sm:aspect-[3/2]"
+              imageClassName="origin-center -translate-x-[8%] object-cover object-[89%_23%] scale-[1.3]"
+              sizes="(max-width: 1023px) 100vw, 65vw"
+            />
           </div>
         </section>
 
         <section
           id="installment"
           aria-labelledby="installment-title"
-          className="mx-auto grid w-full max-w-7xl scroll-mt-20 items-center gap-10 px-5 py-20 md:px-8 lg:grid-cols-[0.35fr_0.65fr] lg:px-10 lg:py-24"
+          className="mx-auto grid w-full max-w-7xl scroll-mt-20 items-center gap-10 px-5 py-20 md:px-8 lg:grid-cols-[1.35fr_0.65fr] lg:gap-16 lg:px-10 lg:py-28"
         >
-          <div className="max-w-sm">
+          <ProductScreen
+            src="/landing/installment.png"
+            alt="Ringkasan Installment Pocket Mint dan baris pertama kartu cicilan"
+            crop="installment-summary-cards"
+            frameClassName="aspect-[4/3] w-full sm:aspect-[3/2]"
+            imageClassName="origin-center -translate-x-[8%] object-cover object-[88%_25%] scale-[1.32]"
+            sizes="(max-width: 1023px) 100vw, 65vw"
+          />
+          <div className="max-w-sm lg:justify-self-end">
+            <p className="text-sm font-medium text-muted-foreground">03</p>
             <h2
               id="installment-title"
-              className="text-3xl font-semibold tracking-[-0.035em] sm:text-4xl"
+              className="mt-4 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl"
             >
               Installment
             </h2>
@@ -257,13 +267,6 @@ export default function LandingPage() {
               Pantau kewajiban tanpa kehilangan tanggal jatuh tempo.
             </p>
           </div>
-          <ProductScreen
-            src="/landing/installment.png"
-            alt="Installment Pocket Mint dengan pengingat, kartu cicilan, tanggal jatuh tempo, dan progres pembayaran"
-            frameClassName="aspect-[4/3] w-full"
-            imageClassName="object-cover object-[86%_26%] scale-[1.12]"
-            sizes="(max-width: 1023px) 100vw, 65vw"
-          />
         </section>
 
         <section id="cta" className="border-y border-border/70 bg-card">

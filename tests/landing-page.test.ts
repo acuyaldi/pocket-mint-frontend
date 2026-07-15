@@ -9,8 +9,8 @@ describe("Pocket Mint landing page contract", () => {
   it("keeps the approved section order", () => {
     const markers = [
       'id="privacy"',
-      'id="dashboard"',
-      'id="product-pair"',
+      'id="wallet"',
+      'id="transactions"',
       'id="installment"',
       'id="cta"',
     ];
@@ -18,6 +18,25 @@ describe("Pocket Mint landing page contract", () => {
 
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
+  });
+
+  it("uses the Dashboard once as the hero visual", () => {
+    expect(page.match(/\/landing\/dashboard\.png/g)).toHaveLength(1);
+    expect(page).not.toContain('id="dashboard"');
+    expect(page).not.toContain('id="product-pair"');
+  });
+
+  it("defines intentional editorial crops for each product story", () => {
+    expect(page).toContain("data-crop={crop}");
+
+    for (const crop of [
+      "dashboard-overview",
+      "wallet-summary-cards",
+      "transaction-search-rows",
+      "installment-summary-cards",
+    ]) {
+      expect(page).toContain(`crop="${crop}"`);
+    }
   });
 
   it("uses the approved concise copy", () => {
