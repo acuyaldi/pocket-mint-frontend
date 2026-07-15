@@ -12,7 +12,7 @@ import {
 
 import { PocketMintHero } from "@/components/ui/pocket-mint-hero";
 
-const dashboardImage = "/landing/dashboard.png";
+const dashboardImage = "/landing/dashboard-clean.png";
 const transactionImage = "/landing/transaction.png";
 
 const largePrimaryButton =

@@ -122,7 +122,7 @@ export function PocketMintHero() {
           >
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
               <Image
-                src="/landing/dashboard.png"
+                src="/landing/dashboard-clean.png"
                 alt="Dashboard Pocket Mint dari ekspor Google Stitch"
                 width={569}
                 height={552}

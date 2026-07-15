@@ -69,7 +69,7 @@ describe("Pocket Mint Stitch landing page contract", () => {
   });
 
   it("uses real local Stitch screens without device mockups", () => {
-    for (const asset of ["dashboard.png", "transaction.png"]) {
+    for (const asset of ["dashboard-clean.png", "transaction.png"]) {
       expect(existsSync(root + `public/landing/${asset}`)).toBe(true);
       expect(page).toContain(`/landing/${asset}`);
     }
@@ -94,7 +94,8 @@ describe("Pocket Mint Stitch landing page contract", () => {
     expect(hero).toContain('from "framer-motion"');
     expect(hero).toContain("Clarity Over Complexity");
     expect(hero).toContain("Lihat Demo");
-    expect(hero).toContain("/landing/dashboard.png");
+    expect(hero).toContain("/landing/dashboard-clean.png");
+    expect(page + hero).not.toContain('"/landing/dashboard.png"');
     expect(hero).toContain("object-contain");
     expect(hero).toContain("max-w-5xl");
     expect(hero).not.toMatch(/Moon|Sun|dark:|bg-gradient|from-background/);
