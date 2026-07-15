@@ -6,12 +6,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowDownLeft,
   ArrowLeftRight,
-  ArrowRight,
   ArrowUpRight,
   Banknote,
   CalendarDays,
   CreditCard,
-  HandCoins,
   Loader2,
   Plus,
   RefreshCw,
@@ -23,10 +21,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePaylaterRates } from "@/src/features/installments/hooks/useInstallments";
 import { isDebtWallet, type Wallet } from "@/src/types/wallet";
+import { AccountPicker } from "./AccountPicker";
 import { formatRupiah } from "./constants";
+import {
+  getTransferEndpointWallets,
+  getTransferWallets,
+  isValidTransferPair,
+  selectTransferEndpoint,
+  swapTransferEndpoints,
+} from "./transfer-account-picker";
 
 type TxType = "EXPENSE" | "INCOME" | "TRANSFER";
-type Tab = TxType | "PAY_DEBT";
+type Tab = TxType;
 
 const EXPENSE_CATS = [
   "Makanan",
@@ -72,13 +78,6 @@ const TYPE_OPTIONS = [
     Icon: ArrowLeftRight,
     activeClass: "bg-primary text-primary-foreground shadow-sm",
     iconClass: "text-primary",
-  },
-  {
-    type: "PAY_DEBT" as Tab,
-    label: "Bayar hutang",
-    Icon: HandCoins,
-    activeClass: "bg-amber text-primary shadow-sm",
-    iconClass: "text-amber",
   },
 ];
 
@@ -170,10 +169,9 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function WalletGrid({
+function WalletSelectionList({
   wallets,
   selected,
-  exclude = "",
   emptyLabel,
   isDisabled,
   disabledTitle = "Saldo tidak cukup",
@@ -181,15 +179,12 @@ function WalletGrid({
 }: {
   wallets: Wallet[];
   selected: string;
-  exclude?: string;
   emptyLabel: string;
   isDisabled?: (wallet: Wallet) => boolean;
   disabledTitle?: string;
   onSelect: (id: string) => void;
 }) {
-  const available = wallets.filter((wallet) => wallet.id !== exclude);
-
-  if (available.length === 0) {
+  if (wallets.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-surface-low p-4 text-sm text-muted-foreground">
         {emptyLabel}
@@ -199,7 +194,7 @@ function WalletGrid({
 
   return (
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-      {available.map((wallet) => {
+      {wallets.map((wallet) => {
         const active = selected === wallet.id;
         const disabled = isDisabled?.(wallet) ?? false;
         const Icon = getWalletIcon(wallet);
@@ -266,9 +261,10 @@ export function AddTransactionModal({
   const router = useRouter();
   const { data: paylaterRates } = usePaylaterRates();
 
-  const hasNoWallets = wallets.length === 0;
+  const transferWallets = useMemo(() => getTransferWallets(wallets), [wallets]);
+  const hasNoWallets =
+    type === "TRANSFER" ? transferWallets.length === 0 : wallets.length === 0;
   const selectedWallet = wallets.find((wallet) => wallet.id === walletId);
-  const destinationWallet = wallets.find((wallet) => wallet.id === toWalletId);
   const installmentDefaults = getInstallmentDefaults(
     selectedWallet,
     paylaterRates,
@@ -298,6 +294,33 @@ export function AddTransactionModal({
     setError("");
   }, []);
 
+  const handleSourceSelect = useCallback(
+    (nextId: string) => {
+      const next = selectTransferEndpoint(walletId, toWalletId, nextId);
+      setWalletId(next.selectedId);
+      setToWalletId(next.oppositeId);
+      setError("");
+    },
+    [walletId, toWalletId],
+  );
+
+  const handleDestinationSelect = useCallback(
+    (nextId: string) => {
+      const next = selectTransferEndpoint(toWalletId, walletId, nextId);
+      setToWalletId(next.selectedId);
+      setWalletId(next.oppositeId);
+      setError("");
+    },
+    [toWalletId, walletId],
+  );
+
+  const handleSwapWallets = useCallback(() => {
+    const next = swapTransferEndpoints(walletId, toWalletId);
+    setWalletId(next.selectedId);
+    setToWalletId(next.oppositeId);
+    setError("");
+  }, [walletId, toWalletId]);
+
   const handleClose = useCallback(() => {
     if (!isCreating) onClose();
   }, [isCreating, onClose]);
@@ -311,23 +334,23 @@ export function AddTransactionModal({
     type === "INCOME" ? INCOME_CATS : type === "EXPENSE" ? EXPENSE_CATS : [];
 
   const sourceWallets = useMemo(() => {
-    if (type === "TRANSFER" || type === "INCOME") {
+    if (type === "INCOME") {
       return wallets.filter((wallet) => !isDebtWallet(wallet.type));
     }
-    if (type === "PAY_DEBT") {
-      return wallets.filter(
-        (wallet) => wallet.type === "BANK" || wallet.type === "CASH",
-      );
+    if (type === "TRANSFER") {
+      return getTransferWallets(wallets);
     }
     return wallets;
   }, [type, wallets]);
 
-  const destinationWallets = useMemo(() => {
-    if (type === "PAY_DEBT") {
-      return wallets.filter((wallet) => isDebtWallet(wallet.type));
-    }
-    return wallets.filter((wallet) => !isDebtWallet(wallet.type));
-  }, [type, wallets]);
+  const sourcePickerWallets = getTransferEndpointWallets(
+    transferWallets,
+    toWalletId,
+  );
+  const destinationPickerWallets = getTransferEndpointWallets(
+    transferWallets,
+    walletId,
+  );
 
   const rateNum = Number(interestRate.replace(",", ".")) || 0;
   const adminFeeNum = Number(adminFee.replace(",", ".")) || 0;
@@ -360,12 +383,16 @@ export function AddTransactionModal({
     if (parsedAmount <= 0) return;
 
     const srcWallet = wallets.find((wallet) => wallet.id === walletId);
-    const destWallet = wallets.find((wallet) => wallet.id === toWalletId);
-    const isTransferLike = type === "TRANSFER" || type === "PAY_DEBT";
+    const isTransfer = type === "TRANSFER";
     const asInstallment =
       isInstallment && !!srcWallet && isDebtWallet(srcWallet.type);
 
-    if (isTransferLike && srcWallet && isDebtWallet(srcWallet.type)) {
+    if (isTransfer && !isValidTransferPair(walletId, toWalletId)) {
+      setError("Pilih dompet sumber dan tujuan yang berbeda.");
+      return;
+    }
+
+    if (isTransfer && srcWallet && isDebtWallet(srcWallet.type)) {
       setError("Transfer tidak bisa dilakukan dari kartu kredit atau paylater.");
       return;
     }
@@ -373,21 +400,6 @@ export function AddTransactionModal({
     if (type === "INCOME" && srcWallet && isDebtWallet(srcWallet.type)) {
       setError("Pemasukan tidak bisa dicatat ke kartu kredit atau paylater.");
       return;
-    }
-
-    if (type === "PAY_DEBT") {
-      if (!srcWallet || !destWallet) {
-        setError("Pilih dompet sumber dan hutang yang ingin dibayar.");
-        return;
-      }
-
-      const outstanding = Math.abs(destWallet.balance);
-      if (parsedAmount > outstanding) {
-        setError(
-          `Melebihi sisa hutang — Rp ${formatRupiah(String(outstanding))}.`,
-        );
-        return;
-      }
     }
 
     if (srcWallet && type !== "INCOME") {
@@ -403,16 +415,12 @@ export function AddTransactionModal({
 
     try {
       await onSubmit({
-        description:
-          description.trim() ||
-          (type === "PAY_DEBT" && destWallet
-            ? `Pembayaran hutang — ${destWallet.name}`
-            : ""),
+        description: description.trim(),
         amount: parsedAmount,
-        type: type === "PAY_DEBT" ? "TRANSFER" : type,
+        type,
         date: new Date(date).toISOString(),
         walletId: walletId || undefined,
-        toWalletId: isTransferLike ? toWalletId || undefined : undefined,
+        toWalletId: isTransfer ? toWalletId || undefined : undefined,
         isInstallment: asInstallment || undefined,
         installmentMonths: asInstallment ? installmentMonths : undefined,
         interestRate: asInstallment ? rateNum : undefined,
@@ -484,7 +492,7 @@ export function AddTransactionModal({
               <div className="flex-1 space-y-6 overflow-y-auto p-6">
                 <nav
                   aria-label="Jenis transaksi"
-                  className="grid grid-cols-2 rounded-lg bg-surface-high p-1 md:grid-cols-4"
+                  className="grid grid-cols-3 rounded-lg bg-surface-high p-1"
                 >
                   {TYPE_OPTIONS.map(({ type: optionType, label, Icon, activeClass }) => {
                     const active = type === optionType;
@@ -559,7 +567,28 @@ export function AddTransactionModal({
                   )}
                 </section>
 
-                {hasNoWallets ? (
+                {hasNoWallets && type === "TRANSFER" ? (
+                  <section className="rounded-xl border border-dashed border-border bg-surface-low p-6 text-center">
+                    <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <WalletIcon className="size-6" />
+                    </div>
+                    <h3 className="text-base font-semibold text-foreground">
+                      Tidak ada dompet untuk transfer
+                    </h3>
+                    <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+                      Tambahkan minimal dua dompet non-hutang untuk memindahkan
+                      uang.
+                    </p>
+                    <Button
+                      type="button"
+                      onClick={handleAddWallet}
+                      className="mt-4 h-10 gap-2 px-4"
+                    >
+                      <Plus className="size-4" />
+                      Tambah dompet
+                    </Button>
+                  </section>
+                ) : hasNoWallets ? (
                   <section className="rounded-xl border border-dashed border-border bg-surface-low p-6 text-center">
                     <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                       <WalletIcon className="size-6" />
@@ -580,73 +609,49 @@ export function AddTransactionModal({
                       Tambah dompet
                     </Button>
                   </section>
-                ) : type === "TRANSFER" || type === "PAY_DEBT" ? (
-                  <section className="relative grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="hidden md:absolute md:left-1/2 md:top-1/2 md:z-10 md:flex md:size-9 md:-translate-x-1/2 md:-translate-y-1/2 md:items-center md:justify-center md:rounded-full md:border md:border-border md:bg-card md:text-mint md:shadow-sm">
-                      <ArrowRight className="size-5" />
+                ) : type === "TRANSFER" ? (
+                  <section className="space-y-2">
+                    <AccountPicker
+                      id="transfer-source"
+                      label="Dompet sumber"
+                      wallets={sourcePickerWallets}
+                      selectedId={walletId}
+                      emptyLabel={
+                        sourcePickerWallets.length === 0
+                          ? "Tidak ada dompet sumber lain yang tersedia."
+                          : "Pilih dompet sumber"
+                      }
+                      disabledReason="Saldo tidak cukup"
+                      isDisabled={lacksFunds}
+                      onSelect={handleSourceSelect}
+                    />
+                    <div className="flex justify-center">
+                      <button
+                        type="button"
+                        aria-label="Tukar dompet sumber dan tujuan"
+                        onClick={handleSwapWallets}
+                        className="flex size-10 items-center justify-center rounded-full border border-border/70 bg-card text-muted-foreground shadow-sm transition-colors hover:bg-surface-low hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/15"
+                      >
+                        <ArrowLeftRight className="size-4" />
+                      </button>
                     </div>
-                    <div className="space-y-2">
-                      <FieldLabel>
-                        {type === "PAY_DEBT" ? "Bayar dari" : "Dompet sumber"}
-                      </FieldLabel>
-                      <WalletGrid
-                        wallets={sourceWallets}
-                        selected={walletId}
-                        exclude={toWalletId}
-                        emptyLabel="Tidak ada dompet sumber yang tersedia."
-                        isDisabled={lacksFunds}
-                        onSelect={setWalletId}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <FieldLabel>
-                        {type === "PAY_DEBT" ? "Hutang tujuan" : "Dompet tujuan"}
-                      </FieldLabel>
-                      <WalletGrid
-                        wallets={destinationWallets}
-                        selected={toWalletId}
-                        exclude={walletId}
-                        emptyLabel="Tidak ada dompet tujuan yang tersedia."
-                        isDisabled={
-                          type === "PAY_DEBT"
-                            ? (wallet) => Math.abs(wallet.balance) === 0
-                            : undefined
-                        }
-                        disabledTitle="Tidak ada hutang berjalan"
-                        onSelect={setToWalletId}
-                      />
-                      {type === "PAY_DEBT" && destinationWallet && (
-                        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-surface-low px-3 py-2 text-xs text-muted-foreground">
-                          <span>
-                            Sisa hutang:{" "}
-                            <strong className="tabular-nums text-coral">
-                              Rp{" "}
-                              {formatRupiah(
-                                String(Math.abs(destinationWallet.balance)),
-                              )}
-                            </strong>
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setAmount(
-                                formatRupiah(
-                                  String(Math.abs(destinationWallet.balance)),
-                                ),
-                              )
-                            }
-                            className="rounded-full border border-mint/30 bg-mint/10 px-3 py-1 font-semibold text-primary transition-colors hover:bg-mint/20"
-                          >
-                            Bayar penuh
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <AccountPicker
+                      id="transfer-destination"
+                      label="Dompet tujuan"
+                      wallets={destinationPickerWallets}
+                      selectedId={toWalletId}
+                      emptyLabel={
+                        destinationPickerWallets.length === 0
+                          ? "Tidak ada dompet tujuan lain yang tersedia."
+                          : "Pilih dompet tujuan"
+                      }
+                      onSelect={handleDestinationSelect}
+                    />
                   </section>
                 ) : (
                   <section className="space-y-2">
                     <FieldLabel>Pilih dompet</FieldLabel>
-                    <WalletGrid
+                    <WalletSelectionList
                       wallets={sourceWallets}
                       selected={walletId}
                       emptyLabel="Tidak ada dompet yang tersedia."
@@ -664,11 +669,7 @@ export function AddTransactionModal({
                   <FieldLabel>Deskripsi</FieldLabel>
                   <Input
                     type="text"
-                    placeholder={
-                      type === "PAY_DEBT"
-                        ? "Contoh: Bayar kartu kredit"
-                        : "Contoh: Belanja mingguan"
-                    }
+                    placeholder="Contoh: Belanja mingguan"
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
                     className="h-12 border-border/70 bg-card px-3 text-sm"
@@ -823,7 +824,11 @@ export function AddTransactionModal({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isCreating || hasNoWallets}
+                  disabled={
+                    isCreating ||
+                    hasNoWallets ||
+                    (type === "TRANSFER" && transferWallets.length < 2)
+                  }
                   className="h-11 flex-1 gap-2"
                 >
                   {isCreating ? (
