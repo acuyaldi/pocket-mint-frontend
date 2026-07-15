@@ -24,6 +24,7 @@ import { isDebtWallet, type Wallet } from "@/src/types/wallet";
 import { AccountPicker } from "./AccountPicker";
 import { formatRupiah } from "./constants";
 import {
+  getTransferEndpointWallets,
   getTransferWallets,
   isValidTransferPair,
   selectTransferEndpoint,
@@ -260,7 +261,9 @@ export function AddTransactionModal({
   const router = useRouter();
   const { data: paylaterRates } = usePaylaterRates();
 
-  const hasNoWallets = wallets.length === 0;
+  const transferWallets = useMemo(() => getTransferWallets(wallets), [wallets]);
+  const hasNoWallets =
+    type === "TRANSFER" ? transferWallets.length === 0 : wallets.length === 0;
   const selectedWallet = wallets.find((wallet) => wallet.id === walletId);
   const installmentDefaults = getInstallmentDefaults(
     selectedWallet,
@@ -340,7 +343,14 @@ export function AddTransactionModal({
     return wallets;
   }, [type, wallets]);
 
-  const transferWallets = useMemo(() => getTransferWallets(wallets), [wallets]);
+  const sourcePickerWallets = getTransferEndpointWallets(
+    transferWallets,
+    toWalletId,
+  );
+  const destinationPickerWallets = getTransferEndpointWallets(
+    transferWallets,
+    walletId,
+  );
 
   const rateNum = Number(interestRate.replace(",", ".")) || 0;
   const adminFeeNum = Number(adminFee.replace(",", ".")) || 0;
@@ -557,7 +567,28 @@ export function AddTransactionModal({
                   )}
                 </section>
 
-                {hasNoWallets ? (
+                {hasNoWallets && type === "TRANSFER" ? (
+                  <section className="rounded-xl border border-dashed border-border bg-surface-low p-6 text-center">
+                    <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <WalletIcon className="size-6" />
+                    </div>
+                    <h3 className="text-base font-semibold text-foreground">
+                      Tidak ada dompet untuk transfer
+                    </h3>
+                    <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+                      Tambahkan minimal dua dompet non-hutang untuk memindahkan
+                      uang.
+                    </p>
+                    <Button
+                      type="button"
+                      onClick={handleAddWallet}
+                      className="mt-4 h-10 gap-2 px-4"
+                    >
+                      <Plus className="size-4" />
+                      Tambah dompet
+                    </Button>
+                  </section>
+                ) : hasNoWallets ? (
                   <section className="rounded-xl border border-dashed border-border bg-surface-low p-6 text-center">
                     <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                       <WalletIcon className="size-6" />
@@ -583,9 +614,13 @@ export function AddTransactionModal({
                     <AccountPicker
                       id="transfer-source"
                       label="Dompet sumber"
-                      wallets={transferWallets}
+                      wallets={sourcePickerWallets}
                       selectedId={walletId}
-                      emptyLabel="Pilih dompet sumber"
+                      emptyLabel={
+                        sourcePickerWallets.length === 0
+                          ? "Tidak ada dompet sumber lain yang tersedia."
+                          : "Pilih dompet sumber"
+                      }
                       disabledReason="Saldo tidak cukup"
                       isDisabled={lacksFunds}
                       onSelect={handleSourceSelect}
@@ -603,9 +638,13 @@ export function AddTransactionModal({
                     <AccountPicker
                       id="transfer-destination"
                       label="Dompet tujuan"
-                      wallets={transferWallets}
+                      wallets={destinationPickerWallets}
                       selectedId={toWalletId}
-                      emptyLabel="Pilih dompet tujuan"
+                      emptyLabel={
+                        destinationPickerWallets.length === 0
+                          ? "Tidak ada dompet tujuan lain yang tersedia."
+                          : "Pilih dompet tujuan"
+                      }
                       onSelect={handleDestinationSelect}
                     />
                   </section>
@@ -785,7 +824,11 @@ export function AddTransactionModal({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isCreating || hasNoWallets}
+                  disabled={
+                    isCreating ||
+                    hasNoWallets ||
+                    (type === "TRANSFER" && transferWallets.length < 2)
+                  }
                   className="h-11 flex-1 gap-2"
                 >
                   {isCreating ? (

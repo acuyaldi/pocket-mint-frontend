@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getTransferEndpointWallets,
   getTransferWallets,
   isValidTransferPair,
   selectTransferEndpoint,
@@ -25,6 +26,30 @@ function wallet(id: string, type: WalletType): Wallet {
 }
 
 describe("transfer account picker state", () => {
+  describe("endpoint wallet availability", () => {
+    it("keeps an empty wallet list empty", () => {
+      expect(getTransferEndpointWallets([], "")).toEqual([]);
+    });
+
+    it("keeps a sole wallet available while the opposite endpoint is empty", () => {
+      const wallets = [wallet("bank", "BANK")];
+
+      expect(getTransferEndpointWallets(wallets, "")).toEqual(wallets);
+    });
+
+    it("hides a sole wallet when it is selected by the opposite endpoint", () => {
+      const wallets = [wallet("bank", "BANK")];
+
+      expect(getTransferEndpointWallets(wallets, "bank")).toEqual([]);
+    });
+
+    it("keeps all wallets available with two endpoints to preserve automatic swap", () => {
+      const wallets = [wallet("bank", "BANK"), wallet("cash", "CASH")];
+
+      expect(getTransferEndpointWallets(wallets, "bank")).toEqual(wallets);
+    });
+  });
+
   it("filters debt wallets while preserving eligible wallet order", () => {
     const wallets = [
       wallet("bank", "BANK"),

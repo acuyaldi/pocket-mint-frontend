@@ -47,6 +47,12 @@ describe("transfer account picker source contract", () => {
     expect(source).not.toContain("line-clamp");
     expect(source).not.toContain("truncate");
   });
+
+  it("names the closed trigger from both its label and current value", () => {
+    expect(source).toContain('const valueId = `${id}-value`');
+    expect(source).toContain('aria-labelledby={`${labelId} ${valueId}`}');
+    expect(source).toContain("id={valueId}");
+  });
 });
 
 describe("add transaction modal transfer flow source contract", () => {
@@ -82,9 +88,28 @@ describe("add transaction modal transfer flow source contract", () => {
       "selectTransferEndpoint(",
       "swapTransferEndpoints(",
       "isValidTransferPair(",
+      "getTransferEndpointWallets(",
+      "sourcePickerWallets",
+      "destinationPickerWallets",
       "Saldo tidak cukup",
     ]) {
       expect(modalSource).toContain(marker);
+    }
+  });
+
+  it("handles transfer-specific empty and single-wallet states truthfully", () => {
+    const normalizedModalSource = modalSource.replace(/\s+/g, " ");
+
+    for (const marker of [
+      "Tidak ada dompet untuk transfer",
+      "Tambahkan minimal dua dompet non-hutang untuk memindahkan uang.",
+      "Tidak ada dompet sumber lain yang tersedia.",
+      "Tidak ada dompet tujuan lain yang tersedia.",
+      'wallets={sourcePickerWallets}',
+      'wallets={destinationPickerWallets}',
+      'type === "TRANSFER" && transferWallets.length < 2',
+    ]) {
+      expect(normalizedModalSource).toContain(marker);
     }
   });
 });

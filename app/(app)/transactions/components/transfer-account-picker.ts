@@ -9,6 +9,17 @@ export function getTransferWallets(wallets: Wallet[]): Wallet[] {
   return wallets.filter((wallet) => !isDebtWallet(wallet.type));
 }
 
+export function getTransferEndpointWallets(
+  wallets: Wallet[],
+  oppositeId: string,
+): Wallet[] {
+  if (wallets.length === 1 && wallets[0].id === oppositeId) {
+    return [];
+  }
+
+  return wallets;
+}
+
 export function selectTransferEndpoint(
   selectedId: string,
   oppositeId: string,

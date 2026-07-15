@@ -71,6 +71,7 @@ export function AccountPicker({
 }: AccountPickerProps) {
   const selectedWallet = wallets.find((wallet) => wallet.id === selectedId);
   const labelId = `${id}-label`;
+  const valueId = `${id}-value`;
 
   return (
     <div className="flex min-w-0 flex-col gap-2">
@@ -86,7 +87,7 @@ export function AccountPicker({
         <DropdownMenuTrigger
           id={id}
           type="button"
-          aria-labelledby={labelId}
+          aria-labelledby={`${labelId} ${valueId}`}
           aria-haspopup="menu"
           className="grid min-h-14 w-full grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3 rounded-lg border border-border/70 bg-card px-3 py-2 text-left outline-none hover:bg-surface-low focus:border-primary focus:ring-2 focus:ring-primary/15"
         >
@@ -95,7 +96,7 @@ export function AccountPicker({
               <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-high text-primary">
                 <WalletTypeIcon wallet={selectedWallet} />
               </span>
-              <span className="min-w-0">
+              <span id={valueId} className="min-w-0">
                 <span className="block text-sm font-semibold text-foreground">
                   {selectedWallet.name}
                 </span>
@@ -108,7 +109,10 @@ export function AccountPicker({
               </span>
             </>
           ) : (
-            <span className="col-span-3 text-sm text-muted-foreground">
+            <span
+              id={valueId}
+              className="col-span-3 text-sm text-muted-foreground"
+            >
               {emptyLabel}
             </span>
           )}
