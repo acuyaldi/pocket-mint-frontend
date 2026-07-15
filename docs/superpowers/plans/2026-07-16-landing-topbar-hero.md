@@ -39,7 +39,7 @@ const heroPath = root + "components/ui/pocket-mint-hero.tsx";
 
 it("uses the approved centered animated Pocket Mint hero", () => {
   expect(existsSync(heroPath)).toBe(true);
-  const hero = readFileSync(heroPath, "utf8");
+  const hero = existsSync(heroPath) ? readFileSync(heroPath, "utf8") : "";
 
   expect(page).toContain("<PocketMintHero />");
   expect(hero).toContain('from "framer-motion"');
@@ -70,6 +70,9 @@ import Link from "next/link";
 import { LockKeyhole } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
 const enter = (delay: number, y = 20, reduced = false) => ({
   initial: reduced ? false : { opacity: 0, y },
   animate: { opacity: 1, y: 0 },
@@ -93,23 +96,23 @@ export function PocketMintHero() {
           </div>
           <div className="flex items-center gap-2">
             <Link href="/login" className="inline-flex min-h-11 items-center px-3 text-sm text-muted-foreground">Login</Link>
-            <Link href="/login" className="inline-flex min-h-11 items-center rounded-full bg-primary px-4 text-sm text-primary-foreground">Daftar</Link>
+            <Link href="/login" className={cn(buttonVariants({ size: "lg" }), "min-h-11 rounded-full px-4 shadow-sm shadow-primary/10")}>Daftar</Link>
           </div>
         </nav>
       </header>
 
-      <main className="relative px-0 sm:px-2">
+      <div className="relative px-0 sm:px-2">
         <section className="w-full py-16 md:py-24 lg:py-32">
-          <motion.div className="flex flex-col items-center space-y-6 text-center" {...enter(0, 20, reducedMotion)}>
+          <motion.div className="flex flex-col items-center gap-6 text-center" {...enter(0, 20, reducedMotion)}>
             <motion.div {...enter(0.1, 20, reducedMotion)} className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-secondary">
               <LockKeyhole aria-hidden="true" className="size-4" />
               <span className="text-xs font-medium tracking-[0.02em]">Private &amp; Secured</span>
             </motion.div>
             <motion.h1 {...enter(0.2, 20, reducedMotion)} className="text-4xl font-semibold tracking-tight text-primary sm:text-5xl md:text-6xl lg:text-7xl">Clarity Over Complexity</motion.h1>
-            <motion.p {...enter(0.3, 20, reducedMotion)} className="mx-auto max-w-2xl text-base leading-6 text-muted-foreground sm:text-xl">Pahami apa yang Anda miliki, apa yang Anda tanggung, dan apa yang perlu diperhatikan—tanpa distraksi.</motion.p>
+            <motion.p {...enter(0.3, 20, reducedMotion)} className="mx-auto max-w-2xl text-base leading-6 text-muted-foreground sm:text-xl">Pahami apa yang Anda miliki, apa yang Anda tanggung, dan apa yang perlu diperhatikan. Tanpa distraksi.</motion.p>
             <motion.div {...enter(0.4, 20, reducedMotion)} className="flex w-full flex-col justify-center gap-4 sm:w-auto sm:flex-row">
-              <Link href="/login" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground">Mulai Sekarang</Link>
-              <Link href="#features" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border px-6 text-sm font-semibold">Lihat Demo</Link>
+              <Link href="/login" className={cn(buttonVariants({ size: "lg" }), "min-h-11 rounded-xl px-6 shadow-sm shadow-primary/10")}>Mulai Sekarang</Link>
+              <Link href="#features" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "min-h-11 rounded-xl px-6")}>Lihat Demo</Link>
             </motion.div>
             <motion.div {...enter(0.5, 20, reducedMotion)} className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm text-muted-foreground"><span>Data Anda</span><span>Tanpa iklan</span><span>Tanpa pelacakan</span></motion.div>
             <motion.div {...enter(0.6, 40, reducedMotion)} className="w-full rounded-3xl border border-border bg-card p-2">
@@ -119,7 +122,7 @@ export function PocketMintHero() {
             </motion.div>
           </motion.div>
         </section>
-      </main>
+      </div>
     </div>
   );
 }
