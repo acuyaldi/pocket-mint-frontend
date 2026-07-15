@@ -189,8 +189,8 @@ export default function LandingPage() {
           <ProductScreen
             src="/landing/dashboard.png"
             alt="Ringkasan Dashboard Pocket Mint dengan posisi keuangan, daftar dompet, dan aktivitas terbaru"
-            frameClassName="aspect-[6/5] w-full"
-            imageClassName="object-cover object-[78%_48%] scale-[1.18]"
+            frameClassName="aspect-square w-full"
+            imageClassName="origin-top object-cover object-[78%_top] scale-[1.08]"
             sizes="(max-width: 1023px) 100vw, 58vw"
           />
         </section>
