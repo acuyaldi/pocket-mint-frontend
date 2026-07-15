@@ -6,16 +6,14 @@ import {
   Database,
   EyeOff,
   LayoutDashboard,
-  LockKeyhole,
   ReceiptText,
   WalletCards,
 } from "lucide-react";
 
+import { PocketMintHero } from "@/components/ui/pocket-mint-hero";
+
 const dashboardImage = "/landing/dashboard.png";
 const transactionImage = "/landing/transaction.png";
-
-const primaryButton =
-  "inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-[#002b2b] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:opacity-80";
 
 const largePrimaryButton =
   "inline-flex min-h-14 items-center justify-center rounded-xl bg-primary px-8 py-4 text-xl font-semibold text-primary-foreground shadow-sm transition-all hover:bg-[#002b2b] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:scale-95";
@@ -26,76 +24,9 @@ const largeSecondaryButton =
 export default function LandingPage() {
   return (
     <div className="min-h-dvh bg-background text-foreground">
-      <header className="sticky top-0 z-20 w-full border-b border-border bg-background">
-        <nav
-          aria-label="Navigasi utama"
-          className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-5 md:px-10"
-        >
-          <div className="flex items-center gap-8">
-            <Link href="/" className="text-xl font-bold text-primary">
-              Pocket Mint
-            </Link>
-            <div className="hidden items-center gap-6 md:flex">
-              <Link href="#features" className="text-sm text-muted-foreground hover:text-primary">
-                Fitur
-              </Link>
-              <Link href="#privacy" className="text-sm text-muted-foreground hover:text-primary">
-                Privasi
-              </Link>
-              <Link href="#about" className="text-sm text-muted-foreground hover:text-primary">
-                Tentang Kami
-              </Link>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="min-h-11 px-4 py-3 text-sm text-muted-foreground hover:text-primary">
-              Login
-            </Link>
-            <Link href="/login" className={primaryButton}>
-              Daftar
-            </Link>
-          </div>
-        </nav>
-      </header>
+      <PocketMintHero />
 
       <main className="mx-auto w-full max-w-7xl">
-        <section className="flex flex-col items-center justify-between gap-12 overflow-hidden px-5 py-24 md:flex-row md:px-10">
-          <div className="w-full space-y-6 md:w-1/2">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#d0e1fb] px-3 py-1 text-[#54647a]">
-              <LockKeyhole aria-hidden="true" className="size-4" strokeWidth={1.75} />
-              <span className="text-xs font-medium tracking-[0.02em]">Private &amp; Secured</span>
-            </div>
-            <h1 className="max-w-xl text-4xl font-semibold leading-tight tracking-tight text-primary md:text-[56px] md:leading-[1.1]">
-              Clarity Over Complexity
-            </h1>
-            <p className="max-w-md text-base leading-6 text-muted-foreground">
-              Satu tempat pribadi untuk memahami posisi finansial Anda tanpa kebisingan iklan atau pelacakan data.
-            </p>
-            <div className="flex flex-wrap items-center gap-4 pt-4">
-              <Link href="/login" className={largePrimaryButton}>
-                Mulai Sekarang
-              </Link>
-              <Link href="#features" className={largeSecondaryButton}>
-                Pelajari Demo
-              </Link>
-            </div>
-          </div>
-
-          <div className="relative w-full md:w-1/2">
-            <div className="stitch-float relative aspect-square w-full overflow-hidden rounded-2xl border border-border bg-card shadow-xl md:aspect-video">
-              <Image
-                src={dashboardImage}
-                alt="Dashboard Pocket Mint dari ekspor Google Stitch"
-                fill
-                sizes="(max-width: 767px) 100vw, 50vw"
-                className="object-contain object-center p-2"
-                preload
-              />
-            </div>
-            <div className="absolute -bottom-6 -left-6 -z-10 size-48 rounded-full bg-mint/10 blur-3xl" />
-          </div>
-        </section>
-
         <section id="privacy" className="scroll-mt-20 px-5 py-8 md:px-10">
           <div className="relative overflow-hidden rounded-3xl bg-[#002b2b] p-12 text-[#6e9493] md:p-20">
             <div className="relative z-10 max-w-2xl">

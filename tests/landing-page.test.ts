@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const page = readFileSync(root + "app/page.tsx", "utf8");
+const heroPath = root + "components/ui/pocket-mint-hero.tsx";
+const hero = existsSync(heroPath) ? readFileSync(heroPath, "utf8") : "";
 
 describe("Pocket Mint Stitch landing page contract", () => {
   it("keeps the Stitch section order", () => {
@@ -19,9 +21,9 @@ describe("Pocket Mint Stitch landing page contract", () => {
       "Private &amp; Secured",
       "Clarity Over Complexity",
       "Mulai Sekarang",
-      "Pelajari Demo",
+      "Lihat Demo",
     ]) {
-      expect(page).toContain(copy);
+      expect(page + hero).toContain(copy);
     }
   });
 
@@ -77,9 +79,24 @@ describe("Pocket Mint Stitch landing page contract", () => {
   });
 
   it("fits the Stitch screens without forced zoom crops", () => {
-    expect(page.match(/object-contain/g)).toHaveLength(3);
-    expect(page).not.toContain("-translate-x-[8%]");
-    expect(page).not.toContain("translate-x-12 translate-y-12");
-    expect(page).not.toMatch(/scale-\[1\.(?:24|3|34)\]/);
+    const landingSources = page + hero;
+
+    expect(landingSources.match(/object-contain/g)).toHaveLength(3);
+    expect(landingSources).not.toContain("-translate-x-[8%]");
+    expect(landingSources).not.toContain("translate-x-12 translate-y-12");
+    expect(landingSources).not.toMatch(/scale-\[1\.(?:24|3|34)\]/);
+  });
+
+  it("uses the approved centered animated Pocket Mint hero", () => {
+    expect(existsSync(heroPath)).toBe(true);
+
+    expect(page).toContain("<PocketMintHero />");
+    expect(hero).toContain('from "framer-motion"');
+    expect(hero).toContain("Clarity Over Complexity");
+    expect(hero).toContain("Lihat Demo");
+    expect(hero).toContain("/landing/dashboard.png");
+    expect(hero).toContain("object-contain");
+    expect(hero).toContain("max-w-5xl");
+    expect(hero).not.toMatch(/Moon|Sun|dark:|bg-gradient|from-background/);
   });
 });
