@@ -72,8 +72,15 @@ export default function LandingPage() {
                   Visualisasi Net Worth, Aset, dan Hutang dalam satu tampilan bersih tanpa distraksi.
                 </p>
               </div>
-              <div className="absolute bottom-0 right-0 h-2/3 w-2/3 overflow-hidden rounded-tl-xl border-l border-t border-border shadow-lg">
-                <Image src={dashboardImage} alt="Tampilan ringkas Dashboard Workspace dari Google Stitch" fill sizes="(max-width: 767px) 66vw, 44vw" className="object-contain object-bottom p-2" />
+              <div className="absolute bottom-0 right-0 h-[52%] w-[72%] overflow-hidden rounded-tl-xl border-l border-t border-border shadow-lg md:h-[62%]">
+                <Image
+                  src={dashboardImage}
+                  alt="Tampilan ringkas Dashboard Workspace dari Google Stitch"
+                  width={569}
+                  height={552}
+                  sizes="(max-width: 767px) 72vw, 48vw"
+                  className="h-auto w-full object-contain object-top"
+                />
               </div>
             </article>
 

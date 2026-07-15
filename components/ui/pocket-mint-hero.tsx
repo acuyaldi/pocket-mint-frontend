@@ -114,31 +114,23 @@ export function PocketMintHero() {
               </Link>
             </motion.div>
 
-            <motion.div
-              {...enter(0.5, 20, reducedMotion)}
-              className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm text-muted-foreground"
-            >
-              <span>Data Anda</span>
-              <span>Tanpa iklan</span>
-              <span>Tanpa pelacakan</span>
-            </motion.div>
+          </motion.div>
 
-            <motion.div
-              {...enter(0.6, 40, reducedMotion)}
-              className="w-full rounded-3xl border border-border bg-card p-2"
-            >
-              <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-                <Image
-                  src="/landing/dashboard.png"
-                  alt="Dashboard Pocket Mint dari ekspor Google Stitch"
-                  width={720}
-                  height={737}
-                  sizes="(max-width: 1024px) calc(100vw - 40px), 1024px"
-                  className="h-auto w-full object-contain"
-                  preload
-                />
-              </div>
-            </motion.div>
+          <motion.div
+            {...enter(0.5, 40, reducedMotion)}
+            className="mt-12 w-full rounded-3xl border border-border bg-card p-2 md:mt-16"
+          >
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+              <Image
+                src="/landing/dashboard.png"
+                alt="Dashboard Pocket Mint dari ekspor Google Stitch"
+                width={569}
+                height={552}
+                sizes="(max-width: 1024px) calc(100vw - 40px), 1024px"
+                className="h-auto w-full object-contain"
+                preload
+              />
+            </div>
           </motion.div>
         </section>
       </div>

@@ -99,4 +99,15 @@ describe("Pocket Mint Stitch landing page contract", () => {
     expect(hero).toContain("max-w-5xl");
     expect(hero).not.toMatch(/Moon|Sun|dark:|bg-gradient|from-background/);
   });
+
+  it("keeps dashboard copy clear and clips only the feature image bottom", () => {
+    expect(hero).not.toContain("Data Anda");
+    expect(hero).not.toContain("Tanpa iklan");
+    expect(hero).toContain('className="mt-12 w-full');
+
+    expect(page).toContain("width={569}");
+    expect(page).toContain("height={552}");
+    expect(page).toContain('className="h-auto w-full object-contain object-top"');
+    expect(page).not.toContain('className="object-contain object-bottom p-2"');
+  });
 });
