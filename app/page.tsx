@@ -88,7 +88,7 @@ export default function LandingPage() {
                 alt="Dashboard Pocket Mint dari ekspor Google Stitch"
                 fill
                 sizes="(max-width: 767px) 100vw, 50vw"
-                className="max-w-none origin-center -translate-x-[8%] object-cover object-[84%_32%] scale-[1.34]"
+                className="object-contain object-center p-2"
                 preload
               />
             </div>
@@ -133,7 +133,7 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:auto-rows-[280px] md:grid-cols-12">
-            <article className="stitch-bento group relative flex min-h-[420px] flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card p-6 md:col-span-8 md:row-span-2 md:min-h-0">
+            <article className="stitch-bento relative flex min-h-[420px] flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card p-6 md:col-span-8 md:row-span-2 md:min-h-0">
               <div className="relative z-10">
                 <LayoutDashboard aria-hidden="true" className="mb-4 size-8 text-primary" strokeWidth={1.75} />
                 <h3 className="mb-2 text-xl font-bold text-primary">Dashboard Workspace</h3>
@@ -141,8 +141,8 @@ export default function LandingPage() {
                   Visualisasi Net Worth, Aset, dan Hutang dalam satu tampilan bersih tanpa distraksi.
                 </p>
               </div>
-              <div className="absolute bottom-0 right-0 h-2/3 w-2/3 translate-x-12 translate-y-12 overflow-hidden rounded-tl-xl border-l border-t border-border shadow-lg transition-transform duration-500 group-hover:translate-x-8 group-hover:translate-y-8">
-                <Image src={dashboardImage} alt="Tampilan ringkas Dashboard Workspace dari Google Stitch" fill sizes="(max-width: 767px) 66vw, 44vw" className="max-w-none origin-center -translate-x-[8%] object-cover object-[84%_28%] scale-[1.3]" />
+              <div className="absolute bottom-0 right-0 h-2/3 w-2/3 overflow-hidden rounded-tl-xl border-l border-t border-border shadow-lg">
+                <Image src={dashboardImage} alt="Tampilan ringkas Dashboard Workspace dari Google Stitch" fill sizes="(max-width: 767px) 66vw, 44vw" className="object-contain object-bottom p-2" />
               </div>
             </article>
 
@@ -159,7 +159,7 @@ export default function LandingPage() {
                 <p className="text-sm leading-5 text-[#a7cecd]">Dapatkan wawasan mendalam tentang arus kas Anda tanpa visualisasi yang berlebihan.</p>
               </div>
               <div className="relative mt-8 h-44 overflow-hidden rounded-lg border border-white/10">
-                <Image src={transactionImage} alt="Riwayat transaksi Pocket Mint dari Google Stitch" fill sizes="(max-width: 767px) 100vw, 33vw" className="max-w-none origin-center -translate-x-[8%] object-cover object-[89%_23%] opacity-60 scale-[1.24]" />
+                <Image src={transactionImage} alt="Riwayat transaksi Pocket Mint dari Google Stitch" fill sizes="(max-width: 767px) 100vw, 33vw" className="object-contain object-bottom p-2 opacity-80" />
               </div>
             </article>
 

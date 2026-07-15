@@ -75,4 +75,11 @@ describe("Pocket Mint Stitch landing page contract", () => {
     expect(page).not.toContain("lh3.googleusercontent.com");
     expect(page).not.toMatch(/laptop|monitor/i);
   });
+
+  it("fits the Stitch screens without forced zoom crops", () => {
+    expect(page.match(/object-contain/g)).toHaveLength(3);
+    expect(page).not.toContain("-translate-x-[8%]");
+    expect(page).not.toContain("translate-x-12 translate-y-12");
+    expect(page).not.toMatch(/scale-\[1\.(?:24|3|34)\]/);
+  });
 });
