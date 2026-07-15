@@ -1,27 +1,25 @@
 "use client";
 
-import { useState, useCallback, FormEvent } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { FormEvent, useCallback, useMemo, useState } from "react";
 import {
-  Landmark,
-  CreditCard,
-  Wallet,
   Banknote,
-  Handshake,
-  Zap,
-  User,
-  Building2,
+  CreditCard,
+  Landmark,
+  Wallet,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
-import type { WalletCategory, AssetSubType, DebtSubType } from "@/src/types/wallet";
+import type {
+  AssetSubType,
+  DebtSubType,
+  WalletCategory,
+} from "@/src/types/wallet";
 
 interface CreateWalletModalProps {
   isOpen: boolean;
@@ -41,25 +39,65 @@ export interface CreateWalletFormData {
   adminFee?: number;
 }
 
+type AccountType = "bank" | "wallet" | "credit" | "loan";
+
 const PAYLATER_PRESETS: Record<string, { interestRate: number; adminFee: number }> = {
-  "SPaylater": { interestRate: 2.95, adminFee: 1.00 },
-  "Kredivo": { interestRate: 2.60, adminFee: 1.00 },
-  "Indodana": { interestRate: 3.00, adminFee: 1.00 },
-  "Home Credit": { interestRate: 2.95, adminFee: 1.00 },
-  "Akulaku": { interestRate: 1.50, adminFee: 1.00 },
-  "Atome": { interestRate: 0.00, adminFee: 2.50 },
-  "GoPayLater": { interestRate: 2.00, adminFee: 0.00 },
-  "Traveloka": { interestRate: 2.14, adminFee: 1.00 },
-  "BRI Ceria": { interestRate: 1.42, adminFee: 0.00 },
-  "BCA PayLater": { interestRate: 1.25, adminFee: 0.00 },
-  "Mandiri": { interestRate: 1.50, adminFee: 0.00 },
-  "Allo": { interestRate: 2.00, adminFee: 1.00 },
+  SPaylater: { interestRate: 2.95, adminFee: 1 },
+  Kredivo: { interestRate: 2.6, adminFee: 1 },
+  Akulaku: { interestRate: 1.5, adminFee: 1 },
+  GoPayLater: { interestRate: 2, adminFee: 0 },
+  "BCA PayLater": { interestRate: 1.25, adminFee: 0 },
+  "Mandiri Paylater": { interestRate: 1.5, adminFee: 0 },
 };
 
-const POPULAR_PAYLATER_PROVIDERS = [
-  "SPaylater", "Kredivo", "Indodana", "Home Credit", 
-  "Akulaku", "Atome", "GoPayLater", "Traveloka PayLater", 
-  "BRI Ceria", "BCA PayLater", "Mandiri Paylater", "Allo PayLater", "Lainnya +"
+const ACCOUNT_TYPES: Array<{
+  value: AccountType;
+  label: string;
+  Icon: typeof Landmark;
+  tone: string;
+  activeTone: string;
+}> = [
+  {
+    value: "bank",
+    label: "Rekening",
+    Icon: Landmark,
+    tone: "border-t-mint text-mint",
+    activeTone: "peer-checked:border-t-mint",
+  },
+  {
+    value: "wallet",
+    label: "E-Wallet",
+    Icon: Wallet,
+    tone: "border-t-primary text-primary",
+    activeTone: "peer-checked:border-t-primary",
+  },
+  {
+    value: "credit",
+    label: "Kredit",
+    Icon: CreditCard,
+    tone: "border-t-coral text-coral",
+    activeTone: "peer-checked:border-t-coral",
+  },
+  {
+    value: "loan",
+    label: "Pinjaman",
+    Icon: Banknote,
+    tone: "border-t-amber text-amber",
+    activeTone: "peer-checked:border-t-amber",
+  },
+];
+
+const INSTITUTIONS = [
+  { value: "", label: "Pilih Bank / Penyedia" },
+  { value: "Bank Central Asia (BCA)", label: "Bank Central Asia (BCA)" },
+  { value: "Bank Mandiri", label: "Bank Mandiri" },
+  { value: "Bank Negara Indonesia (BNI)", label: "Bank Negara Indonesia (BNI)" },
+  { value: "GoPay", label: "GoPay" },
+  { value: "OVO", label: "OVO" },
+  { value: "SPaylater", label: "SPaylater" },
+  { value: "Kredivo", label: "Kredivo" },
+  { value: "Akulaku", label: "Akulaku" },
+  { value: "Lainnya", label: "Lainnya" },
 ];
 
 const parseRupiahToNumber = (value: string): number => {
@@ -67,504 +105,258 @@ const parseRupiahToNumber = (value: string): number => {
   return cleaned ? parseInt(cleaned, 10) : 0;
 };
 
+const formatRupiahVisual = (value: string): string => {
+  const rawNumber = value.replace(/\D/g, "");
+  if (!rawNumber) return "";
+  return new Intl.NumberFormat("id-ID").format(Number(rawNumber));
+};
 
-const assetIdentityIcons = [
-  { id: "bank_account", Icon: Landmark, label: "Bank Account" },
-  { id: "e_wallet", Icon: Wallet, label: "E-Wallet" },
-  { id: "cash_on_hand", Icon: Banknote, label: "Cash on Hand" },
-  { id: "piutang", Icon: Handshake, label: "Piutang" },
-];
+function getAccountMeta(type: AccountType): {
+  category: WalletCategory;
+  subType: AssetSubType | DebtSubType;
+  icon: string;
+} {
+  if (type === "bank") {
+    return { category: "asset", subType: "bank_account", icon: "landmark" };
+  }
+  if (type === "wallet") {
+    return { category: "asset", subType: "e_wallet", icon: "wallet" };
+  }
+  if (type === "credit") {
+    return { category: "debt", subType: "credit_card", icon: "creditcard" };
+  }
+  return { category: "debt", subType: "paylater", icon: "coins" };
+}
 
-const debtIdentityIcons = [
-  { id: "credit_card", Icon: CreditCard, label: "Credit Card" },
-  { id: "paylater", Icon: Zap, label: "Paylater" },
-  { id: "utang_personal", Icon: User, label: "Utang Personal" },
-  { id: "line_of_credit", Icon: Building2, label: "Line of Credit" },
-];
+function FieldLabel({ children, danger = false }: { children: React.ReactNode; danger?: boolean }) {
+  return (
+    <label
+      className={`text-[12px] font-medium ${
+        danger ? "font-bold text-coral" : "text-muted-foreground"
+      }`}
+    >
+      {children}
+    </label>
+  );
+}
 
-export default function CreateWalletModal({ isOpen, onClose, onSuccess }: CreateWalletModalProps) {
-  // Form state
-  const [classification, setClassification] = useState<WalletCategory>("asset");
+export default function CreateWalletModal({
+  isOpen,
+  onClose,
+  onSuccess,
+}: CreateWalletModalProps) {
+  const [accountType, setAccountType] = useState<AccountType>("bank");
   const [walletName, setWalletName] = useState("");
-  
-  // Asset-specific fields
   const [initialBalance, setInitialBalance] = useState("");
-  
-  // Debt-specific fields
   const [creditLimit, setCreditLimit] = useState("");
-  const [currentOutstanding, setCurrentOutstanding] = useState("");
-  
-  // Paylater-specific fields
-  const [interestRate, setInterestRate] = useState<string>("");
-  const [adminFee, setAdminFee] = useState<string>("");
-  
-  // Sub-category tracking
-  const [selectedAssetSubType, setSelectedAssetSubType] = useState<AssetSubType | null>(null);
-  const [selectedDebtSubType, setSelectedDebtSubType] = useState<DebtSubType | null>(null);
-  const [selectedPaylaterProvider, setSelectedPaylaterProvider] = useState<string | null>(null);
+  const [institution, setInstitution] = useState("");
 
-  // Visual identity
-  const [walletIcon, setWalletIcon] = useState<"landmark" | "creditcard" | "coins" | "wallet" | "handshake">("wallet");
-
-  // Active-selection tint: primary token at 8% (theme-safe, no raw hex).
-  const activeTint = "color-mix(in srgb, var(--color-primary) 8%, transparent)";
-
-  // Input-mask formatter: thousand separators ONLY (e.g. "10.000.000").
-  // The "Rp" prefix is a static adornment on each field, so this must NOT emit
-  // it too — otherwise the input shows a duplicated "Rp Rp".
-  const formatRupiahVisual = (value: string): string => {
-    if (!value) return "";
-    const rawNumber = value.replace(/\D/g, "");
-    if (!rawNumber) return "";
-    return new Intl.NumberFormat("id-ID").format(Number(rawNumber));
-  };
-
-  const handlePaylaterProviderSelect = (providerName: string) => {
-    setSelectedPaylaterProvider(providerName);
-    setSelectedDebtSubType("paylater");
-    
-    if (providerName === "Lainnya +") {
-      setInterestRate("0");
-      setAdminFee("0");
-    } else {
-      const preset = PAYLATER_PRESETS[providerName];
-      if (preset) {
-        setInterestRate(preset.interestRate.toString());
-        setAdminFee(preset.adminFee.toString());
-      }
-    }
-  };
+  const meta = useMemo(() => getAccountMeta(accountType), [accountType]);
+  const isDebt = meta.category === "debt";
 
   const resetForm = useCallback(() => {
-    setClassification("asset");
+    setAccountType("bank");
     setWalletName("");
     setInitialBalance("");
     setCreditLimit("");
-    setCurrentOutstanding("");
-    setInterestRate("");
-    setAdminFee("");
-    setSelectedAssetSubType(null);
-    setSelectedDebtSubType(null);
-    setSelectedPaylaterProvider(null);
-    setWalletIcon("wallet");
+    setInstitution("");
   }, []);
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
+  const handleClose = useCallback(() => {
+    resetForm();
+    onClose();
+  }, [onClose, resetForm]);
 
-    // Preset paylater providers disable the name input, so walletName stays empty —
-    // the provider name IS the wallet name.
-    const isPresetPaylater =
-      classification === "debt" &&
-      selectedDebtSubType === "paylater" &&
-      !!selectedPaylaterProvider &&
-      selectedPaylaterProvider !== "Lainnya +";
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+
+    const fallbackName = institution && institution !== "Lainnya" ? institution : "";
+    const resolvedName = walletName.trim() || fallbackName;
+    const preset = PAYLATER_PRESETS[resolvedName];
 
     const formData: CreateWalletFormData = {
-      name: isPresetPaylater ? selectedPaylaterProvider : walletName.trim(),
-      category: classification,
-      ...(classification === "asset"
+      name: resolvedName,
+      category: meta.category,
+      subType: meta.subType,
+      icon: meta.icon,
+      ...(isDebt
         ? {
-            balance: parseRupiahToNumber(initialBalance),
-            subType: selectedAssetSubType || undefined,
+            outstanding: parseRupiahToNumber(initialBalance),
+            creditLimit: parseRupiahToNumber(creditLimit),
+            ...(preset ? preset : {}),
           }
         : {
-            creditLimit: parseRupiahToNumber(creditLimit),
-            outstanding: parseRupiahToNumber(currentOutstanding),
-            subType: selectedDebtSubType || undefined,
-            ...(selectedDebtSubType === "paylater" && selectedPaylaterProvider !== "Lainnya +"
-              ? {
-                  interestRate: parseFloat(interestRate) || 0,
-                  adminFee: parseFloat(adminFee) || 0,
-                }
-              : {}),
+            balance: parseRupiahToNumber(initialBalance),
           }),
-      icon: walletIcon,
     };
 
     onSuccess(formData);
-    onClose();
-    resetForm();
+    handleClose();
   };
 
-  const paylaterProviderButtons = POPULAR_PAYLATER_PROVIDERS.map((provider) => ({
-    name: provider,
-    isCustom: provider === "Lainnya +",
-  }));
-
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) {
-        resetForm();
-        onClose();
-      }
-    }}>
-      <DialogContent 
-        className="max-w-2xl text-foreground sm:max-w-2xl p-0 overflow-hidden max-h-[85vh] flex flex-col"
-        style={{ backgroundColor: "var(--color-popover)", border: "1px solid var(--color-border)" }}
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) handleClose();
+      }}
+    >
+      <DialogContent
+        showCloseButton={false}
+        className="flex max-h-[90vh] w-full max-w-2xl flex-col gap-0 overflow-hidden rounded-xl border border-border/70 bg-card p-0 text-foreground shadow-2xl sm:max-w-2xl"
       >
-        <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
-          {/* Header */}
-          <div className="px-6 py-5 shrink-0" style={{ borderBottom: "1px solid var(--color-border)", backgroundColor: "var(--color-card)" }}>
-            <DialogTitle className="text-base font-semibold" style={{ color: "var(--color-foreground)", fontFamily: "var(--font-hanken)" }}>Create New Wallet</DialogTitle>
-            <DialogDescription className="text-sm mt-1" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>Define your wallet identity and configure its settings.</DialogDescription>
-          </div>
-
-          {/* Scrollable content section — flex-1 + min-h-0 lets it consume the
-              space between the sticky header and footer, so the footer never
-              gets clipped regardless of header/footer height. */}
-          <div className="p-6 space-y-5 overflow-y-auto pr-2 flex-1 min-h-0 scroll-smooth">
-            
-            {/* SECTION 1: CLASSIFICATION */}
-            <div className="space-y-4">
-              <label className="text-[11px] font-bold tracking-widest uppercase mb-3" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>Classification</label>
-              <div className="grid grid-cols-2 gap-3">
-                {/* Asset Button */}
-                <button
-                  type="button"
-                  onClick={() => setClassification("asset")}
-                  className={cn(
-                    "relative flex items-center justify-center gap-3 p-4 rounded-xl transition-all duration-200 border-2",
-                    classification === "asset"
-                      ? "border-brand"
-                      : "border-border"
-                  )}
-                  style={{
-                    backgroundColor: classification === "asset" ? activeTint : "var(--color-card)",
-                    color: classification === "asset" ? "var(--color-primary)" : "var(--color-muted-foreground)",
-                    borderColor: classification === "asset" ? "var(--color-primary)" : "var(--color-border)",
-                  }}
-                >
-                  <Wallet className="size-5" />
-                  <span className="font-semibold text-sm">ASSET</span>
-                </button>
-                
-                {/* Debt Button */}
-                <button
-                  type="button"
-                  onClick={() => setClassification("debt")}
-                  className={cn(
-                    "relative flex items-center justify-center gap-3 p-4 rounded-xl transition-all duration-200 border-2",
-                    classification === "debt"
-                      ? "border-brand"
-                      : "border-border"
-                  )}
-                  style={{
-                    backgroundColor: classification === "debt" ? activeTint : "var(--color-card)",
-                    color: classification === "debt" ? "var(--color-primary)" : "var(--color-muted-foreground)",
-                    borderColor: classification === "debt" ? "var(--color-primary)" : "var(--color-border)",
-                  }}
-                >
-                  <CreditCard className="size-5" />
-                  <span className="font-semibold text-sm">DEBT</span>
-                </button>
-              </div>
-              
-              {/* Muted description under each button */}
-              <div className="pt-2">
-                <p className={cn(
-                  "text-xs text-muted-foreground transition-all duration-200",
-                  classification === "asset" ? "block" : "hidden"
-                )}>
-                  Cash, savings, or receivables that add to your net worth.
-                </p>
-                <p className={cn(
-                  "text-xs text-muted-foreground transition-all duration-200",
-                  classification === "debt" ? "block" : "hidden"
-                )}>
-                  Credit facilities, cards, or personal loans you must pay back.
-                </p>
-              </div>
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <header className="flex items-start justify-between border-b border-border/70 p-6">
+            <div>
+              <DialogTitle className="text-xl font-semibold text-primary">
+                Tambah Akun
+              </DialogTitle>
+              <DialogDescription className="mt-1 text-sm text-muted-foreground">
+                Daftarkan rekening, e-wallet, atau kartu kredit baru
+              </DialogDescription>
             </div>
+            <button
+              type="button"
+              aria-label="Tutup modal tambah akun"
+              onClick={handleClose}
+              className="rounded-lg p-1 text-muted-foreground transition-colors hover:text-coral"
+            >
+              <X className="size-5" />
+            </button>
+          </header>
 
-            {/* SECTION 2: VISUAL IDENTITY */}
-            <div className="space-y-4">
-              <label className="text-[11px] font-bold tracking-widest uppercase mb-3" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>Visual Identity</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {classification === "asset" ? (
-                  assetIdentityIcons.map((item) => {
-                    const Icon = item.Icon;
-                    const isActive = selectedAssetSubType === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedAssetSubType(item.id as AssetSubType);
-                          setSelectedDebtSubType(null);
-                          setSelectedPaylaterProvider(null);
-                          setInterestRate("");
-                          setAdminFee("");
+          <div className="min-h-0 flex-1 space-y-8 overflow-y-auto p-6">
+            <section>
+              <h3 className="mb-4 text-[12px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                Pilih Kategori Akun
+              </h3>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                {ACCOUNT_TYPES.map((item) => {
+                  const Icon = item.Icon;
+                  return (
+                    <label key={item.value} className="group relative cursor-pointer">
+                      <input
+                        type="radio"
+                        name="account_type"
+                        value={item.value}
+                        checked={accountType === item.value}
+                        onChange={() => {
+                          setAccountType(item.value);
+                          setCreditLimit("");
                         }}
-                        className={cn(
-                          "flex flex-col items-center justify-center gap-2 p-3 rounded-xl transition-all duration-200 border-2",
-                          isActive
-                            ? "border-brand"
-                            : "border-border"
-                        )}
-                        style={{
-                          backgroundColor: isActive ? activeTint : "var(--color-card)",
-                          color: isActive ? "var(--color-primary)" : "var(--color-muted-foreground)",
-                          borderColor: isActive ? "var(--color-primary)" : "var(--color-border)",
-                        }}
+                        className="peer sr-only"
+                      />
+                      <span
+                        className={`flex h-full min-h-[92px] flex-col items-center justify-center gap-2 rounded-lg border border-border bg-card p-3 text-center transition-all border-t-4 ${item.tone} ${item.activeTone} peer-checked:border-primary peer-checked:bg-accent hover:bg-surface-low`}
                       >
-                        <motion.div
-                          layoutId={isActive ? "activeIdentityBtn" : undefined}
-                          className="p-2 rounded-lg"
-                        >
-                          <Icon className="size-5" />
-                        </motion.div>
-                        <span className="text-xs font-medium">{item.label}</span>
-                      </button>
-                    );
-                  })
-                ) : (
-                  debtIdentityIcons.map((item) => {
-                    const Icon = item.Icon;
-                    const isActive = selectedDebtSubType === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedDebtSubType(item.id as DebtSubType);
-                          setSelectedAssetSubType(null);
-                          if (item.id !== "paylater") {
-                            setSelectedPaylaterProvider(null);
-                            setInterestRate("");
-                            setAdminFee("");
-                          }
-                        }}
-                        className={cn(
-                          "flex flex-col items-center justify-center gap-2 p-3 rounded-xl transition-all duration-200 border-2",
-                          isActive
-                            ? "border-brand"
-                            : "border-border"
-                        )}
-                        style={{
-                          backgroundColor: isActive ? activeTint : "var(--color-card)",
-                          color: isActive ? "var(--color-primary)" : "var(--color-muted-foreground)",
-                          borderColor: isActive ? "var(--color-primary)" : "var(--color-border)",
-                        }}
-                      >
-                        <motion.div
-                          layoutId={isActive ? "activeIdentityBtn" : undefined}
-                          className="p-2 rounded-lg"
-                        >
-                          <Icon className="size-5" />
-                        </motion.div>
-                        <span className="text-xs font-medium">{item.label}</span>
-                      </button>
-                    );
-                  })
-                )}
+                        <Icon className="size-6" />
+                        <span className="text-[12px] font-semibold leading-tight text-foreground">
+                          {item.label}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
               </div>
-            </div>
+            </section>
 
-            {/* SECTION 3: SUB-IDENTITY PROVIDERS (Only for Paylater) */}
-            <AnimatePresence>
-              {classification === "debt" && selectedDebtSubType === "paylater" && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="space-y-3 overflow-hidden"
-                >
-                  <label className="text-[11px] font-bold tracking-widest uppercase mb-3" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>Paylater Provider</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {paylaterProviderButtons.map((provider) => {
-                      const isActive = selectedPaylaterProvider === provider.name;
-                      return (
-                        <button
-                          key={provider.name}
-                          type="button"
-                          onClick={() => handlePaylaterProviderSelect(provider.name)}
-                          className={cn(
-                            "px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-200 border-2",
-                            isActive
-                              ? "border-brand"
-                              : "border-border"
-                          )}
-                          style={{
-                            backgroundColor: isActive ? activeTint : "var(--color-card)",
-                            color: isActive ? "var(--color-primary)" : "var(--color-muted-foreground)",
-                            borderColor: isActive ? "var(--color-primary)" : "var(--color-border)",
-                          }}
-                        >
-                          {provider.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <section className="space-y-6">
+              <h3 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                Rincian Akun
+              </h3>
 
-            {/* Wallet Name */}
-            <div className="space-y-4">
-              <label className="text-[11px] font-bold tracking-widest uppercase mb-3" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>Wallet Name</label>
-              <Input 
-                type="text" 
-                placeholder={classification === "debt" && !selectedPaylaterProvider ? "e.g. Kredivo, SPaylater" : "e.g. Daily Expenses"}
-                value={selectedPaylaterProvider && classification === "debt" && selectedDebtSubType === "paylater" && selectedPaylaterProvider !== "Lainnya +" 
-                  ? selectedPaylaterProvider 
-                  : walletName} 
-                onChange={(e) => {
-                  if (!selectedPaylaterProvider || selectedPaylaterProvider === "Lainnya +" || classification !== "debt") {
-                    setWalletName(e.target.value);
-                  }
-                }}
-                disabled={!!(classification === "debt" && selectedDebtSubType === "paylater" && selectedPaylaterProvider && selectedPaylaterProvider !== "Lainnya +")}
-                required={!selectedPaylaterProvider || selectedPaylaterProvider === "Lainnya +" || classification !== "debt"}
-                className="h-11"
-                style={{ backgroundColor: "var(--color-card)", border: "1px solid var(--color-border)", color: "var(--color-foreground)" }} 
-              />
-            </div>
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <FieldLabel>Nama Akun</FieldLabel>
+                  <input
+                    value={walletName}
+                    onChange={(event) => setWalletName(event.target.value)}
+                    required={!institution || institution === "Lainnya"}
+                    className="h-12 w-full rounded-lg border border-border bg-surface-low px-4 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground/60 focus:border-primary focus:ring-1 focus:ring-primary/30"
+                    placeholder="Contoh: BCA Debit, GoPay Personal"
+                    type="text"
+                  />
+                </div>
 
-            {/* Asset Fields */}
-            <AnimatePresence>
-              {classification === "asset" && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="space-y-3 overflow-hidden"
-                >
-                  <label className="text-[11px] font-bold tracking-widest uppercase mb-3" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>Initial Balance</label>
+                <div className="space-y-1.5">
+                  <FieldLabel>{isDebt ? "Outstanding Awal" : "Saldo Awal"}</FieldLabel>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold select-none font-mono" style={{ color: "var(--color-muted-foreground)" }}>Rp</span>
-                    <Input
-                      type="text"
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-semibold text-muted-foreground">
+                      Rp
+                    </span>
+                    <input
+                      value={initialBalance}
+                      onChange={(event) =>
+                        setInitialBalance(formatRupiahVisual(event.target.value))
+                      }
+                      className="h-16 w-full rounded-lg border border-border bg-card pl-12 pr-4 text-right text-[32px] font-semibold tabular-nums text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                       inputMode="numeric"
                       placeholder="0"
-                      value={initialBalance}
-                      onChange={(e) => {
-                        const raw = e.target.value.replace(/\D/g, "");
-                        setInitialBalance(raw ? formatRupiahVisual(raw) : "");
-                      }}
-                      className="h-11 pl-10 pr-4 font-mono" style={{ backgroundColor: "var(--color-card)", border: "1px solid var(--color-border)", color: "var(--color-foreground)" }}
+                      type="text"
                     />
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                </div>
 
-            {/* Debt Fields */}
-            <AnimatePresence>
-              {classification === "debt" && (
-                <>
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="space-y-3 overflow-hidden"
-                  >
-                    <label className="text-[11px] font-bold tracking-widest uppercase mb-3" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>Credit Limit</label>
+                {isDebt ? (
+                  <div className="space-y-1.5 transition-all duration-300">
+                    <FieldLabel danger>
+                      {accountType === "credit" ? "Limit Kredit" : "Limit Pinjaman"}
+                    </FieldLabel>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold select-none font-mono" style={{ color: "var(--color-muted-foreground)" }}>Rp</span>
-                      <Input
-                        type="text"
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-semibold text-muted-foreground">
+                        Rp
+                      </span>
+                      <input
+                        value={creditLimit}
+                        onChange={(event) =>
+                          setCreditLimit(formatRupiahVisual(event.target.value))
+                        }
+                        className="h-16 w-full rounded-lg border border-coral bg-coral/10 pl-12 pr-4 text-right text-[32px] font-semibold tabular-nums text-foreground outline-none transition-all focus:border-coral focus:ring-2 focus:ring-coral/20"
                         inputMode="numeric"
                         placeholder="0"
-                        value={creditLimit}
-                        onChange={(e) => {
-                          const raw = e.target.value.replace(/\D/g, "");
-                          setCreditLimit(raw ? formatRupiahVisual(raw) : "");
-                        }}
-                        className="h-11 pl-10 pr-4 font-mono" style={{ backgroundColor: "var(--color-card)", border: "1px solid var(--color-border)", color: "var(--color-foreground)" }}
+                        type="text"
                       />
                     </div>
-                  </motion.div>
+                  </div>
+                ) : null}
 
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="space-y-3 overflow-hidden"
+                <div className="space-y-1.5">
+                  <FieldLabel>Institusi (Opsional)</FieldLabel>
+                  <select
+                    value={institution}
+                    onChange={(event) => setInstitution(event.target.value)}
+                    className="h-12 w-full rounded-lg border border-border bg-surface-low px-4 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary/30"
                   >
-                    <label className="text-[11px] font-bold tracking-widest uppercase mb-3" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>Current Outstanding</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold select-none font-mono" style={{ color: "var(--color-muted-foreground)" }}>Rp</span>
-                      <Input 
-                        type="text" 
-                        inputMode="numeric" 
-                        placeholder="0" 
-                        value={currentOutstanding}
-                        onChange={(e) => {
-                          const raw = e.target.value.replace(/\D/g, "");
-                          setCurrentOutstanding(raw ? formatRupiahVisual(raw) : "");
-                        }}
-                        className="h-11 pl-10 pr-4 font-mono" style={{ backgroundColor: "var(--color-card)", border: "1px solid var(--color-border)", color: "var(--color-foreground)" }} 
-                      />
-                    </div>
-                  </motion.div>
-
-                  {/* Paylater-specific: Interest Rate & Admin Fee */}
-                  <AnimatePresence>
-                    {selectedDebtSubType === "paylater" && selectedPaylaterProvider !== "Lainnya +" && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="space-y-3 overflow-hidden"
-                      >
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-[11px] font-bold tracking-widest uppercase mb-2" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>Interest Rate (%)</label>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              max="100"
-                              value={interestRate}
-                              onChange={(e) => setInterestRate(e.target.value)}
-                              className="h-11 font-mono" style={{ backgroundColor: "var(--color-card)", border: "1px solid var(--color-border)", color: "var(--color-foreground)" }}
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[11px] font-bold tracking-widest uppercase mb-2" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>Admin Fee (%)</label>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              max="100"
-                              value={adminFee}
-                              onChange={(e) => setAdminFee(e.target.value)}
-                              className="h-11 font-mono" style={{ backgroundColor: "var(--color-card)", border: "1px solid var(--color-border)", color: "var(--color-foreground)" }}
-                            />
-                          </div>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Auto-filled based on {selectedPaylaterProvider} default rates. You can edit these values manually.
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </>
-              )}
-            </AnimatePresence>
-
+                    {INSTITUTIONS.map((item) => (
+                      <option key={item.value || "empty"} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    Jika nama akun dikosongkan, institusi terpilih akan dipakai sebagai nama akun.
+                  </p>
+                </div>
+              </div>
+            </section>
           </div>
 
-          {/* Footer */}
-          <div className="flex justify-end gap-3 px-6 py-5 shrink-0" style={{ borderTop: "1px solid var(--color-border)", backgroundColor: "var(--color-card)" }}>
-            <Button 
-              type="button" 
-              variant="ghost" 
-              onClick={onClose} 
-              className="h-9 text-sm font-medium transition-all"
-              style={{ color: "var(--color-muted-foreground)" }}
+          <footer className="flex justify-end gap-3 border-t border-border/70 bg-card p-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              className="h-10 px-6 text-[12px] font-semibold uppercase tracking-[0.08em]"
             >
-              Cancel
+              Batal
             </Button>
-            <Button 
-              type="submit" 
-              className="h-9 font-semibold"
-              style={{ backgroundColor: "var(--color-primary)", color: "var(--color-primary-foreground)" }}
+            <Button
+              type="submit"
+              className="h-10 bg-primary px-8 text-[12px] font-bold uppercase tracking-[0.08em] text-primary-foreground hover:bg-primary/90"
             >
-              Create Wallet
+              Simpan Akun
             </Button>
-          </div>
+          </footer>
         </form>
       </DialogContent>
     </Dialog>

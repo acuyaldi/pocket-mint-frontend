@@ -1,191 +1,109 @@
 ---
-name: Pocket Mint
+name: Pocket Mint Design Contract
+authority: ../pocket-mint-docs/docs/product/stictch/core/DESIGN.md
+version: '2.0'
+status: derived
+language: id-ID
 colors:
-  surface: '#f8f9ff'
-  surface-dim: '#cbdbf5'
-  surface-bright: '#f8f9ff'
-  surface-container-lowest: '#ffffff'
-  surface-container-low: '#eff4ff'
-  surface-container: '#e5eeff'
-  surface-container-high: '#dce9ff'
-  surface-container-highest: '#d3e4fe'
-  on-surface: '#0b1c30'
-  on-surface-variant: '#3d4a3e'
-  inverse-surface: '#213145'
-  inverse-on-surface: '#eaf1ff'
-  outline: '#6d7b6d'
-  outline-variant: '#bccabb'
-  surface-tint: '#006d36'
-  primary: '#006d36'
-  on-primary: '#ffffff'
-  primary-container: '#4ade80'
-  on-primary-container: '#005e2d'
-  inverse-primary: '#4de082'
-  secondary: '#545f73'
-  on-secondary: '#ffffff'
-  secondary-container: '#d5e0f8'
-  on-secondary-container: '#586377'
-  tertiary: '#895024'
-  on-tertiary: '#ffffff'
-  tertiary-container: '#ffb47f'
-  on-tertiary-container: '#794418'
-  error: '#ba1a1a'
-  on-error: '#ffffff'
-  error-container: '#ffdad6'
-  on-error-container: '#93000a'
-  primary-fixed: '#6dfe9c'
-  primary-fixed-dim: '#4de082'
-  on-primary-fixed: '#00210c'
-  on-primary-fixed-variant: '#005227'
-  secondary-fixed: '#d8e3fb'
-  secondary-fixed-dim: '#bcc7de'
-  on-secondary-fixed: '#111c2d'
-  on-secondary-fixed-variant: '#3c475a'
-  tertiary-fixed: '#ffdcc6'
-  tertiary-fixed-dim: '#ffb784'
-  on-tertiary-fixed: '#301400'
-  on-tertiary-fixed-variant: '#6c3a0f'
-  background: '#f8f9ff'
-  on-background: '#0b1c30'
-  surface-variant: '#d3e4fe'
+  canvas: '#f9f9f8'
+  surface: '#ffffff'
+  surface-muted: '#f4f3f3'
+  border: '#c0c8c7'
+  ink: '#1a1c1c'
+  ink-muted: '#414848'
+  mint: '#2DD4BF'
+  slate: '#0F172A'
+  amber: '#F59E0B'
+  coral: '#F87171'
 typography:
-  display-lg:
-    fontFamily: Inter
-    fontSize: 48px
-    fontWeight: '700'
-    lineHeight: 56px
-    letterSpacing: -0.02em
-  headline-lg:
-    fontFamily: Inter
-    fontSize: 32px
-    fontWeight: '600'
-    lineHeight: 40px
-    letterSpacing: -0.01em
-  headline-lg-mobile:
-    fontFamily: Inter
-    fontSize: 24px
-    fontWeight: '600'
-    lineHeight: 32px
-  title-md:
-    fontFamily: Inter
-    fontSize: 20px
-    fontWeight: '600'
-    lineHeight: 28px
-  body-lg:
-    fontFamily: Inter
-    fontSize: 16px
-    fontWeight: '400'
-    lineHeight: 24px
-  body-sm:
-    fontFamily: Inter
-    fontSize: 14px
-    fontWeight: '400'
-    lineHeight: 20px
-  label-md:
-    fontFamily: Inter
-    fontSize: 12px
-    fontWeight: '600'
-    lineHeight: 16px
-    letterSpacing: 0.05em
-  data-mono:
-    fontFamily: Inter
-    fontSize: 16px
-    fontWeight: '500'
-    lineHeight: 24px
-rounded:
-  sm: 0.25rem
-  DEFAULT: 0.5rem
-  md: 0.75rem
-  lg: 1rem
-  xl: 1.5rem
-  full: 9999px
+  family: Inter
+  financial-figures: tabular-nums
+radius:
+  default: 12px
+  large: 16px
+  pill: 999px
 spacing:
-  base: 4px
-  xs: 4px
-  sm: 8px
-  md: 16px
-  lg: 24px
-  xl: 32px
-  gutter: 16px
-  margin-mobile: 16px
-  margin-desktop: 40px
+  base: 8px
+  internal: 16px
+  card: 24px
+  section: 32px
+  desktop-safe-area: 40px
+  tablet-safe-area: 32px
+  mobile-margin: 20px
+layout:
+  max-content-width: 1280px
+  desktop-columns: 12
+  tablet-columns: 8
+  mobile-columns: 4
 ---
 
-## Brand & Style
-The brand personality is grounded in financial clarity and proactive growth. It targets the self-hosting enthusiast who values privacy and precision. The emotional response should be one of "controlled transparency"—the user feels in command of their data through a clean, systematic interface.
+# Pocket Mint Design Direction
 
-The design style is **Corporate / Modern** with a focus on data density and legibility. It utilizes a refined digital-first aesthetic that avoids unnecessary decoration, favoring functional whitespace and subtle depth to organize complex financial information. 
-- **Growth-Centric:** Mint green is used purposefully to highlight positive trends.
-- **Trust-Driven:** Deep slate provides a stable foundation, ensuring the UI feels robust and institutional.
-- **Precision-Focused:** Every element aligns to a strict grid to reinforce the feeling of an organized ledger.
+This document is an agent-facing derivative of the authoritative Pocket Mint `DESIGN.md`. If any wording differs, `DESIGN.md` wins. Do not treat existing implementation as permission to override the authority.
 
-## Colors
-This design system uses a logic-gated color palette where hue communicates financial status:
-- **Primary (Mint Green):** Reserved for "Assets," "Income," and "Growth." It represents the "Mint" in the brand name.
-- **Secondary (Deep Slate):** Used for primary navigation, headings, and high-contrast text to convey stability and security.
-- **Accent (Amber):** Specific to "Pending" states, upcoming installments, or warnings that require attention but aren't critical failures.
-- **Error (Coral Red):** Dedicated to "Debt," "Over-budget" alerts, and negative cash flow indicators.
+## Product Identity
 
-The background uses a subtle off-white (`#f8fafc`) to reduce eye strain, while cards and containers use pure white to pop from the background.
+Pocket Mint is a private financial workspace, not a generic admin dashboard, banking app, crypto or trading product, gamified expense tracker, or marketing-heavy fintech site. It must feel calm, professional, trustworthy, organized, private, information-first, and premium through restraint. Every visual element must improve financial comprehension.
+
+The primary application language is Bahasa Indonesia. Use these navigation labels exactly and never translate or rename them: `Dashboard`, `Dompet`, `Transaksi`, `Cicilan`, `Akun`.
+
+## Visual Foundation
+
+- Use the light off-white canvas and white card surfaces defined in the frontmatter.
+- Use Slate for navigation, primary text emphasis, and solid primary buttons.
+- Use Mint only for assets, income, positive values, and positive financial meaning.
+- Use Coral only for debt, destructive actions, negative balances, overdue obligations, and critical negative states.
+- Use Amber only for warnings, upcoming payments, pending states, or items requiring attention.
+- Ordinary expense amounts are dark neutral, not automatically Coral.
+- Color must never be the only status cue. Pair it with text, iconography, or another structural indicator.
+- Use semantic tokens. Do not add arbitrary raw colors or alternate warm/cool neutral systems.
+- Cards have white backgrounds, 12px radius, 24px padding, and minimal elevation. Large containers use 16px radius.
+- No glassmorphism, gradients, decorative blobs, ornamental graphics, excessive shadows, or decorative card side stripes.
 
 ## Typography
-Inter is selected for its exceptional legibility and neutral, professional tone. 
 
-**Numerical Data:**
-All currency and balance displays must use `tabular-nums` (Tabular Figures). This ensures that decimal points and digits align vertically in lists and tables, allowing users to scan and compare values rapidly without visual jitter.
+Use Inter throughout the product. Establish hierarchy in this order: financial values, section titles, body, metadata. Keep headings controlled and application-scaled; never use oversized marketing typography.
 
-**Hierarchy:**
-- **Headlines:** Use tighter letter spacing and Semi-Bold weights to create a strong anchor for page sections.
-- **Labels:** Small, uppercase labels are used for metadata like "Transaction Date" or "Account Type" to differentiate from primary content.
-- **Body:** Standardized at 16px for optimal readability in data-heavy contexts.
+All currency, balances, payments, percentages, and other financial values use Inter with tabular figures. Do not introduce a competing display or monospace font. Preserve complete financial values with Indonesian locale formatting. Long values may resize responsively or wrap as one readable amount; never abbreviate or truncate them in a misleading way. Negative values use a minus sign and the correct semantic context. Zero values remain neutral.
 
-## Layout & Spacing
-The layout follows a **Fluid Grid** model with a max-width container of 1280px for desktop to maintain readability.
+## Layout and Responsive Composition
 
-- **Grid:** A 12-column grid for desktop, 8-column for tablet, and 4-column for mobile.
-- **Rhythm:** An 8px (base 4) spacing system governs all margins and paddings.
-- **Padding:** High-level dashboard widgets should use `lg` (24px) internal padding to provide "breathing room" for financial data.
-- **Mobile Adaptivity:** On mobile, widgets stack vertically and horizontal margins reduce to 16px. Transaction rows remain full-width to maximize the touch target and horizontal space for currency values.
+Desktop is the master breakpoint. Use a maximum content width of 1280px, an 8px spacing rhythm, 32px major section spacing, and the safe areas defined in the frontmatter.
 
-## Elevation & Depth
-Depth is created through **Tonal Layers** and **Ambient Shadows** to differentiate between the canvas and interactive elements.
+- Desktop: persistent sidebar, page header, then content on a 12-column grid.
+- Tablet: compact navigation and content on an 8-column grid.
+- Mobile: top app bar, single reading column on a 4-column grid, then bottom navigation.
 
-- **Level 0 (Canvas):** The base background layer, using a very light slate tint.
-- **Level 1 (Cards):** Primary containers for wallets and widgets. These use a soft, highly diffused shadow (Blur: 12px, Y: 4px, Opacity: 4%) to appear slightly lifted.
-- **Level 2 (Modals/Dropdowns):** Higher elevation with a more pronounced shadow (Blur: 20px, Y: 8px, Opacity: 8%) and a subtle 1px border using the secondary color at 10% opacity.
-- **Interactive States:** Buttons and cards use a slight scale-down (0.98x) on click rather than heavy shadow changes to maintain the "Modern Fintech" polish.
+Responsive behavior changes width, columns, wrapping, and stacking only. Shared components retain the same typography hierarchy, colors, radius, elevation, spacing scale, icon style, content, and interaction behavior at every breakpoint. Keep the page free of horizontal overflow.
 
-## Shapes
-The design system utilizes **Rounded** shapes (8px / 0.5rem) to soften the professional tone, making the financial data feel approachable rather than intimidating.
+## Information and Screen Hierarchy
 
-- **Standard Elements:** Buttons, input fields, and small cards use the 8px base radius.
-- **Large Containers:** Dashboard widgets and main wallet cards use `rounded-lg` (16px) to define major layout sections.
-- **Chips/Status Tags:** Utilize `rounded-xl` (24px) or full pill-shape to distinguish them from interactive buttons.
+Every screen reads from primary information to supporting information, actions, then history. Preserve the authoritative information architecture and existing product scope.
 
-## Components
+The Dashboard reading order is fixed: Financial Position, Needs Attention, Quick Actions, Wallet Overview, Current Period Summary, Recent Activity. It is not an analytics dashboard.
 
-### Wallet Cards
-Wallet cards are the primary data containers. 
-- **Asset Wallets:** Feature a 4px left-border accent of Primary Mint.
-- **Debt Wallets:** Feature a 4px left-border accent of Coral Red.
-- Cards must include a "Balance" in `display-lg` and a "Limit/Available" secondary line in `body-sm`.
+The Hero Card contains only Net Worth, Total Assets, Total Outstanding Debt, and Reporting Cutoff. Never add a chart, sparkline, trend graph, decorative analytic, or fabricated comparison.
 
-### Transaction Rows
-- Layout: [Icon/Category] [Merchant/Name (Bold)] [Date/Subtext] --- [Amount (Tabular)].
-- Positive transactions (Income) use Primary Mint for the amount text.
-- Negative transactions (Expenses) use the Secondary Slate.
+Wallet Cards contain wallet name, wallet type, balance, and optionally institution. Balance is dominant. Asset and debt semantics may use functional labels, icons, borders, or status treatments; a decorative side stripe is never mandatory.
 
-### Installment Progress Bars
-- High-contrast track (Slate at 10% opacity) with a solid Primary Mint fill.
-- If an installment is "Pending" or "Upcoming," the fill color shifts to Accent Amber.
-- Always include "X of Y months" label aligned to the right.
+Transaction rows contain category icon, title, metadata, and a tabular amount. Income is Mint, ordinary expense is dark neutral, and debt is Coral.
 
-### Net Worth Summary Widgets
-- A hero-style component at the top of the dashboard.
-- Uses a large-scale line chart (sparkline) with a gradient fill.
-- The "Net Worth" total is always the largest typographic element on the page.
+Installment cards contain installment name, monthly payment, remaining balance, and due date. Progress communicates repayment only and is never gamified.
 
-### Buttons & Inputs
-- **Primary Button:** Solid Secondary Slate background with white text.
-- **Secondary Button:** White background with a 1px Slate border.
-- **Inputs:** Clean, 1px bordered boxes that highlight in Primary Mint on focus. Error states use a Coral Red border and subtext.
+## Components and States
+
+Every shared component has one visual definition. Buttons are compact: primary is solid Slate, secondary is outlined, and danger is Coral. Inputs use labels above fields and errors beside or below the relevant field.
+
+Define hover, focus-visible, pressed, selected, disabled, loading, skeleton, empty, error, no-search-result, overdue, upcoming-payment, and destructive-confirmation states. State changes must preserve dimensions and component identity. Loading must prevent duplicate submission. Skeletons match real geometry and contain no fabricated data. Errors never masquerade as zero or empty data.
+
+Use a visible high-contrast focus indicator, logical keyboard order, native control semantics, and 44px minimum touch targets. Selected and status states require a non-color cue. Respect reduced-motion preferences.
+
+Desktop modals are centered contained dialogs. Tablet and Mobile keep the same visual definition and may adapt width, wrapping, action stacking, and internal scrolling only. Trap focus, make the background inert, support Escape, and restore focus to the trigger.
+
+On narrow screens, tables keep their semantic headers, row styling, information order, and financial alignment. If columns cannot fit, contain horizontal scrolling within a labelled table region; never allow page-level horizontal overflow and never turn rows into decorative cards.
+
+## Truthfulness and Prohibited Patterns
+
+Generate only from real fields and supported product actions. Distinguish loading, error, empty, and zero states. Never invent financial values, trends, insights, comparisons, charts, sections, controls, or actions.
+
+Never introduce glassmorphism, gradients, fake sparklines, decorative analytics, bento marketing layouts, oversized hero headings, multiple visual directions, generic dashboard patterns, English navigation labels, breakpoint-specific component redesigns, or competing font systems.

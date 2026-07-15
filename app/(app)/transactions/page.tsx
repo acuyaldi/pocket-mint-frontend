@@ -1,113 +1,81 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  useTransactions,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Filter,
+  Plus,
+  Search,
+  Shuffle,
+} from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { formatCurrency } from "@/lib/utils";
+import {
   useCreateTransaction,
-  useUpdateTransaction,
   useDeleteTransaction,
+  useTransactions,
+  useUpdateTransaction,
 } from "@/src/features/transactions/hooks/useTransactions";
 import { useWallets } from "@/src/features/wallets/hooks/useWallets";
 import { Transaction } from "@/src/types/transaction";
-import { motion } from "framer-motion";
-import { createClient } from "@/lib/supabase/client";
-import { PAGE_SIZE } from "./components/constants";
-import type { DateRangeFilter } from "./components/constants";
-import { TransactionStats } from "./components/TransactionStats";
-import { TransactionBreakdownChart } from "./components/TransactionBreakdownChart";
-import { TransactionFilters } from "./components/TransactionFilters";
-import { TransactionTable } from "./components/TransactionTable";
-import { TransactionDetailPanel } from "./components/TransactionDetailPanel";
-import { EditTransactionModal } from "./components/EditTransactionModal";
-import { DeleteTransactionModal } from "./components/DeleteTransactionModal";
 import { AddTransactionModal, type AddTransactionData } from "./components/AddTransactionModal";
+import { DeleteTransactionModal } from "./components/DeleteTransactionModal";
+import { EditTransactionModal } from "./components/EditTransactionModal";
+import { TransactionDetailPanel } from "./components/TransactionDetailPanel";
+
+type TypeFilter = "all" | "INCOME" | "EXPENSE" | "TRANSFER";
+
+const TYPE_FILTERS: { key: TypeFilter; label: string }[] = [
+  { key: "all", label: "Semua" },
+  { key: "INCOME", label: "Pemasukan" },
+  { key: "EXPENSE", label: "Pengeluaran" },
+  { key: "TRANSFER", label: "Transfer" },
+];
+
+function txDateKey(transaction: Transaction) {
+  return new Date(transaction.date).toISOString().slice(0, 10);
+}
+
+function formatGroupTitle(dateKey: string) {
+  const date = new Date(`${dateKey}T00:00:00`);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) return "Hari Ini";
+  if (date.toDateString() === yesterday.toDateString()) return "Kemarin";
+
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
+}
+
+function TransactionIcon({ type }: { type: Transaction["type"] }) {
+  if (type === "INCOME") {
+    return <ArrowUpRight className="size-5 text-mint" />;
+  }
+  if (type === "TRANSFER") {
+    return <Shuffle className="size-5 text-primary" />;
+  }
+  return <ArrowDownLeft className="size-5 text-muted-foreground" />;
+}
 
 export default function TransactionsPage() {
   const router = useRouter();
-  const supabase = createClient();
   const { data, isLoading } = useTransactions();
   const { data: walletsData } = useWallets();
   const updateTransaction = useUpdateTransaction();
   const createTransaction = useCreateTransaction();
   const deleteTransaction = useDeleteTransaction();
-  const transactions: Transaction[] = useMemo(() => data ?? [], [data]);
+  const transactions = useMemo(() => data ?? [], [data]);
   const wallets = useMemo(() => walletsData ?? [], [walletsData]);
 
-  // Auth guard
-  useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) router.replace("/login");
-    })();
-  }, [router, supabase.auth]);
-
-  // ── Filter state ─────────────────────────────────────────────────────────
-  const [dateFilter, setDateFilter] = useState<DateRangeFilter>("30d");
-  const [customFrom, setCustomFrom] = useState("");
-  const [customTo, setCustomTo] = useState("");
-  const [walletFilter, setWalletFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
   const [search, setSearch] = useState("");
-
-  // Pending filter state
-  const [pendingDate, setPendingDate] = useState<DateRangeFilter>("30d");
-  const [pendingWallet, setPendingWallet] = useState("all");
-  const [pendingCategory, setPendingCategory] = useState("all");
-  const [pendingType, setPendingType] = useState("all");
-  const [pendingCustomFrom, setPendingCustomFrom] = useState("");
-  const [pendingCustomTo, setPendingCustomTo] = useState("");
-  const handleApplyFilters = useCallback(() => {
-    setDateFilter(pendingDate); setWalletFilter(pendingWallet);
-    setCategoryFilter(pendingCategory); setTypeFilter(pendingType);
-    setCustomFrom(pendingCustomFrom); setCustomTo(pendingCustomTo);
-  }, [pendingDate, pendingWallet, pendingCategory, pendingType, pendingCustomFrom, pendingCustomTo]);
-
-  const uniqueCategories = useMemo(() => {
-    const cats = new Map<string, string>();
-    transactions.forEach((tx) => { if (tx.category?.name) cats.set(tx.category.name, tx.category.name); });
-    return Array.from(cats.values()).sort();
-  }, [transactions]);
-
-  const filteredTransactions = useMemo(() => {
-    const now = new Date();
-    return transactions.filter((tx) => {
-      const txDate = new Date(tx.date);
-      let passDate = true;
-      if (dateFilter === "7d") { const c = new Date(now); c.setDate(c.getDate() - 7); passDate = txDate >= c; }
-      else if (dateFilter === "30d") { const c = new Date(now); c.setDate(c.getDate() - 30); passDate = txDate >= c; }
-      else if (dateFilter === "3m") { const c = new Date(now); c.setMonth(c.getMonth() - 3); passDate = txDate >= c; }
-      else if (dateFilter === "6m") { const c = new Date(now); c.setMonth(c.getMonth() - 6); passDate = txDate >= c; }
-      else if (dateFilter === "year") { passDate = txDate >= new Date(now.getFullYear(), 0, 1); }
-      else if (dateFilter === "custom") {
-        if (customFrom) passDate = txDate >= new Date(customFrom);
-        if (customTo) { const to = new Date(customTo); to.setHours(23, 59, 59, 999); passDate = passDate && txDate <= to; }
-      }
-      const passWallet = walletFilter === "all" || tx.walletId === walletFilter;
-      const passCategory = categoryFilter === "all" || tx.category?.name === categoryFilter;
-      const passType = typeFilter === "all" || tx.type.toLowerCase() === typeFilter.toLowerCase();
-      const passSearch = !search || (tx.description ?? "").toLowerCase().includes(search.toLowerCase()) || (tx.category?.name ?? "").toLowerCase().includes(search.toLowerCase());
-      return passDate && passSearch && passWallet && passCategory && passType;
-    });
-  }, [transactions, dateFilter, customFrom, customTo, search, walletFilter, categoryFilter, typeFilter]);
-
-  const stats = useMemo(() => {
-    let income = 0, expense = 0;
-    filteredTransactions.forEach((tx) => { if (tx.type === "INCOME") income += tx.amount; else if (tx.type === "EXPENSE") expense += tx.amount; });
-    return { income, expense, net: income - expense };
-  }, [filteredTransactions]);
-
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / PAGE_SIZE));
-  const filterKey = `${dateFilter}-${customFrom}-${customTo}-${search}-${walletFilter}-${categoryFilter}-${typeFilter}`;
-
-  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
-  if (filterKey !== prevFilterKey) { setPrevFilterKey(filterKey); setCurrentPage(1); }
-  const visibleTransactions = useMemo(() => filteredTransactions.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE), [filteredTransactions, currentPage]);
-
-  // Modals & panel
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -116,62 +84,247 @@ export default function TransactionsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
-  const handleEditSubmit = useCallback(async (d: { id: string; description: string; amount: number; type: "EXPENSE" | "INCOME"; date?: string }) => {
-    setIsSaving(true); try { await updateTransaction.mutateAsync({ id: d.id, description: d.description, amount: d.amount, type: d.type, date: d.date }); setEditingTx(null); } catch (e) { console.error(e); } finally { setIsSaving(false); }
-  }, [updateTransaction]);
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) router.replace("/login");
+    });
+  }, [router]);
+
+  const filteredTransactions = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return transactions
+      .filter((transaction) => typeFilter === "all" || transaction.type === typeFilter)
+      .filter((transaction) => {
+        if (!query) return true;
+        return (
+          (transaction.description ?? "").toLowerCase().includes(query) ||
+          (transaction.category?.name ?? "").toLowerCase().includes(query) ||
+          (transaction.wallet?.name ?? "").toLowerCase().includes(query)
+        );
+      })
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [transactions, search, typeFilter]);
+
+  const groupedTransactions = useMemo(() => {
+    const groups = new Map<string, Transaction[]>();
+    filteredTransactions.forEach((transaction) => {
+      const key = txDateKey(transaction);
+      groups.set(key, [...(groups.get(key) ?? []), transaction]);
+    });
+    return Array.from(groups.entries());
+  }, [filteredTransactions]);
+
+  const handleEditSubmit = useCallback(
+    async (data: {
+      id: string;
+      description: string;
+      amount: number;
+      type: "EXPENSE" | "INCOME";
+      date?: string;
+    }) => {
+      setIsSaving(true);
+      try {
+        await updateTransaction.mutateAsync({
+          id: data.id,
+          description: data.description,
+          amount: data.amount,
+          type: data.type,
+          date: data.date,
+        });
+        setEditingTx(null);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [updateTransaction],
+  );
+
   const handleDeleteConfirm = useCallback(async () => {
-    if (!deleteConfirmId) return; setIsDeleting(true); try { await deleteTransaction.mutateAsync(deleteConfirmId); setDeleteConfirmId(null); setSelectedTx(null); } catch (e) { console.error(e); } finally { setIsDeleting(false); }
+    if (!deleteConfirmId) return;
+    setIsDeleting(true);
+    try {
+      await deleteTransaction.mutateAsync(deleteConfirmId);
+      setDeleteConfirmId(null);
+      setSelectedTx(null);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsDeleting(false);
+    }
   }, [deleteConfirmId, deleteTransaction]);
-  const handleAddSubmit = useCallback(async (d: AddTransactionData) => {
-    setIsCreating(true);
-    try { await createTransaction.mutateAsync(d); setIsAddModalOpen(false); }
-    catch (e) { console.error(e); throw e; } // let the modal surface the message
-    finally { setIsCreating(false); }
-  }, [createTransaction]);
+
+  const handleAddSubmit = useCallback(
+    async (data: AddTransactionData) => {
+      setIsCreating(true);
+      try {
+        await createTransaction.mutateAsync(data);
+        setIsAddModalOpen(false);
+      } catch (error) {
+        console.error(error);
+        throw error;
+      } finally {
+        setIsCreating(false);
+      }
+    },
+    [createTransaction],
+  );
 
   return (
-    <div className="space-y-6">
-      <motion.main className="space-y-6" initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.08 } } }}>
-        {/* Header + summary (left, 2/3) · Income vs Expense donut (right, 1/3) */}
-        <motion.div
-          className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3"
-          variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45 } } }}
-        >
-          <div className="flex flex-col gap-5 lg:col-span-2">
-            <div>
-              <p className="font-mono text-[11px] tracking-[0.08em] text-primary">
-                TRANSACTIONS
-              </p>
-              <h2 className="mt-2 tracking-tight" style={{ fontSize: 28, fontWeight: 700, color: "var(--color-foreground)", fontFamily: "var(--font-heading)" }}>
-                Transactions History
-              </h2>
-              <p className="mt-1" style={{ fontSize: 14, color: "var(--color-muted-foreground)", fontFamily: "var(--font-body)" }}>
-                Track every inflow, expense, and transfer from the same ledger.
-              </p>
-            </div>
-            <TransactionStats income={stats.income} expense={stats.expense} net={stats.net} />
-          </div>
-          <TransactionBreakdownChart income={stats.income} expense={stats.expense} />
-        </motion.div>
-        <TransactionFilters
-          wallets={wallets} uniqueCategories={uniqueCategories}
-          pendingDate={pendingDate} pendingWallet={pendingWallet} pendingCategory={pendingCategory} pendingType={pendingType}
-          pendingCustomFrom={pendingCustomFrom} pendingCustomTo={pendingCustomTo}
-          onPendingDateChange={setPendingDate} onPendingWalletChange={setPendingWallet}
-          onPendingCategoryChange={setPendingCategory} onPendingTypeChange={setPendingType}
-          onPendingCustomFromChange={setPendingCustomFrom} onPendingCustomToChange={setPendingCustomTo}
-          onApply={handleApplyFilters}
-        />
-        <TransactionTable
-          isLoading={isLoading} search={search} onSearchChange={setSearch} filteredTransactions={filteredTransactions} visibleTransactions={visibleTransactions}
-          currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} onRowClick={setSelectedTx}
-        />
-      </motion.main>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-xl font-bold text-primary">Transaksi</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Jurnal keuangan Anda</p>
+      </div>
 
-      <TransactionDetailPanel tx={selectedTx} onClose={() => setSelectedTx(null)} onEdit={setEditingTx} onDelete={setDeleteConfirmId} />
-      <EditTransactionModal tx={editingTx} isSaving={isSaving} onClose={() => setEditingTx(null)} onSubmit={handleEditSubmit} />
-      <DeleteTransactionModal isOpen={!!deleteConfirmId} isDeleting={isDeleting} onClose={() => setDeleteConfirmId(null)} onConfirm={handleDeleteConfirm} />
-      <AddTransactionModal isOpen={isAddModalOpen} isCreating={isCreating} wallets={wallets} onClose={() => setIsAddModalOpen(false)} onSubmit={handleAddSubmit} />
+      <div className="flex flex-col gap-4 py-2 md:flex-row md:items-center md:justify-between">
+        <div className="relative w-full md:max-w-sm">
+          <Search className="absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="h-10 w-full rounded-lg border border-border bg-card py-2 pl-10 pr-4 text-sm outline-none transition-all focus:ring-1 focus:ring-primary"
+            placeholder="Cari transaksi..."
+            type="text"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsAddModalOpen(true)}
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
+        >
+          <Plus className="size-4" />
+          Tambah Transaksi
+        </button>
+      </div>
+
+      <div className="flex items-center gap-2 overflow-x-auto pb-2">
+        {TYPE_FILTERS.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => setTypeFilter(item.key)}
+            className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
+              typeFilter === item.key
+                ? "bg-primary text-primary-foreground"
+                : "border border-border bg-surface-high text-muted-foreground hover:bg-border/40"
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
+        <div className="mx-2 h-6 w-px bg-border" />
+        <button
+          type="button"
+          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-high px-4 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-border/40"
+        >
+          <Filter className="size-4" />
+          Lainnya
+        </button>
+      </div>
+
+      <div className="space-y-10">
+        {groupedTransactions.map(([dateKey, group]) => {
+          const total = group.reduce((sum, transaction) => {
+            if (transaction.type === "INCOME") return sum + transaction.amount;
+            if (transaction.type === "EXPENSE") return sum - transaction.amount;
+            return sum;
+          }, 0);
+
+          return (
+            <section key={dateKey}>
+              <div className="mb-4 flex items-center justify-between border-b border-border pb-2">
+                <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
+                  {formatGroupTitle(dateKey)}
+                </h2>
+                <span className="text-xs tabular-nums text-muted-foreground">
+                  Total: {formatCurrency(total)}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {group.map((transaction) => (
+                  <button
+                    key={transaction.id}
+                    type="button"
+                    onClick={() => setSelectedTx(transaction)}
+                    className="group flex w-full items-center justify-between rounded-xl border border-border/60 bg-card p-6 text-left transition-all duration-300 hover:shadow-md"
+                  >
+                    <div className="flex min-w-0 items-center gap-4">
+                      <div
+                        className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${
+                          transaction.type === "INCOME" ? "bg-mint/10" : "bg-surface-high"
+                        }`}
+                      >
+                        <TransactionIcon type={transaction.type} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-foreground">
+                          {transaction.description || "Transaksi"}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {transaction.category?.name ?? "Tanpa kategori"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="hidden text-sm text-muted-foreground md:block">
+                      {transaction.wallet?.name ??
+                        wallets.find((wallet) => wallet.id === transaction.walletId)?.name ??
+                        "-"}
+                    </div>
+                    <p
+                      className={`shrink-0 text-sm font-bold tabular-nums ${
+                        transaction.type === "INCOME" ? "text-mint" : "text-coral"
+                      }`}
+                    >
+                      {transaction.type === "INCOME" ? "+" : transaction.type === "EXPENSE" ? "-" : ""}
+                      {formatCurrency(transaction.amount)}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+
+      {filteredTransactions.length === 0 && !isLoading ? (
+        <p className="rounded-xl border border-dashed border-border bg-card py-10 text-center text-sm text-muted-foreground">
+          Tidak ada transaksi yang cocok.
+        </p>
+      ) : null}
+      {isLoading ? (
+        <p className="rounded-xl border border-border bg-card py-10 text-center text-sm text-muted-foreground">
+          Memuat transaksi...
+        </p>
+      ) : null}
+
+      <TransactionDetailPanel
+        tx={selectedTx}
+        onClose={() => setSelectedTx(null)}
+        onEdit={setEditingTx}
+        onDelete={setDeleteConfirmId}
+      />
+      <EditTransactionModal
+        tx={editingTx}
+        isSaving={isSaving}
+        onClose={() => setEditingTx(null)}
+        onSubmit={handleEditSubmit}
+      />
+      <DeleteTransactionModal
+        isOpen={!!deleteConfirmId}
+        isDeleting={isDeleting}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={handleDeleteConfirm}
+      />
+      <AddTransactionModal
+        isOpen={isAddModalOpen}
+        isCreating={isCreating}
+        wallets={wallets}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={handleAddSubmit}
+      />
     </div>
   );
 }

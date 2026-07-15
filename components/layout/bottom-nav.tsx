@@ -7,6 +7,7 @@ import {
   ArrowLeftRight,
   Wallet,
   CalendarClock,
+  BarChart3,
   User,
 } from "lucide-react";
 import { AccountMenuItems } from "./account-menu";
@@ -21,9 +22,10 @@ import {
 // vocabulary on both surfaces so wayfinding transfers between devices
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Wallets", href: "/wallets", icon: Wallet },
-  { label: "Transactions", href: "/transactions", icon: ArrowLeftRight },
-  { label: "Installments", href: "/cicilan", icon: CalendarClock },
+  { label: "Dompet", href: "/wallets", icon: Wallet },
+  { label: "Transaksi", href: "/transactions", icon: ArrowLeftRight },
+  { label: "Cicilan", href: "/cicilan", icon: CalendarClock },
+  { label: "Analitik", href: "/analytics", icon: BarChart3 },
 ];
 
 export function BottomNav() {
@@ -45,7 +47,7 @@ export function BottomNav() {
 
     navItems.push({
       key: "account",
-      label: "Account",
+      label: "Akun",
       icon: <User className="size-[18px]" />,
       renderTrigger: ({ defaultTrigger }) => (
         <DropdownMenu>

@@ -1,293 +1,276 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
+import { useMemo, useState } from "react";
 import {
+  Banknote,
+  ChevronDown,
+  CreditCard,
+  Landmark,
+  MoreVertical,
   Plus,
-  ShieldCheck,
-  AlertTriangle,
-  ArrowUpDown,
+  Search,
+  Smartphone,
+  Wallet as WalletIcon,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-
-// Import components
-import WalletSummaryCard from "./components/WalletSummaryCard";
-import CreateWalletModal, { type CreateWalletFormData } from "./components/CreateWalletModal";
+import CreateWalletModal, {
+  type CreateWalletFormData,
+} from "./components/CreateWalletModal";
 import EditWalletModal from "./components/EditWalletModal";
-import { WalletCard } from "@/components/WalletCard";
-
-// Import hooks & types
-import { useWallets, useCreateWallet } from "@/src/features/wallets/hooks/useWallets";
+import { useCreateWallet, useWallets } from "@/src/features/wallets/hooks/useWallets";
 import { isDebtWallet, type Wallet, type WalletType } from "@/src/types/wallet";
 import { formatCurrency } from "@/lib/utils";
 
-// Modal sub-types → backend WalletType
 const TYPE_FROM_SUBTYPE: Record<string, WalletType> = {
   bank_account: "BANK",
   e_wallet: "E_WALLET",
   cash_on_hand: "CASH",
-  piutang: "CASH", // ponytail: no receivable type in schema; closest asset bucket
+  piutang: "CASH",
   credit_card: "CREDIT_CARD",
   paylater: "LOAN_PAYLATER",
   utang_personal: "LOAN_PAYLATER",
   line_of_credit: "LOAN_PAYLATER",
 };
 
-// Derived financial aggregates
-function computeAggregates(wallets: Wallet[]) {
-  const assets = wallets.filter((w) => !isDebtWallet(w.type));
-  const debts = wallets.filter((w) => isDebtWallet(w.type));
-
-  const totalAssets = assets.reduce((s, w) => s + w.balance, 0);
-  const totalDebts = debts.reduce((s, w) => s + Math.abs(w.balance), 0);
-  // Net worth = assets only; debt is outstanding to pay later, it reduces
-  // net worth only when the repayment transaction leaves an asset wallet
-  const netWorth = totalAssets;
-  const totalCreditLimit = debts.reduce((s, w) => s + (w.creditLimit ?? 0), 0);
-  const debtRatio = totalCreditLimit > 0 ? (totalDebts / totalCreditLimit) * 100 : 0;
-
-  return { totalAssets, totalDebts, netWorth, totalCreditLimit, debtRatio };
-}
-
-// Filter Pills
-type FilterKey = "all" | "asset" | "debt";
-type SortKey = "default" | "balance";
+type FilterKey = "all" | "bank" | "ewallet" | "credit" | "loan";
 
 const FILTERS: { key: FilterKey; label: string }[] = [
-  { key: "all", label: "All Wallets" },
-  { key: "asset", label: "Assets" },
-  { key: "debt", label: "Debts" },
+  { key: "all", label: "Semua" },
+  { key: "bank", label: "Rekening" },
+  { key: "ewallet", label: "E-Wallet" },
+  { key: "credit", label: "Kredit" },
+  { key: "loan", label: "Pinjaman" },
 ];
 
-// Animation Variants
-const pageVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
-};
+function walletMatchesFilter(wallet: Wallet, filter: FilterKey) {
+  if (filter === "bank") return wallet.type === "BANK" || wallet.type === "CASH";
+  if (filter === "ewallet") return wallet.type === "E_WALLET";
+  if (filter === "credit") return wallet.type === "CREDIT_CARD";
+  if (filter === "loan") return wallet.type === "LOAN_PAYLATER";
+  return true;
+}
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] as const },
-  },
-};
+function SectionIcon({ type }: { type: FilterKey }) {
+  if (type === "bank") return <Landmark className="size-5 text-primary" />;
+  if (type === "ewallet") return <Smartphone className="size-5 text-primary" />;
+  if (type === "credit") return <CreditCard className="size-5 text-coral" />;
+  return <Banknote className="size-5 text-primary" />;
+}
 
-// Connect Account Card
-function ConnectAccountCard({ onClick }: { onClick: () => void }) {
+function WalletTile({
+  wallet,
+  onEdit,
+}: {
+  wallet: Wallet;
+  onEdit: (wallet: Wallet) => void;
+}) {
+  const isDebt = isDebtWallet(wallet.type);
+  const balance = isDebt ? Math.abs(wallet.balance) : wallet.balance;
+  const limit = wallet.creditLimit ?? 0;
+  const utilization = isDebt && limit > 0 ? Math.min(100, Math.round((balance / limit) * 100)) : 0;
+
   return (
-    <motion.div
-      variants={fadeUp}
-      onClick={onClick}
-      className="rounded-xl p-4 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-200 hover:opacity-80 min-h-40 border-2 border-dashed border-border bg-transparent"
+    <article
+      className={`relative overflow-hidden rounded-xl border border-border/60 bg-card p-6 shadow-sm transition-all duration-300 hover:scale-[1.01] hover:shadow-md ${
+        isDebt ? "hover:border-coral/40" : "hover:border-mint/40"
+      }`}
     >
-      <div className="size-10 rounded-full flex items-center justify-center border border-border bg-muted">
-        <Plus className="size-4 text-muted-foreground" />
+      <div className={`absolute left-0 top-0 h-1 w-full ${isDebt ? "bg-coral/40" : "bg-mint/40"}`} />
+      <div className="mb-6 flex items-start justify-between">
+        <div className="flex items-center gap-2">
+          <WalletIcon className={`size-5 ${isDebt ? "text-coral" : "text-mint"}`} />
+          <span className="text-xs text-muted-foreground">{wallet.currency}</span>
+        </div>
+        <button
+          type="button"
+          onClick={() => onEdit(wallet)}
+          aria-label={`Edit ${wallet.name}`}
+          className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-surface-high hover:text-foreground"
+        >
+          <MoreVertical className="size-5" />
+        </button>
       </div>
-      <div className="text-center">
-        <p className="text-sm font-medium text-muted-foreground font-sans">
-          Connect Account
-        </p>
-        <p className="mt-1 text-xs font-sans text-muted-foreground">
-          Bank, Card, or Investment
-        </p>
-      </div>
-    </motion.div>
+      <p className="mb-1 text-sm text-muted-foreground">{wallet.name}</p>
+      <p className={`text-xl font-bold tabular-nums ${isDebt ? "text-coral" : "text-foreground"}`}>
+        {formatCurrency(balance)}
+      </p>
+      {isDebt ? (
+        <div className="mt-4 space-y-1.5">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Utilisasi</span>
+            <span className="font-semibold">{utilization}%</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-surface-high">
+            <div className="h-full rounded-full bg-coral" style={{ width: `${utilization}%` }} />
+          </div>
+        </div>
+      ) : (
+        <p className="mt-1 text-xs text-mint">Aset aktif</p>
+      )}
+    </article>
   );
 }
 
-// Main Page
+function WalletSection({
+  title,
+  kind,
+  wallets,
+  badge,
+  onEdit,
+}: {
+  title: string;
+  kind: FilterKey;
+  wallets: Wallet[];
+  badge: "Aset" | "Liabilitas";
+  onEdit: (wallet: Wallet) => void;
+}) {
+  if (wallets.length === 0) return null;
+
+  return (
+    <section>
+      <details className="group" open>
+        <summary className="mb-6 flex cursor-pointer list-none items-center justify-between border-b border-border/40 pb-3 transition-opacity hover:opacity-80">
+          <div className="flex items-center gap-3">
+            <h2 className="flex items-center gap-2 text-xl font-bold text-foreground">
+              <SectionIcon type={kind} />
+              {title} ({wallets.length})
+            </h2>
+            <span
+              className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
+                badge === "Aset" ? "bg-mint/10 text-mint" : "bg-coral/10 text-coral"
+              }`}
+            >
+              {badge}
+            </span>
+          </div>
+          <ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {wallets.map((wallet) => (
+            <WalletTile key={wallet.id} wallet={wallet} onEdit={onEdit} />
+          ))}
+        </div>
+      </details>
+    </section>
+  );
+}
+
 export default function WalletsPage() {
   const [filter, setFilter] = useState<FilterKey>("all");
-  const [sort, setSort] = useState<SortKey>("default");
-  const { data: wallets } = useWallets();
-
-  const allWallets = useMemo(
-    () => (wallets ?? []).filter((w) => !w.isArchived),
-    [wallets],
-  );
-
-  const agg = useMemo(() => computeAggregates(allWallets), [allWallets]);
-
-  // Modal state
+  const [search, setSearch] = useState("");
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
   const [editingWallet, setEditingWallet] = useState<Wallet | null>(null);
+  const { data: wallets } = useWallets();
   const createWallet = useCreateWallet();
 
-  const filteredWallets = useMemo(() => {
-    let list = allWallets;
-    if (filter === "debt") list = allWallets.filter((w) => isDebtWallet(w.type));
-    else if (filter === "asset") list = allWallets.filter((w) => !isDebtWallet(w.type));
-    if (sort === "balance") list = [...list].sort((a, b) => Math.abs(b.balance) - Math.abs(a.balance));
-    return list;
-  }, [filter, sort, allWallets]);
+  const visibleWallets = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return (wallets ?? [])
+      .filter((wallet) => !wallet.isArchived)
+      .filter((wallet) => walletMatchesFilter(wallet, filter))
+      .filter((wallet) => !query || wallet.name.toLowerCase().includes(query));
+  }, [wallets, filter, search]);
 
-  const handleWalletCreateSuccess = async (d: CreateWalletFormData) => {
+  const bankWallets = visibleWallets.filter((wallet) => wallet.type === "BANK" || wallet.type === "CASH");
+  const ewallets = visibleWallets.filter((wallet) => wallet.type === "E_WALLET");
+  const creditWallets = visibleWallets.filter((wallet) => wallet.type === "CREDIT_CARD");
+  const loanWallets = visibleWallets.filter((wallet) => wallet.type === "LOAN_PAYLATER");
+
+  const handleWalletCreateSuccess = async (data: CreateWalletFormData) => {
     const type =
-      TYPE_FROM_SUBTYPE[d.subType ?? ""] ?? (d.category === "debt" ? "LOAN_PAYLATER" : "CASH");
+      TYPE_FROM_SUBTYPE[data.subType ?? ""] ??
+      (data.category === "debt" ? "LOAN_PAYLATER" : "CASH");
+
     try {
       await createWallet.mutateAsync({
-        name: d.name,
+        name: data.name,
         type,
-        // Debt wallets store outstanding as a negative balance
-        balance: d.category === "debt" ? -(d.outstanding ?? 0) : d.balance ?? 0,
-        creditLimit: d.creditLimit,
-        interestRate: d.interestRate,
-        // Modal collects admin fee as % of principal
-        adminFee: d.adminFee,
-        ...(d.adminFee !== undefined && { adminFeeType: "PERCENT" as const }),
-        icon: d.icon,
+        balance: data.category === "debt" ? -(data.outstanding ?? 0) : data.balance ?? 0,
+        creditLimit: data.creditLimit,
+        interestRate: data.interestRate,
+        adminFee: data.adminFee,
+        ...(data.adminFee !== undefined && { adminFeeType: "PERCENT" as const }),
+        icon: data.icon,
       });
-    } catch (err) {
-      console.error("Failed to create wallet:", err);
+    } catch (error) {
+      console.error("Failed to create wallet:", error);
     }
   };
 
   return (
-    <motion.div variants={pageVariants} initial="hidden" animate="visible" className="space-y-6">
-      <motion.section
-        variants={fadeUp}
-        className="surface-card flex flex-col gap-4 rounded-2xl border border-white/80 px-6 py-5 md:flex-row md:items-center md:justify-between"
-      >
-        <div className="flex-1">
-          <p className="font-mono text-[11px] tracking-[0.08em] text-primary">
-            WALLETS
-          </p>
-          <h1 className="mt-2 font-heading text-3xl font-bold tracking-[-0.02em] text-foreground">
-            Every asset and debt account in one ledger
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Filter by asset or debt, monitor total exposure, and keep every
-            wallet ready for fast transaction logging.
-          </p>
-        </div>
-        <div className="w-full shrink-0 md:w-auto">
-          <Button
-            onClick={() => setIsCustomModalOpen(true)}
-            className="h-9 w-full gap-2 rounded-lg bg-primary px-5 font-semibold text-primary-foreground md:w-auto"
-          >
-            <Plus className="size-4" /> Add New Wallet
-          </Button>
-        </div>
-      </motion.section>
-
-      {/* Header Stats Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-6">
-        {/* Wallet Summary (Net Worth Card) */}
-        <WalletSummaryCard
-          netWorth={agg.netWorth}
-          totalAset={agg.totalAssets}
-          totalUtang={agg.totalDebts}
-        />
-
-        {/* Total Debt Ratio Card — lighter surface (bg-accent) per mockup */}
-        <motion.div
-          variants={fadeUp}
-          className="surface-card relative overflow-hidden rounded-2xl border border-white/80 bg-accent/80 p-5"
-        >
-          <p className="uppercase tracking-widest text-[11px] font-semibold text-muted-foreground font-mono">
-            Total Debt Ratio
-          </p>
-          <div className="flex items-center gap-3 mt-3">
-            <p className="text-[32px] font-bold text-foreground font-heading">
-              {agg.debtRatio.toFixed(1)}%
-            </p>
-            {agg.debtRatio < 30 && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full bg-primary/10 border border-primary/25 text-[11px] font-semibold text-primary font-mono">
-                <ShieldCheck className="size-3" /> Status: Aman
-              </span>
-            )}
-          </div>
-          {/* Progress bar (track darker than the lighter card surface) */}
-          <div className="mt-4 overflow-hidden h-1 rounded-full bg-muted">
-            <motion.div
-              className={`h-full rounded-full ${
-                agg.debtRatio > 50 ? "bg-destructive" : agg.debtRatio > 30 ? "bg-[#895024]" : "bg-primary"
-              }`}
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.min(agg.debtRatio, 100)}%` }}
-              transition={{ duration: 1, ease: "easeOut", delay: 0.4 }}
-            />
-          </div>
-          <div className="flex items-center gap-1.5 mt-2">
-            <AlertTriangle className="size-3 text-muted-foreground" />
-            <span className="text-[11px] text-muted-foreground font-sans">
-              Safe threshold: &lt;30%
-            </span>
-          </div>
-          <div className="mt-5 grid grid-cols-2 gap-4 border-t border-border/70 pt-4">
-            <div>
-              <p className="uppercase tracking-wider text-[11px] text-muted-foreground font-mono">
-                Total Outstanding
-              </p>
-              <p className="font-semibold mt-1 text-[14px] text-destructive font-heading">
-                {formatCurrency(agg.totalDebts)}
-              </p>
-            </div>
-            <div>
-              <p className="uppercase tracking-wider text-[11px] text-muted-foreground font-mono">
-                Total Credit Limit
-              </p>
-              <p className="font-semibold mt-1 text-[14px] text-foreground font-heading">
-                {formatCurrency(agg.totalCreditLimit)}
-              </p>
-            </div>
-          </div>
-        </motion.div>
+    <div className="space-y-10">
+      <div>
+        <h1 className="mb-1 text-[32px] font-bold leading-10 text-primary">
+          Dompet
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Kelola seluruh akun finansial Anda
+        </p>
       </div>
 
-      {/* Filter Bar */}
-      <motion.div variants={fadeUp} className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex gap-1 p-1 rounded-lg bg-muted border border-border">
-          {FILTERS.map((f) => (
+      <div className="sticky top-16 z-10 -mx-1 bg-background/95 px-1 py-4 backdrop-blur-md">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="relative w-full md:max-w-md">
+              <Search className="absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                className="h-10 w-full rounded-lg border border-border bg-card pl-10 pr-4 text-sm outline-none transition-all placeholder:text-muted-foreground/55 focus:ring-1 focus:ring-primary/40"
+                placeholder="Cari dompet atau akun..."
+                type="text"
+              />
+            </div>
             <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all duration-200 font-sans ${
-                filter === f.key ? "bg-accent text-foreground" : "text-muted-foreground"
-              }`}
+              type="button"
+              onClick={() => setIsCustomModalOpen(true)}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:opacity-90 active:scale-95"
             >
-              {f.label}
+              <Plus className="size-4" />
+              Tambah Akun
             </button>
-          ))}
+          </div>
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            {FILTERS.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => setFilter(item.key)}
+                className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
+                  filter === item.key
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-surface-high text-muted-foreground hover:bg-border/40"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+      </div>
+
+      <div className="space-y-10">
+        <WalletSection title="Rekening" kind="bank" wallets={bankWallets} badge="Aset" onEdit={setEditingWallet} />
+        <WalletSection title="E-Wallet" kind="ewallet" wallets={ewallets} badge="Aset" onEdit={setEditingWallet} />
+        <WalletSection title="Kredit" kind="credit" wallets={creditWallets} badge="Liabilitas" onEdit={setEditingWallet} />
+        <WalletSection title="Pinjaman" kind="loan" wallets={loanWallets} badge="Liabilitas" onEdit={setEditingWallet} />
+        {visibleWallets.length === 0 ? (
           <button
-            onClick={() => setSort(sort === "balance" ? "default" : "balance")}
-            className={`flex items-center gap-2 h-9 px-4 rounded-lg text-xs font-medium transition-all duration-200 font-sans border ${
-              sort === "balance"
-                ? "bg-primary/10 border-primary/25 text-primary"
-                : "bg-muted border-border text-muted-foreground"
-            }`}
+            type="button"
+            onClick={() => setIsCustomModalOpen(true)}
+            className="flex min-h-40 w-full items-center justify-center rounded-xl border-2 border-dashed border-border bg-card text-sm font-semibold text-primary"
           >
-            <ArrowUpDown className="size-3.5" />
-            Sort by Balance
+            <Plus className="mr-2 size-4" />
+            Tambah akun pertama
           </button>
-        </div>
-      </motion.div>
+        ) : null}
+      </div>
 
-      {/* Wallet Cards Grid */}
-      <motion.div
-        variants={pageVariants}
-        key={filter}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-      >
-        {filteredWallets.map((wallet) => (
-          <WalletCard key={wallet.id} wallet={wallet} variant="full" onEdit={setEditingWallet} />
-        ))}
-        <ConnectAccountCard onClick={() => setIsCustomModalOpen(true)} />
-      </motion.div>
-
-      {/* Create New Wallet Modal */}
       <CreateWalletModal
         isOpen={isCustomModalOpen}
         onClose={() => setIsCustomModalOpen(false)}
         onSuccess={handleWalletCreateSuccess}
       />
-
-      {/* Edit Wallet Modal */}
       <EditWalletModal wallet={editingWallet} onClose={() => setEditingWallet(null)} />
-    </motion.div>
+    </div>
   );
 }
