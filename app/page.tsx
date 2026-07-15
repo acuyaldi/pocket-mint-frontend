@@ -1,188 +1,301 @@
+import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  CalendarClock,
-  ShieldCheck,
-  Wallet,
-  Webhook,
-} from "lucide-react";
 import { PocketMintLogo } from "@/components/Logo";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const capabilityCards = [
-  {
-    title: "Multi-wallet clarity",
-    body: "Pantau kas, bank, e-wallet, kartu kredit, dan paylater dalam satu permukaan yang tetap rapi saat datanya makin padat.",
-    icon: Wallet,
-  },
-  {
-    title: "Debt told straight",
-    body: "Outstanding, sisa limit, debt ratio, dan status aman atau bahaya tetap tampil jujur tanpa dibungkus gamifikasi.",
-    icon: ShieldCheck,
-  },
-  {
-    title: "Installment intelligence",
-    body: "Cicilan dipantau dari grand total, tenor berjalan, sampai due terdekat supaya keputusan bayar tidak menunggu kejutan tagihan.",
-    icon: CalendarClock,
-  },
-];
+type ProductScreenProps = {
+  src: string;
+  alt: string;
+  frameClassName: string;
+  imageClassName: string;
+  sizes: string;
+  preload?: boolean;
+};
 
-const productSignals = [
-  { label: "Access model", value: "Email & Google sign-in" },
-  { label: "Deployment", value: "Cloud-ready private workspace" },
-  { label: "Money engine", value: "IDR-first precise tracking" },
-  { label: "Automation", value: "Webhook + n8n ready roadmap" },
-];
+function ProductScreen({
+  src,
+  alt,
+  frameClassName,
+  imageClassName,
+  sizes,
+  preload = false,
+}: ProductScreenProps) {
+  return (
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-2xl border border-border bg-card shadow-[0_24px_60px_rgba(15,23,42,0.08)]",
+        frameClassName
+      )}
+    >
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes={sizes}
+        preload={preload}
+        className={cn("max-w-none", imageClassName)}
+      />
+    </div>
+  );
+}
+
+const primaryAction = cn(
+  buttonVariants({ size: "lg" }),
+  "h-11 rounded-xl bg-slate px-5 text-white shadow-none hover:bg-slate/92"
+);
+
+const secondaryAction = cn(
+  buttonVariants({ size: "lg", variant: "outline" }),
+  "h-11 rounded-xl border-border bg-card px-5 shadow-none"
+);
 
 export default function LandingPage() {
   return (
     <div className="min-h-dvh bg-background text-foreground">
-      <div className="mx-auto flex min-h-dvh w-full max-w-360 flex-col px-4 py-4 sm:px-6 lg:px-8">
-        <header className="surface-card sticky top-4 z-20 flex items-center justify-between gap-3 rounded-2xl border border-white/70 px-4 py-3 backdrop-blur sm:px-6 sm:py-4">
-          <PocketMintLogo />
-          <div className="flex shrink-0 items-center gap-2">
+      <header className="sticky top-0 z-20 border-b border-border/70 bg-background/95 backdrop-blur-sm">
+        <nav
+          aria-label="Navigasi utama"
+          className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-5 md:px-8 lg:px-10"
+        >
+          <Link
+            href="/"
+            aria-label="Pocket Mint"
+            className="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+          >
+            <PocketMintLogo className="size-7" />
+          </Link>
+
+          <div className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
             <Link
-              href="/login"
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                "hidden border-border/80 bg-card/70 px-4 sm:inline-flex"
-              )}
+              href="#dashboard"
+              className="rounded-md transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
             >
-              Sign In
+              Fitur
             </Link>
             <Link
-              href="/login"
-              className={cn(
-                buttonVariants(),
-                "bg-primary px-4 text-primary-foreground hover:bg-primary/92"
-              )}
+              href="#privacy"
+              className="rounded-md transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
             >
-              Get Started
+              Privasi
             </Link>
           </div>
-        </header>
 
-        <main className="flex flex-1 flex-col justify-center py-8 lg:py-12">
-          <section className="surface-grid relative overflow-hidden rounded-[28px] border border-white/70 bg-card/64 px-6 py-8 duration-700 animate-in fade-in-0 sm:px-8 lg:px-10 lg:py-10">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0"
-              style={{
-                backgroundImage:
-                  "radial-gradient(circle at top left, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 28%), radial-gradient(circle at bottom right, color-mix(in srgb, var(--color-warning) 10%, transparent), transparent 22%)",
-              }}
-            />
-            <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_420px] lg:items-end">
-              <div>
-                <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/12 bg-card/85 px-3 py-1.5 text-[11px] font-semibold tracking-[0.08em] text-primary duration-700 animate-in fade-in-0 slide-in-from-bottom-2">
-                  <ShieldCheck className="size-3.5" />
-                  PRIVATE PERSONAL FINANCE TERMINAL
-                </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/login"
+              className={cn(
+                buttonVariants({ variant: "ghost" }),
+                "h-11 px-3 text-muted-foreground shadow-none"
+              )}
+            >
+              Login
+            </Link>
+            <Link href="/login" className={primaryAction}>
+              Daftar
+            </Link>
+          </div>
+        </nav>
+      </header>
 
-                <h1 className="max-w-4xl font-heading text-4xl font-bold leading-[1.04] tracking-[-0.03em] text-foreground duration-700 animate-in fade-in-0 slide-in-from-bottom-3 sm:text-5xl lg:text-[64px]">
-                  Financial clarity for people juggling assets, debt, and
-                  cicilan in one private workspace.
-                </h1>
-
-                <p className="mt-6 max-w-3xl text-base leading-7 text-muted-foreground duration-700 animate-in fade-in-0 slide-in-from-bottom-3 [animation-delay:120ms] sm:text-lg">
-                  Pocket Mint is a premium personal finance workspace built for
-                  people who need net worth, debt, and cicilan to stay clearly
-                  readable — precise, private, and always under your control.
-                </p>
-
-                <div className="mt-8 flex flex-col items-stretch gap-3 duration-700 animate-in fade-in-0 slide-in-from-bottom-3 [animation-delay:220ms] sm:flex-row sm:items-center">
-                  <Link
-                    href="/login"
-                    className={cn(
-                      buttonVariants({ size: "lg" }),
-                      "group h-11 min-w-52 justify-between bg-primary px-4 text-primary-foreground hover:bg-primary/92"
-                    )}
-                  >
-                    <span>Get Started</span>
-                    <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-                  </Link>
-                  <Link
-                    href="/login"
-                    className={cn(
-                      buttonVariants({ size: "lg", variant: "outline" }),
-                      "h-11 justify-center border-border/80 bg-card/70 px-6"
-                    )}
-                  >
-                    Sign In
-                  </Link>
-                </div>
-              </div>
-
-              <div className="surface-card rounded-[24px] border border-white/80 p-5 duration-700 animate-in fade-in-0 slide-in-from-bottom-4 [animation-delay:320ms]">
-                <p className="text-[11px] font-semibold tracking-[0.08em] text-muted-foreground">
-                  SYSTEM SIGNALS
-                </p>
-                <div className="mt-5 grid gap-3">
-                  {productSignals.map((signal) => (
-                    <div
-                      key={signal.label}
-                      className="rounded-2xl border border-border/80 bg-card/85 px-4 py-3"
-                    >
-                      <p className="text-[11px] font-semibold tracking-[0.08em] text-muted-foreground">
-                        {signal.label.toUpperCase()}
-                      </p>
-                      <p className="mt-2 font-mono text-sm font-semibold text-foreground">
-                        {signal.value}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+      <main>
+        <section
+          aria-labelledby="hero-title"
+          className="mx-auto grid min-h-[calc(100dvh-4rem)] w-full max-w-7xl items-center gap-10 px-5 py-12 md:px-8 lg:grid-cols-[0.88fr_1.12fr] lg:gap-14 lg:px-10 lg:py-14"
+        >
+          <div className="max-w-xl">
+            <p className="text-sm font-medium text-muted-foreground">
+              Private Financial Workspace
+            </p>
+            <h1
+              id="hero-title"
+              className="mt-5 max-w-lg text-5xl font-semibold leading-[1.02] tracking-[-0.045em] text-foreground sm:text-6xl"
+            >
+              Clarity Over Complexity
+            </h1>
+            <p className="mt-6 max-w-md text-base leading-7 text-muted-foreground sm:text-lg">
+              Pahami apa yang Anda miliki, kewajiban Anda, dan hal yang perlu
+              perhatian, tanpa distraksi.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href="/login" className={primaryAction}>
+                Mulai Sekarang
+              </Link>
+              <Link href="#dashboard" className={secondaryAction}>
+                Lihat Demo
+              </Link>
             </div>
-          </section>
+          </div>
 
-          <section className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="grid gap-4 md:grid-cols-3">
-              {capabilityCards.map((card, index) => {
-                const Icon = card.icon;
+          <ProductScreen
+            src="/landing/dashboard.png"
+            alt="Dashboard Pocket Mint yang menampilkan posisi keuangan, dompet, dan aktivitas terbaru"
+            frameClassName="aspect-[893/925] w-full"
+            imageClassName="object-contain"
+            sizes="(max-width: 1023px) 100vw, 56vw"
+            preload
+          />
+        </section>
 
-                return (
-                  <article
-                    key={card.title}
-                    style={{ animationDelay: `${420 + index * 90}ms` }}
-                    className="surface-card rounded-2xl border border-white/80 p-5 transition-transform hover:-translate-y-0.5 fill-mode-both animation-duration-[700ms] animate-in fade-in-0 slide-in-from-bottom-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-xl border border-primary/12 bg-primary/10 p-2 text-primary">
-                        <Icon className="size-4" />
-                      </div>
-                      <h2 className="font-heading text-base font-semibold text-foreground">
-                        {card.title}
-                      </h2>
-                    </div>
-                    <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                      {card.body}
-                    </p>
-                  </article>
-                );
-              })}
-            </div>
-
-            <aside className="surface-card rounded-2xl border border-white/80 p-5 fill-mode-both animation-duration-[700ms] [animation-delay:690ms] animate-in fade-in-0 slide-in-from-bottom-4">
-              <div className="flex items-center gap-2 text-primary">
-                <Webhook className="size-4" />
-                <p className="text-[11px] font-semibold tracking-[0.08em]">
-                  CURRENT ROADMAP
-                </p>
-              </div>
-              <h2 className="mt-3 font-heading text-xl font-semibold text-foreground">
-                Automation-ready, but privacy still stays in your hands.
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                Next up: secure webhooks and n8n flows to ingest transaction
-                notifications — automation that never trades away the privacy
-                and precision at the core of the product.
+        <section
+          id="privacy"
+          aria-labelledby="privacy-title"
+          className="scroll-mt-20 border-y border-border/70 bg-card"
+        >
+          <div className="mx-auto grid w-full max-w-7xl gap-8 px-5 py-14 md:px-8 lg:grid-cols-[1.4fr_repeat(3,1fr)] lg:px-10 lg:py-16">
+            <h2
+              id="privacy-title"
+              className="max-w-md text-3xl font-semibold leading-tight tracking-[-0.03em]"
+            >
+              Data finansial Anda tetap milik Anda.
+            </h2>
+            <div className="border-t border-border pt-4 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+              <h3 className="font-semibold">Tanpa iklan</h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Tidak ada ruang yang dijual kepada pengiklan.
               </p>
-            </aside>
-          </section>
-        </main>
-      </div>
+            </div>
+            <div className="border-t border-border pt-4 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+              <h3 className="font-semibold">Tanpa pelacakan</h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Tidak ada perilaku finansial yang dipakai untuk targeting.
+              </p>
+            </div>
+            <div className="border-t border-border pt-4 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+              <h3 className="font-semibold">Data seperlunya</h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Hanya informasi yang dibutuhkan oleh workspace Anda.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="dashboard"
+          aria-labelledby="dashboard-title"
+          className="mx-auto grid w-full max-w-7xl scroll-mt-20 items-center gap-10 px-5 py-20 md:px-8 lg:grid-cols-[0.42fr_0.58fr] lg:px-10 lg:py-24"
+        >
+          <div className="max-w-sm">
+            <h2
+              id="dashboard-title"
+              className="text-3xl font-semibold tracking-[-0.035em] sm:text-4xl"
+            >
+              Dashboard
+            </h2>
+            <p className="mt-4 text-base leading-7 text-muted-foreground">
+              Lihat posisi keuangan Anda dalam satu ringkasan.
+            </p>
+          </div>
+          <ProductScreen
+            src="/landing/dashboard.png"
+            alt="Ringkasan Dashboard Pocket Mint dengan posisi keuangan, daftar dompet, dan aktivitas terbaru"
+            frameClassName="aspect-[6/5] w-full"
+            imageClassName="object-cover object-[78%_48%] scale-[1.18]"
+            sizes="(max-width: 1023px) 100vw, 58vw"
+          />
+        </section>
+
+        <section
+          id="product-pair"
+          aria-label="Wallet dan Transaction"
+          className="border-y border-border/70 bg-card"
+        >
+          <div className="mx-auto grid w-full max-w-7xl gap-12 px-5 py-20 md:px-8 lg:grid-cols-2 lg:gap-6 lg:px-10 lg:py-24">
+            <article aria-labelledby="wallet-title">
+              <h2
+                id="wallet-title"
+                className="text-3xl font-semibold tracking-[-0.035em]"
+              >
+                Wallet
+              </h2>
+              <p className="mt-3 text-base leading-7 text-muted-foreground">
+                Semua aset dan kewajiban dalam satu ledger.
+              </p>
+              <ProductScreen
+                src="/landing/wallet.png"
+                alt="Wallet Pocket Mint yang menampilkan daftar aset dan kewajiban"
+                frameClassName="mt-8 aspect-[4/5] w-full"
+                imageClassName="object-cover object-[88%_42%] scale-[1.14]"
+                sizes="(max-width: 1023px) 100vw, 50vw"
+              />
+            </article>
+
+            <article aria-labelledby="transaction-title">
+              <h2
+                id="transaction-title"
+                className="text-3xl font-semibold tracking-[-0.035em]"
+              >
+                Transaction
+              </h2>
+              <p className="mt-3 text-base leading-7 text-muted-foreground">
+                Riwayat yang cepat dicari dan mudah diperbaiki.
+              </p>
+              <ProductScreen
+                src="/landing/transaction.png"
+                alt="Transaction Pocket Mint dengan pencarian dan riwayat transaksi"
+                frameClassName="mt-8 aspect-[4/5] w-full"
+                imageClassName="object-cover object-[90%_34%] scale-[1.12]"
+                sizes="(max-width: 1023px) 100vw, 50vw"
+              />
+            </article>
+          </div>
+        </section>
+
+        <section
+          id="installment"
+          aria-labelledby="installment-title"
+          className="mx-auto grid w-full max-w-7xl scroll-mt-20 items-center gap-10 px-5 py-20 md:px-8 lg:grid-cols-[0.35fr_0.65fr] lg:px-10 lg:py-24"
+        >
+          <div className="max-w-sm">
+            <h2
+              id="installment-title"
+              className="text-3xl font-semibold tracking-[-0.035em] sm:text-4xl"
+            >
+              Installment
+            </h2>
+            <p className="mt-4 text-base leading-7 text-muted-foreground">
+              Pantau kewajiban tanpa kehilangan tanggal jatuh tempo.
+            </p>
+          </div>
+          <ProductScreen
+            src="/landing/installment.png"
+            alt="Installment Pocket Mint dengan pengingat, kartu cicilan, tanggal jatuh tempo, dan progres pembayaran"
+            frameClassName="aspect-[4/3] w-full"
+            imageClassName="object-cover object-[86%_26%] scale-[1.12]"
+            sizes="(max-width: 1023px) 100vw, 65vw"
+          />
+        </section>
+
+        <section id="cta" className="border-y border-border/70 bg-card">
+          <div className="mx-auto flex w-full max-w-3xl flex-col items-center px-5 py-20 text-center md:px-8 lg:py-24">
+            <h2 className="text-3xl font-semibold leading-tight tracking-[-0.035em] sm:text-4xl">
+              Mulai bangun ruang kerja finansial privat Anda.
+            </h2>
+            <Link href="/login" className={cn(primaryAction, "mt-8")}>
+              Mulai Sekarang
+            </Link>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-5 py-10 md:flex-row md:items-end md:justify-between md:px-8 lg:px-10">
+          <div>
+            <p className="font-semibold">Pocket Mint</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Private Financial Workspace
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-muted-foreground">
+            <Link href="#privacy" className="hover:text-foreground">
+              Privacy
+            </Link>
+            <span>Terms</span>
+            <span>GitHub</span>
+            <span>Contact</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
