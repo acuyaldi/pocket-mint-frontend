@@ -1,5 +1,5 @@
 'use client';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 
 export interface Installment {
@@ -53,5 +53,31 @@ export function useInstallments(status?: string) {
       return res.data?.data ?? [];
     },
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+export interface PayInstallmentInput {
+  installmentId: string;
+  sourceWalletId: string;
+  amount: number;
+  date?: string;
+}
+
+export function usePayInstallment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ installmentId, ...payload }: PayInstallmentInput) => {
+      const res = await api.post<{ data: unknown }>(
+        `/installments/${installmentId}/pay`,
+        payload,
+      );
+      return res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['installments'] });
+      queryClient.invalidateQueries({ queryKey: ['wallets'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
   });
 }
