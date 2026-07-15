@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
@@ -64,5 +64,15 @@ describe("Pocket Mint Stitch landing page contract", () => {
     expect(page).not.toContain('id="transactions"');
     expect(page).not.toContain('id="installment"');
     expect(page).not.toContain("data-crop={crop}");
+  });
+
+  it("uses real local Stitch screens without device mockups", () => {
+    for (const asset of ["dashboard.png", "transaction.png"]) {
+      expect(existsSync(root + `public/landing/${asset}`)).toBe(true);
+      expect(page).toContain(`/landing/${asset}`);
+    }
+
+    expect(page).not.toContain("lh3.googleusercontent.com");
+    expect(page).not.toMatch(/laptop|monitor/i);
   });
 });

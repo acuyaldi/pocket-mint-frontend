@@ -11,14 +11,8 @@ import {
   WalletCards,
 } from "lucide-react";
 
-const heroImage =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuB89ClmV7TCkB9Ydw3hDKHAOfUGDfa5qlwSomyoW48A1ugO46TQkh48tsmFqQsSXWfgybNaFsmfdbhyLt8eA4kYCrzfQS4cv6DnAiLOAItO5sK4k2-JbzffouUDYVzlFs_o64MkdkuNl3qjLKfMLOGkPYZ-ON5C5nI4RJ5dHz-aOInRqxqDLwtbreHVVuzf6uNSQtNeo692WstH5p9iadi5n-IH9C3GTH3LoXY6locQkPKUMFMnl8rl";
-
-const dashboardImage =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuDNq00J7NCxCEeCQbjHrHMclU3VF5OV7tMg8wSAHH-7czgl6KCZckriVzzWhIYTLfdoVLR1GVoq_avPOAk2IuxUHjEfxOz3K6KjYPi9KFSfH62Kn7dXly55l_xlMBjvgCkAUThXemFQkTFV0pnvSzB92K0BBICPpQLMULrLNFTzg-ja7b0j5jRvzKFRynBNJmMTflrWnu_gt6d-kGgLhrwtbwyx7T9oPIcd5bzmGGsV1D8_4GkP6mQr";
-
-const analyticsImage =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuB2aUCdKKpvB_qAVQzef0DR0T5azpUTWp6A1rmcjFtH4LCBAjpkGaz1t343tYX7zlVv3SX5v2gGqoiYfAk-NFc7Eh7Z_iRJ6eL04Q47oWzDTehf6Gc3XMxmSpbqa6ABDy_tilEC7avHJtxNdu1dro58MWrYx3z4e2ReWipgXj_yWyuTv9hPcaDTVKzvXZYa9l8NyVfM1bWQ6INWnWJfHtBax7bbpp5qZ5hY1PBSEq3tXbbkVZJXPmmt";
+const dashboardImage = "/landing/dashboard.png";
+const transactionImage = "/landing/transaction.png";
 
 const primaryButton =
   "inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-[#002b2b] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:opacity-80";
@@ -90,11 +84,11 @@ export default function LandingPage() {
           <div className="relative w-full md:w-1/2">
             <div className="stitch-float relative aspect-square w-full overflow-hidden rounded-2xl border border-border bg-card shadow-xl md:aspect-video">
               <Image
-                src={heroImage}
-                alt="Tampilan workspace finansial Pocket Mint pada ruang kerja modern"
+                src={dashboardImage}
+                alt="Dashboard Pocket Mint dari ekspor Google Stitch"
                 fill
                 sizes="(max-width: 767px) 100vw, 50vw"
-                className="object-cover"
+                className="max-w-none origin-center -translate-x-[8%] object-cover object-[84%_32%] scale-[1.34]"
                 preload
               />
             </div>
@@ -148,7 +142,7 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="absolute bottom-0 right-0 h-2/3 w-2/3 translate-x-12 translate-y-12 overflow-hidden rounded-tl-xl border-l border-t border-border shadow-lg transition-transform duration-500 group-hover:translate-x-8 group-hover:translate-y-8">
-                <Image src={dashboardImage} alt="Tampilan ringkas Dashboard Workspace" fill sizes="(max-width: 767px) 66vw, 44vw" className="object-cover" />
+                <Image src={dashboardImage} alt="Tampilan ringkas Dashboard Workspace dari Google Stitch" fill sizes="(max-width: 767px) 66vw, 44vw" className="max-w-none origin-center -translate-x-[8%] object-cover object-[84%_28%] scale-[1.3]" />
               </div>
             </article>
 
@@ -165,7 +159,7 @@ export default function LandingPage() {
                 <p className="text-sm leading-5 text-[#a7cecd]">Dapatkan wawasan mendalam tentang arus kas Anda tanpa visualisasi yang berlebihan.</p>
               </div>
               <div className="relative mt-8 h-44 overflow-hidden rounded-lg border border-white/10">
-                <Image src={analyticsImage} alt="Laporan finansial berbasis tabel" fill sizes="(max-width: 767px) 100vw, 33vw" className="object-cover opacity-60" />
+                <Image src={transactionImage} alt="Riwayat transaksi Pocket Mint dari Google Stitch" fill sizes="(max-width: 767px) 100vw, 33vw" className="max-w-none origin-center -translate-x-[8%] object-cover object-[89%_23%] opacity-60 scale-[1.24]" />
               </div>
             </article>
 
