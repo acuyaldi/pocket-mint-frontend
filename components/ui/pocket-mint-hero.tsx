@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { LockKeyhole } from "lucide-react";
 
+import { PocketMintLogo } from "@/components/Logo";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -30,8 +31,8 @@ export function PocketMintHero() {
           className="flex min-h-16 items-center justify-between rounded-xl border border-border bg-background px-4 py-2 shadow-sm"
         >
           <div className="flex items-center gap-6">
-            <Link href="/" className="inline-flex min-h-11 items-center font-semibold text-primary">
-              Pocket Mint
+            <Link href="/" className="inline-flex min-h-11 items-center text-primary">
+              <PocketMintLogo />
             </Link>
             <div className="hidden items-center gap-6 md:flex">
               <Link href="#features" className="text-sm text-muted-foreground transition-colors hover:text-foreground">

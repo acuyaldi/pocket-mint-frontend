@@ -13,6 +13,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { logout } from "@/app/actions/auth";
+import { PocketMintLogo } from "@/components/Logo";
 import { createClient } from "@/lib/supabase/client";
 
 const NAV_ITEMS = [
@@ -52,12 +53,7 @@ export function AppSidebar() {
   return (
     <aside className="hidden h-screen w-64 shrink-0 flex-col gap-2 border-r border-border bg-background p-4 md:flex">
       <div className="mb-8 px-4">
-        <h1 className="text-xl font-bold tracking-tight text-primary">
-          Pocket Mint
-        </h1>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Private Financial Workspace
-        </p>
+        <PocketMintLogo wrapperClassName="text-primary" />
       </div>
 
       <nav aria-label="Navigasi utama" className="flex-grow space-y-1">

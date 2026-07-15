@@ -185,7 +185,7 @@ function LoginForm() {
 
           <div className="relative py-10 lg:py-0">
             <div className="mb-6">
-              <PocketMintLogo />
+              <PocketMintLogo wrapperClassName="text-primary" markSize={32} />
             </div>
 
             <div className="max-w-2xl">
@@ -246,7 +246,7 @@ function LoginForm() {
             <Card className="surface-card w-full max-w-md border-white/90 py-0 shadow-none">
               <CardHeader className="border-b border-border/70 px-6 py-6">
                 <div className="mb-4 text-primary">
-                  <PocketMintLogo className="h-9 w-9" />
+                  <PocketMintLogo wrapperClassName="text-primary" markSize={32} />
                 </div>
                 <CardTitle className="text-2xl font-semibold text-foreground">
                   {isForgot

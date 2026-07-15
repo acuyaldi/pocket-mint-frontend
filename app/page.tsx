@@ -10,6 +10,7 @@ import {
   WalletCards,
 } from "lucide-react";
 
+import { PocketMintLogo } from "@/components/Logo";
 import { PocketMintHero } from "@/components/ui/pocket-mint-hero";
 
 const dashboardImage = "/landing/dashboard-clean.png";
@@ -141,7 +142,9 @@ export default function LandingPage() {
       <footer id="about" className="mt-24 w-full border-t border-border bg-muted">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between px-5 py-8 md:flex-row md:px-10">
           <div className="mb-8 text-center md:mb-0 md:text-left">
-            <Link href="/" className="text-xl font-bold text-primary">Pocket Mint</Link>
+            <Link href="/" className="inline-flex text-primary">
+              <PocketMintLogo />
+            </Link>
             <p className="mt-2 text-xs text-muted-foreground">© 2024 Pocket Mint. Seluruh hak cipta dilindungi.</p>
           </div>
           <div className="flex flex-wrap justify-center gap-x-8 gap-y-4">

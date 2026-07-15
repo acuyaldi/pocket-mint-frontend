@@ -112,9 +112,7 @@ export default function ResetPasswordPage() {
         <Card className="surface-card w-full border-white/90 py-0 shadow-none">
           <CardHeader className="border-b border-border/70 px-6 py-6">
             <div className="mb-4 flex items-center gap-3">
-              <div className="rounded-lg border border-primary/20 bg-primary/10 p-2 text-primary">
-                <PocketMintLogo className="h-6 w-6" />
-              </div>
+              <PocketMintLogo wrapperClassName="text-primary" markSize={32} />
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/12 bg-white/82 px-3 py-1.5 text-[11px] font-semibold tracking-[0.08em] text-primary">
                 <ShieldCheck className="size-3.5" />
                 SECURE RESET
