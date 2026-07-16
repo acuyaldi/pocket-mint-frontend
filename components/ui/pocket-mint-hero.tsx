@@ -35,7 +35,7 @@ export function PocketMintHero() {
               <PocketMintLogo />
             </Link>
             <div className="hidden items-center gap-6 md:flex">
-              <Link href="#features" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+              <Link href="#dashboard" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                 Fitur
               </Link>
               <Link href="#privacy" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
@@ -104,15 +104,7 @@ export function PocketMintHero() {
               >
                 Mulai Sekarang
               </Link>
-              <Link
-                href="#features"
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "lg" }),
-                  "min-h-11 rounded-xl px-6"
-                )}
-              >
-                Lihat Demo
-              </Link>
+
             </motion.div>
 
           </motion.div>
@@ -123,8 +115,8 @@ export function PocketMintHero() {
           >
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
               <Image
-                src="/landing/dashboard-clean.png"
-                alt="Dashboard Pocket Mint dari ekspor Google Stitch"
+                src="/landing/dashboard.png"
+                alt="Dashboard Pocket Mint"
                 width={569}
                 height={552}
                 sizes="(max-width: 1024px) calc(100vw - 40px), 1024px"
