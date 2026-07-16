@@ -6,6 +6,7 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const page = readFileSync(root + "app/page.tsx", "utf8");
 const heroPath = root + "components/ui/pocket-mint-hero.tsx";
 const hero = readFileSync(heroPath, "utf8");
+const globals = readFileSync(root + "app/globals.css", "utf8");
 
 describe("Pocket Mint public experience contract", () => {
   it("uses the approved product-led section order", () => {
@@ -60,5 +61,19 @@ describe("Pocket Mint public experience contract", () => {
 
   it("contains no em dash in visible source copy", () => {
     expect(page + hero).not.toContain("—");
+  });
+
+  it("removes obsolete landing decoration utilities", () => {
+    for (const utility of [
+      ".stitch-float",
+      ".stitch-bento",
+      ".surface-grid",
+      ".animate-gradient",
+      ".animate-shake",
+      ".delay-1000",
+      ".delay-2000",
+    ]) {
+      expect(globals).not.toContain(utility);
+    }
   });
 });
