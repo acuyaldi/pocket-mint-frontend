@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getTransferDestinations,
   getTransferEndpointWallets,
+  getTransferSources,
   getTransferWallets,
   isValidTransferPair,
   selectTransferEndpoint,
@@ -64,6 +66,40 @@ describe("transfer account picker state", () => {
       "bank",
       "cash",
       "ewallet",
+    ]);
+  });
+
+  it("limits transfer sources to cash, bank, and e-wallet", () => {
+    const wallets = [
+      wallet("cash", "CASH"),
+      wallet("bank", "BANK"),
+      wallet("ewallet", "E_WALLET"),
+      wallet("credit", "CREDIT_CARD"),
+      wallet("paylater", "PAYLATER"),
+      wallet("loan", "LOAN"),
+    ];
+
+    expect(getTransferSources(wallets).map(({ id }) => id)).toEqual([
+      "cash",
+      "bank",
+      "ewallet",
+    ]);
+  });
+
+  it("allows every other owned wallet as a transfer destination", () => {
+    const wallets = [
+      wallet("cash", "CASH"),
+      wallet("bank", "BANK"),
+      wallet("credit", "CREDIT_CARD"),
+      wallet("paylater", "PAYLATER"),
+      wallet("loan", "LOAN"),
+    ];
+
+    expect(getTransferDestinations(wallets, "cash").map(({ id }) => id)).toEqual([
+      "bank",
+      "credit",
+      "paylater",
+      "loan",
     ]);
   });
 

@@ -1,12 +1,22 @@
-import { isDebtWallet, type Wallet } from "@/src/types/wallet";
+import { ASSET_WALLET_TYPES, type Wallet } from "@/src/types/wallet";
 
 export interface TransferEndpoints {
   selectedId: string;
   oppositeId: string;
 }
 
-export function getTransferWallets(wallets: Wallet[]): Wallet[] {
-  return wallets.filter((wallet) => !isDebtWallet(wallet.type));
+export function getTransferSources(wallets: Wallet[]): Wallet[] {
+  return wallets.filter((wallet) => ASSET_WALLET_TYPES.includes(wallet.type));
+}
+
+/** Compatibility alias used by older callers and tests. */
+export const getTransferWallets = getTransferSources;
+
+export function getTransferDestinations(
+  wallets: Wallet[],
+  sourceId: string,
+): Wallet[] {
+  return wallets.filter((wallet) => wallet.id !== sourceId);
 }
 
 export function getTransferEndpointWallets(

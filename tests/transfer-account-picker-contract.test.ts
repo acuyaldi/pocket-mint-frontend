@@ -89,9 +89,12 @@ describe("add transaction modal transfer flow source contract", () => {
       "swapTransferEndpoints(",
       "isValidTransferPair(",
       "getTransferEndpointWallets(",
+      "getTransferSources(",
+      "getTransferDestinations(",
       "sourcePickerWallets",
       "destinationPickerWallets",
       "Saldo tidak cukup",
+      "Saldo tidak mencukupi",
     ]) {
       expect(modalSource).toContain(marker);
     }
@@ -102,12 +105,12 @@ describe("add transaction modal transfer flow source contract", () => {
 
     for (const marker of [
       "Tidak ada dompet untuk transfer",
-      "Tambahkan minimal dua dompet non-hutang untuk memindahkan uang.",
+      "Tambahkan dompet Kas, Bank, atau E-Wallet sebagai sumber transfer.",
       "Tidak ada dompet sumber lain yang tersedia.",
       "Tidak ada dompet tujuan lain yang tersedia.",
       'wallets={sourcePickerWallets}',
       'wallets={destinationPickerWallets}',
-      'type === "TRANSFER" && transferWallets.length < 2',
+      'type === "TRANSFER" && destinationPickerWallets.length === 0',
     ]) {
       expect(normalizedModalSource).toContain(marker);
     }

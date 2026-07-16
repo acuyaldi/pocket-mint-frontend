@@ -19,12 +19,20 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useCategories } from "@/src/features/categories/hooks/useCategories";
 import { usePaylaterRates } from "@/src/features/installments/hooks/useInstallments";
-import { isDebtWallet, type Wallet } from "@/src/types/wallet";
+import {
+  ASSET_WALLET_TYPES,
+  isCreditWallet,
+  isDebtWallet,
+  type Wallet,
+} from "@/src/types/wallet";
 import { AccountPicker } from "./AccountPicker";
 import { formatRupiah } from "./constants";
 import {
+  getTransferDestinations,
   getTransferEndpointWallets,
+  getTransferSources,
   getTransferWallets,
   isValidTransferPair,
   selectTransferEndpoint,
@@ -33,27 +41,6 @@ import {
 
 type TxType = "EXPENSE" | "INCOME" | "TRANSFER";
 type Tab = TxType;
-
-const EXPENSE_CATS = [
-  "Makanan",
-  "Transportasi",
-  "Belanja",
-  "Hiburan",
-  "Tagihan",
-  "Kesehatan",
-  "Pendidikan",
-  "Perjalanan",
-  "Perawatan",
-  "Lainnya",
-];
-const INCOME_CATS = [
-  "Gaji",
-  "Freelance",
-  "Bisnis",
-  "Investasi",
-  "Hadiah",
-  "Lainnya",
-];
 
 const TENORS = [3, 6, 12];
 
@@ -81,10 +68,12 @@ const TYPE_OPTIONS = [
   },
 ];
 
+const remainingCredit = (wallet: Wallet) =>
+  wallet.remainingCredit ??
+  Math.max(wallet.creditLimit - Math.abs(Math.min(wallet.balance, 0)), 0);
+
 const spendable = (wallet: Wallet) =>
-  isDebtWallet(wallet.type)
-    ? Math.max((wallet.creditLimit ?? 0) - Math.abs(wallet.balance), 0)
-    : wallet.balance;
+  isCreditWallet(wallet.type) ? remainingCredit(wallet) : wallet.balance;
 
 function todayStr() {
   const date = new Date();
@@ -100,7 +89,7 @@ function getInstallmentDefaults(
     | Array<{ match: string; rate: number; adminFee: number }>
     | undefined,
 ) {
-  if (!wallet || !isDebtWallet(wallet.type)) {
+  if (!wallet || !isCreditWallet(wallet.type)) {
     return { interestRate: "", adminFee: "" };
   }
 
@@ -123,10 +112,11 @@ function getInstallmentDefaults(
 }
 
 function getWalletKind(wallet: Wallet) {
-  if (wallet.type === "BANK") return "Rekening";
+  if (wallet.type === "BANK") return "Bank";
   if (wallet.type === "E_WALLET") return "E-Wallet";
   if (wallet.type === "CASH") return "Kas";
-  if (wallet.type === "CREDIT_CARD") return "Kredit";
+  if (wallet.type === "CREDIT_CARD") return "Kartu Kredit";
+  if (wallet.type === "PAYLATER") return "Paylater";
   return "Pinjaman";
 }
 
@@ -138,7 +128,10 @@ function getWalletIcon(wallet: Wallet) {
 }
 
 function formatWalletAmount(wallet: Wallet) {
-  return `Rp ${formatRupiah(String(Math.abs(wallet.balance)))}`;
+  const amount = isDebtWallet(wallet.type)
+    ? wallet.outstanding ?? Math.abs(wallet.balance)
+    : wallet.balance;
+  return `Rp ${formatRupiah(String(amount))}`;
 }
 
 export interface AddTransactionData {
@@ -148,6 +141,9 @@ export interface AddTransactionData {
   date: string;
   walletId?: string;
   toWalletId?: string;
+  categoryId?: string;
+  billingMode?: "FULL" | "INSTALLMENT";
+  firstDueDate?: string;
   isInstallment?: boolean;
   installmentMonths?: number;
   interestRate?: number;
@@ -247,7 +243,7 @@ export function AddTransactionModal({
   const [type, setType] = useState<Tab>("EXPENSE");
   const [walletId, setWalletId] = useState("");
   const [toWalletId, setToWalletId] = useState("");
-  const [category, setCategory] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(todayStr);
   const [isInstallment, setIsInstallment] = useState(false);
@@ -256,9 +252,11 @@ export function AddTransactionModal({
     string | null
   >(null);
   const [adminFeeOverride, setAdminFeeOverride] = useState<string | null>(null);
+  const [firstDueDate, setFirstDueDate] = useState("");
   const [error, setError] = useState("");
 
   const router = useRouter();
+  const { data: categories = [] } = useCategories();
   const { data: paylaterRates } = usePaylaterRates();
 
   const transferWallets = useMemo(() => getTransferWallets(wallets), [wallets]);
@@ -286,11 +284,12 @@ export function AddTransactionModal({
     setType(nextType);
     setWalletId("");
     setToWalletId("");
-    setCategory("");
+    setCategoryId("");
     setIsInstallment(false);
     setInstallmentMonths(3);
     setInterestRateOverride(null);
     setAdminFeeOverride(null);
+    setFirstDueDate("");
     setError("");
   }, []);
 
@@ -315,11 +314,13 @@ export function AddTransactionModal({
   );
 
   const handleSwapWallets = useCallback(() => {
+    const destination = wallets.find((wallet) => wallet.id === toWalletId);
+    if (!destination || !ASSET_WALLET_TYPES.includes(destination.type)) return;
     const next = swapTransferEndpoints(walletId, toWalletId);
     setWalletId(next.selectedId);
     setToWalletId(next.oppositeId);
     setError("");
-  }, [walletId, toWalletId]);
+  }, [walletId, toWalletId, wallets]);
 
   const handleClose = useCallback(() => {
     if (!isCreating) onClose();
@@ -330,17 +331,16 @@ export function AddTransactionModal({
     router.push("/wallets");
   }, [onClose, router]);
 
-  const cats =
-    type === "INCOME" ? INCOME_CATS : type === "EXPENSE" ? EXPENSE_CATS : [];
+  const cats = categories.filter((category) => category.type === type);
 
   const sourceWallets = useMemo(() => {
     if (type === "INCOME") {
-      return wallets.filter((wallet) => !isDebtWallet(wallet.type));
+      return wallets.filter((wallet) => ASSET_WALLET_TYPES.includes(wallet.type));
     }
     if (type === "TRANSFER") {
-      return getTransferWallets(wallets);
+      return getTransferSources(wallets);
     }
-    return wallets;
+    return wallets.filter((wallet) => wallet.type !== "LOAN");
   }, [type, wallets]);
 
   const sourcePickerWallets = getTransferEndpointWallets(
@@ -348,7 +348,7 @@ export function AddTransactionModal({
     toWalletId,
   );
   const destinationPickerWallets = getTransferEndpointWallets(
-    transferWallets,
+    getTransferDestinations(wallets, walletId),
     walletId,
   );
 
@@ -367,12 +367,17 @@ export function AddTransactionModal({
           selectedWallet.name.toLowerCase().includes(preset.match),
         )
       : undefined;
+  const isCreditPurchase =
+    type === "EXPENSE" && !!selectedWallet && isCreditWallet(selectedWallet.type);
+  const needsManualDueDate =
+    isCreditPurchase &&
+    (!selectedWallet?.cutoffDay || !selectedWallet?.paymentDueDay);
 
   const lacksFunds = (wallet: Wallet) =>
     type !== "INCOME" &&
     parsedAmount > 0 &&
     spendable(wallet) <
-      (isInstallment && isDebtWallet(wallet.type)
+      (isInstallment && isCreditWallet(wallet.type)
         ? parsedAmount + totalInterest
         : parsedAmount);
 
@@ -384,15 +389,26 @@ export function AddTransactionModal({
 
     const srcWallet = wallets.find((wallet) => wallet.id === walletId);
     const isTransfer = type === "TRANSFER";
-    const asInstallment =
-      isInstallment && !!srcWallet && isDebtWallet(srcWallet.type);
+    const asCreditExpense =
+      type === "EXPENSE" && !!srcWallet && isCreditWallet(srcWallet.type);
+    const asInstallment = isInstallment && asCreditExpense;
+
+    if (!isTransfer && !categoryId) {
+      setError("Pilih kategori.");
+      return;
+    }
+
+    if (asCreditExpense && needsManualDueDate && !firstDueDate) {
+      setError("Isi jatuh tempo pertama untuk akun ini.");
+      return;
+    }
 
     if (isTransfer && !isValidTransferPair(walletId, toWalletId)) {
       setError("Pilih dompet sumber dan tujuan yang berbeda.");
       return;
     }
 
-    if (isTransfer && srcWallet && isDebtWallet(srcWallet.type)) {
+    if (isTransfer && srcWallet && !ASSET_WALLET_TYPES.includes(srcWallet.type)) {
       setError("Transfer tidak bisa dilakukan dari kartu kredit atau paylater.");
       return;
     }
@@ -421,6 +437,14 @@ export function AddTransactionModal({
         date: new Date(date).toISOString(),
         walletId: walletId || undefined,
         toWalletId: isTransfer ? toWalletId || undefined : undefined,
+        categoryId: isTransfer ? undefined : categoryId,
+        billingMode: asCreditExpense
+          ? asInstallment
+            ? "INSTALLMENT"
+            : "FULL"
+          : undefined,
+        firstDueDate:
+          asCreditExpense && needsManualDueDate ? firstDueDate : undefined,
         isInstallment: asInstallment || undefined,
         installmentMonths: asInstallment ? installmentMonths : undefined,
         interestRate: asInstallment ? rateNum : undefined,
@@ -436,13 +460,14 @@ export function AddTransactionModal({
     setType("EXPENSE");
     setWalletId("");
     setToWalletId("");
-    setCategory("");
+    setCategoryId("");
     setDescription("");
     setDate(todayStr());
     setIsInstallment(false);
     setInstallmentMonths(3);
     setInterestRateOverride(null);
     setAdminFeeOverride(null);
+    setFirstDueDate("");
   };
 
   return (
@@ -552,14 +577,15 @@ export function AddTransactionModal({
                     <div className="space-y-2">
                       <FieldLabel>Kategori</FieldLabel>
                       <select
-                        value={category}
-                        onChange={(event) => setCategory(event.target.value)}
+                        value={categoryId}
+                        onChange={(event) => setCategoryId(event.target.value)}
+                        required
                         className="h-12 w-full rounded-lg border border-border/70 bg-card px-3 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15"
                       >
-                        <option value="">Pilih kategori</option>
+                        <option value="" disabled hidden>Pilih kategori</option>
                         {cats.map((cat) => (
-                          <option key={cat} value={cat}>
-                            {cat}
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
                           </option>
                         ))}
                       </select>
@@ -576,8 +602,7 @@ export function AddTransactionModal({
                       Tidak ada dompet untuk transfer
                     </h3>
                     <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                      Tambahkan minimal dua dompet non-hutang untuk memindahkan
-                      uang.
+                      Tambahkan dompet Kas, Bank, atau E-Wallet sebagai sumber transfer.
                     </p>
                     <Button
                       type="button"
@@ -621,7 +646,7 @@ export function AddTransactionModal({
                           ? "Tidak ada dompet sumber lain yang tersedia."
                           : "Pilih dompet sumber"
                       }
-                      disabledReason="Saldo tidak cukup"
+                      disabledReason="Saldo tidak mencukupi"
                       isDisabled={lacksFunds}
                       onSelect={handleSourceSelect}
                     />
@@ -630,7 +655,10 @@ export function AddTransactionModal({
                         type="button"
                         aria-label="Tukar dompet sumber dan tujuan"
                         onClick={handleSwapWallets}
-                        className="flex size-10 items-center justify-center rounded-full border border-border/70 bg-card text-muted-foreground shadow-sm transition-colors hover:bg-surface-low hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/15"
+                        disabled={!ASSET_WALLET_TYPES.includes(
+                          wallets.find((wallet) => wallet.id === toWalletId)?.type ?? "LOAN",
+                        )}
+                        className="flex size-10 items-center justify-center rounded-full border border-border/70 bg-card text-muted-foreground shadow-sm transition-colors hover:bg-surface-low hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <ArrowLeftRight className="size-4" />
                       </button>
@@ -660,6 +688,7 @@ export function AddTransactionModal({
                         setWalletId(id);
                         setInterestRateOverride(null);
                         setAdminFeeOverride(null);
+                        setFirstDueDate("");
                       }}
                     />
                   </section>
@@ -678,44 +707,46 @@ export function AddTransactionModal({
 
                 {type === "EXPENSE" &&
                   selectedWallet &&
-                  isDebtWallet(selectedWallet.type) && (
+                  isCreditWallet(selectedWallet.type) && (
                     <section className="rounded-xl border border-border/60 bg-surface-low p-4">
-                      <div className="flex items-center justify-between gap-4">
+                      <div className="space-y-3">
                         <div className="flex items-center gap-3">
                           <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                             <RefreshCw className="size-5" />
                           </span>
                           <div>
                             <h3 className="text-sm font-semibold text-foreground">
-                              Jadikan cicilan?
+                              Cara pembayaran tagihan
                             </h3>
                             <p className="mt-1 text-xs text-muted-foreground">
-                              Aktif untuk transaksi dari kartu kredit atau
-                              paylater.
+                              Sisa limit: Rp {formatRupiah(String(remainingCredit(selectedWallet)))}
                             </p>
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked={isInstallment}
-                          onClick={() => {
-                            setIsInstallment((value) => !value);
-                            setInterestRateOverride(null);
-                            setAdminFeeOverride(null);
-                          }}
-                          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${
-                            isInstallment ? "bg-primary" : "bg-border"
-                          }`}
-                        >
-                          <span
-                            className={`inline-block size-5 rounded-full bg-card shadow-sm transition-transform ${
-                              isInstallment
-                                ? "translate-x-6"
-                                : "translate-x-1"
-                            }`}
-                          />
-                        </button>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { value: false, label: "Satu kali bayar" },
+                            { value: true, label: "Cicilan" },
+                          ].map((mode) => (
+                            <button
+                              key={mode.label}
+                              type="button"
+                              aria-pressed={isInstallment === mode.value}
+                              onClick={() => {
+                                setIsInstallment(mode.value);
+                                setInterestRateOverride(null);
+                                setAdminFeeOverride(null);
+                              }}
+                              className={`h-10 rounded-lg border text-sm font-semibold transition-colors ${
+                                isInstallment === mode.value
+                                  ? "border-primary bg-primary/10 text-primary"
+                                  : "border-border bg-card text-muted-foreground"
+                              }`}
+                            >
+                              {mode.label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
 
                       {isInstallment && (
@@ -802,6 +833,23 @@ export function AddTransactionModal({
                           )}
                         </div>
                       )}
+
+                      {needsManualDueDate ? (
+                        <div className="mt-4 space-y-2 border-t border-border/60 pt-4">
+                          <FieldLabel>Jatuh tempo pertama</FieldLabel>
+                          <Input
+                            type="date"
+                            value={firstDueDate}
+                            onChange={(event) => setFirstDueDate(event.target.value)}
+                            min={date}
+                            required
+                            className="h-11 border-border/70 bg-card"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Wajib karena cutoff atau tanggal jatuh tempo akun belum lengkap.
+                          </p>
+                        </div>
+                      ) : null}
                     </section>
                   )}
 
@@ -827,7 +875,7 @@ export function AddTransactionModal({
                   disabled={
                     isCreating ||
                     hasNoWallets ||
-                    (type === "TRANSFER" && transferWallets.length < 2)
+                    (type === "TRANSFER" && destinationPickerWallets.length === 0)
                   }
                   className="h-11 flex-1 gap-2"
                 >

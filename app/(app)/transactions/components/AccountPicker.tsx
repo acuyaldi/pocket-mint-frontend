@@ -32,15 +32,19 @@ export interface AccountPickerProps {
 }
 
 function getWalletKind(wallet: Wallet) {
-  if (wallet.type === "BANK") return "Rekening";
+  if (wallet.type === "BANK") return "Bank";
   if (wallet.type === "E_WALLET") return "E-Wallet";
   if (wallet.type === "CASH") return "Kas";
-  if (wallet.type === "CREDIT_CARD") return "Kredit";
+  if (wallet.type === "CREDIT_CARD") return "Kartu Kredit";
+  if (wallet.type === "PAYLATER") return "Paylater";
   return "Pinjaman";
 }
 
 function formatWalletAmount(wallet: Wallet) {
-  return `Rp ${formatRupiah(String(Math.abs(wallet.balance)))}`;
+  const amount = isDebtWallet(wallet.type)
+    ? wallet.outstanding ?? Math.abs(wallet.balance)
+    : wallet.balance;
+  return `Rp ${formatRupiah(String(amount))}`;
 }
 
 function WalletTypeIcon({ wallet }: { wallet: Wallet }) {
@@ -65,7 +69,7 @@ export function AccountPicker({
   wallets,
   selectedId,
   emptyLabel,
-  disabledReason = "Saldo tidak cukup",
+  disabledReason = "Saldo tidak mencukupi",
   isDisabled,
   onSelect,
 }: AccountPickerProps) {
