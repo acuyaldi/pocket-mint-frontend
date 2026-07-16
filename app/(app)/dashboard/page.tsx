@@ -22,7 +22,7 @@ import {
   useTransactions,
 } from "@/src/features/transactions/hooks/useTransactions";
 import { useWallets } from "@/src/features/wallets/hooks/useWallets";
-import { useInstallments } from "@/src/features/installments/hooks/useInstallments";
+import { useBills } from "@/src/features/bills/hooks/useBills";
 import { formatCurrency } from "@/lib/utils";
 import { isDebtWallet, type Wallet as WalletType } from "@/src/types/wallet";
 import {
@@ -141,8 +141,10 @@ export default function DashboardPage() {
 
   const { data: summary } = useMonthlySummary();
   const netSavings = summary?.netSavings ?? 0;
-  const { data: activeInstallments } = useInstallments("ACTIVE");
-  const activeInstallment = activeInstallments?.[0] ?? null;
+  const { data: bills = [] } = useBills();
+  const activeBills = bills.filter(
+    (bill) => bill.status === "ACTIVE" || bill.status === "OVERDUE",
+  );
 
   const dashboardWallets = useMemo(
     () => wallets.filter((walletItem) => !walletItem.isArchived).slice(0, 4),
@@ -219,7 +221,9 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2">
             <CalendarClock className="size-[18px] text-amber" />
             <span className="text-sm text-muted-foreground">
-              {activeInstallment ? "1 cicilan sedang berjalan" : "Tidak ada cicilan aktif"}
+              {activeBills.length > 0
+                ? `${activeBills.length} tagihan aktif`
+                : "Tidak ada tagihan aktif"}
             </span>
           </div>
         </div>
@@ -250,7 +254,7 @@ export default function DashboardPage() {
             Transfer
           </button>
           <Link
-            href="/cicilan"
+            href="/tagihan"
             className="group flex h-14 items-center justify-center gap-3 rounded-lg border border-border/60 bg-card px-4 text-sm font-semibold transition-all hover:border-primary/40 hover:bg-surface-low"
           >
             <ReceiptText className="size-5 text-primary transition-transform group-hover:scale-110" />

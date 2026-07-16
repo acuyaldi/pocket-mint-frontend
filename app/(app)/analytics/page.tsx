@@ -11,7 +11,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { useInstallments } from "@/src/features/installments/hooks/useInstallments";
+import { useBills } from "@/src/features/bills/hooks/useBills";
 import { useTransactions } from "@/src/features/transactions/hooks/useTransactions";
 import { isDebtWallet } from "@/src/types/wallet";
 import { useWallets } from "@/src/features/wallets/hooks/useWallets";
@@ -95,7 +95,10 @@ export default function AnalyticsPage() {
   const { data: transactionData, isLoading: isTransactionsLoading } =
     useTransactions();
   const { data: walletData } = useWallets();
-  const { data: activeInstallments } = useInstallments("ACTIVE");
+  const { data: bills = [] } = useBills();
+  const activeBillCount = bills.filter(
+    (bill) => bill.status === "ACTIVE" || bill.status === "OVERDUE",
+  ).length;
 
   const transactions = useMemo(() => transactionData ?? [], [transactionData]);
   const wallets = useMemo(() => walletData ?? [], [walletData]);
@@ -211,13 +214,13 @@ export default function AnalyticsPage() {
       }
     }
 
-    if ((activeInstallments?.length ?? 0) > 0) {
-      items.push(`${activeInstallments?.length} cicilan aktif perlu dipantau.`);
+    if (activeBillCount > 0) {
+      items.push(`${activeBillCount} tagihan aktif perlu dipantau.`);
     }
 
     return items.slice(0, 4);
   }, [
-    activeInstallments?.length,
+    activeBillCount,
     cashFlow,
     expenseCategories,
     expenseRatio,

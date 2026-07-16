@@ -15,17 +15,19 @@ import {
 import { logout } from "@/app/actions/auth";
 import { PocketMintLogo } from "@/components/Logo";
 import { createClient } from "@/lib/supabase/client";
+import { useDueBillCount } from "@/src/features/bills/hooks/useBills";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Dompet", href: "/wallets", icon: Wallet },
   { label: "Transaksi", href: "/transactions", icon: ArrowLeftRight },
-  { label: "Cicilan", href: "/cicilan", icon: CalendarClock },
+  { label: "Tagihan", href: "/tagihan", icon: CalendarClock },
   { label: "Analitik", href: "/analytics", icon: BarChart3 },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const dueBillCount = useDueBillCount();
   const [accountLabel, setAccountLabel] = useState("Akun");
 
   useEffect(() => {
@@ -75,6 +77,14 @@ export function AppSidebar() {
             >
               <Icon className="size-5" strokeWidth={isActive ? 2.4 : 2} />
               {item.label}
+              {item.href === "/tagihan" && dueBillCount > 0 ? (
+                <span
+                  aria-label={`${dueBillCount} tagihan perlu diperhatikan`}
+                  className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-coral px-1.5 py-0.5 text-[10px] font-bold leading-none text-white"
+                >
+                  {dueBillCount > 9 ? "9+" : dueBillCount}
+                </span>
+              ) : null}
             </Link>
           );
         })}
