@@ -5,7 +5,7 @@ import { PocketMintHero } from "@/components/ui/pocket-mint-hero";
 import { VerticalTabs } from "@/components/ui/vertical-tabs";
 
 const largePrimaryButton =
-  "inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-6 py-3 text-base font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:bg-primary/85";
+  "landing-cta-sweep inline-flex min-h-11 items-center justify-center rounded-[40px] bg-primary px-[50px] py-[17px] text-base font-medium leading-[27px] text-primary-foreground shadow-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:bg-primary/85";
 
 export default function LandingPage() {
   return (
@@ -55,7 +55,7 @@ export default function LandingPage() {
             Mulai bangun ruang kerja finansial privat Anda.
           </h2>
           <Link href="/login" className={`${largePrimaryButton} mt-8`}>
-            Mulai Sekarang
+            <span>Mulai Sekarang</span>
           </Link>
         </section>
       </main>

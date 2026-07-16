@@ -49,17 +49,19 @@ describe("Pocket Mint public experience contract", () => {
     expect(verticalTabs).toContain('role="tabpanel"');
   });
 
-  it("shows the full-width top 70 percent and keeps restrained controls", () => {
-    expect(verticalTabs).toContain("VISIBLE_IMAGE_RATIO = 0.7");
-    expect(verticalTabs).toContain("activeScreen.height * VISIBLE_IMAGE_RATIO");
+  it("uses one top-aligned media frame for every feature", () => {
+    expect(verticalTabs).toMatch(/aspect-\[[^\]]+\]/);
+    expect(verticalTabs).toContain("items-start");
     expect(verticalTabs).toContain("w-full h-auto");
+    expect(verticalTabs).not.toContain("VISIBLE_IMAGE_RATIO");
+    expect(verticalTabs).not.toContain("activeScreen.height *");
     expect(verticalTabs).toContain("ArrowLeft");
     expect(verticalTabs).toContain("ArrowRight");
     expect(verticalTabs).not.toMatch(/bg-gradient|backdrop-blur|glass/i);
   });
 
   it("pauses autoplay for pointer and keyboard interaction", () => {
-    expect(verticalTabs).toContain("AUTO_PLAY_DURATION = 5000");
+    expect(verticalTabs).toContain("AUTO_PLAY_DURATION = 3000");
     expect(verticalTabs).toContain("onMouseEnter");
     expect(verticalTabs).toContain("onMouseLeave");
     expect(verticalTabs).toContain("onFocusCapture");
@@ -74,6 +76,14 @@ describe("Pocket Mint public experience contract", () => {
     expect(hero).toContain('href="/login"');
     expect(hero).toContain("useReducedMotion");
     expect(page + hero).not.toMatch(/Moon|Sun|dark:|bg-gradient/);
+  });
+
+  it("adds a left-to-right hover sweep to both primary CTAs", () => {
+    expect(hero).toContain("landing-cta-sweep");
+    expect(page).toContain("landing-cta-sweep");
+    expect(globals).toContain(".landing-cta-sweep::before");
+    expect(globals).toContain(".landing-cta-sweep:hover::before");
+    expect(globals).toContain("translateX(0)");
   });
 
   it("removes the bento campaign treatment", () => {
