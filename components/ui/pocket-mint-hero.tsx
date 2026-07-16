@@ -35,7 +35,7 @@ export function PocketMintHero() {
               <PocketMintLogo />
             </Link>
             <div className="hidden items-center gap-6 md:flex">
-              <Link href="#dashboard" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+              <Link href="#features" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                 Fitur
               </Link>
               <Link href="#privacy" className="text-sm text-muted-foreground transition-colors hover:text-foreground">

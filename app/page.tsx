@@ -1,15 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import { PocketMintLogo } from "@/components/Logo";
 import { PocketMintHero } from "@/components/ui/pocket-mint-hero";
-
-const screens = {
-  dashboard: "/landing/dashboard.png",
-  wallet: "/landing/wallet.png",
-  transaction: "/landing/transaction.png",
-  installment: "/landing/installment.png",
-} as const;
+import { VerticalTabs } from "@/components/ui/vertical-tabs";
 
 const largePrimaryButton =
   "inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-6 py-3 text-base font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:bg-primary/85";
@@ -48,91 +41,10 @@ export default function LandingPage() {
         </section>
 
         <section
-          id="dashboard"
+          id="features"
           className="scroll-mt-20 py-16 md:py-24"
         >
-          <div className="mb-8 max-w-xl">
-            <h2 className="text-3xl font-semibold tracking-tight text-primary">
-              Dashboard
-            </h2>
-            <p className="mt-3 text-base leading-7 text-muted-foreground">
-              Lihat posisi keuangan Anda dalam satu ringkasan.
-            </p>
-          </div>
-          <div className="overflow-hidden rounded-2xl border border-border bg-card p-2 shadow-sm">
-            <Image
-              src={screens.dashboard}
-              alt="Dashboard Pocket Mint"
-              width={1280}
-              height={1312}
-              sizes="(max-width: 1280px) calc(100vw - 40px), 1200px"
-              className="h-auto w-full object-contain"
-            />
-          </div>
-        </section>
-
-        <section className="grid gap-12 border-t border-border py-16 md:py-24 lg:grid-cols-2">
-          <article id="wallet" className="scroll-mt-20">
-            <h2 className="text-2xl font-semibold tracking-tight text-primary">
-              Wallet
-            </h2>
-            <p className="mt-3 text-base leading-7 text-muted-foreground">
-              Semua aset dan kewajiban dalam satu ledger.
-            </p>
-            <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-card p-2 shadow-sm">
-              <Image
-                src={screens.wallet}
-                alt="Wallet Pocket Mint"
-                width={1384}
-                height={1600}
-                sizes="(max-width: 1023px) calc(100vw - 40px), 560px"
-                className="h-auto w-full object-contain"
-              />
-            </div>
-          </article>
-
-          <article id="transactions" className="scroll-mt-20">
-            <h2 className="text-2xl font-semibold tracking-tight text-primary">
-              Transaction
-            </h2>
-            <p className="mt-3 text-base leading-7 text-muted-foreground">
-              Riwayat yang cepat dicari dan mudah diperbaiki.
-            </p>
-            <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-card p-2 shadow-sm">
-              <Image
-                src={screens.transaction}
-                alt="Transaction Pocket Mint"
-                width={1489}
-                height={1600}
-                sizes="(max-width: 1023px) calc(100vw - 40px), 560px"
-                className="h-auto w-full object-contain"
-              />
-            </div>
-          </article>
-        </section>
-
-        <section
-          id="installment"
-          className="scroll-mt-20 border-t border-border py-16 md:py-24"
-        >
-          <div className="mb-8 max-w-xl">
-            <h2 className="text-3xl font-semibold tracking-tight text-primary">
-              Installment
-            </h2>
-            <p className="mt-3 text-base leading-7 text-muted-foreground">
-              Pantau kewajiban tanpa kehilangan tanggal jatuh tempo.
-            </p>
-          </div>
-          <div className="overflow-hidden rounded-2xl border border-border bg-card p-2 shadow-sm">
-            <Image
-              src={screens.installment}
-              alt="Installment Pocket Mint"
-              width={1600}
-              height={1280}
-              sizes="(max-width: 1280px) calc(100vw - 40px), 1200px"
-              className="h-auto w-full object-contain"
-            />
-          </div>
+          <VerticalTabs />
         </section>
 
         <section

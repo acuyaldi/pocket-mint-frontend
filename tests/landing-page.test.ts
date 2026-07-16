@@ -6,16 +6,17 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const page = readFileSync(root + "app/page.tsx", "utf8");
 const heroPath = root + "components/ui/pocket-mint-hero.tsx";
 const hero = readFileSync(heroPath, "utf8");
+const verticalTabsPath = root + "components/ui/vertical-tabs.tsx";
+const verticalTabs = existsSync(verticalTabsPath)
+  ? readFileSync(verticalTabsPath, "utf8")
+  : "";
 const globals = readFileSync(root + "app/globals.css", "utf8");
 
 describe("Pocket Mint public experience contract", () => {
   it("uses the approved product-led section order", () => {
     const markers = [
       'id="privacy"',
-      'id="dashboard"',
-      'id="wallet"',
-      'id="transactions"',
-      'id="installment"',
+      'id="features"',
       'id="cta"',
     ];
     const positions = markers.map((marker) => page.indexOf(marker));
@@ -30,10 +31,40 @@ describe("Pocket Mint public experience contract", () => {
       "wallet.png",
       "transaction.png",
       "installment.png",
+      "analytics.png",
     ]) {
       expect(existsSync(root + `public/landing/${asset}`)).toBe(true);
-      expect(page + hero).toContain(`/landing/${asset}`);
+      expect(page + hero + verticalTabs).toContain(`/landing/${asset}`);
     }
+  });
+
+  it("integrates one accessible vertical-tabs showcase", () => {
+    expect(existsSync(verticalTabsPath)).toBe(true);
+    expect(page).toContain('import { VerticalTabs } from "@/components/ui/vertical-tabs"');
+    expect(page).toContain("<VerticalTabs />");
+    expect(hero).toContain('href="#features"');
+    expect(verticalTabs).toContain('role="tablist"');
+    expect(verticalTabs).toContain('role="tab"');
+    expect(verticalTabs).toContain("aria-selected");
+    expect(verticalTabs).toContain('role="tabpanel"');
+  });
+
+  it("shows the full-width top 70 percent and keeps restrained controls", () => {
+    expect(verticalTabs).toContain("VISIBLE_IMAGE_RATIO = 0.7");
+    expect(verticalTabs).toContain("activeScreen.height * VISIBLE_IMAGE_RATIO");
+    expect(verticalTabs).toContain("w-full h-auto");
+    expect(verticalTabs).toContain("ArrowLeft");
+    expect(verticalTabs).toContain("ArrowRight");
+    expect(verticalTabs).not.toMatch(/bg-gradient|backdrop-blur|glass/i);
+  });
+
+  it("pauses autoplay for pointer and keyboard interaction", () => {
+    expect(verticalTabs).toContain("AUTO_PLAY_DURATION = 5000");
+    expect(verticalTabs).toContain("onMouseEnter");
+    expect(verticalTabs).toContain("onMouseLeave");
+    expect(verticalTabs).toContain("onFocusCapture");
+    expect(verticalTabs).toContain("onBlurCapture");
+    expect(verticalTabs).toContain("useReducedMotion");
   });
 
   it("keeps the centered hero and one conversion intent", () => {
