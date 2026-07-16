@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -10,7 +9,6 @@ import {
   Search,
   Shuffle,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { formatCurrency } from "@/lib/utils";
 import {
   useCreateTransaction,
@@ -65,7 +63,6 @@ function TransactionIcon({ type }: { type: Transaction["type"] }) {
 }
 
 export default function TransactionsPage() {
-  const router = useRouter();
   const { data, isLoading } = useTransactions();
   const { data: walletsData } = useWallets();
   const updateTransaction = useUpdateTransaction();
@@ -83,13 +80,6 @@ export default function TransactionsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) router.replace("/login");
-    });
-  }, [router]);
 
   const filteredTransactions = useMemo(() => {
     const query = search.trim().toLowerCase();
