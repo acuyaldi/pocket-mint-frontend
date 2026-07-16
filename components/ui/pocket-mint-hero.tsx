@@ -99,10 +99,10 @@ export function PocketMintHero() {
                 href="/login"
                 className={cn(
                   buttonVariants({ size: "lg" }),
-                  "min-h-11 rounded-xl px-6 shadow-sm shadow-primary/10"
+                  "landing-cta-sweep min-h-11 rounded-[40px] px-[50px] py-[17px] shadow-sm shadow-primary/10"
                 )}
               >
-                Mulai Sekarang
+                <span>Mulai Sekarang</span>
               </Link>
 
             </motion.div>

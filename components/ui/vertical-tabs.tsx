@@ -67,8 +67,7 @@ const SCREENS = [
   },
 ] as const;
 
-const AUTO_PLAY_DURATION = 5000;
-const VISIBLE_IMAGE_RATIO = 0.7;
+const AUTO_PLAY_DURATION = 3000;
 
 export function VerticalTabs() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -78,8 +77,6 @@ export function VerticalTabs() {
   const reducedMotion = useReducedMotion() ?? false;
   const isPaused = isPointerPaused || isFocusPaused || reducedMotion;
   const activeScreen = SCREENS[activeIndex];
-  const visibleAspectRatio =
-    activeScreen.width / (activeScreen.height * VISIBLE_IMAGE_RATIO);
 
   const selectScreen = useCallback(
     (index: number) => {
@@ -252,8 +249,7 @@ export function VerticalTabs() {
           id={`feature-panel-${activeScreen.id}`}
           role="tabpanel"
           aria-labelledby={`feature-tab-${activeScreen.id}`}
-          className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-[aspect-ratio] duration-500"
-          style={{ aspectRatio: visibleAspectRatio }}
+          className="relative aspect-[16/11] overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
         >
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
             <motion.div
@@ -264,7 +260,7 @@ export function VerticalTabs() {
               animate="center"
               exit="exit"
               transition={{ duration: reducedMotion ? 0 : 0.45, ease: [0.23, 1, 0.32, 1] }}
-              className="absolute inset-x-0 top-0"
+              className="absolute inset-0 flex items-start justify-center"
             >
               <Image
                 src={activeScreen.image}

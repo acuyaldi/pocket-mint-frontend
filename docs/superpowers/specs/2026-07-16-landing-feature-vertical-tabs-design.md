@@ -17,13 +17,13 @@ Mengganti section fitur Dashboard, Wallet, Transaction, Installment, dan Analyti
 - Desktop memakai dua kolom: daftar tab vertikal di kiri dan media aktif yang lebih dominan di kanan.
 - Mobile menampilkan media aktif terlebih dahulu, lalu daftar tab vertikal agar produk langsung terlihat tanpa horizontal overflow.
 - Gaya mengikuti design contract Pocket Mint: canvas off-white, surface putih, border semantik, tipografi Inter, radius 16px, bayangan minimal, dan tanpa gradient atau glassmorphism.
-- Screenshot dirender selebar penuh dari sisi atas dengan rasio intrinsik yang dipertahankan. Frame media memotong bagian bawah sehingga hanya 70% bagian teratas gambar yang terlihat; tidak ada crop pada sisi kiri atau kanan.
-- Perubahan tab boleh mengubah tinggi frame sesuai rasio intrinsik tiap aset. Transisi tinggi dibuat halus agar layout tidak meloncat kasar.
+- Semua tab memakai frame media dengan tinggi responsif yang sama agar layout tidak berubah saat tab berganti.
+- Screenshot dirender selebar penuh, diratakan ke sisi atas dan tengah secara horizontal, serta mempertahankan rasio intrinsiknya. Frame memotong bagian bawah gambar; area topbar sampai sekitar separuh layar produk harus tetap terlihat dan tidak ada crop pada sisi kiri atau kanan.
 
 ## Interaksi
 
 - Tab aktif dapat dipilih melalui click/tap dan keyboard menggunakan native `button`.
-- Tab berganti otomatis setiap lima detik.
+- Tab berganti otomatis setiap tiga detik.
 - Auto-play berhenti saat pointer berada pada showcase atau ketika fokus keyboard berada di dalam showcase, lalu dilanjutkan setelah interaksi selesai.
 - Tombol previous dan next tersedia pada frame media dengan ikon Lucide yang sudah terpasang.
 - Pergantian media bergerak vertikal sesuai arah navigasi menggunakan `framer-motion` yang sudah terpasang.
@@ -48,4 +48,4 @@ Mengganti section fitur Dashboard, Wallet, Transaction, Installment, dan Analyti
 - Jalankan lint, test, dan production build.
 - Uji landing page pada viewport desktop dan mobile.
 - Verifikasi click/tap, keyboard focus, previous/next, auto-play, pause saat hover/focus, serta reduced-motion.
-- Bandingkan screenshot browser dengan desain yang disetujui: hero tidak berubah, semua lima fitur berada dalam satu vertical-tabs showcase, gambar memenuhi lebar frame, dan bagian bawah terpotong setelah 70% tinggi intrinsik.
+- Bandingkan screenshot browser dengan desain yang disetujui: hero tidak berubah, semua lima fitur berada dalam satu vertical-tabs showcase, seluruh frame memiliki tinggi yang sama, gambar rata atas dan terpusat secara horizontal, serta bagian bawah gambar terpotong tanpa menyembunyikan topbar sampai sekitar separuh layar produk.
