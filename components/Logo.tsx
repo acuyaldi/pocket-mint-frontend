@@ -1,50 +1,56 @@
-import React from 'react';
-
 interface LogoProps {
   className?: string;
+  markSize?: number;
   showText?: boolean;
+  wrapperClassName?: string;
 }
 
-export const PocketMintLogo: React.FC<LogoProps> = ({ className = "w-8 h-8", showText = true }) => {
+export function PocketMintLogo({
+  className,
+  markSize = 24,
+  showText = true,
+  wrapperClassName,
+}: LogoProps) {
   return (
-    <div className="flex items-center gap-3">
-      {/* SVG LOGO ICON 
-        Menggunakan currentColor agar warnanya otomatis mengikuti class text Tailwind (contoh: text-white atau text-zinc-900)
-      */}
-      <svg 
-        className={`shrink-0 ${className}`} 
-        viewBox="0 0 32 32" 
-        fill="none" 
+    <span
+      className={wrapperClassName}
+      role="img"
+      aria-label="Pocket Mint"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: markSize / 4,
+        color: "currentColor",
+      }}
+    >
+      <svg
         xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        width={markSize}
+        height={markSize}
+        className={`shrink-0 ${className ?? ""}`}
+        aria-hidden="true"
+        focusable="false"
       >
-        {/* The Sharp Pocket */}
-        <path 
-          d="M6 10V28H26V10" 
-          stroke="currentColor" 
-          strokeWidth="2" 
-          strokeLinecap="square"
-        />
-        {/* The Mint/Wealth Diamond */}
-        <path 
-          d="M16 4L22 10L16 16L10 10L16 4Z" 
+        <path
           fill="currentColor"
+          d="M5 1.75h12L13.75 5h-7A1.5 1.5 0 0 0 5.25 6.5v11.25a1.5 1.5 0 0 0 1.5 1.5h10.5a1.5 1.5 0 0 0 1.5-1.5V9l3.5-3.5V19A3.25 3.25 0 0 1 19 22.25H5A3.25 3.25 0 0 1 1.75 19V5A3.25 3.25 0 0 1 5 1.75Z"
         />
-        {/* The Data/Card Lines */}
-        <line x1="10" y1="20" x2="22" y2="20" stroke="currentColor" strokeWidth="2" />
-        <line x1="10" y1="24" x2="18" y2="24" stroke="currentColor" strokeWidth="2" />
       </svg>
-
-      {/* TYPOGRAPHY LOGO TEXT */}
-      {showText && (
-        <div className="flex flex-col justify-center">
-          <span className="text-sm font-bold tracking-[0.2em] text-foreground uppercase leading-none">
-            Pocket
-          </span>
-          <span className="text-sm font-bold tracking-[0.2em] text-muted-foreground uppercase leading-tight">
-            Mint
-          </span>
-        </div>
-      )}
-    </div>
+      {showText ? (
+        <span
+          aria-hidden="true"
+          style={{
+            fontSize: markSize * 0.75,
+            fontWeight: 600,
+            lineHeight: 1,
+            letterSpacing: "-0.0125em",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Pocket Mint
+        </span>
+      ) : null}
+    </span>
   );
-};
+}
