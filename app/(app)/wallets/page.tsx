@@ -17,27 +17,21 @@ import CreateWalletModal, {
 } from "./components/CreateWalletModal";
 import EditWalletModal from "./components/EditWalletModal";
 import { useCreateWallet, useWallets } from "@/src/features/wallets/hooks/useWallets";
-import { isDebtWallet, type Wallet, type WalletType } from "@/src/types/wallet";
+import {
+  isCreditWallet,
+  isLiabilityWallet,
+  type Wallet,
+} from "@/src/types/wallet";
 import { formatCurrency } from "@/lib/utils";
 
-const TYPE_FROM_SUBTYPE: Record<string, WalletType> = {
-  bank_account: "BANK",
-  e_wallet: "E_WALLET",
-  cash_on_hand: "CASH",
-  piutang: "CASH",
-  credit_card: "CREDIT_CARD",
-  paylater: "LOAN_PAYLATER",
-  utang_personal: "LOAN_PAYLATER",
-  line_of_credit: "LOAN_PAYLATER",
-};
-
-type FilterKey = "all" | "bank" | "ewallet" | "credit" | "loan";
+type FilterKey = "all" | "bank" | "ewallet" | "credit" | "paylater" | "loan";
 
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "all", label: "Semua" },
-  { key: "bank", label: "Rekening" },
+  { key: "bank", label: "Kas & Bank" },
   { key: "ewallet", label: "E-Wallet" },
-  { key: "credit", label: "Kredit" },
+  { key: "credit", label: "Kartu Kredit" },
+  { key: "paylater", label: "Paylater" },
   { key: "loan", label: "Pinjaman" },
 ];
 
@@ -45,14 +39,15 @@ function walletMatchesFilter(wallet: Wallet, filter: FilterKey) {
   if (filter === "bank") return wallet.type === "BANK" || wallet.type === "CASH";
   if (filter === "ewallet") return wallet.type === "E_WALLET";
   if (filter === "credit") return wallet.type === "CREDIT_CARD";
-  if (filter === "loan") return wallet.type === "LOAN_PAYLATER";
+  if (filter === "paylater") return wallet.type === "PAYLATER";
+  if (filter === "loan") return wallet.type === "LOAN";
   return true;
 }
 
 function SectionIcon({ type }: { type: FilterKey }) {
   if (type === "bank") return <Landmark className="size-5 text-primary" />;
   if (type === "ewallet") return <Smartphone className="size-5 text-primary" />;
-  if (type === "credit") return <CreditCard className="size-5 text-coral" />;
+  if (type === "credit" || type === "paylater") return <CreditCard className="size-5 text-coral" />;
   return <Banknote className="size-5 text-primary" />;
 }
 
@@ -63,10 +58,11 @@ function WalletTile({
   wallet: Wallet;
   onEdit: (wallet: Wallet) => void;
 }) {
-  const isDebt = isDebtWallet(wallet.type);
-  const balance = isDebt ? Math.abs(wallet.balance) : wallet.balance;
+  const isDebt = isLiabilityWallet(wallet.type);
+  const isCredit = isCreditWallet(wallet.type);
+  const balance = isDebt ? wallet.outstanding ?? Math.abs(wallet.balance) : wallet.balance;
   const limit = wallet.creditLimit ?? 0;
-  const utilization = isDebt && limit > 0 ? Math.min(100, Math.round((balance / limit) * 100)) : 0;
+  const utilization = isCredit && limit > 0 ? Math.min(100, Math.round((balance / limit) * 100)) : 0;
 
   return (
     <article
@@ -93,7 +89,7 @@ function WalletTile({
       <p className={`text-xl font-bold tabular-nums ${isDebt ? "text-coral" : "text-foreground"}`}>
         {formatCurrency(balance)}
       </p>
-      {isDebt ? (
+      {isCredit ? (
         <div className="mt-4 space-y-1.5">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>Utilisasi</span>
@@ -103,6 +99,8 @@ function WalletTile({
             <div className="h-full rounded-full bg-coral" style={{ width: `${utilization}%` }} />
           </div>
         </div>
+      ) : isDebt ? (
+        <p className="mt-1 text-xs text-coral">Sisa kewajiban</p>
       ) : (
         <p className="mt-1 text-xs text-mint">Aset aktif</p>
       )}
@@ -173,19 +171,19 @@ export default function WalletsPage() {
   const bankWallets = visibleWallets.filter((wallet) => wallet.type === "BANK" || wallet.type === "CASH");
   const ewallets = visibleWallets.filter((wallet) => wallet.type === "E_WALLET");
   const creditWallets = visibleWallets.filter((wallet) => wallet.type === "CREDIT_CARD");
-  const loanWallets = visibleWallets.filter((wallet) => wallet.type === "LOAN_PAYLATER");
+  const paylaterWallets = visibleWallets.filter((wallet) => wallet.type === "PAYLATER");
+  const loanWallets = visibleWallets.filter((wallet) => wallet.type === "LOAN");
 
   const handleWalletCreateSuccess = async (data: CreateWalletFormData) => {
-    const type =
-      TYPE_FROM_SUBTYPE[data.subType ?? ""] ??
-      (data.category === "debt" ? "LOAN_PAYLATER" : "CASH");
-
     try {
       await createWallet.mutateAsync({
         name: data.name,
-        type,
-        balance: data.category === "debt" ? -(data.outstanding ?? 0) : data.balance ?? 0,
+        type: data.type,
+        balance: data.balance,
+        principal: data.principal,
         creditLimit: data.creditLimit,
+        cutoffDay: data.cutoffDay,
+        paymentDueDay: data.paymentDueDay,
         interestRate: data.interestRate,
         adminFee: data.adminFee,
         ...(data.adminFee !== undefined && { adminFeeType: "PERCENT" as const }),
@@ -249,9 +247,10 @@ export default function WalletsPage() {
       </div>
 
       <div className="space-y-10">
-        <WalletSection title="Rekening" kind="bank" wallets={bankWallets} badge="Aset" onEdit={setEditingWallet} />
+        <WalletSection title="Kas & Bank" kind="bank" wallets={bankWallets} badge="Aset" onEdit={setEditingWallet} />
         <WalletSection title="E-Wallet" kind="ewallet" wallets={ewallets} badge="Aset" onEdit={setEditingWallet} />
-        <WalletSection title="Kredit" kind="credit" wallets={creditWallets} badge="Liabilitas" onEdit={setEditingWallet} />
+        <WalletSection title="Kartu Kredit" kind="credit" wallets={creditWallets} badge="Liabilitas" onEdit={setEditingWallet} />
+        <WalletSection title="Paylater" kind="paylater" wallets={paylaterWallets} badge="Liabilitas" onEdit={setEditingWallet} />
         <WalletSection title="Pinjaman" kind="loan" wallets={loanWallets} badge="Liabilitas" onEdit={setEditingWallet} />
         {visibleWallets.length === 0 ? (
           <button

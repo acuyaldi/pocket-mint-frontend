@@ -21,7 +21,10 @@ export interface CreateWalletDto {
   name: string;
   type: WalletType;
   balance?: number;
+  principal?: number;
   creditLimit?: number;
+  cutoffDay?: number | null;
+  paymentDueDay?: number | null;
   interestRate?: number;
   adminFee?: number;
   adminFeeType?: 'FLAT' | 'PERCENT';

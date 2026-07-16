@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { FormEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,17 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useUpdateWallet } from "@/src/features/wallets/hooks/useWallets";
-import { isDebtWallet, type Wallet } from "@/src/types/wallet";
-
-const labelStyle = {
-  color: "var(--color-muted-foreground)",
-  fontFamily: "var(--font-inter)",
-} as const;
-const inputStyle = {
-  backgroundColor: "var(--color-card)",
-  border: "1px solid var(--color-border)",
-  color: "var(--color-foreground)",
-} as const;
+import { isCreditWallet, type Wallet } from "@/src/types/wallet";
 
 export default function EditWalletModal({
   wallet,
@@ -29,159 +19,117 @@ export default function EditWalletModal({
   wallet: Wallet | null;
   onClose: () => void;
 }) {
-  if (!wallet) {
-    return <Dialog open={false} onOpenChange={() => undefined} />;
-  }
-
+  if (!wallet) return <Dialog open={false} onOpenChange={() => undefined} />;
   return <EditWalletForm key={wallet.id} wallet={wallet} onClose={onClose} />;
 }
 
-function EditWalletForm({
-  wallet,
-  onClose,
-}: {
-  wallet: Wallet;
-  onClose: () => void;
-}) {
+function EditWalletForm({ wallet, onClose }: { wallet: Wallet; onClose: () => void }) {
   const updateWallet = useUpdateWallet();
-  const isDebt = isDebtWallet(wallet.type);
-
+  const isCredit = isCreditWallet(wallet.type);
   const [name, setName] = useState(wallet.name);
-  const [balance, setBalance] = useState(String(Math.abs(wallet.balance))); // asset: saldo · debt: outstanding (positif)
   const [creditLimit, setCreditLimit] = useState(String(wallet.creditLimit ?? 0));
+  const [cutoffDay, setCutoffDay] = useState(wallet.cutoffDay ? String(wallet.cutoffDay) : "");
+  const [paymentDueDay, setPaymentDueDay] = useState(
+    wallet.paymentDueDay ? String(wallet.paymentDueDay) : "",
+  );
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
     setError("");
     try {
       await updateWallet.mutateAsync({
         id: wallet.id,
         name: name.trim(),
-        // Debt wallets store outstanding as a negative balance
-        balance: isDebt ? -Math.abs(Number(balance) || 0) : Number(balance) || 0,
-        ...(isDebt && { creditLimit: Number(creditLimit) || 0 }),
+        ...(isCredit && {
+          creditLimit: Number(creditLimit),
+          cutoffDay: cutoffDay ? Number(cutoffDay) : null,
+          paymentDueDay: paymentDueDay ? Number(paymentDueDay) : null,
+        }),
       });
       onClose();
-    } catch (err) {
-      const msg = (err as { response?: { data?: { error?: { message?: string } } } })
+    } catch (caught) {
+      const message = (caught as { response?: { data?: { error?: { message?: string } } } })
         ?.response?.data?.error?.message;
-      setError(msg ?? "Couldn't save changes. Please try again.");
+      setError(message ?? "Perubahan belum dapat disimpan. Coba lagi.");
     }
   };
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent
-        className="max-w-md p-0 overflow-hidden"
-        style={{ backgroundColor: "var(--color-popover)", border: "1px solid var(--color-border)" }}
-      >
+      <DialogContent className="max-w-md overflow-hidden p-0">
         <form onSubmit={handleSubmit}>
-          <div
-            className="px-6 py-5"
-            style={{ borderBottom: "1px solid var(--color-border)", backgroundColor: "var(--color-card)" }}
-          >
-            <DialogTitle
-              className="text-base font-semibold"
-              style={{ color: "var(--color-foreground)", fontFamily: "var(--font-hanken)" }}
-            >
-              Edit Wallet
-            </DialogTitle>
-            <DialogDescription
-              className="text-sm mt-1"
-              style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}
-            >
-              {wallet.name} · {wallet.type}
+          <div className="border-b border-border bg-card px-6 py-5">
+            <DialogTitle className="text-base font-semibold">Edit Akun</DialogTitle>
+            <DialogDescription className="mt-1 text-sm">
+              Saldo dan tagihan hanya berubah melalui transaksi.
             </DialogDescription>
           </div>
 
-          <div className="p-6 space-y-4">
+          <div className="space-y-4 p-6">
             <div className="space-y-2">
-              <label className="text-[11px] font-bold tracking-widest uppercase" style={labelStyle}>
-                Wallet Name
-              </label>
+              <label className="text-xs font-medium text-muted-foreground">Nama Akun</label>
               <Input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(event) => setName(event.target.value)}
                 required
                 className="h-11"
-                style={inputStyle}
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold tracking-widest uppercase" style={labelStyle}>
-                {isDebt ? "Current Outstanding" : "Balance"}
-              </label>
-              <div className="relative">
-                <span
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold select-none"
-                  style={{ color: "var(--color-muted-foreground)" }}
-                >
-                  Rp
-                </span>
-                <Input
-                  type="text"
-                  inputMode="numeric"
-                  value={balance}
-                  onChange={(e) => setBalance(e.target.value.replace(/\D/g, ""))}
-                  className="h-11 pl-10 pr-4"
-                  style={inputStyle}
-                />
-              </div>
-            </div>
-
-            {isDebt && (
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold tracking-widest uppercase" style={labelStyle}>
-                  Credit Limit
-                </label>
-                <div className="relative">
-                  <span
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold select-none"
-                    style={{ color: "var(--color-muted-foreground)" }}
-                  >
-                    Rp
-                  </span>
-                  <Input
-                    type="text"
-                    inputMode="numeric"
-                    value={creditLimit}
-                    onChange={(e) => setCreditLimit(e.target.value.replace(/\D/g, ""))}
-                    className="h-11 pl-10 pr-4"
-                    style={inputStyle}
-                  />
+            {isCredit ? (
+              <>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">Limit Kredit</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">Rp</span>
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      value={creditLimit}
+                      onChange={(event) => setCreditLimit(event.target.value.replace(/\D/g, ""))}
+                      className="h-11 pl-10"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Tanggal Cutoff</label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={cutoffDay}
+                      onChange={(event) => setCutoffDay(event.target.value)}
+                      placeholder="Opsional"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Tanggal Jatuh Tempo</label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={paymentDueDay}
+                      onChange={(event) => setPaymentDueDay(event.target.value)}
+                      placeholder="Opsional"
+                    />
+                  </div>
+                </div>
+              </>
+            ) : null}
 
-            {error && (
-              <p className="text-[11px]" style={{ color: "var(--color-destructive)" }}>{error}</p>
-            )}
+            {error ? <p className="text-xs text-destructive">{error}</p> : null}
           </div>
 
-          <div
-            className="flex justify-end gap-3 px-6 py-5"
-            style={{ borderTop: "1px solid var(--color-border)", backgroundColor: "var(--color-card)" }}
-          >
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={onClose}
-              disabled={updateWallet.isPending}
-              className="h-9 text-sm font-medium"
-              style={{ color: "var(--color-muted-foreground)" }}
-            >
-              Cancel
+          <div className="flex justify-end gap-3 border-t border-border bg-card px-6 py-5">
+            <Button type="button" variant="ghost" onClick={onClose} disabled={updateWallet.isPending}>
+              Batal
             </Button>
-            <Button
-              type="submit"
-              disabled={updateWallet.isPending}
-              className="h-9 font-semibold"
-              style={{ backgroundColor: "var(--color-primary)", color: "var(--color-primary-foreground)" }}
-            >
-              {updateWallet.isPending ? "Saving..." : "Save Changes"}
+            <Button type="submit" disabled={updateWallet.isPending}>
+              {updateWallet.isPending ? "Menyimpan..." : "Simpan Perubahan"}
             </Button>
           </div>
         </form>

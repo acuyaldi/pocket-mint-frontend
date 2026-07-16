@@ -55,7 +55,8 @@ describe("transfer account picker state", () => {
       wallet("bank", "BANK"),
       wallet("credit", "CREDIT_CARD"),
       wallet("cash", "CASH"),
-      wallet("paylater", "LOAN_PAYLATER"),
+      wallet("paylater", "PAYLATER"),
+      wallet("loan", "LOAN"),
       wallet("ewallet", "E_WALLET"),
     ];
 
