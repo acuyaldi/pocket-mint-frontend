@@ -7,6 +7,7 @@ import {
   ArrowLeftRight,
   Wallet,
   CalendarClock,
+  BarChart3,
   User,
 } from "lucide-react";
 import { AccountMenuItems } from "./account-menu";
@@ -16,18 +17,21 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useDueBillCount } from "@/src/features/bills/hooks/useBills";
 
 // Labels and order mirror the desktop sidebar (app-sidebar.tsx) — same
 // vocabulary on both surfaces so wayfinding transfers between devices
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Wallets", href: "/wallets", icon: Wallet },
-  { label: "Transactions", href: "/transactions", icon: ArrowLeftRight },
-  { label: "Installments", href: "/cicilan", icon: CalendarClock },
+  { label: "Dompet", href: "/wallets", icon: Wallet },
+  { label: "Transaksi", href: "/transactions", icon: ArrowLeftRight },
+  { label: "Tagihan", href: "/tagihan", icon: CalendarClock },
+  { label: "Analitik", href: "/analytics", icon: BarChart3 },
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
+  const dueBillCount = useDueBillCount();
   const items = React.useMemo<DockMorphItemData[]>(() => {
     const navItems: DockMorphItemData[] = NAV_ITEMS.map((item) => {
       const isActive =
@@ -39,13 +43,25 @@ export function BottomNav() {
         label: item.label,
         href: item.href,
         isActive,
-        icon: <Icon className="size-[18px]" />,
+        icon: (
+          <span className="relative inline-flex">
+            <Icon className="size-[18px]" />
+            {item.href === "/tagihan" && dueBillCount > 0 ? (
+              <span
+                aria-label={`${dueBillCount} tagihan perlu diperhatikan`}
+                className="absolute -right-3 -top-2 inline-flex min-w-4 items-center justify-center rounded-full bg-coral px-1 text-[9px] font-bold leading-4 text-white"
+              >
+                {dueBillCount > 9 ? "9+" : dueBillCount}
+              </span>
+            ) : null}
+          </span>
+        ),
       };
     });
 
     navItems.push({
       key: "account",
-      label: "Account",
+      label: "Akun",
       icon: <User className="size-[18px]" />,
       renderTrigger: ({ defaultTrigger }) => (
         <DropdownMenu>
@@ -58,7 +74,7 @@ export function BottomNav() {
     });
 
     return navItems;
-  }, [pathname]);
+  }, [dueBillCount, pathname]);
 
   return (
     <div

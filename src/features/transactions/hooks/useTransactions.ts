@@ -77,11 +77,9 @@ export const useCreateTransaction = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    Transaction, // response type
-    Error,       // error type
-    Omit<Transaction, 'id' | 'createdAt' | 'updatedAt' | 'userId'> & {
-      userId?: string;
-    }
+    Transaction,
+    Error,
+    CreateTransactionDto
   >({
     mutationFn: (newTx) => api.post<{ status: string; data: Transaction }>('/transactions', newTx).then((res) => res.data.data),
     onSuccess: () => {
@@ -92,6 +90,21 @@ export const useCreateTransaction = () => {
     }
   );
 };
+
+export interface CreateTransactionDto {
+  type: Transaction['type'];
+  amount: number;
+  description?: string;
+  date?: string;
+  walletId?: string;
+  toWalletId?: string;
+  categoryId?: string;
+  billingMode?: 'FULL' | 'INSTALLMENT';
+  firstDueDate?: string;
+  isInstallment?: boolean;
+  installmentMonths?: number;
+  interestRate?: number;
+}
 
 export const useDeleteTransaction = () => {
   const queryClient = useQueryClient();

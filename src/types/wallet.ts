@@ -1,17 +1,23 @@
-export type WalletType = 'CASH' | 'BANK' | 'E_WALLET' | 'CREDIT_CARD' | 'LOAN_PAYLATER';
+export type WalletType =
+  | "CASH"
+  | "BANK"
+  | "E_WALLET"
+  | "CREDIT_CARD"
+  | "PAYLATER"
+  | "LOAN";
 
-export type WalletCategory = 'asset' | 'debt';
+export const ASSET_WALLET_TYPES: WalletType[] = ["CASH", "BANK", "E_WALLET"];
+export const CREDIT_WALLET_TYPES: WalletType[] = ["CREDIT_CARD", "PAYLATER"];
+export const LIABILITY_WALLET_TYPES: WalletType[] = [...CREDIT_WALLET_TYPES, "LOAN"];
 
-export type AssetSubType = 'bank_account' | 'e_wallet' | 'cash_on_hand' | 'piutang';
+export const isCreditWallet = (type: WalletType): boolean =>
+  CREDIT_WALLET_TYPES.includes(type);
 
-export type DebtSubType = 'credit_card' | 'paylater' | 'utang_personal' | 'line_of_credit';
+export const isLiabilityWallet = (type: WalletType): boolean =>
+  LIABILITY_WALLET_TYPES.includes(type);
 
-/** Wallet types that represent debt/credit products — single source of truth. */
-export const DEBT_WALLET_TYPES: WalletType[] = ['CREDIT_CARD', 'LOAN_PAYLATER'];
-
-/** True when a wallet's type is a debt/credit product (derived, not a DB column). */
-export const isDebtWallet = (type: WalletType): boolean =>
-  DEBT_WALLET_TYPES.includes(type);
+/** Compatibility alias for existing dashboard and transaction views. */
+export const isDebtWallet = isLiabilityWallet;
 
 export interface Wallet {
   id: string;
@@ -20,9 +26,13 @@ export interface Wallet {
   type: WalletType;
   balance: number;
   creditLimit: number;
+  cutoffDay?: number | null;
+  paymentDueDay?: number | null;
+  outstanding?: number | null;
+  remainingCredit?: number | null;
   interestRate: number;
   adminFee?: number;
-  adminFeeType?: 'FLAT' | 'PERCENT';
+  adminFeeType?: "FLAT" | "PERCENT";
   currency: string;
   icon?: string | null;
   color?: string | null;

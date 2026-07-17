@@ -18,6 +18,7 @@ import { createClient } from "@/lib/supabase/client";
 import { PocketMintLogo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PulseBeams } from "@/components/ui/pulse-beams";
 import {
   Card,
   CardContent,
@@ -54,17 +55,17 @@ function GoogleIcon({ className }: { className?: string }) {
 const accessHighlights = [
   {
     label: "Encrypted access",
-    value: "Secure email & Google sign-in",
+    value: "Secure email and Google sign-in",
     icon: ShieldCheck,
   },
   {
-    label: "Debt visibility",
-    value: "Outstanding, limit, utilization",
+    label: "Readable obligations",
+    value: "Assets, debt, and cicilan in one workspace",
     icon: Wallet,
   },
   {
-    label: "Installment tracking",
-    value: "Cicilan status and due flow",
+    label: "Private by default",
+    value: "Your financial data stays under your control",
     icon: CalendarClock,
   },
 ];
@@ -85,7 +86,10 @@ function validateSignup(formData: FormData): string | null {
 }
 
 function LoginForm() {
-  const [authMode, setAuthMode] = useState<AuthMode>("signin");
+  const searchParams = useSearchParams();
+  const [authMode, setAuthMode] = useState<AuthMode>(() =>
+    searchParams.get("mode") === "register" ? "signup" : "signin"
+  );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -94,8 +98,6 @@ function LoginForm() {
 
   const isSignUp = authMode === "signup";
   const isForgot = authMode === "forgot";
-  const searchParams = useSearchParams();
-
   // Google OAuth runs as a server action that redirects to the provider on
   // success; useActionState lets us surface an initiation error if one occurs.
   const [googleState, googleAction, googlePending] = useActionState(
@@ -178,63 +180,54 @@ function LoginForm() {
   const busy = loading || googlePending;
 
   return (
-    <div className="min-h-screen bg-background px-4 py-4 text-foreground sm:px-6 lg:px-8">
-      <div className="mx-auto grid min-h-[calc(100vh-2rem)] w-full max-w-[1440px] overflow-hidden rounded-[28px] border border-white/70 bg-white/66 lg:grid-cols-[minmax(0,1.1fr)_420px]">
-        <section className="surface-grid relative order-2 flex flex-col justify-between overflow-hidden px-6 py-6 sm:px-8 lg:order-1 lg:px-10 lg:py-8">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,109,54,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(137,80,36,0.12),transparent_22%)]" />
-
-          <div className="relative py-10 lg:py-0">
-            <div className="mb-6">
-              <PocketMintLogo />
-            </div>
-
-            <div className="max-w-2xl">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/12 bg-white/82 px-3 py-1.5 text-[11px] font-semibold tracking-[0.08em] text-primary">
-                <ShieldCheck className="size-3.5" />
-                SECURE FINTECH WORKSPACE
-              </div>
-              <h1 className="max-w-2xl font-heading text-4xl font-bold leading-[1.06] tracking-[-0.03em] text-foreground sm:text-5xl lg:text-[56px]">
-                Enter the private workspace where assets, debt, and cicilan
-                stay readable in one system.
+    <div className="min-h-[100dvh] bg-background px-5 py-5 text-foreground md:px-8 md:py-8">
+      <div className="mx-auto grid min-h-[calc(100dvh-2.5rem)] w-full max-w-7xl overflow-hidden rounded-2xl border border-border bg-card md:min-h-[calc(100dvh-4rem)] lg:grid-cols-[minmax(0,1fr)_440px]">
+        <section className="relative order-2 flex flex-col justify-between isolate overflow-hidden border-t border-border bg-muted px-6 py-10 sm:px-10 lg:order-1 lg:border-r lg:border-t-0 lg:px-12 lg:py-12">
+          <PulseBeams variant="panel" className="text-primary opacity-45" />
+          <div className="relative z-10">
+            <PocketMintLogo wrapperClassName="text-primary" markSize={32} />
+            <div className="mt-16 max-w-xl lg:mt-28">
+              <p className="text-xs font-semibold tracking-[0.08em] text-muted-foreground">
+                PRIVATE FINANCIAL WORKSPACE
+              </p>
+              <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-tight text-foreground lg:text-5xl">
+                Your numbers stay readable, private, and under your control.
               </h1>
-              <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground">
-                Pocket Mint keeps the numbers direct, precise, and always under
-                your control — from the first screen onward.
+              <p className="mt-5 max-w-lg text-base leading-7 text-muted-foreground">
+                Return to one workspace for assets, debt, transactions, and
+                cicilan.
               </p>
             </div>
-
-            <div className="mt-8 grid max-w-3xl gap-4 md:grid-cols-3">
+            <div className="mt-12 max-w-xl">
               {accessHighlights.map((highlight) => {
                 const Icon = highlight.icon;
 
                 return (
                   <div
                     key={highlight.label}
-                    className="surface-card rounded-2xl border border-white/80 p-4"
+                    className="grid grid-cols-[24px_1fr] gap-4 border-t border-border py-4"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-xl border border-primary/12 bg-primary/10 p-2 text-primary">
-                        <Icon className="size-4" />
-                      </div>
+                    <Icon
+                      aria-hidden="true"
+                      className="mt-0.5 size-5 text-primary"
+                      strokeWidth={1.75}
+                    />
+                    <div>
                       <p className="text-sm font-semibold text-foreground">
                         {highlight.label}
                       </p>
+                      <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                        {highlight.value}
+                      </p>
                     </div>
-                    <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                      {highlight.value}
-                    </p>
                   </div>
                 );
               })}
             </div>
           </div>
-
-          <div className="relative text-[11px] font-semibold tracking-[0.08em] text-muted-foreground">
-            ENCRYPTED ACCESS | PRIVACY-FIRST | IDR-FIRST FINANCIAL CLARITY
-          </div>
         </section>
 
-        <section className="order-1 flex items-center justify-center bg-white/82 px-5 py-8 sm:px-8 lg:order-2">
+        <section className="order-1 flex items-center justify-center px-5 py-8 sm:px-8 lg:order-2">
           <div className="flex w-full max-w-md flex-col gap-4">
             <Link
               href="/"
@@ -243,11 +236,8 @@ function LoginForm() {
               <ArrowLeft className="size-4" />
               Back to landing page
             </Link>
-            <Card className="surface-card w-full max-w-md border-white/90 py-0 shadow-none">
+            <Card className="w-full max-w-md border-border bg-card py-0 shadow-none">
               <CardHeader className="border-b border-border/70 px-6 py-6">
-                <div className="mb-4 text-primary">
-                  <PocketMintLogo className="h-9 w-9" />
-                </div>
                 <CardTitle className="text-2xl font-semibold text-foreground">
                   {isForgot
                     ? "Reset your password"
@@ -451,7 +441,7 @@ function LoginForm() {
                         size="lg"
                         variant="outline"
                         disabled={busy}
-                        className="h-11 w-full justify-center gap-2 border-border/80 bg-white text-foreground hover:bg-muted"
+                        className="h-11 w-full justify-center gap-2 border-border/80 bg-card text-foreground hover:bg-muted"
                       >
                         {googlePending ? (
                           <Loader2 className="size-4 animate-spin" />

@@ -35,10 +35,20 @@ export async function updateSession(request: NextRequest) {
   const isAuthRoute = authRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );
-  const isDashboard = request.nextUrl.pathname.startsWith("/dashboard");
+  const protectedRoutes = [
+    "/dashboard",
+    "/wallets",
+    "/transactions",
+    "/tagihan",
+    "/analytics",
+    "/profile",
+  ];
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    request.nextUrl.pathname.startsWith(route)
+  );
 
   // Not logged in + accessing dashboard → redirect to login
-  if (!user && isDashboard) {
+  if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

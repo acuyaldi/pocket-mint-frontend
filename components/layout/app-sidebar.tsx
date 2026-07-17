@@ -1,121 +1,125 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import {
-  LayoutDashboard,
   ArrowLeftRight,
-  Wallet,
+  BarChart3,
   CalendarClock,
+  LayoutDashboard,
+  LogOut,
   User,
+  Wallet,
 } from "lucide-react";
-import { PocketMintLogo } from "../Logo";
-import {
-  Sidebar,
-  SidebarBody,
-  SidebarLabel,
-  SidebarLink,
-  SidebarToggle,
-  useSidebar,
-} from "@/components/ui/sidebar";
-import { AccountMenuItems } from "./account-menu";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { logout } from "@/app/actions/auth";
+import { PocketMintLogo } from "@/components/Logo";
+import { createClient } from "@/lib/supabase/client";
+import { useDueBillCount } from "@/src/features/bills/hooks/useBills";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Wallets", href: "/wallets", icon: Wallet },
-  { label: "Transactions", href: "/transactions", icon: ArrowLeftRight },
-  { label: "Installments", href: "/cicilan", icon: CalendarClock },
+  { label: "Dompet", href: "/wallets", icon: Wallet },
+  { label: "Transaksi", href: "/transactions", icon: ArrowLeftRight },
+  { label: "Tagihan", href: "/tagihan", icon: CalendarClock },
+  { label: "Analitik", href: "/analytics", icon: BarChart3 },
 ];
 
 export function AppSidebar() {
-  return (
-    <Sidebar>
-      <SidebarBody>
-        <SidebarContent />
-      </SidebarBody>
-    </Sidebar>
-  );
-}
-
-function SidebarContent() {
-  const { open } = useSidebar();
   const pathname = usePathname();
-
-  // Bottom account entry shows the signed-in user's name (Supabase session),
-  // falling back to their email, then a static "Account" label.
-  const [accountLabel, setAccountLabel] = useState("Account");
+  const dueBillCount = useDueBillCount();
+  const [accountLabel, setAccountLabel] = useState("Akun");
 
   useEffect(() => {
     const supabase = createClient();
     let active = true;
+
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!active || !user) return;
       const meta = user.user_metadata ?? {};
-      setAccountLabel(meta.full_name || meta.name || user.email || "Account");
+      setAccountLabel(meta.full_name || meta.name || user.email || "Akun");
     });
+
     return () => {
       active = false;
     };
   }, []);
 
+  async function handleLogout() {
+    const result = await logout();
+    if (result?.error) {
+      console.error("Logout failed:", result.error);
+    }
+  }
+
   return (
-    <>
-      {/* Top: logo + main nav */}
-      <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
-        <div className="py-2 text-foreground">
-          <PocketMintLogo className="w-6 h-6" showText={open} />
-        </div>
-
-        <nav aria-label="Main" className="mt-6 flex flex-col gap-1">
-          {NAV_ITEMS.map((item) => {
-            const isActive =
-              pathname === item.href || pathname.startsWith(item.href + "/");
-            const Icon = item.icon;
-            return (
-              <SidebarLink
-                key={item.href}
-                link={{
-                  label: item.label,
-                  href: item.href,
-                  icon: <Icon className="size-5 shrink-0" />,
-                }}
-                isActive={isActive}
-                className={isActive ? "text-primary font-semibold" : ""}
-              />
-            );
-          })}
-        </nav>
+    <aside className="hidden h-screen w-64 shrink-0 flex-col gap-2 border-r border-border bg-background p-4 md:flex">
+      <div className="mb-8 px-4">
+        <PocketMintLogo wrapperClassName="text-primary" />
+        <p className="mt-1.5 text-[11px] font-medium tracking-wide text-muted-foreground">
+          Private Financial Workspace
+        </p>
       </div>
 
-      {/* Bottom: account */}
-      <div className="flex shrink-0 flex-col gap-1">
-        {/* ponytail: Help link removed — /help route doesn't exist yet; re-add when it ships */}
+      <nav aria-label="Navigasi utama" className="flex-grow space-y-1">
+        {NAV_ITEMS.map((item) => {
+          const isActive =
+            pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const Icon = item.icon;
 
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className="flex cursor-pointer items-center justify-start gap-2 rounded-md py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            aria-label="Account menu"
-          >
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-primary">
-              <User className="size-4" />
-            </span>
-            <SidebarLabel className="max-w-45 truncate text-muted-foreground">
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={isActive ? "page" : undefined}
+              className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition-colors ${
+                isActive
+                  ? "bg-accent text-accent-foreground font-semibold"
+                  : "text-muted-foreground hover:bg-surface-high hover:text-foreground"
+              }`}
+            >
+              <Icon className="size-5" strokeWidth={isActive ? 2.4 : 2} />
+              {item.label}
+              {item.href === "/tagihan" && dueBillCount > 0 ? (
+                <span
+                  aria-label={`${dueBillCount} tagihan perlu diperhatikan`}
+                  className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-coral px-1.5 py-0.5 text-[10px] font-bold leading-none text-white"
+                >
+                  {dueBillCount > 9 ? "9+" : dueBillCount}
+                </span>
+              ) : null}
+            </Link>
+          );
+        })}
+
+      </nav>
+
+      <div className="mt-auto border-t border-border pt-4">
+        <Link
+          href="/profile"
+          className="mb-1 flex w-full items-center gap-3 rounded-lg px-4 py-3 text-foreground transition-colors hover:bg-surface-high"
+        >
+          <span className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <User className="size-4" />
+          </span>
+          <span className="min-w-0 text-left">
+            <span className="block truncate text-sm font-semibold">
               {accountLabel}
-            </SidebarLabel>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <AccountMenuItems />
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <SidebarToggle />
+            </span>
+            <span className="block text-xs text-muted-foreground">
+              Pengaturan Akun
+            </span>
+          </span>
+        </Link>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-destructive transition-colors hover:bg-destructive/10"
+        >
+          <LogOut className="size-5" />
+          Keluar
+        </button>
       </div>
-    </>
+    </aside>
   );
 }
