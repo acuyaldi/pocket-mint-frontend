@@ -34,7 +34,7 @@ sequenceDiagram
   `supabase.auth.getSession().data.session.access_token`.
 - **Client requests:** `lib/api.ts` (single axios instance) attaches the token in a
   request interceptor ([`authRequestInterceptor`](../lib/api.ts)). All feature hooks
-  (`useWallets`, `useTransactions`, `useInstallments`, `useSparkline`) go through it.
+  (`useWallets`, `useTransactions`, `useBills`, `usePaylaterRates`) go through it.
 - **Server requests:** `/users/sync` ([`lib/auth/sync-user.ts`](../lib/auth/sync-user.ts))
   is called from server actions / the OAuth callback and passes the session's
   `access_token` explicitly (server client, request cookies — no browser globals).

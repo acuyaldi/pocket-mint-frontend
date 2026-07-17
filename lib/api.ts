@@ -12,7 +12,7 @@ import { AuthenticationRequiredError } from "@/lib/api-errors";
  * Defaults to "required": every current backend endpoint is user-scoped.
  * Use "none" only for genuinely public endpoints (there are none today).
  */
-export type ApiAuthMode = "required" | "none";
+type ApiAuthMode = "required" | "none";
 
 declare module "axios" {
   interface AxiosRequestConfig {

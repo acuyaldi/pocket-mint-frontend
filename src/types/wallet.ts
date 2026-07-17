@@ -7,8 +7,8 @@ export type WalletType =
   | "LOAN";
 
 export const ASSET_WALLET_TYPES: WalletType[] = ["CASH", "BANK", "E_WALLET"];
-export const CREDIT_WALLET_TYPES: WalletType[] = ["CREDIT_CARD", "PAYLATER"];
-export const LIABILITY_WALLET_TYPES: WalletType[] = [...CREDIT_WALLET_TYPES, "LOAN"];
+const CREDIT_WALLET_TYPES: WalletType[] = ["CREDIT_CARD", "PAYLATER"];
+const LIABILITY_WALLET_TYPES: WalletType[] = [...CREDIT_WALLET_TYPES, "LOAN"];
 
 export const isCreditWallet = (type: WalletType): boolean =>
   CREDIT_WALLET_TYPES.includes(type);

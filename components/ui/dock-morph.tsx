@@ -34,11 +34,11 @@ export interface DockMorphProps {
   "aria-label"?: string;
 }
 
-export interface DockMorphItemProps extends Omit<DockMorphItemData, "key"> {
+interface DockMorphItemProps extends Omit<DockMorphItemData, "key"> {
   className?: string;
 }
 
-export interface DockMorphItemRenderArgs {
+interface DockMorphItemRenderArgs {
   content: React.ReactNode;
   defaultTrigger: React.ReactNode;
   active: boolean;
@@ -109,7 +109,7 @@ const DockMorphItemContent = ({
   );
 };
 
-export const DockMorphItem = ({
+const DockMorphItem = ({
   className,
   label,
   icon,

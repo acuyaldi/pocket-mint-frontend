@@ -116,12 +116,3 @@ export async function logout() {
   revalidatePath("/", "layout");
   redirect("/");
 }
-
-// ─── Get Current User ────────────────────────────────────────────
-export async function getUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
-}

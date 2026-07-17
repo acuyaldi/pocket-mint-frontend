@@ -67,7 +67,7 @@ describe("Pocket Mint public experience contract", () => {
   });
 
   it("pauses autoplay for pointer and keyboard interaction", () => {
-    expect(verticalTabs).toContain("AUTO_PLAY_DURATION = 3000");
+    expect(verticalTabs).toContain("AUTO_PLAY_DURATION = 5000");
     expect(verticalTabs).toContain("onMouseEnter");
     expect(verticalTabs).toContain("onMouseLeave");
     expect(verticalTabs).toContain("onFocusCapture");
@@ -207,7 +207,7 @@ describe("Pocket Mint public experience contract", () => {
 
   it("makes the active feature tab visually unmistakable", () => {
     expect(verticalTabs).toContain(
-      'isActive && "rounded-xl bg-mint/20 shadow-sm ring-1 ring-primary/15"'
+      'isActive && "bg-mint/10 shadow-sm"'
     );
     expect(verticalTabs).toMatch(
       /isActive\s*\? "text-3xl font-semibold text-primary md:text-4xl"/

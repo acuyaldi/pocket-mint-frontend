@@ -35,7 +35,7 @@ export interface PayBillInput {
   date?: string;
 }
 
-export function addCalendarDays(dateKey: string, days: number): string {
+function addCalendarDays(dateKey: string, days: number): string {
   const [year, month, day] = dateKey.split("-").map(Number);
   const date = new Date(Date.UTC(year, month - 1, day + days));
   return date.toISOString().slice(0, 10);
