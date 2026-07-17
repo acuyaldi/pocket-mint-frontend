@@ -4,7 +4,6 @@ import { useCallback, useMemo, useState } from "react";
 import {
   ArrowDownLeft,
   ArrowUpRight,
-  Filter,
   Plus,
   Search,
   Shuffle,
@@ -60,7 +59,7 @@ function TransactionIcon({ type }: { type: Transaction["type"] }) {
   if (type === "TRANSFER") {
     return <Shuffle className="size-5 text-primary" />;
   }
-  return <ArrowDownLeft className="size-5 text-muted-foreground" />;
+  return <ArrowDownLeft className="size-5 text-coral" />;
 }
 
 export default function TransactionsPage() {
@@ -167,50 +166,44 @@ export default function TransactionsPage() {
     <div className="space-y-8">
       <PageHeader title="Transaksi" description="Jurnal keuangan Anda" />
 
-      <div className="flex flex-col gap-4 py-2 md:flex-row md:items-center md:justify-between">
-        <div className="relative w-full md:max-w-sm">
-          <Search className="absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            className="h-10 w-full rounded-lg border border-border bg-card py-2 pl-10 pr-4 text-sm outline-none transition-all focus:ring-1 focus:ring-primary"
-            placeholder="Cari transaksi..."
-            type="text"
-          />
-        </div>
-        <button
-          type="button"
-          onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
-        >
-          <Plus className="size-4" />
-          Tambah Transaksi
-        </button>
-      </div>
-
-      <div className="flex items-center gap-2 overflow-x-auto pb-2">
-        {TYPE_FILTERS.map((item) => (
+      <div className="space-y-3">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="relative w-full md:max-w-sm">
+            <Search className="absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="h-10 w-full rounded-lg border border-border bg-card py-2 pl-10 pr-4 text-sm outline-none transition-all focus:ring-1 focus:ring-primary"
+              placeholder="Cari transaksi..."
+              type="text"
+            />
+          </div>
           <button
-            key={item.key}
             type="button"
-            onClick={() => setTypeFilter(item.key)}
-            className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
-              typeFilter === item.key
-                ? "bg-primary text-primary-foreground"
-                : "border border-border bg-surface-high text-muted-foreground hover:bg-border/40"
-            }`}
+            onClick={() => setIsAddModalOpen(true)}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
           >
-            {item.label}
+            <Plus className="size-4" />
+            Tambah Transaksi
           </button>
-        ))}
-        <div className="mx-2 h-6 w-px bg-border" />
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-high px-4 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-border/40"
-        >
-          <Filter className="size-4" />
-          Lainnya
-        </button>
+        </div>
+
+        <div className="flex items-center gap-2 overflow-x-auto pb-2">
+          {TYPE_FILTERS.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => setTypeFilter(item.key)}
+              className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
+                typeFilter === item.key
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-border bg-surface-high text-muted-foreground hover:bg-border/40"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-10">
@@ -242,7 +235,11 @@ export default function TransactionsPage() {
                     <div className="flex min-w-0 items-center gap-4">
                       <div
                         className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${
-                          transaction.type === "INCOME" ? "bg-mint/10" : "bg-surface-high"
+                          transaction.type === "INCOME"
+                            ? "bg-mint/10"
+                            : transaction.type === "EXPENSE"
+                            ? "bg-coral/10"
+                            : "bg-surface-high"
                         }`}
                       >
                         <TransactionIcon type={transaction.type} />

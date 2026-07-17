@@ -9,6 +9,8 @@ import { PocketMintLogo } from "@/components/Logo";
 import { buttonVariants } from "@/components/ui/button";
 import { PulseBeams } from "@/components/ui/pulse-beams";
 import { cn } from "@/lib/utils";
+import dashboard from "@/playwright/screenshots/dashboard.png";
+
 
 function enter(delay: number, y = 20, reducedMotion = false) {
   return {
@@ -61,10 +63,10 @@ export function PocketMintHero() {
               href="/login?mode=register"
               className={cn(
                 buttonVariants({ size: "lg" }),
-                "landing-cta-sweep min-h-11 rounded-full px-4 shadow-sm shadow-primary/10 hover:text-primary focus-visible:text-primary"
+                "landing-cta-sweep min-h-11 rounded-[40px] px-[50px] py-[17px] text-base shadow-sm shadow-primary/20 hover:text-primary focus-visible:text-primary"
               )}
             >
-              Daftar
+              <span>Daftar</span>
             </Link>
           </div>
         </nav>
@@ -120,11 +122,11 @@ export function PocketMintHero() {
 
           <motion.div
             {...enter(0.5, 40, reducedMotion)}
-            className="mt-12 w-full rounded-3xl border border-border bg-card p-2 md:mt-16"
+            className="relative mt-12 w-full rounded-3xl border border-border bg-card p-2 md:mt-16"
           >
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
               <Image
-                src="/landing/dashboard.png"
+                src={dashboard}
                 alt="Dashboard Pocket Mint"
                 width={569}
                 height={552}
@@ -133,6 +135,7 @@ export function PocketMintHero() {
                 preload
               />
             </div>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 rounded-b-3xl bg-linear-to-t from-background to-transparent" />
           </motion.div>
           </section>
         </div>

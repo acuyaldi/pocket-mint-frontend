@@ -45,7 +45,7 @@ describe("PulseBeams", () => {
     expect(source).toContain("H366");
     expect(source).toContain("M886 164H730");
     expect(source).toContain("H492");
-    expect(source.match(/reverse: true/g)).toHaveLength(3);
+    expect(source.match(/reverse: true/g)).toHaveLength(5);
     expect(source).toMatch(
       /x1:\s*beam\.reverse\s*\?\s*\["135%", "55%", "-20%"\]/
     );
