@@ -184,8 +184,8 @@ export default function DashboardPage() {
           <CalendarClock className="size-[18px] text-amber" />
           <span className="text-sm text-muted-foreground">
             {activeBills.length > 0
-              ? `${activeBills.length} tagihan aktif`
-              : "Tidak ada tagihan aktif"}
+              ? `${activeBills.length} cicilan aktif`
+              : "Tidak ada cicilan aktif"}
           </span>
         </div>
       </section>
@@ -208,7 +208,7 @@ export default function DashboardPage() {
             className="group flex h-14 items-center justify-center gap-3 rounded-lg border border-border/60 bg-card px-4 text-sm font-semibold transition-all hover:border-primary/40 hover:bg-surface-low"
           >
             <ReceiptText className="size-5 text-primary transition-transform group-hover:scale-110" />
-            Tagihan
+            Cicilan
           </Link>
                   <button
             type="button"

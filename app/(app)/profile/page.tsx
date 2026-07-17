@@ -75,6 +75,7 @@ export default function ProfilePage() {
     setError(null);
     setSuccess(null);
 
+    // ── Client-side validation ───────────────────────────────────
     if (!form.currentPassword || !form.newPassword || !form.confirmPassword) {
       setError("Lengkapi semua field password terlebih dahulu.");
       return;
@@ -90,10 +91,55 @@ export default function ProfilePage() {
       return;
     }
 
+    if (form.newPassword === form.currentPassword) {
+      setError("Password baru tidak boleh sama dengan password saat ini.");
+      return;
+    }
+
+    if (!authUser?.email) {
+      setError("Session tidak valid. Silakan login kembali.");
+      return;
+    }
+
     setLoading(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 900));
+    const supabase = createClient();
+
+    // Verify current password by attempting sign-in.
+    // Supabase updateUser only requires a valid session; explicit current-password
+    // verification gives the user the feedback they expect and matches the spec.
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: authUser.email,
+      password: form.currentPassword,
+    });
+
+    if (signInError) {
+      setLoading(false);
+      setError("Password saat ini salah.");
+      return;
+    }
+
+    // Update to the new password on the freshly-authenticated session.
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: form.newPassword,
+    });
+
+    if (updateError) {
+      setLoading(false);
+      setError(updateError.message);
+      return;
+    }
+
+    // Invalidate the session — user must re-authenticate with the new password.
+    await supabase.auth.signOut();
     setLoading(false);
-    setSuccess("Form perubahan password sudah siap digunakan.");
+    setForm(initialState);
+    setSuccess("Password berhasil diubah. Mengarahkan ke halaman login...");
+
+    router.replace(
+      `/login?message=${encodeURIComponent(
+        "Password berhasil diubah. Silakan login dengan password baru."
+      )}`
+    );
   }
 
   return (
@@ -251,6 +297,7 @@ export default function ProfilePage() {
                   <Input
                     id="currentPassword"
                     type="password"
+                    autoComplete="current-password"
                     value={form.currentPassword}
                     onChange={(event) =>
                       setForm((current) => ({
@@ -278,6 +325,7 @@ export default function ProfilePage() {
                   <Input
                     id="newPassword"
                     type="password"
+                    autoComplete="new-password"
                     value={form.newPassword}
                     onChange={(event) =>
                       setForm((current) => ({
@@ -300,6 +348,7 @@ export default function ProfilePage() {
                   <Input
                     id="confirmPassword"
                     type="password"
+                    autoComplete="new-password"
                     value={form.confirmPassword}
                     onChange={(event) =>
                       setForm((current) => ({
@@ -328,8 +377,8 @@ export default function ProfilePage() {
 
               <div className="flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-muted-foreground">
-                  Perubahan disiapkan dengan validasi dasar sebelum dihubungkan ke
-                  aksi backend.
+                  Password akan diverifikasi dan diubah melalui Supabase Auth.
+                  Anda akan diminta login kembali setelah perubahan berhasil.
                 </p>
                 <Button
                   type="submit"

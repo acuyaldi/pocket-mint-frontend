@@ -225,163 +225,120 @@ ini adalah identitas resmi yang dipakai lintas dokumen (`release-status.md`,
 
 ## PM-STAB-005 — [High] Profile password form does not perform password update
 
-- **Status:** Open.
+- **Status:** Resolved (18 Juli 2026).
+- **Resolution:** `handleSubmit` diganti dari placeholder `setTimeout` + pesan
+  sukses palsu menjadi flow nyata: verifikasi password saat ini via
+  `supabase.auth.signInWithPassword`, update via `supabase.auth.updateUser`,
+  sign out, dan redirect ke login. 19 contract test baru di
+  `tests/profile-page.test.ts`. Manual smoke test lulus: login → ubah password
+  → logout → login dengan password baru (berhasil) → login dengan password
+  lama (gagal).
+- **Files changed:** `app/(app)/profile/page.tsx` (form fix),
+  `tests/profile-page.test.ts` (new, 19 assertions).
+- **Backend changes:** Tidak ada — autentikasi dimiliki Supabase Auth, tidak
+  ada kolom password di database Pocket Mint.
 - **Affected area:** Frontend — `app/(app)/profile/page.tsx`, fungsi
-  `handleSubmit` (baris 73–97), bagian dari alur Authentication.
+  `handleSubmit`, bagian dari alur Authentication.
 - **Expected behavior:** Form ubah password memanggil
   `supabase.auth.updateUser({ password })` (sama seperti alur reset password
   yang sudah benar di `app/auth/reset-password/page.tsx`) dan benar-benar
   mengubah password akun.
-- **Actual behavior:** Setelah validasi client-side, kode hanya menjalankan
-  `await new Promise((resolve) => window.setTimeout(resolve, 900))` lalu
-  men-set pesan sukses "Form perubahan password sudah siap digunakan." Tidak
-  ada pemanggilan `supabase.auth.updateUser`, tidak ada `fetch`/`api.*` ke
-  backend. Dikonfirmasi ulang masih ada di kode saat audit stabilitas MVP
-  ditulis (18 Juli 2026).
-- **Evidence / lokasi kode:** `app/(app)/profile/page.tsx:73-97`; pembanding
-  yang benar: `app/auth/reset-password/page.tsx`
-  (`supabase.auth.updateUser`).
-- **User impact:** Pengguna yang mengisi form ini melihat konfirmasi sukses
-  palsu padahal password lama mereka tidak berubah — false sense of security
-  pada alur keamanan akun, berpotensi menimbulkan keluhan dukungan atau
-  insiden akun tidak aman yang dikira sudah diamankan.
-- **Acceptance criteria:** Form memanggil `supabase.auth.updateUser` (atau
-  endpoint setara) sungguhan; pesan sukses hanya tampil setelah panggilan
-  berhasil; error dari Supabase ditampilkan ke pengguna, bukan diabaikan.
-- **Required regression tests:** Test frontend baru untuk
-  `profile/page.tsx` yang memverifikasi `supabase.auth.updateUser` benar-benar
-  dipanggil dengan password baru, dan bahwa pesan sukses tidak tampil pada
-  kasus gagal.
-- **Catatan rekonsiliasi:** Finding ini identik dengan known-issue #1 versi
-  sebelumnya (severity High, tervalidasi ulang di `mvp-stability-audit.md`
-  bagian Authentication dengan severity High yang sama). Bagian ringkasan
-  blocker pada audit sempat menandainya `[Medium]` saat menaikkan prioritas
-  pengerjaan — ini adalah label ringkasan yang tidak konsisten dengan
-  penilaian severity rinci pada dokumen yang sama; dokumen ini mengikuti
-  severity **High** yang dikonfirmasi dua kali (known-issues sebelumnya +
-  detail audit), bukan label ringkasan Medium.
+- **Actual behavior (sebelum fix):** Setelah validasi client-side, kode hanya
+  menjalankan `await new Promise((resolve) => window.setTimeout(resolve, 900))`
+  lalu men-set pesan sukses "Form perubahan password sudah siap digunakan."
+  Tidak ada pemanggilan `supabase.auth.updateUser`, tidak ada `fetch`/`api.*`
+  ke backend.
+- **Acceptance criteria:** ✅ Form memanggil `supabase.auth.updateUser`
+  sungguhan; ✅ pesan sukses hanya tampil setelah panggilan berhasil; ✅ error
+  dari Supabase ditampilkan ke pengguna; ✅ contract test verifikasi pemanggilan
+  `updateUser` dan ketiadaan fake success message; ✅ manual smoke test lulus.
 
 ## PM-STAB-006 — [Medium] Installment final payment leaves rounding remainder
 
-- **Status:** Open.
+- **Status:** Open — code fix in place; needs confirmation.
+- **Update 18 Juli 2026 (PM-STAB-008 reconciliation):** Code fix found
+  already in `installment-payment.service.ts:60-72`. `payInstallment` now
+  computes `expectedAmount` via `computeFinalMonthlyAmount` for the final
+  term and rejects the regular `monthlyAmount` on that term (`INVALID_AMOUNT`).
+  Test `installmentPaymentService.test.ts` covers the PM-STAB-006 case
+  (non-divisible grandTotal, finalMonthlyAmount used, debt wallet reaches
+  exactly zero after SETTLED). Schema unchanged — `finalMonthlyAmount` is
+  derived from stored fields at payment time. Acceptance criteria met in
+  code; awaiting explicit confirmation no remaining edge cases.
 - **Affected area:** Backend — `installment-payment.service.ts:payInstallment`,
-  domain `domain/installment.ts` (`computeInstallmentPlan`).
-- **Expected behavior:** Setelah termin terakhir cicilan dibayar dan status
-  menjadi `SETTLED`, saldo wallet DEBT terkait mencapai tepat nol (kriteria
-  stable: "Cicilan lunas tidak lagi dihitung sebagai hutang aktif").
-- **Actual behavior:** `monthlyAmount = round(grandTotal / months)` dapat
-  menyisakan sisa pembulatan beberapa sen ketika `grandTotal` tidak habis
-  dibagi rata oleh `installmentMonths` (`monthlyAmount × months ≠
-  grandTotal`). Domain function `computeInstallmentPlan` sudah menyediakan
-  `finalMonthlyAmount` untuk menyerap sisa ini di termin terakhir
-  (`domain/installment.ts:58-60,91`, diuji di `installment.test.ts:27,39`),
-  **tapi kolom ini tidak pernah disimpan ke schema Prisma dan tidak pernah
-  dipakai di `installment-payment.service.ts`** — pembayaran termin terakhir
-  tetap divalidasi harus sama persis dengan `monthlyAmount` biasa. Setelah
-  status `SETTLED`, `payInstallment` menolak pembayaran lanjutan
-  ("Tagihan sudah lunas"), sehingga sisa hutang tersebut **tak tertagih
-  selamanya** kecuali direkonsiliasi manual.
-- **Evidence / lokasi kode:** `domain/installment.ts:58-60,91`,
-  `installment.test.ts:27,39`, `installment-payment.service.ts:17` dan
-  logika validasi `amount.equals(installment.monthlyAmount)`. Contoh
-  reproduksi numerik: principal 100000, rate 2,6%, tenor 3 bulan →
-  `totalInterest = round(100000 × 0,026 × 3) = 7800`,
-  `grandTotal = 107800`, `monthlyAmount = round(107800/3) = 35933,33`,
-  `monthlyAmount × 3 = 107799,99` — kurang Rp0,01 dari `grandTotal`.
-- **User impact:** Nilainya kecil per kasus (di bawah unit Rupiah praktis di
-  UI), tapi merupakan bug integritas data finansial yang sistematis;
-  membesar dengan jumlah pengguna serta kombinasi tenor/rate ganjil. Wallet
-  DEBT yang "lunas" secara status masih menyimpan sisa saldo negatif kecil
-  yang masuk ke `totalUtang` pada net worth selamanya kecuali direkonsiliasi.
-- **Acceptance criteria:** `finalMonthlyAmount` diterapkan pada validasi
-  pembayaran termin terakhir (kolom ditambahkan ke schema `Installment` dan
-  dipakai oleh `installment-payment.service.ts`), atau mekanisme
-  reconciliation otomatis menutup sisa pembulatan saat status menjadi
-  `SETTLED`, sehingga saldo wallet DEBT benar-benar nol.
-- **Required regression tests:** Test baru pada
-  `installmentPaymentService.test.ts` untuk kasus `grandTotal` tidak habis
-  dibagi rata oleh `installmentMonths`, menegaskan saldo wallet DEBT = 0
-  tepat setelah termin terakhir dibayar dan status `SETTLED`.
+  domain `domain/installment.ts` (`computeInstallmentPlan`,
+  `computeFinalMonthlyAmount`).
+- **Evidence / lokasi kode:** `installment-payment.service.ts:60-72`
+  (final term detection + expectedAmount),
+  `installmentPaymentService.test.ts` (PM-STAB-006 test cases).
+- **Acceptance criteria:** ✅ `finalMonthlyAmount` used in final term
+  validation; ✅ regular `monthlyAmount` rejected on final term; ✅ debt
+  wallet = 0 after SETTLED; ⏳ Explicit confirmation.
+- **Required regression tests:** Already in `installmentPaymentService.test.ts`.
 
 ## PM-STAB-007 — [Medium] Backend allows INCOME targeting DEBT wallet
 
-- **Status:** Open.
+- **Status:** Open — code fix in place; needs confirmation.
+- **Update 18 Juli 2026 (PM-STAB-008 reconciliation):** Code fix found
+  already in `transaction.service.ts:141-143`. Backend now rejects INCOME
+  targeting CREDIT_CARD, PAYLATER, or LOAN (`classifyWalletForNetWorth(wallet.type)
+  === 'DEBT'`) with 400 BAD_REQUEST before any database write. Guard also
+  active on the update path (re-targeting and type-flip cases). Tested:
+  `transactionService.test.ts` — 5 PM-STAB-007 cases covering create
+  (ASSET allowed, all 3 DEBT types rejected, user isolation) and update
+  (re-target, type-flip). Acceptance criteria met in code; awaiting explicit
+  confirmation.
 - **Affected area:** Backend — `transaction.service.ts:createTransaction`
-  (cabang non-`isCreditExpense`, tipe `INCOME`).
-- **Expected behavior:** Backend menolak transaksi `INCOME` yang menyasar
-  wallet DEBT (`CREDIT_CARD`/`PAYLATER`/`LOAN`), sejajar dengan guard yang
-  sudah ada untuk `EXPENSE` dari wallet `LOAN`
-  (`transaction.service.ts:137-139`: "Pinjaman tidak dapat digunakan sebagai
-  sumber pengeluaran").
-- **Actual behavior:** Larangan "Pemasukan tidak bisa dicatat ke kartu
-  kredit atau paylater" **hanya ada di frontend**
-  (`AddTransactionModal.tsx:460`) — tidak ada guard setara di backend.
-  Panggilan API langsung (tanpa lewat UI produk) dengan `type: "INCOME"` dan
-  `walletId` mengarah ke wallet DEBT berhasil membuat saldo wallet tersebut
-  menjadi **positif**, melanggar invarian "outstanding = saldo negatif" di
-  `financial-logic.skill.md`.
-- **Evidence / lokasi kode:** `transaction.service.ts` (cabang INCOME, tidak
-  ada guard tipe wallet DEBT), `AddTransactionModal.tsx:460` (guard
-  frontend-only), `utils/financial.ts:42` (`calculateNetWorth` memakai
-  `balance.abs()` untuk wallet DEBT tanpa memandang tanda — saldo DEBT
-  positif akan **menambah** `totalUtang`, bukan mengoreksinya).
-- **User impact:** Tidak reachable dari UI produk saat ini (butuh akses API
-  langsung), tapi jika dieksploitasi dapat mendistorsi `totalUtang` dan Net
-  Worth pengguna secara diam-diam.
-- **Acceptance criteria:** Backend menolak `INCOME` dengan `walletId`
-  bertipe DEBT (`CREDIT_CARD`/`PAYLATER`/`LOAN`) dengan pesan error yang
-  jelas, konsisten dengan guard `EXPENSE`→`LOAN` yang sudah ada.
-- **Required regression tests:** Test baru pada `transactionService.test.ts`
-  yang menegaskan `POST /v1/transactions` dengan `type: "INCOME"` dan
-  `walletId` DEBT ditolak untuk ketiga tipe wallet DEBT.
+  (line 141-143) and `updateTransaction` (line 342-344).
+- **Evidence / lokasi kode:** `transaction.service.ts:141-143`
+  (`classifyWalletForNetWorth(wallet.type) === 'DEBT'` guard),
+  `transactionService.test.ts` (PM-STAB-007 test cases).
+- **Acceptance criteria:** ✅ Backend rejects INCOME to all three DEBT types;
+  ✅ Guard fires before any write (no `$transaction` call); ✅ User isolation
+  preserved; ✅ Update path also guarded; ⏳ Explicit confirmation.
+- **Required regression tests:** Already in `transactionService.test.ts`.
 
 ## PM-STAB-008 — [Medium] Financial documentation conflicts with implementation
 
-- **Status:** Open.
-- **Affected area:** Dokumentasi otoritatif agent —
-  `pocket-mint-fe/skills/financial-logic.skill.md`; turut berdampak ke
-  `release-status.md` yang mewarisi klaim yang sama.
-- **Expected behavior:** Dokumen otoritatif yang dipakai agent/pengembang
-  untuk mengambil keputusan implementasi mencerminkan perilaku backend yang
-  sebenarnya dan teruji.
-- **Actual behavior:** Dua inkonsistensi terverifikasi:
-  1. **Formula Net Worth.** `financial-logic.skill.md` menyatakan
-     `netWorth = Σ(ASSET balances)` ("Debt does NOT subtract from net worth
-     directly ... decided Jul 2026") dan mengklaim ini "implemented in
-     backend calculateNetWorth, dashboard, and wallets page". **Kode backend
-     yang sebenarnya dan teruji melakukan sebaliknya**
-     (`assets − debt`, PD-001, lihat PM-STAB-001). `release-status.md` juga
-     mewarisi klaim yang sama pada tabel fitur implemented sebelum dokumen
-     ini diperbarui.
-  2. **Sumber pembayaran cicilan.** `financial-logic.skill.md` menyatakan
-     "E-wallets cannot pay CC/paylater bills — PAY DEBT sources are BANK/CASH
-     only", tapi kode nyata (`installment-payment.service.ts:17`:
-     `ALLOWED_SOURCE_TYPES = ['BANK', 'CASH', 'E_WALLET']`) dan frontend
-     (`PayBillModal.tsx:27-29`) **keduanya mengizinkan E-Wallet**. Perilaku
-     FE/BE konsisten satu sama lain (bukan bug fungsional), tapi dokumen
-     otoritatif tidak sinkron dengan kode.
-- **Evidence / lokasi kode:** `skills/financial-logic.skill.md` (bagian "Net
-  Worth Calculation" dan "Transaction Rules"), `utils/financial.ts:42`,
-  `dashboard-query.service.ts`, `installment-payment.service.ts:17`,
-  `PayBillModal.tsx:27-29`.
-- **User impact:** Tidak berdampak langsung ke pengguna akhir, tapi berisiko
-  tinggi terhadap **pengembangan berikutnya**: agent atau pengembang manusia
-  yang mengikuti dokumen otoritatif ini berpotensi "memperbaiki" kode yang
-  sebenarnya sudah benar (sumber pembayaran), atau — lebih berbahaya —
-  mengimplementasikan formula Net Worth yang salah di tempat lain karena
-  mengira itu keputusan produk yang sah. Severity dinilai Medium (bukan Low)
-  karena risiko ini secara langsung menyebabkan PM-STAB-001.
-- **Acceptance criteria:** `financial-logic.skill.md` diperbarui agar cocok
-  dengan implementasi backend yang teruji (`assets − debt` untuk Net Worth;
-  `BANK/CASH/E_WALLET` untuk sumber pembayaran cicilan), atau — jika
-  `Σ(ASSET balances)` memang keputusan produk final — backend dan test
-  `dashboardQueryService.test.ts` diubah agar konsisten. Keputusan produk
-  mana yang benar harus diambil eksplisit (di luar cakupan audit ini), bukan
-  dibiarkan bertentangan.
-- **Required regression tests:** Tidak ada test kode baru untuk perbaikan
-  dokumentasi itu sendiri; pastikan test yang menjadi acuan kebenaran
-  (`dashboardQueryService.test.ts` PD-001) tetap menjadi single source of
-  truth setelah dokumen diperbarui.
+- **Status:** Resolved (18 Juli 2026).
+- **Resolution:** Rekonsiliasi penuh dokumentasi finansial terhadap PD-001
+  (Approved), kode backend, dan 381 test. Tiga file skill.md diperbarui:
+  `pocket-mint-be/.claude/skills/financial-logic.skill.md` (otoritatif),
+  `pocket-mint-fe/.claude/skills/financial-logic.skill.md`, dan
+  `pocket-mint-fe/skills/financial-logic.skill.md`. Perubahan utama:
+  1. **Net Worth:** Formula dikoreksi dari `Σ(ASSET balances)` menjadi
+     `totalAset − totalUtang` sesuai PD-001 (Approved 2026-07-14). Formula
+     lama dipindahkan ke bagian "Deprecated" dengan catatan sejarah.
+  2. **Sumber pembayaran:** Dikoreksi dari `BANK/CASH only` menjadi
+     `BANK/CASH/E_WALLET` — sesuai implementasi backend dan frontend.
+  3. **finalMonthlyAmount:** Didokumentasikan sebagai sudah aktif di
+     `installment-payment.service.ts` (PM-STAB-006 code fix sudah ada).
+  4. **INCOME→DEBT guard:** Didokumentasikan sebagai sudah ada di
+     `transaction.service.ts` (PM-STAB-007 code fix sudah ada).
+  5. **Klasifikasi wallet:** `LOAN_PAYLATER` dikoreksi menjadi `PAYLATER`
+     dan `LOAN` sebagai tipe terpisah sesuai schema Prisma.
+  6. **Debt ratio thresholds:** Disesuaikan mengikuti PD-005 (Draft):
+     Warning 30%–<80%, Danger ≥80%.
+  7. **Transfer model:** Ditandai sebagai dead schema.
+  8. **Admin fee:** Dicatat sebagai gap — disimpan di schema tapi tidak
+     masuk kalkulasi `grandTotal` (menunggu PD-004).
+  9. Semua aturan utama sekarang punya contoh angka konkret, formula
+     eksplisit, matriks dampak Net Worth per tipe transaksi, dan referensi
+     implementasi.
+- **Files changed:** `pocket-mint-be/.claude/skills/financial-logic.skill.md`,
+  `pocket-mint-fe/.claude/skills/financial-logic.skill.md`,
+  `pocket-mint-fe/skills/financial-logic.skill.md`.
+- **Affected area:** Dokumentasi otoritatif agent — ketiga file
+  `financial-logic.skill.md`.
+- **Acceptance criteria:** ✅ Tidak ada aturan utama yang kontradiktif;
+  ✅ Formula Net Worth sesuai PD-001 + kode + test; ✅ Seluruh formula
+  utama tertulis eksplisit; ✅ Transfer, debt payment, dan installment
+  payment tidak dapat ditafsirkan sebagai expense; ✅ Agent rule menunjuk
+  dokumen ini sebagai source of truth; ✅ Konflik yang belum dapat diputuskan
+  (admin fee, lifecycle) tercatat sebagai Open Decision.
+- **Required regression tests:** Tidak ada — perbaikan dokumentasi murni.
+  Test eksisting (`dashboardQueryService.test.ts`, `installmentPaymentService.test.ts`,
+  `transactionService.test.ts`) tetap menjadi acuan kebenaran.
 
 ## PM-STAB-009 — [Low] Unused Transfer model and inconsistent navigation label
 

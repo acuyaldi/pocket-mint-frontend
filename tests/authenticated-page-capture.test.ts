@@ -35,7 +35,7 @@ describe("authenticated page capture source contract", () => {
       '"Posisi keuangan bersih"',
       '"Dompet"',
       '"Transaksi"',
-      '"Tagihan"',
+      '"Cicilan"',
       '"Analitik"',
     ]) {
       expect(source).toContain(readyText);

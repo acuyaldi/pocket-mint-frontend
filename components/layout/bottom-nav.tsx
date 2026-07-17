@@ -25,7 +25,7 @@ const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Dompet", href: "/wallets", icon: Wallet },
   { label: "Transaksi", href: "/transactions", icon: ArrowLeftRight },
-  { label: "Tagihan", href: "/tagihan", icon: CalendarClock },
+  { label: "Cicilan", href: "/tagihan", icon: CalendarClock },
   { label: "Analitik", href: "/analytics", icon: BarChart3 },
 ];
 
@@ -48,7 +48,7 @@ export function BottomNav() {
             <Icon className="size-[18px]" />
             {item.href === "/tagihan" && dueBillCount > 0 ? (
               <span
-                aria-label={`${dueBillCount} tagihan perlu diperhatikan`}
+                aria-label={`${dueBillCount} cicilan perlu diperhatikan`}
                 className="absolute -right-3 -top-2 inline-flex min-w-4 items-center justify-center rounded-full bg-coral px-1 text-[9px] font-bold leading-4 text-white"
               >
                 {dueBillCount > 9 ? "9+" : dueBillCount}

@@ -47,7 +47,7 @@ export default function TagihanPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <LoaderCircle className="size-10 animate-spin text-primary" aria-label="Memuat tagihan" />
+        <LoaderCircle className="size-10 animate-spin text-primary" aria-label="Memuat cicilan" />
       </div>
     );
   }
@@ -55,7 +55,7 @@ export default function TagihanPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Tagihan"
+        title="Cicilan"
         description="Pantau semua pemakaian kartu kredit dan paylater, baik satu kali bayar maupun cicilan."
       />
 
@@ -63,19 +63,19 @@ export default function TagihanPage() {
         <div className="flex items-center gap-3 rounded-xl border border-amber/30 bg-amber/10 p-4" role="status">
           <AlertTriangle className="size-5 shrink-0 text-amber" />
           <p className="text-sm font-medium text-foreground">
-            {dueSoonCount} tagihan terlambat atau jatuh tempo dalam 3 hari ke depan.
+            {dueSoonCount} cicilan terlambat atau jatuh tempo dalam 3 hari ke depan.
           </p>
         </div>
       ) : null}
 
       <section className="grid gap-4 md:grid-cols-3">
-        <StatCard label="Tagihan Aktif" value={String(activeBills.length)} helper="Satu kali bayar dan cicilan" />
+        <StatCard label="Cicilan Aktif" value={String(activeBills.length)} helper="Satu kali bayar dan cicilan" />
         <StatCard label="Pembayaran Berikutnya" value={formatCurrency(amountDue)} helper={`${dueSoonCount} perlu diperhatikan`} />
-        <StatCard label="Total Belum Lunas" value={formatCurrency(outstanding)} helper="Akumulasi seluruh tagihan aktif" />
+        <StatCard label="Total Belum Lunas" value={formatCurrency(outstanding)} helper="Akumulasi seluruh cicilan aktif" />
       </section>
 
       <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-        <CalendarClock className="size-5 text-primary" /> Daftar Tagihan
+        <CalendarClock className="size-5 text-primary" /> Daftar Cicilan
       </div>
 
       {activeBills.length > 0 ? (
@@ -87,7 +87,7 @@ export default function TagihanPage() {
       ) : (
         <div className="rounded-xl border border-dashed border-border bg-card py-12 text-center">
           <CircleDollarSign className="mx-auto size-8 text-muted-foreground" />
-          <p className="mt-3 text-sm font-medium text-foreground">Belum ada tagihan aktif.</p>
+          <p className="mt-3 text-sm font-medium text-foreground">Belum ada cicilan aktif.</p>
           <p className="mt-1 text-xs text-muted-foreground">Pemakaian kartu kredit atau paylater akan muncul di sini.</p>
         </div>
       )}

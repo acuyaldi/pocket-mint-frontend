@@ -188,7 +188,7 @@ export default function AnalyticsPage() {
     }
 
     if (activeBillCount > 0) {
-      items.push(`${activeBillCount} tagihan aktif perlu dipantau.`);
+      items.push(`${activeBillCount} cicilan aktif perlu dipantau.`);
     }
 
     return items.slice(0, 4);

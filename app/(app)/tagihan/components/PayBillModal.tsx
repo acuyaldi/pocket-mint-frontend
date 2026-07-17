@@ -57,7 +57,7 @@ export function PayBillModal({
       >
         <header className="flex items-start justify-between border-b border-border bg-surface-low p-6">
           <div>
-            <h2 id="pay-bill-title" className="text-xl font-semibold text-primary">Bayar Tagihan</h2>
+            <h2 id="pay-bill-title" className="text-xl font-semibold text-primary">Bayar Cicilan</h2>
             <p className="mt-1 text-sm text-muted-foreground">{bill.description || bill.walletName}</p>
           </div>
           <button type="button" aria-label="Tutup pembayaran" onClick={onClose} disabled={payBill.isPending}>
@@ -97,7 +97,7 @@ export function PayBillModal({
             </div>
             {sourceWallets.length === 0 ? (
               <p className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-                Tambahkan Kas, Bank, atau E-Wallet untuk membayar tagihan.
+                Tambahkan Kas, Bank, atau E-Wallet untuk membayar cicilan.
               </p>
             ) : null}
           </section>

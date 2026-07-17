@@ -1,63 +1,98 @@
-# Financial Logic — Pocket Mint
+# Financial Logic — Pocket Mint (Frontend)
 > Read this before touching any wallet, transaction, installment, or calculation logic.
+
+**Synced with backend financial-logic.skill.md on 2026-07-18.**
+Source of truth for financial rules is the backend implementation and
+approved product decisions (PD-001 ff.). This document summarizes the
+rules the frontend must follow.
 
 ## Wallet Types
 
 ### ASSET
-- Positive contribution to net worth
-- Examples: e-wallet (GoPay, OVO), bank account, cash, investment
-- Balance displayed as positive, green
+- Types: `CASH`, `BANK`, `E_WALLET`
+- Balance stored as positive. Displayed in Mint.
+- Contribute to `totalAset` at face value.
+- `isAssetWallet` / `ASSET_WALLET_TYPES` in `src/types/wallet.ts`.
 
 ### DEBT
-- Types: `CREDIT_CARD`, `LOAN_PAYLATER` (see `isDebtWallet` in `src/types/wallet.ts`)
-- Examples: credit card, paylater (Kredivo, Akulaku), loan
-- **Outstanding is stored as a NEGATIVE balance** — display `Math.abs(balance)` in red
-- Shows: outstanding amount, credit limit, utilization %
-- Spendable = `creditLimit - |balance|` (assets: spendable = balance)
+- Types: `CREDIT_CARD`, `PAYLOAD`, `LOAN`
+- **Outstanding is stored as a NEGATIVE balance** — display `Math.abs(balance)` in Coral.
+- `isDebtWallet` in `src/types/wallet.ts`.
+- `spendable = creditLimit - |balance|` (for asset wallets: `spendable = balance`).
 
-## Net Worth Calculation
-```
-netWorth = Σ(ASSET balances)   // assets only
-```
-- Debt does NOT subtract from net worth directly — assets shrink when the repayment transaction happens (decided Jul 2026; implemented in backend `calculateNetWorth`, dashboard, and wallets page)
-- Recalculate on every transaction, wallet update, or installment payment
-- Display with +/- delta vs last month
+## Net Worth Calculation (PD-001 — Approved)
 
-## Debt Ratio
 ```
-debtRatio = totalDebt / totalCreditLimit * 100
+totalAset  = Σ(balance) for ASSET wallets
+totalUtang = Σ(|balance|) for DEBT wallets
+netWorth   = totalAset − totalUtang
 ```
-- Safe threshold: < 30% → status "Aman" (green)
-- Warning: 30–60% → status "Hati-hati" (orange)
-- Danger: > 60% → status "Bahaya" (red)
 
-## Installment — Model A
-- Only from a DEBT wallet, EXPENSE type; grand total (principal + flat interest) is locked at creation by the backend
-- Valid tenors: 3 / 6 / 12 months (backend `VALID_TENORS` — keep frontend `TENORS` in sync)
-- Interest: flat % per month; `totalInterest = round(principal * rate/100 * months)`
-- Monthly tracking: paid months / total months; progress = (paidMonths / totalMonths) * 100
-- Completion: when paidMonths === totalMonths
+- Debt IS subtracted from net worth. This is PD-001 (Approved 2026-07-14).
+- Net worth may be negative — never clamp to zero.
+- Compute from live wallet balances; never store.
+- **Important:** Call `GET /v1/dashboard/summary` from the backend for the
+  canonical calculation. Do NOT recompute independently in frontend.
 
-## Paylater Rates
-- Wallet-stored rates win (`wallet.interestRate`, `wallet.adminFee` + `adminFeeType`)
-- Fallback: provider presets from backend endpoint via `usePaylaterRates()` (`src/features/installments/hooks/useInstallments.ts`), name-matched to the wallet
-- Do NOT hardcode preset constants in components
+### Deprecated
+A previous formula (`netWorth = Σ(ASSET balances)`, assets only) was
+superseded by PD-001. If you find code using this old formula, flag it.
 
 ## Transaction Rules
-- Backend types: INCOME / EXPENSE / TRANSFER only
-- Transfer = ONE transaction record with `walletId` (source, decremented) + `toWalletId` (destination, incremented)
-- Debt repayment = TRANSFER from asset wallet into debt wallet (negative balance increments toward 0). The UI "PAY DEBT" tab maps to this — it is not a separate backend type
-- E-wallets cannot pay CC/paylater bills — PAY DEBT sources are BANK/CASH only
-- Category is optional metadata, not used in core calculations
+
+- Backend types: `INCOME`, `EXPENSE`, `TRANSFER`.
+- Transfer = ONE transaction record with `walletId` (source) + `toWalletId` (destination).
+- Debt repayment = TRANSFER from asset wallet into debt wallet — **NOT EXPENSE**.
+- Payment sources for bills: `BANK`, `CASH`, `E_WALLET` (all asset types allowed).
+- Category is metadata — not used in core calculations.
+
+### Net Worth impact by transaction type
+
+| Transaction | Net Worth |
+|---|---|
+| INCOME to ASSET | +amount (assets ↑) |
+| EXPENSE from ASSET | −amount (assets ↓) |
+| Credit expense (installment) | −grandTotal (debt ↑) |
+| Transfer asset→asset | 0 (relocation) |
+| Transfer asset→debt (payment) | 0 (assets ↓, debt ↓) |
+
+### INCOME to DEBT wallet
+Backend rejects INCOME targeting CREDIT_CARD, PAYLATER, or LOAN wallets.
+Frontend must also block this in the UI (`AddTransactionModal`).
+
+## Installment Rules
+
+- Created from EXPENSE on CREDIT_CARD/PAYLATER wallet.
+- Grand total (principal + interest) locked at creation by backend.
+- `monthlyAmount = round(grandTotal / months)`, stored in Transaction.
+- Final term uses a slightly different amount to absorb rounding remainder.
+- Payment is TRANSFER from asset wallet → debt wallet (NOT a new expense).
+- Progress: `paidTerms / installmentMonths * 100`.
+- Completed when `paidTerms >= installmentMonths`, status = `SETTLED`.
+
+## Debt Ratio
+
+```
+debtRatio = totalUtang / totalCreditLimit * 100
+```
+
+Thresholds:
+- Normal: < 30%
+- Warning: 30% to < 80%
+- Danger: ≥ 80%
 
 ## Currency & Precision
-- Primary: IDR (Indonesian Rupiah)
-- Display format: `Rp 1.000.000` (dots as thousand separator, no decimal for IDR)
-- Frontend: always `formatCurrency` from `@/lib/utils` — never write a new formatter
-- Backend: all money is `Prisma.Decimal` end-to-end; never `number`/`float`/`parseInt`. Convert with `parseFloat(val.toString())` only at the response boundary
 
-## Business Rule Constraints
-- A DEBT wallet cannot owe more than its credit limit: `|balance| <= creditLimit`
-- Deleting a wallet requires confirmation if it has transaction history
-- Installment cannot be deleted mid-progress — must be marked complete or cancelled
-- Net worth is always computed, never stored — derive from live wallet balances
+- Primary: IDR (Indonesian Rupiah).
+- Display: `formatCurrency` from `@/lib/utils` — never write a new formatter.
+- Frontend parses Decimal values via the API response boundary.
+- For display-only aggregates, `Number()` is tolerated for IDR (no sub-rupiah
+  display), but prefer the backend's canonical values for key metrics.
+
+## Business Rules
+
+- DEBT wallet cannot owe more than credit limit: `|balance| ≤ creditLimit`.
+- Wallet deletion requires confirmation if it has transaction history.
+- Backend validation always takes priority over frontend.
+- Never display fabricated financial values — distinguish loading, empty,
+  error, and zero states.
