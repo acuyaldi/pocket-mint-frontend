@@ -13,11 +13,15 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/page-header";
 import { useBills } from "@/src/features/bills/hooks/useBills";
-import { useTransactions } from "@/src/features/transactions/hooks/useTransactions";
+import { useAllTransactions } from "@/src/features/transactions/hooks/useTransactions";
 import { isDebtWallet } from "@/src/types/wallet";
 import { useWallets } from "@/src/features/wallets/hooks/useWallets";
-
-type PeriodFilter = "month" | "quarter" | "six-months";
+import {
+  buildMonthlyFlow,
+  filterTransactionsByPeriod,
+  getPeriodMonthKeys,
+  type PeriodFilter,
+} from "./period";
 
 const PERIODS: Array<{ key: PeriodFilter; label: string }> = [
   { key: "month", label: "Bulan ini" },
@@ -25,21 +29,11 @@ const PERIODS: Array<{ key: PeriodFilter; label: string }> = [
   { key: "six-months", label: "6 bulan" },
 ];
 
-function getMonthKey(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
-
 function getMonthLabel(monthKey: string) {
   const [year, month] = monthKey.split("-").map(Number);
   return new Intl.DateTimeFormat("id-ID", { month: "short" }).format(
     new Date(year, month - 1, 1),
   );
-}
-
-function getPeriodStart(period: PeriodFilter) {
-  const now = new Date();
-  const monthsBack = period === "month" ? 0 : period === "quarter" ? 2 : 5;
-  return new Date(now.getFullYear(), now.getMonth() - monthsBack, 1);
 }
 
 function formatPercent(value: number) {
@@ -94,7 +88,7 @@ function EmptyPanel({ children }: { children: React.ReactNode }) {
 export default function AnalyticsPage() {
   const [period, setPeriod] = useState<PeriodFilter>("six-months");
   const { data: transactionData, isLoading: isTransactionsLoading } =
-    useTransactions();
+    useAllTransactions();
   const { data: walletData } = useWallets();
   const { data: bills = [] } = useBills();
   const activeBillCount = bills.filter(
@@ -104,14 +98,9 @@ export default function AnalyticsPage() {
   const transactions = useMemo(() => transactionData ?? [], [transactionData]);
   const wallets = useMemo(() => walletData ?? [], [walletData]);
 
-  const periodStart = useMemo(() => getPeriodStart(period), [period]);
   const filteredTransactions = useMemo(
-    () =>
-      transactions.filter((transaction) => {
-        const date = new Date(transaction.date);
-        return date >= periodStart && date <= new Date();
-      }),
-    [periodStart, transactions],
+    () => filterTransactionsByPeriod(transactions, period),
+    [transactions, period],
   );
 
   const totals = useMemo(() => {
@@ -148,27 +137,10 @@ export default function AnalyticsPage() {
   const debtRatio =
     debtSummary.limit > 0 ? (debtSummary.debt / debtSummary.limit) * 100 : 0;
 
-  const monthlyFlow = useMemo(() => {
-    const now = new Date();
-    const keys = Array.from({ length: 6 }, (_, index) => {
-      const date = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1);
-      return getMonthKey(date);
-    });
-
-    return keys.map((key) => {
-      const monthTransactions = transactions.filter(
-        (transaction) => getMonthKey(new Date(transaction.date)) === key,
-      );
-      return monthTransactions.reduce(
-        (acc, transaction) => {
-          if (transaction.type === "INCOME") acc.income += transaction.amount;
-          if (transaction.type === "EXPENSE") acc.expenses += transaction.amount;
-          return acc;
-        },
-        { month: key, income: 0, expenses: 0 },
-      );
-    });
-  }, [transactions]);
+  const monthlyFlow = useMemo(
+    () => buildMonthlyFlow(transactions, getPeriodMonthKeys("six-months")),
+    [transactions],
+  );
 
   const maxMonthlyAmount = Math.max(
     1,
