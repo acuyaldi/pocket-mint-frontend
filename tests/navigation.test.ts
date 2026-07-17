@@ -9,9 +9,9 @@ const bottomNav = readFileSync(root + "components/layout/bottom-nav.tsx", "utf8"
 const legacyRoute = readFileSync(root + "app/(app)/cicilan/page.tsx", "utf8");
 
 describe("bill navigation source contract", () => {
-  it("uses the Tagihan label and route on desktop and mobile", () => {
+  it("uses the Cicilan label and route on desktop and mobile", () => {
     for (const source of [sidebar, bottomNav]) {
-      expect(source).toContain('label: "Tagihan"');
+      expect(source).toContain('label: "Cicilan"');
       expect(source).toContain('href: "/tagihan"');
       expect(source).not.toContain('href: "/cicilan"');
     }
@@ -22,7 +22,7 @@ describe("bill navigation source contract", () => {
       expect(source).toContain("useDueBillCount()");
       expect(source).toContain("dueBillCount > 0");
       expect(source).toContain('dueBillCount > 9 ? "9+"');
-      expect(source).toContain("tagihan perlu diperhatikan");
+      expect(source).toContain("cicilan perlu diperhatikan");
     }
   });
 

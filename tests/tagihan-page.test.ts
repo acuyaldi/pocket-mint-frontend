@@ -8,7 +8,7 @@ const page = readFileSync(root + "app/(app)/tagihan/page.tsx", "utf8");
 const card = readFileSync(root + "app/(app)/tagihan/components/BillCard.tsx", "utf8");
 const modal = readFileSync(root + "app/(app)/tagihan/components/PayBillModal.tsx", "utf8");
 
-describe("Tagihan page source contract", () => {
+describe("Cicilan page source contract", () => {
   it("renders full and installment bills with one card", () => {
     expect(page).toContain("useBills()");
     expect(page).toContain("<BillCard");

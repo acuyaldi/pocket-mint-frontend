@@ -12,7 +12,7 @@ export const RELEASES: Release[] = [
     title: "MVP Beta",
     publishedAt: "2026-07-18",
     summary:
-      "Alur inti Pocket Mint (autentikasi, dompet, transaksi, cicilan/tagihan, dashboard, analitik) terhubung end-to-end dari frontend ke backend dengan automated test.",
+      "Alur inti Pocket Mint (autentikasi, dompet, transaksi, cicilan, dashboard, analitik) terhubung end-to-end dari frontend ke backend dengan automated test.",
     status: "beta",
     changes: {
       added: [
@@ -21,7 +21,7 @@ export const RELEASES: Release[] = [
         "Manajemen dompet: buat, ubah, hapus, dan sparkline saldo",
         "Pencatatan transaksi income, expense, dan transfer antar-dompet",
         "Ringkasan bulanan (pemasukan vs pengeluaran)",
-        "Cicilan dan tagihan: pembuatan, daftar, dan pembayaran",
+        "Cicilan: pembuatan, daftar, dan pembayaran",
         "Dashboard dengan net worth, ringkasan dompet, dan aktivitas terbaru",
         "Halaman analitik: arus kas, kategori, dan komposisi dompet",
         "Daftar kategori transaksi (read-only)",
@@ -32,13 +32,13 @@ export const RELEASES: Release[] = [
       ],
     },
     highlights: [
-      "QA manual bertanggal untuk rute privat, dompet, transfer, kartu kredit, dan tagihan (docs/qa/wallet-billing-flow.md, 17 Juli 2026)",
+      "QA manual bertanggal untuk rute privat, dompet, transfer, kartu kredit, dan cicilan (docs/qa/wallet-billing-flow.md, 17 Juli 2026)",
       "CI mencakup typecheck, test, build, dan pemindaian artefak autentikasi lama pada bundle produksi",
     ],
     knownIssues: [
       "Form ubah password di halaman Profil belum benar-benar memanggil API (lihat docs/releases/known-issues.md #1)",
       "Tombol \"Ekspor laporan\" di halaman Analitik belum berfungsi (known-issues.md #2)",
-      "Label navigasi \"Tagihan\"/\"Analitik\" menyimpang dari kontrak desain (known-issues.md #5)",
+      "Label navigasi \"Analitik\" menyimpang dari kontrak desain 5-item (known-issues.md #5)",
     ],
   },
 ];
