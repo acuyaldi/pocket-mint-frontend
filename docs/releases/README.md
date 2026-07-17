@@ -105,27 +105,38 @@ dibuat dan rilis diumumkan.
 
 ## 6. Cara memperbarui source of truth changelog
 
-Source of truth changelog adalah `CHANGELOG.md` di root masing-masing
-repo (`pocket-mint-fe/CHANGELOG.md` dan `pocket-mint-be/CHANGELOG.md`).
-Belum ada file ini di kedua repo (lihat `known-issues.md` #7) — buat saat
-rilis pertama dibuat menggunakan `templates/release-template.md`.
+Source of truth changelog `pocket-mint-fe` adalah
+`pocket-mint-fe/src/lib/changelog.ts` (array `RELEASES`, tervalidasi oleh
+`validateRelease`/`assertValidReleases` dan diuji di `tests/changelog.test.ts`)
+— **bukan** file Markdown terpisah. `/changelog` dan bagian "Yang Baru di
+Pocket Mint" pada landing page (`app/page.tsx`) sama-sama mengimpor
+`getReleases()`/`getLatestRelease()` dari file ini, jadi tidak ada data
+rilis yang di-hardcode dua kali. Format data mengikuti `src/types/changelog.ts`
+(`Release`, `ReleaseChanges`, `ReleaseStatus`).
 
-Langkah:
+`pocket-mint-be` belum punya perubahan yang butuh changelog terpisah; jika
+suatu rilis nanti mencakup perubahan backend yang terlihat pengguna/operator,
+buat struktur setara (`pocket-mint-be/src/lib/changelog.ts` atau sejenisnya)
+mengikuti pola yang sama — jangan gabungkan changelog dua repo jadi satu
+sumber data.
 
-1. Salin `templates/release-template.md`, isi seluruh bagian yang relevan
-   (lihat bagian 4 di atas).
-2. Tambahkan entri baru **di bagian paling atas** `CHANGELOG.md`, di bawah
-   judul file, sebelum entri versi sebelumnya (urutan terbaru → terlama).
-3. Simpan di repo yang perubahannya benar-benar terjadi. Jika suatu rilis
-   mencakup perubahan FE dan BE, catat di kedua `CHANGELOG.md` masing-masing
-   dengan scope yang jelas — jangan menggabungkan changelog dua repo jadi
-   satu file.
-4. Commit `CHANGELOG.md` sebagai bagian dari PR rilis, direview sebelum
-   merge — bukan ditambahkan setelah tag dibuat.
+Langkah menambah rilis baru:
+
+1. Salin bentuk objek pada `templates/release-template.md`, isi seluruh
+   bagian yang relevan (lihat bagian 4 di atas) sebagai objek `Release`.
+2. Tambahkan objek baru ke array `RELEASES` di `src/lib/changelog.ts`.
+   Urutan penulisan dalam array tidak penting — `getReleases()` selalu
+   mengurutkan newest-first berdasarkan `version` lalu `publishedAt` lewat
+   `sortReleases()`.
+3. Jalankan `npx vitest run tests/changelog.test.ts` — `assertValidReleases`
+   akan melempar error jika field wajib hilang, format `version`/`publishedAt`
+   salah, atau ada `version` duplikat.
+4. Commit perubahan `src/lib/changelog.ts` sebagai bagian dari PR rilis,
+   direview sebelum merge — bukan ditambahkan setelah tag dibuat.
 
 ## 7. Cara membuat Git tag
 
-Setelah `CHANGELOG.md` di-merge ke branch utama:
+Setelah perubahan pada `src/lib/changelog.ts` di-merge ke branch utama:
 
 ```bash
 git checkout main
@@ -139,8 +150,8 @@ Aturan tag:
 - Format `vMAJOR.MINOR.PATCH`, selalu dengan prefix `v`.
 - Selalu annotated tag (`-a`), bukan lightweight tag, agar punya pesan dan
   metadata author/tanggal.
-- Tag dibuat pada commit yang sama dengan commit merge `CHANGELOG.md`,
-  bukan commit sesudahnya.
+- Tag dibuat pada commit yang sama dengan commit merge perubahan
+  `src/lib/changelog.ts`, bukan commit sesudahnya.
 - Tag FE dan BE independen — beri nama sama hanya jika kebetulan rilis
   bersamaan, jangan dipaksakan sinkron.
 

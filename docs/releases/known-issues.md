@@ -377,11 +377,14 @@ ini adalah identitas resmi yang dipakai lintas dokumen (`release-status.md`,
   Prisma tetap hijau. Bila label nav diganti, tambahkan/perbarui test
   navigasi yang menegaskan label persis sesuai `skills/design.md`.
 
-## PM-STAB-010 — [Low] Missing integration, changelog, backup, and restore validation
+## PM-STAB-010 — [Low → narrowed] Missing integration test coverage, backup, and restore validation
 
-- **Status:** Open.
-- **Affected area:** Operasional — `pocket-mint-be` test suite, root kedua
-  repo, prosedur disaster recovery.
+- **Status:** Open — narrowed. *(Updated 18 Juli 2026, PM-STAB-010B: bagian
+  changelog resolved di `pocket-mint-fe`, lihat sub-item 2 di bawah. Sisa
+  sub-item 1 dan 3 tetap Open.)*
+- **Affected area:** Operasional — `pocket-mint-be` test suite, prosedur
+  disaster recovery. (Sub-item changelog sebelumnya di sini sudah
+  diselesaikan di `pocket-mint-fe`; lihat catatan sub-item 2.)
 - **Expected behavior:** Seluruh test integrasi backend dijalankan dan
   lulus dengan bukti; changelog/release notes tersedia
   (`stable-criteria.md` — Release Readiness); backup dan proses pemulihan
@@ -391,32 +394,43 @@ ini adalah identitas resmi yang dipakai lintas dokumen (`release-status.md`,
      `pocket-mint-be/test/prismaAdapter.integration.test.ts` memakai
      `describe.skipIf(!TEST_DATABASE_URL)`; `npx vitest run` melaporkan
      366 lulus, 0 gagal, **4 skip** karena `TEST_DATABASE_URL` tidak diset
-     di lingkungan audit.
-  2. Tidak ada `CHANGELOG.md` atau release notes: pencarian `CHANGELOG*` di
-     kedua repo hanya menemukan file di dalam `node_modules` (dependency
-     pihak ketiga).
+     di lingkungan audit. **Masih Open.**
+  2. **Resolved (18 Juli 2026, PM-STAB-010B) untuk `pocket-mint-fe`:**
+     source of truth changelog terstruktur ditambahkan di
+     `pocket-mint-fe/src/lib/changelog.ts` (array `RELEASES`, tervalidasi
+     `assertValidReleases`, diuji `tests/changelog.test.ts`), dikonsumsi
+     oleh route `/changelog` (`app/changelog/page.tsx`) dan ringkasan
+     rilis terbaru di landing page (`app/page.tsx`, section "Yang Baru di
+     Pocket Mint") — satu sumber data, tidak di-hardcode dua tempat.
+     Baseline rilis `0.1.0` (status `beta`, MVP Beta) berisi hanya fitur
+     yang terverifikasi di `release-status.md` dan mencantumkan known
+     issue material sebagai `knownIssues`. `pocket-mint-be` **belum**
+     punya struktur setara — tetap Open untuk backend.
   3. Tidak ada bukti uji backup & restore data produksi: satu-satunya
      aktivitas yang mendekati adalah replay migrasi skema pada database
      PostgreSQL disposable lokal
      (`docs/prisma-migration-reconciliation.md` §6) — itu uji migrasi
-     skema, bukan uji backup/restore data pengguna.
+     skema, bukan uji backup/restore data pengguna. **Masih Open.**
 - **Evidence / lokasi kode:**
-  `pocket-mint-be/test/prismaAdapter.integration.test.ts`; root
-  `pocket-mint-fe` dan `pocket-mint-be` (tidak ada `CHANGELOG.md`);
-  `pocket-mint-be/docs/prisma-migration-reconciliation.md` §6.
-- **User impact:** Tidak memblokir fungsi produk saat ini, tapi menghambat
-  kriteria Release Readiness dan Reliability, serta meninggalkan disaster
+  `pocket-mint-be/test/prismaAdapter.integration.test.ts`;
+  `pocket-mint-fe/src/lib/changelog.ts`, `pocket-mint-fe/src/types/changelog.ts`,
+  `pocket-mint-fe/app/changelog/page.tsx`, `pocket-mint-fe/app/page.tsx`,
+  `pocket-mint-fe/tests/changelog.test.ts` (sub-item 2, FE);
+  `pocket-mint-be/docs/prisma-migration-reconciliation.md` §6 (sub-item 3).
+- **User impact:** Sub-item 2 tidak lagi menghambat Release Readiness untuk
+  `pocket-mint-fe`. Sub-item 1 dan 3 tetap tidak memblokir fungsi produk
+  saat ini, tapi menghambat kriteria Reliability dan meninggalkan disaster
   recovery data finansial pengguna belum terbukti dari repository.
 - **Acceptance criteria:** 4 test integrasi Prisma dijalankan dengan
-  `TEST_DATABASE_URL` dan hasilnya didokumentasikan; `CHANGELOG.md`
-  ditambahkan di kedua repo dan dipelihara per rilis; uji backup/restore
-  data produksi (bukan hanya skema) dilakukan dan hasilnya didokumentasikan
-  dengan tanggal.
+  `TEST_DATABASE_URL` dan hasilnya didokumentasikan; ✅ changelog
+  terstruktur ditambahkan dan dipelihara per rilis di `pocket-mint-fe`
+  (belum di `pocket-mint-be`); uji backup/restore data produksi (bukan
+  hanya skema) dilakukan dan hasilnya didokumentasikan dengan tanggal.
 - **Required regression tests:** Jalankan
   `TEST_DATABASE_URL=<disposable-db-url> npx vitest run` di CI atau lokal
-  dan pastikan 370/370 lulus (0 skip); tidak ada test kode baru untuk
-  changelog/backup, itu adalah aktivitas operasional yang didokumentasikan
-  terpisah.
+  dan pastikan 370/370 lulus (0 skip); `tests/changelog.test.ts` sudah ada
+  untuk sub-item 2 (FE); tidak ada test kode baru untuk backup, itu adalah
+  aktivitas operasional yang didokumentasikan terpisah.
 
 ---
 

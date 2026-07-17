@@ -14,20 +14,23 @@ Lihat `README.md` di folder ini untuk penjelasan tiap langkah.
 - [ ] Nomor versi ditentukan sesuai aturan patch/minor/major di
       `README.md` bagian 2, termasuk aturan major tetap `0` selama belum
       Public Stable.
-- [ ] `CHANGELOG.md` diperbarui menggunakan `templates/release-template.md`,
-      ditambahkan di paling atas file.
-- [ ] Setiap entri `Added`/`Improved`/`Fixed`/`Security` sudah diverifikasi
+- [ ] `src/lib/changelog.ts` (`RELEASES`) diperbarui dengan entri baru,
+      mengikuti bentuk pada `templates/release-template.md`.
+- [ ] `npx vitest run tests/changelog.test.ts` lulus (validasi field wajib,
+      format versi/tanggal, dan versi duplikat).
+- [ ] Setiap entri `added`/`improved`/`fixed`/`security` sudah diverifikasi
       end-to-end (bukan UI-only) — lihat README.md bagian 10.
-- [ ] `Known Issues` pada entri rilis konsisten dengan `known-issues.md`
+- [ ] `knownIssues` pada entri rilis konsisten dengan `known-issues.md`
       (tidak ada temuan relevan yang hilang atau disembunyikan).
-- [ ] Status rilis (Internal MVP / MVP Beta / MVP Stable / Public Stable)
-      dicantumkan dan sesuai dengan `release-status.md` terkini.
-- [ ] `CHANGELOG.md` sudah direview dan merge ke branch utama.
+- [ ] Status rilis (`internal` / `beta` / `stable`) dicantumkan dan sesuai
+      dengan `release-status.md` terkini.
+- [ ] Perubahan `src/lib/changelog.ts` sudah direview dan merge ke branch
+      utama.
 
 ## Tag dan deployment
 
-- [ ] Git tag annotated dibuat pada commit merge `CHANGELOG.md` (lihat
-      README.md bagian 7).
+- [ ] Git tag annotated dibuat pada commit merge `src/lib/changelog.ts`
+      (lihat README.md bagian 7).
 - [ ] Tag di-push ke remote.
 - [ ] Deployment ke target environment selesai dijalankan.
 
