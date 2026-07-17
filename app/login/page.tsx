@@ -91,7 +91,6 @@ function LoginForm() {
     searchParams.get("mode") === "register" ? "signup" : "signin"
   );
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   // Confirmation shown after a reset-password email is dispatched.
   const [resetSent, setResetSent] = useState(false);
@@ -102,6 +101,17 @@ function LoginForm() {
   // success; useActionState lets us surface an initiation error if one occurs.
   const [googleState, googleAction, googlePending] = useActionState(
     async () => (await signInWithGoogle()) ?? null,
+    null
+  );
+  // React runs form actions inside a transition, so useState updates made
+  // during the action don't paint until it settles; a manual "loading" flag
+  // never shows. useActionState's pending flag does paint, and stays true
+  // through the server-side redirect to /dashboard.
+  const [, submitAction, submitPending] = useActionState(
+    async (_prev: null, formData: FormData) => {
+      await handleSubmit(formData);
+      return null;
+    },
     null
   );
 
@@ -128,7 +138,6 @@ function LoginForm() {
       return;
     }
 
-    setLoading(true);
     setError(null);
 
     const supabase = createClient();
@@ -137,7 +146,6 @@ function LoginForm() {
       { redirectTo: `${window.location.origin}/auth/reset-password` }
     );
 
-    setLoading(false);
     if (resetError) {
       setError(resetError.message);
       return;
@@ -151,21 +159,18 @@ function LoginForm() {
       return;
     }
 
-    setLoading(true);
     setError(null);
 
     if (isSignUp) {
       const validationError = validateSignup(formData);
       if (validationError) {
         setError(validationError);
-        setLoading(false);
         return;
       }
 
       const result = await signup(formData);
       if (result?.error) {
         setError(result.error);
-        setLoading(false);
       }
       return;
     }
@@ -173,11 +178,10 @@ function LoginForm() {
     const result = await login(formData);
     if (result?.error) {
       setError(result.error);
-      setLoading(false);
     }
   }
 
-  const busy = loading || googlePending;
+  const busy = submitPending || googlePending;
 
   return (
     <div className="min-h-[100dvh] bg-background px-5 py-5 text-foreground md:px-8 md:py-8">
@@ -255,7 +259,7 @@ function LoginForm() {
               </CardHeader>
 
               <CardContent className="px-6 py-6">
-                <form action={handleSubmit} className="space-y-5">
+                <form action={submitAction} className="space-y-5">
                   {isSignUp ? (
                     <div className="space-y-2">
                       <label
@@ -395,7 +399,7 @@ function LoginForm() {
                     disabled={busy}
                     className="h-11 w-full justify-center bg-primary text-primary-foreground hover:bg-primary/92"
                   >
-                    {loading ? (
+                    {submitPending ? (
                       <>
                         <Loader2 className="size-4 animate-spin" />
                         {isForgot

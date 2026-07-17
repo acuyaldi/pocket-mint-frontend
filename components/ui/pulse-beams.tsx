@@ -51,6 +51,28 @@ const heroBeams: ReadonlyArray<Beam> = [
     reverse: true,
     points: [{ cx: 548, cy: 940 }],
   },
+  {
+    path: "M-28 402H196C217 402 234 419 234 440V520C234 541 251 558 272 558H352",
+    delay: 0.4,
+    points: [{ cx: 352, cy: 558 }],
+  },
+  {
+    path: "M886 368H710C689 368 672 385 672 406V468C672 489 655 506 634 506H560",
+    delay: 1.9,
+    reverse: true,
+    points: [{ cx: 560, cy: 506 }],
+  },
+  {
+    path: "M-28 700H88C109 700 126 683 126 662V624C126 603 143 586 164 586H236",
+    delay: 3.1,
+    points: [{ cx: 236, cy: 586 }],
+  },
+  {
+    path: "M886 668H766C745 668 728 685 728 706V888C728 909 711 926 690 926H626",
+    delay: 2.45,
+    reverse: true,
+    points: [{ cx: 626, cy: 926 }],
+  },
 ];
 
 const panelBeams: ReadonlyArray<Beam> = [

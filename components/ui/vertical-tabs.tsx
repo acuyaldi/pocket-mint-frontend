@@ -10,6 +10,11 @@ import {
 } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import dashboard from "@/playwright/screenshots/dashboard.png";
+import wallet from "@/playwright/screenshots/wallets.png";
+import transaction from "@/playwright/screenshots/transactions.png";
+import installment from "@/playwright/screenshots/installment.png";
+import analytics from "@/playwright/screenshots/analytics.png";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -20,7 +25,7 @@ const SCREENS = [
     number: "01",
     title: "Dashboard",
     description: "Lihat posisi keuangan Anda dalam satu ringkasan.",
-    image: "/landing/dashboard.png",
+    image: dashboard,
     alt: "Tampilan Dashboard Pocket Mint",
     width: 1280,
     height: 1312,
@@ -30,7 +35,7 @@ const SCREENS = [
     number: "02",
     title: "Wallet",
     description: "Semua aset dan kewajiban dalam satu ledger.",
-    image: "/landing/wallet.png",
+    image: wallet,
     alt: "Tampilan Wallet Pocket Mint",
     width: 1384,
     height: 1600,
@@ -40,7 +45,7 @@ const SCREENS = [
     number: "03",
     title: "Transaction",
     description: "Riwayat yang cepat dicari dan mudah diperbaiki.",
-    image: "/landing/transaction.png",
+    image: transaction,
     alt: "Tampilan Transaction Pocket Mint",
     width: 1489,
     height: 1600,
@@ -50,7 +55,7 @@ const SCREENS = [
     number: "04",
     title: "Installment",
     description: "Pantau kewajiban tanpa kehilangan tanggal jatuh tempo.",
-    image: "/landing/installment.png",
+    image: installment,
     alt: "Tampilan Installment Pocket Mint",
     width: 1600,
     height: 1280,
@@ -60,7 +65,7 @@ const SCREENS = [
     number: "05",
     title: "Analytics",
     description: "Baca pola pemasukan dan pengeluaran dengan lebih jelas.",
-    image: "/landing/analytics.png",
+    image: analytics,
     alt: "Tampilan Analytics Pocket Mint",
     width: 676,
     height: 541,
@@ -260,7 +265,7 @@ export function VerticalTabs() {
           id={`feature-panel-${activeScreen.id}`}
           role="tabpanel"
           aria-labelledby={`feature-tab-${activeScreen.id}`}
-          className="relative aspect-[16/11] overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
+          className="relative aspect-16/10 overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
         >
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
             <motion.div
@@ -279,7 +284,7 @@ export function VerticalTabs() {
                 width={activeScreen.width}
                 height={activeScreen.height}
                 sizes="(max-width: 1023px) calc(100vw - 40px), 720px"
-                className="w-full h-auto"
+                className="h-full w-full object-contain object-top"
               />
             </motion.div>
           </AnimatePresence>
@@ -289,7 +294,7 @@ export function VerticalTabs() {
               type="button"
               variant="outline"
               size="icon-lg"
-              className="size-11 rounded-full shadow-sm"
+              className="size-11 rounded-full shadow-sm transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
               aria-label="Fitur sebelumnya"
               onClick={handlePrevious}
             >
@@ -299,7 +304,7 @@ export function VerticalTabs() {
               type="button"
               variant="outline"
               size="icon-lg"
-              className="size-11 rounded-full shadow-sm"
+              className="size-11 rounded-full shadow-sm transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
               aria-label="Fitur berikutnya"
               onClick={handleNext}
             >
