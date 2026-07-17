@@ -23,6 +23,24 @@ export const useTransactions = () => {
   });
 };
 
+/**
+ * Fetch the user's full transaction history (no current-month auto-filter).
+ * Backed by `GET /transactions/all` — use this for any multi-month view
+ * (Analytics filters/charts). Current-month-only views should keep using
+ * `useTransactions()`.
+ */
+export const useAllTransactions = () => {
+  return useQuery<Transaction[], Error>({
+    queryKey: ['transactions', 'all'],
+    queryFn: async () => {
+      const response = await api.get<{ status: string; data: Transaction[] }>('/transactions/all');
+      const arr = response.data?.data ?? [];
+      return Array.isArray(arr) ? arr : [];
+    },
+    staleTime: STALE_TIME,
+  });
+};
+
 export interface MonthlySummary {
   income: number;
   expenses: number;
