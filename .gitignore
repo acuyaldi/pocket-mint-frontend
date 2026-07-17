@@ -28,3 +28,7 @@ yarn-error.log*
 **/graphify-out/.graphify_python
 **/graphify-out/.graphify_root
 **/graphify-out/cache/
+
+# Ignore Playwright test artifacts
+playwright/.auth/
+playwright/screenshots/

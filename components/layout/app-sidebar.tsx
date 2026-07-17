@@ -56,6 +56,9 @@ export function AppSidebar() {
     <aside className="hidden h-screen w-64 shrink-0 flex-col gap-2 border-r border-border bg-background p-4 md:flex">
       <div className="mb-8 px-4">
         <PocketMintLogo wrapperClassName="text-primary" />
+        <p className="mt-1.5 text-[11px] font-medium tracking-wide text-muted-foreground">
+          Private Financial Workspace
+        </p>
       </div>
 
       <nav aria-label="Navigasi utama" className="flex-grow space-y-1">

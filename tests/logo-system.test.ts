@@ -34,7 +34,8 @@ describe("Pocket Mint logo system", () => {
       frontendRoot + "components/layout/app-sidebar.tsx",
       "utf8"
     );
-    expect(sidebar).not.toContain("Private Financial Workspace");
+    // Tagline requested Jul 2026: sits under the logo lockup in the sidebar.
+    expect(sidebar).toContain("Private Financial Workspace");
   });
 
   it("installs the approved file-based app icon", () => {

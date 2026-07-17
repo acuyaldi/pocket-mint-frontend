@@ -9,6 +9,8 @@ import {
   ArrowUpRight,
   Banknote,
   CalendarDays,
+  Check,
+  ChevronDown,
   CreditCard,
   Loader2,
   Plus,
@@ -18,7 +20,14 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/toaster";
 import { useCategories } from "@/src/features/categories/hooks/useCategories";
 import { usePaylaterRates } from "@/src/features/installments/hooks/useInstallments";
 import {
@@ -83,6 +92,25 @@ function todayStr() {
   return `${year}-${month}-${day}`;
 }
 
+const PAYLATER_DUE_DAYS = 30;
+
+function addDays(dateStr: string, days: number) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const next = new Date(year, month - 1, day + days);
+  const m = String(next.getMonth() + 1).padStart(2, "0");
+  const d = String(next.getDate()).padStart(2, "0");
+  return `${next.getFullYear()}-${m}-${d}`;
+}
+
+function formatDateId(dateStr: string) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 function getInstallmentDefaults(
   wallet: Wallet | undefined,
   paylaterRates:
@@ -128,6 +156,10 @@ function getWalletIcon(wallet: Wallet) {
 }
 
 function formatWalletAmount(wallet: Wallet) {
+  // Kartu kredit/paylater dipakai sebagai sumber dana: yang relevan adalah sisa limit
+  if (isCreditWallet(wallet.type)) {
+    return `Sisa limit Rp ${formatRupiah(String(remainingCredit(wallet)))}`;
+  }
   const amount = isDebtWallet(wallet.type)
     ? wallet.outstanding ?? Math.abs(wallet.balance)
     : wallet.balance;
@@ -153,6 +185,8 @@ interface AddTransactionModalProps {
   isOpen: boolean;
   isCreating: boolean;
   wallets: Wallet[];
+  /** Tab awal saat modal dibuka (mis. aksi cepat "Transfer" di dashboard). */
+  initialType?: TxType;
   onClose: () => void;
   onSubmit: (data: AddTransactionData) => Promise<void>;
 }
@@ -236,11 +270,12 @@ export function AddTransactionModal({
   isOpen,
   isCreating,
   wallets,
+  initialType,
   onClose,
   onSubmit,
 }: AddTransactionModalProps) {
   const [amount, setAmount] = useState("");
-  const [type, setType] = useState<Tab>("EXPENSE");
+  const [type, setType] = useState<Tab>(initialType ?? "EXPENSE");
   const [walletId, setWalletId] = useState("");
   const [toWalletId, setToWalletId] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -369,9 +404,18 @@ export function AddTransactionModal({
       : undefined;
   const isCreditPurchase =
     type === "EXPENSE" && !!selectedWallet && isCreditWallet(selectedWallet.type);
+  const hasBillingCycle =
+    !!selectedWallet?.cutoffDay && !!selectedWallet?.paymentDueDay;
+  // Paylater tanpa cutoff: jatuh tempo otomatis 30 hari setelah tanggal transaksi
+  const isPaylaterAutoDue =
+    isCreditPurchase && selectedWallet?.type === "PAYLATER" && !hasBillingCycle;
+  const paylaterDueDate = isPaylaterAutoDue
+    ? addDays(date, PAYLATER_DUE_DAYS)
+    : "";
   const needsManualDueDate =
     isCreditPurchase &&
-    (!selectedWallet?.cutoffDay || !selectedWallet?.paymentDueDay);
+    selectedWallet?.type === "CREDIT_CARD" &&
+    !hasBillingCycle;
 
   const lacksFunds = (wallet: Wallet) =>
     type !== "INCOME" &&
@@ -443,8 +487,11 @@ export function AddTransactionModal({
             ? "INSTALLMENT"
             : "FULL"
           : undefined,
-        firstDueDate:
-          asCreditExpense && needsManualDueDate ? firstDueDate : undefined,
+        firstDueDate: isPaylaterAutoDue
+          ? paylaterDueDate
+          : asCreditExpense && needsManualDueDate
+          ? firstDueDate
+          : undefined,
         isInstallment: asInstallment || undefined,
         installmentMonths: asInstallment ? installmentMonths : undefined,
         interestRate: asInstallment ? rateNum : undefined,
@@ -456,8 +503,16 @@ export function AddTransactionModal({
       return;
     }
 
+    toast(
+      type === "TRANSFER"
+        ? "Transfer berhasil dicatat"
+        : type === "INCOME"
+        ? "Pemasukan berhasil dicatat"
+        : "Pengeluaran berhasil dicatat",
+    );
+
     setAmount("");
-    setType("EXPENSE");
+    setType(initialType ?? "EXPENSE");
     setWalletId("");
     setToWalletId("");
     setCategoryId("");
@@ -559,7 +614,7 @@ export function AddTransactionModal({
                 </section>
 
                 <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
+                  <div className={`space-y-2 ${cats.length > 0 ? "" : "md:col-span-2"}`}>
                     <FieldLabel>Tanggal</FieldLabel>
                     <div className="relative">
                       <CalendarDays className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -568,7 +623,7 @@ export function AddTransactionModal({
                         value={date}
                         onChange={(event) => setDate(event.target.value)}
                         required
-                        className="h-12 w-full rounded-lg border border-border/70 bg-card pl-10 pr-3 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15"
+                        className="h-12 w-full rounded-xl border border-border/70 bg-card pl-10 pr-3 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15"
                       />
                     </div>
                   </div>
@@ -576,19 +631,49 @@ export function AddTransactionModal({
                   {cats.length > 0 && (
                     <div className="space-y-2">
                       <FieldLabel>Kategori</FieldLabel>
-                      <select
-                        value={categoryId}
-                        onChange={(event) => setCategoryId(event.target.value)}
-                        required
-                        className="h-12 w-full rounded-lg border border-border/70 bg-card px-3 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15"
-                      >
-                        <option value="" disabled hidden>Pilih kategori</option>
-                        {cats.map((cat) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </option>
-                        ))}
-                      </select>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          type="button"
+                          aria-label="Pilih kategori"
+                          className="flex h-12 w-full items-center justify-between gap-2 rounded-xl border border-border/70 bg-card px-3 text-sm outline-none transition-colors hover:bg-surface-low focus:border-primary focus:ring-2 focus:ring-primary/15"
+                        >
+                          <span
+                            className={
+                              categoryId ? "text-foreground" : "text-muted-foreground"
+                            }
+                          >
+                            {cats.find((cat) => cat.id === categoryId)?.name ??
+                              "Pilih kategori"}
+                          </span>
+                          <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="start"
+                          side="bottom"
+                          sideOffset={6}
+                          className="max-h-[var(--available-height)] w-[var(--anchor-width)] overflow-y-auto"
+                        >
+                          {cats.map((cat) => {
+                            const selected = cat.id === categoryId;
+                            return (
+                              <DropdownMenuItem
+                                key={cat.id}
+                                role="menuitemradio"
+                                aria-checked={selected}
+                                onClick={() => setCategoryId(cat.id)}
+                                className={`min-h-10 justify-between ${
+                                  selected ? "bg-mint/10 text-foreground" : ""
+                                }`}
+                              >
+                                {cat.name}
+                                {selected ? (
+                                  <Check className="text-mint" aria-hidden="true" />
+                                ) : null}
+                              </DropdownMenuItem>
+                            );
+                          })}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   )}
                 </section>
@@ -635,7 +720,7 @@ export function AddTransactionModal({
                     </Button>
                   </section>
                 ) : type === "TRANSFER" ? (
-                  <section className="space-y-2">
+                  <section className="grid grid-cols-1 gap-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-end md:gap-3">
                     <AccountPicker
                       id="transfer-source"
                       label="Dompet sumber"
@@ -650,7 +735,7 @@ export function AddTransactionModal({
                       isDisabled={lacksFunds}
                       onSelect={handleSourceSelect}
                     />
-                    <div className="flex justify-center">
+                    <div className="flex justify-center md:mb-2">
                       <button
                         type="button"
                         aria-label="Tukar dompet sumber dan tujuan"
@@ -739,8 +824,8 @@ export function AddTransactionModal({
                               }}
                               className={`h-10 rounded-lg border text-sm font-semibold transition-colors ${
                                 isInstallment === mode.value
-                                  ? "border-primary bg-primary/10 text-primary"
-                                  : "border-border bg-card text-muted-foreground"
+                                  ? "border-mint bg-mint/10 text-primary"
+                                  : "border-border bg-card text-muted-foreground hover:bg-surface-high"
                               }`}
                             >
                               {mode.label}
@@ -834,7 +919,20 @@ export function AddTransactionModal({
                         </div>
                       )}
 
-                      {needsManualDueDate ? (
+                      {isPaylaterAutoDue ? (
+                        <div className="mt-4 border-t border-border/60 pt-4">
+                          <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <CalendarDays className="size-4 shrink-0" />
+                            <span>
+                              Jatuh tempo otomatis:{" "}
+                              <strong className="font-semibold text-foreground">
+                                {formatDateId(paylaterDueDate)}
+                              </strong>{" "}
+                              — {PAYLATER_DUE_DAYS} hari setelah tanggal transaksi.
+                            </span>
+                          </p>
+                        </div>
+                      ) : needsManualDueDate ? (
                         <div className="mt-4 space-y-2 border-t border-border/60 pt-4">
                           <FieldLabel>Jatuh tempo pertama</FieldLabel>
                           <Input

@@ -11,6 +11,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { PageHeader } from "@/components/layout/page-header";
 import { useBills } from "@/src/features/bills/hooks/useBills";
 import { useTransactions } from "@/src/features/transactions/hooks/useTransactions";
 import { isDebtWallet } from "@/src/types/wallet";
@@ -236,14 +237,10 @@ export default function AnalyticsPage() {
         transition: "opacity 0.2s ease-in-out",
       }}
     >
-      <section className="space-y-1">
-        <h2 className="text-[32px] font-semibold leading-tight tracking-[-0.02em] text-primary">
-          Analitik
-        </h2>
-        <p className="text-base text-muted-foreground">
-          Pantau tren dan performa finansial Anda
-        </p>
-      </section>
+      <PageHeader
+        title="Analitik"
+        description="Pantau tren dan performa finansial Anda"
+      />
 
       <section className="sticky top-16 z-10 flex flex-wrap items-center justify-between gap-4 border-y border-border/50 bg-background py-3">
         <div className="flex flex-wrap items-center gap-3">

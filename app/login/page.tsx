@@ -18,6 +18,7 @@ import { createClient } from "@/lib/supabase/client";
 import { PocketMintLogo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PulseBeams } from "@/components/ui/pulse-beams";
 import {
   Card,
   CardContent,
@@ -85,7 +86,10 @@ function validateSignup(formData: FormData): string | null {
 }
 
 function LoginForm() {
-  const [authMode, setAuthMode] = useState<AuthMode>("signin");
+  const searchParams = useSearchParams();
+  const [authMode, setAuthMode] = useState<AuthMode>(() =>
+    searchParams.get("mode") === "register" ? "signup" : "signin"
+  );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -94,8 +98,6 @@ function LoginForm() {
 
   const isSignUp = authMode === "signup";
   const isForgot = authMode === "forgot";
-  const searchParams = useSearchParams();
-
   // Google OAuth runs as a server action that redirects to the provider on
   // success; useActionState lets us surface an initiation error if one occurs.
   const [googleState, googleAction, googlePending] = useActionState(
@@ -180,8 +182,9 @@ function LoginForm() {
   return (
     <div className="min-h-[100dvh] bg-background px-5 py-5 text-foreground md:px-8 md:py-8">
       <div className="mx-auto grid min-h-[calc(100dvh-2.5rem)] w-full max-w-7xl overflow-hidden rounded-2xl border border-border bg-card md:min-h-[calc(100dvh-4rem)] lg:grid-cols-[minmax(0,1fr)_440px]">
-        <section className="order-2 flex flex-col justify-between border-t border-border bg-muted px-6 py-10 sm:px-10 lg:order-1 lg:border-r lg:border-t-0 lg:px-12 lg:py-12">
-          <div>
+        <section className="relative order-2 flex flex-col justify-between isolate overflow-hidden border-t border-border bg-muted px-6 py-10 sm:px-10 lg:order-1 lg:border-r lg:border-t-0 lg:px-12 lg:py-12">
+          <PulseBeams variant="panel" className="text-primary opacity-45" />
+          <div className="relative z-10">
             <PocketMintLogo wrapperClassName="text-primary" markSize={32} />
             <div className="mt-16 max-w-xl lg:mt-28">
               <p className="text-xs font-semibold tracking-[0.08em] text-muted-foreground">

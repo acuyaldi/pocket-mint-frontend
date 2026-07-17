@@ -7,6 +7,7 @@ import { LockKeyhole } from "lucide-react";
 
 import { PocketMintLogo } from "@/components/Logo";
 import { buttonVariants } from "@/components/ui/button";
+import { PulseBeams } from "@/components/ui/pulse-beams";
 import { cn } from "@/lib/utils";
 
 function enter(delay: number, y = 20, reducedMotion = false) {
@@ -20,41 +21,47 @@ function enter(delay: number, y = 20, reducedMotion = false) {
   };
 }
 
+const landingNavLink =
+  "relative inline-flex min-h-11 items-center text-sm font-medium text-foreground transition-colors duration-200 ease-out after:absolute after:inset-x-0 after:bottom-1.5 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-full after:bg-mint after:transition-transform after:duration-200 after:ease-out hover:text-primary hover:after:scale-x-100 focus-visible:after:scale-x-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring";
+
 export function PocketMintHero() {
   const reducedMotion = useReducedMotion() ?? false;
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-5">
-      <header className="relative pt-4">
+    <>
+      <header className="sticky top-4 z-30 mx-auto mt-4 w-[calc(100%-2.5rem)] max-w-7xl">
         <nav
           aria-label="Navigasi utama"
-          className="flex min-h-16 items-center justify-between rounded-xl border border-border bg-background px-4 py-2 shadow-sm"
+          className="flex min-h-16 items-center justify-between rounded-xl border border-border bg-background/95 px-4 py-2 shadow-sm backdrop-blur-md"
         >
           <div className="flex items-center gap-6">
             <Link href="/" className="inline-flex min-h-11 items-center text-primary">
               <PocketMintLogo />
             </Link>
             <div className="hidden items-center gap-6 md:flex">
-              <Link href="#features" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+              <Link href="#features" className={landingNavLink}>
                 Fitur
               </Link>
-              <Link href="#privacy" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+              <Link href="#privacy" className={landingNavLink}>
                 Privasi
               </Link>
-              <Link href="#about" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+              <Link href="#about" className={landingNavLink}>
                 Tentang Kami
               </Link>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/login" className="inline-flex min-h-11 items-center px-3 text-sm text-muted-foreground hover:text-foreground">
+            <Link
+              href="/login"
+              className="inline-flex min-h-11 items-center px-3 text-sm font-medium text-muted-foreground transition-colors duration-200 ease-out hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+            >
               Login
             </Link>
             <Link
-              href="/login"
+              href="/login?mode=register"
               className={cn(
                 buttonVariants({ size: "lg" }),
-                "min-h-11 rounded-full px-4 shadow-sm shadow-primary/10"
+                "landing-cta-sweep min-h-11 rounded-full px-4 shadow-sm shadow-primary/10 hover:text-primary focus-visible:text-primary"
               )}
             >
               Daftar
@@ -63,8 +70,10 @@ export function PocketMintHero() {
         </nav>
       </header>
 
-      <div className="relative px-0 sm:px-2">
-        <section className="w-full py-16 md:py-24">
+      <div className="mx-auto w-full max-w-7xl px-5">
+        <div className="relative isolate overflow-hidden px-0 sm:px-2">
+          <PulseBeams variant="hero" className="text-primary opacity-75" />
+          <section className="relative z-10 w-full py-16 md:py-24">
           <motion.div
             className="flex flex-col items-center gap-6 text-center"
             {...enter(0, 20, reducedMotion)}
@@ -79,7 +88,7 @@ export function PocketMintHero() {
 
             <motion.h1
               {...enter(0.2, 20, reducedMotion)}
-              className="max-w-4xl text-4xl font-semibold leading-tight tracking-tight text-primary sm:text-5xl md:text-6xl lg:text-7xl"
+              className="max-w-5xl text-balance text-[clamp(3rem,7vw,5.5rem)] font-semibold leading-[0.98] tracking-[-0.045em] text-primary"
             >
               Clarity Over Complexity
             </motion.h1>
@@ -99,7 +108,7 @@ export function PocketMintHero() {
                 href="/login"
                 className={cn(
                   buttonVariants({ size: "lg" }),
-                  "landing-cta-sweep min-h-11 rounded-[40px] px-[50px] py-[17px] shadow-sm shadow-primary/10"
+                  "landing-cta-sweep min-h-11 rounded-[40px] px-[50px] py-[17px] text-base shadow-sm shadow-primary/20 hover:text-primary focus-visible:text-primary"
                 )}
               >
                 <span>Mulai Sekarang</span>
@@ -125,8 +134,9 @@ export function PocketMintHero() {
               />
             </div>
           </motion.div>
-        </section>
+          </section>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

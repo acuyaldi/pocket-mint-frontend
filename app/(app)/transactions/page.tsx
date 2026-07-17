@@ -10,6 +10,7 @@ import {
   Shuffle,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { PageHeader } from "@/components/layout/page-header";
 import {
   useCreateTransaction,
   useDeleteTransaction,
@@ -164,10 +165,7 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-xl font-bold text-primary">Transaksi</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Jurnal keuangan Anda</p>
-      </div>
+      <PageHeader title="Transaksi" description="Jurnal keuangan Anda" />
 
       <div className="flex flex-col gap-4 py-2 md:flex-row md:items-center md:justify-between">
         <div className="relative w-full md:max-w-sm">
@@ -254,7 +252,9 @@ export default function TransactionsPage() {
                           {transaction.description || "Transaksi"}
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {transaction.category?.name ?? "Tanpa kategori"}
+                          {transaction.type === "TRANSFER"
+                            ? "Transfer"
+                            : transaction.category?.name ?? "Tanpa kategori"}
                         </p>
                       </div>
                     </div>
@@ -265,7 +265,11 @@ export default function TransactionsPage() {
                     </div>
                     <p
                       className={`shrink-0 text-sm font-bold tabular-nums ${
-                        transaction.type === "INCOME" ? "text-mint" : "text-coral"
+                        transaction.type === "INCOME"
+                          ? "text-mint"
+                          : transaction.type === "TRANSFER"
+                          ? "text-foreground"
+                          : "text-coral"
                       }`}
                     >
                       {transaction.type === "INCOME" ? "+" : transaction.type === "EXPENSE" ? "-" : ""}

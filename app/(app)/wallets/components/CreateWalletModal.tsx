@@ -86,7 +86,11 @@ const formatRupiahVisual = (value: string): string => {
 };
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <label className="text-xs font-medium text-muted-foreground">{children}</label>;
+  return (
+    <label className="text-[12px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+      {children}
+    </label>
+  );
 }
 
 function MoneyInput({
@@ -106,7 +110,7 @@ function MoneyInput({
       <input
         value={value}
         onChange={(event) => onChange(formatRupiahVisual(event.target.value))}
-        className="h-16 w-full rounded-lg border border-border bg-card pl-12 pr-4 text-right text-3xl font-semibold tabular-nums text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+        className="h-16 w-full rounded-lg border border-border/70 bg-card pl-12 pr-4 text-right text-3xl font-semibold tabular-nums text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/15"
         inputMode="numeric"
         placeholder="0"
         required={required}
@@ -181,12 +185,12 @@ export default function CreateWalletModal({
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
       <DialogContent
         showCloseButton={false}
-        className="flex max-h-[90vh] w-full max-w-2xl flex-col gap-0 overflow-hidden rounded-xl border border-border/70 bg-card p-0 text-foreground shadow-2xl sm:max-w-2xl"
+        className="flex max-h-[90vh] w-full max-w-2xl flex-col gap-0 overflow-hidden rounded-xl border border-border/60 bg-card p-0 text-foreground shadow-xl sm:max-w-2xl"
       >
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <header className="flex items-start justify-between border-b border-border/70 p-6">
+          <header className="flex items-center justify-between border-b border-border/50 bg-surface-low px-6 py-4">
             <div>
-              <DialogTitle className="text-xl font-semibold text-primary">Tambah Akun</DialogTitle>
+              <DialogTitle className="text-xl font-semibold text-foreground">Tambah Akun</DialogTitle>
               <DialogDescription className="mt-1 text-sm text-muted-foreground">
                 Tambahkan kas, bank, e-wallet, kredit, atau pinjaman.
               </DialogDescription>
@@ -195,13 +199,13 @@ export default function CreateWalletModal({
               type="button"
               aria-label="Tutup modal tambah akun"
               onClick={handleClose}
-              className="rounded-lg p-1 text-muted-foreground transition-colors hover:text-coral"
+              className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface-high hover:text-foreground"
             >
               <X className="size-5" />
             </button>
           </header>
 
-          <div className="min-h-0 flex-1 space-y-8 overflow-y-auto p-6">
+          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6">
             <section>
               <h3 className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                 Pilih Jenis Akun
@@ -225,7 +229,7 @@ export default function CreateWalletModal({
                         }}
                         className="peer sr-only"
                       />
-                      <span className={`flex min-h-24 flex-col items-center justify-center gap-2 rounded-lg border border-border border-t-4 bg-card p-3 text-center transition-all peer-checked:border-primary peer-checked:bg-accent hover:bg-surface-low ${item.tone}`}>
+                      <span className={`flex min-h-24 flex-col items-center justify-center gap-2 rounded-lg border border-border/70 bg-card p-3 text-center transition-all peer-checked:border-mint peer-checked:bg-mint/10 hover:bg-surface-low ${item.tone}`}>
                         <Icon className="size-6" />
                         <span className="text-xs font-semibold leading-tight text-foreground">{item.label}</span>
                       </span>
@@ -246,7 +250,7 @@ export default function CreateWalletModal({
                   value={walletName}
                   onChange={(event) => setWalletName(event.target.value)}
                   required={["none", "Lainnya"].includes(institution)}
-                  className="h-12 w-full rounded-lg border border-border bg-surface-low px-4 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/30"
+                  className="h-12 w-full rounded-lg border border-border/70 bg-card px-4 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15"
                   placeholder="Contoh: Uang Tunai, BCA, SPaylater"
                   type="text"
                 />
@@ -272,8 +276,13 @@ export default function CreateWalletModal({
                   <div className="space-y-1.5">
                     <FieldLabel>Limit Kredit</FieldLabel>
                     <MoneyInput value={creditLimit} onChange={setCreditLimit} required />
-                    <p className="text-xs text-muted-foreground">Tagihan awal selalu Rp0 dan bertambah saat dipakai.</p>
+                    <p className="text-xs text-muted-foreground">
+                      {accountType === "PAYLATER"
+                        ? "Tagihan awal selalu Rp0 dan bertambah saat dipakai. Jatuh tempo tiap pembelian otomatis 30 hari setelah tanggal transaksi. Hutang berjalan yang sudah ada dicatat lewat transaksi satu per satu."
+                        : "Tagihan awal selalu Rp0 dan bertambah saat dipakai."}
+                    </p>
                   </div>
+                  {accountType === "CREDIT_CARD" ? (
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">
                       <FieldLabel>Tanggal Cutoff (Opsional)</FieldLabel>
@@ -283,7 +292,7 @@ export default function CreateWalletModal({
                         max="31"
                         value={cutoffDay}
                         onChange={(event) => setCutoffDay(event.target.value)}
-                        className="h-12 w-full rounded-lg border border-border bg-surface-low px-4 text-sm outline-none focus:border-primary"
+                        className="h-12 w-full rounded-lg border border-border/70 bg-card px-4 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15"
                         placeholder="1–31"
                       />
                     </div>
@@ -295,11 +304,12 @@ export default function CreateWalletModal({
                         max="31"
                         value={paymentDueDay}
                         onChange={(event) => setPaymentDueDay(event.target.value)}
-                        className="h-12 w-full rounded-lg border border-border bg-surface-low px-4 text-sm outline-none focus:border-primary"
+                        className="h-12 w-full rounded-lg border border-border/70 bg-card px-4 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15"
                         placeholder="1–31"
                       />
                     </div>
                   </div>
+                  ) : null}
                 </>
               ) : null}
 
@@ -308,7 +318,7 @@ export default function CreateWalletModal({
                 <select
                   value={institution}
                   onChange={(event) => setInstitution(event.target.value)}
-                  className="h-12 w-full rounded-lg border border-border bg-surface-low px-4 text-sm outline-none focus:border-primary"
+                  className="h-12 w-full rounded-lg border border-border/70 bg-card px-4 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15"
                 >
                   {INSTITUTIONS.map((item) => (
                     <option key={item.value} value={item.value}>{item.label}</option>
@@ -318,9 +328,13 @@ export default function CreateWalletModal({
             </section>
           </div>
 
-          <footer className="flex justify-end gap-3 border-t border-border/70 bg-card p-6">
-            <Button type="button" variant="outline" onClick={handleClose}>Batal</Button>
-            <Button type="submit" className="bg-primary text-primary-foreground">Simpan Akun</Button>
+          <footer className="flex flex-col-reverse gap-3 border-t border-border/50 bg-surface-low px-6 py-4 sm:flex-row">
+            <Button type="button" variant="outline" onClick={handleClose} className="h-11 flex-1 bg-card">
+              Batal
+            </Button>
+            <Button type="submit" className="h-11 flex-1">
+              Simpan Akun
+            </Button>
           </footer>
         </form>
       </DialogContent>

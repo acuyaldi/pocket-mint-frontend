@@ -7,16 +7,31 @@ import {
   CreditCard,
   Landmark,
   MoreVertical,
+  Pencil,
   Plus,
   Search,
   Smartphone,
+  Trash2,
   Wallet as WalletIcon,
 } from "lucide-react";
 import CreateWalletModal, {
   type CreateWalletFormData,
 } from "./components/CreateWalletModal";
+import DeleteWalletModal from "./components/DeleteWalletModal";
 import EditWalletModal from "./components/EditWalletModal";
-import { useCreateWallet, useWallets } from "@/src/features/wallets/hooks/useWallets";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { PageHeader } from "@/components/layout/page-header";
+import { toast } from "@/components/ui/toaster";
+import {
+  useCreateWallet,
+  useDeleteWallet,
+  useWallets,
+} from "@/src/features/wallets/hooks/useWallets";
 import {
   isCreditWallet,
   isLiabilityWallet,
@@ -54,14 +69,17 @@ function SectionIcon({ type }: { type: FilterKey }) {
 function WalletTile({
   wallet,
   onEdit,
+  onDelete,
 }: {
   wallet: Wallet;
   onEdit: (wallet: Wallet) => void;
+  onDelete: (wallet: Wallet) => void;
 }) {
   const isDebt = isLiabilityWallet(wallet.type);
   const isCredit = isCreditWallet(wallet.type);
   const balance = isDebt ? wallet.outstanding ?? Math.abs(wallet.balance) : wallet.balance;
   const limit = wallet.creditLimit ?? 0;
+  const remaining = wallet.remainingCredit ?? Math.max(limit - balance, 0);
   const utilization = isCredit && limit > 0 ? Math.min(100, Math.round((balance / limit) * 100)) : 0;
 
   return (
@@ -76,33 +94,68 @@ function WalletTile({
           <WalletIcon className={`size-5 ${isDebt ? "text-coral" : "text-mint"}`} />
           <span className="text-xs text-muted-foreground">{wallet.currency}</span>
         </div>
-        <button
-          type="button"
-          onClick={() => onEdit(wallet)}
-          aria-label={`Edit ${wallet.name}`}
-          className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-surface-high hover:text-foreground"
-        >
-          <MoreVertical className="size-5" />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            aria-label={`Menu akun ${wallet.name}`}
+            className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-surface-high hover:text-foreground"
+          >
+            <MoreVertical className="size-5" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => onEdit(wallet)}>
+              <Pencil />
+              Edit Akun
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onDelete(wallet)}
+              className="text-coral data-highlighted:bg-coral/10"
+            >
+              <Trash2 />
+              Hapus Akun
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <p className="mb-1 text-sm text-muted-foreground">{wallet.name}</p>
-      <p className={`text-xl font-bold tabular-nums ${isDebt ? "text-coral" : "text-foreground"}`}>
-        {formatCurrency(balance)}
-      </p>
       {isCredit ? (
-        <div className="mt-4 space-y-1.5">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Utilisasi</span>
-            <span className="font-semibold">{utilization}%</span>
+        <>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Tagihan
+          </p>
+          <p
+            className={`text-xl font-bold tabular-nums ${
+              balance > 0 ? "text-coral" : "text-foreground"
+            }`}
+          >
+            {formatCurrency(balance)}
+          </p>
+          <div className="mt-4 space-y-2">
+            <div className="h-2 overflow-hidden rounded-full bg-surface-high">
+              <div className="h-full rounded-full bg-coral" style={{ width: `${utilization}%` }} />
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Sisa limit</span>
+              <span className="font-semibold tabular-nums text-foreground">
+                {formatCurrency(remaining)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Utilisasi dari limit {formatCurrency(limit)}</span>
+              <span className="font-semibold tabular-nums">{utilization}%</span>
+            </div>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-surface-high">
-            <div className="h-full rounded-full bg-coral" style={{ width: `${utilization}%` }} />
-          </div>
-        </div>
-      ) : isDebt ? (
-        <p className="mt-1 text-xs text-coral">Sisa kewajiban</p>
+        </>
       ) : (
-        <p className="mt-1 text-xs text-mint">Aset aktif</p>
+        <>
+          <p className={`text-xl font-bold tabular-nums ${isDebt ? "text-coral" : "text-foreground"}`}>
+            {formatCurrency(balance)}
+          </p>
+          {isDebt ? (
+            <p className="mt-1 text-xs text-coral">Sisa kewajiban</p>
+          ) : (
+            <p className="mt-1 text-xs text-mint">Aset aktif</p>
+          )}
+        </>
       )}
     </article>
   );
@@ -114,12 +167,14 @@ function WalletSection({
   wallets,
   badge,
   onEdit,
+  onDelete,
 }: {
   title: string;
   kind: FilterKey;
   wallets: Wallet[];
   badge: "Aset" | "Liabilitas";
   onEdit: (wallet: Wallet) => void;
+  onDelete: (wallet: Wallet) => void;
 }) {
   if (wallets.length === 0) return null;
 
@@ -144,7 +199,7 @@ function WalletSection({
         </summary>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {wallets.map((wallet) => (
-            <WalletTile key={wallet.id} wallet={wallet} onEdit={onEdit} />
+            <WalletTile key={wallet.id} wallet={wallet} onEdit={onEdit} onDelete={onDelete} />
           ))}
         </div>
       </details>
@@ -157,8 +212,10 @@ export default function WalletsPage() {
   const [search, setSearch] = useState("");
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
   const [editingWallet, setEditingWallet] = useState<Wallet | null>(null);
+  const [deletingWallet, setDeletingWallet] = useState<Wallet | null>(null);
   const { data: wallets } = useWallets();
   const createWallet = useCreateWallet();
+  const deleteWallet = useDeleteWallet();
 
   const visibleWallets = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -189,23 +246,31 @@ export default function WalletsPage() {
         ...(data.adminFee !== undefined && { adminFeeType: "PERCENT" as const }),
         icon: data.icon,
       });
+      toast(`Akun "${data.name}" ditambahkan`);
     } catch (error) {
       console.error("Failed to create wallet:", error);
+      toast("Akun gagal ditambahkan. Coba lagi.", "error");
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingWallet) return;
+    try {
+      await deleteWallet.mutateAsync(deletingWallet.id);
+      toast(`Akun "${deletingWallet.name}" dihapus`);
+      setDeletingWallet(null);
+    } catch (caught) {
+      const message = (caught as { response?: { data?: { error?: { message?: string } } } })
+        ?.response?.data?.error?.message;
+      toast(message ?? "Akun gagal dihapus. Coba lagi.", "error");
     }
   };
 
   return (
-    <div className="space-y-10">
-      <div>
-        <h1 className="mb-1 text-[32px] font-bold leading-10 text-primary">
-          Dompet
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Kelola seluruh akun finansial Anda
-        </p>
-      </div>
+    <div className="space-y-8">
+      <PageHeader title="Dompet" description="Kelola seluruh akun finansial Anda" />
 
-      <div className="sticky top-16 z-10 -mx-1 bg-background/95 px-1 py-4 backdrop-blur-md">
+      <div className="sticky top-16 z-10 -mx-1 bg-background/95 px-1 py-3 backdrop-blur-md">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="relative w-full md:max-w-md">
@@ -246,12 +311,12 @@ export default function WalletsPage() {
         </div>
       </div>
 
-      <div className="space-y-10">
-        <WalletSection title="Kas & Bank" kind="bank" wallets={bankWallets} badge="Aset" onEdit={setEditingWallet} />
-        <WalletSection title="E-Wallet" kind="ewallet" wallets={ewallets} badge="Aset" onEdit={setEditingWallet} />
-        <WalletSection title="Kartu Kredit" kind="credit" wallets={creditWallets} badge="Liabilitas" onEdit={setEditingWallet} />
-        <WalletSection title="Paylater" kind="paylater" wallets={paylaterWallets} badge="Liabilitas" onEdit={setEditingWallet} />
-        <WalletSection title="Pinjaman" kind="loan" wallets={loanWallets} badge="Liabilitas" onEdit={setEditingWallet} />
+      <div className="space-y-8">
+        <WalletSection title="Kas & Bank" kind="bank" wallets={bankWallets} badge="Aset" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
+        <WalletSection title="E-Wallet" kind="ewallet" wallets={ewallets} badge="Aset" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
+        <WalletSection title="Kartu Kredit" kind="credit" wallets={creditWallets} badge="Liabilitas" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
+        <WalletSection title="Paylater" kind="paylater" wallets={paylaterWallets} badge="Liabilitas" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
+        <WalletSection title="Pinjaman" kind="loan" wallets={loanWallets} badge="Liabilitas" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
         {visibleWallets.length === 0 ? (
           <button
             type="button"
@@ -270,6 +335,12 @@ export default function WalletsPage() {
         onSuccess={handleWalletCreateSuccess}
       />
       <EditWalletModal wallet={editingWallet} onClose={() => setEditingWallet(null)} />
+      <DeleteWalletModal
+        wallet={deletingWallet}
+        isDeleting={deleteWallet.isPending}
+        onClose={() => setDeletingWallet(null)}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 }

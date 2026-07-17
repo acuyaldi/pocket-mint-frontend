@@ -2,10 +2,11 @@ import Link from "next/link";
 
 import { PocketMintLogo } from "@/components/Logo";
 import { PocketMintHero } from "@/components/ui/pocket-mint-hero";
+import { PrivacyCommitments } from "@/components/ui/privacy-commitments";
 import { VerticalTabs } from "@/components/ui/vertical-tabs";
 
 const largePrimaryButton =
-  "landing-cta-sweep inline-flex min-h-11 items-center justify-center rounded-[40px] bg-primary px-[50px] py-[17px] text-base font-medium leading-[27px] text-primary-foreground shadow-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:bg-primary/85";
+  "landing-cta-sweep inline-flex min-h-11 items-center justify-center rounded-[40px] bg-primary px-[50px] py-[17px] text-base font-medium leading-[27px] text-primary-foreground shadow-sm hover:text-primary focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:bg-primary/85";
 
 export default function LandingPage() {
   return (
@@ -15,28 +16,20 @@ export default function LandingPage() {
       <main className="mx-auto w-full max-w-7xl px-5 md:px-8 lg:px-10">
         <section
           id="privacy"
-          className="scroll-mt-20 border-b border-border py-16 md:py-24"
+          className="scroll-mt-20 border-b border-border py-14 md:py-20"
         >
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.55fr)] lg:items-end">
-            <div>
-              <h2 className="max-w-2xl text-3xl font-semibold tracking-tight text-primary md:text-4xl">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.55fr)] lg:items-stretch">
+            <div className="flex flex-col lg:justify-center lg:py-2">
+              <h2 className="max-w-2xl text-4xl font-semibold tracking-tight text-primary md:text-5xl lg:text-6xl">
                 Data finansial Anda tetap milik Anda.
               </h2>
-              <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground">
+              <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
                 Pocket Mint membantu Anda membaca kondisi finansial tanpa
                 iklan, pelacakan marketing, atau pengumpulan data yang tidak
                 diperlukan.
               </p>
             </div>
-            <div className="space-y-4 text-sm leading-6 text-muted-foreground">
-              <p className="border-t border-border pt-4">Tanpa iklan.</p>
-              <p className="border-t border-border pt-4">
-                Tanpa pelacakan marketing.
-              </p>
-              <p className="border-t border-border pt-4">
-                Hanya data yang diperlukan untuk workspace Anda.
-              </p>
-            </div>
+            <PrivacyCommitments />
           </div>
         </section>
 
@@ -60,7 +53,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer id="about" className="w-full border-t border-border bg-muted">
+      <footer id="about" className="scroll-mt-20 w-full border-t border-border bg-muted">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between px-5 py-8 md:flex-row md:px-8 lg:px-10">
           <div className="mb-8 text-center md:mb-0 md:text-left">
             <Link href="/" className="inline-flex text-primary">

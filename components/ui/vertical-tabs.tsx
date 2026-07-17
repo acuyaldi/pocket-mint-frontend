@@ -158,10 +158,10 @@ export function VerticalTabs() {
     >
       <div className="order-2 flex flex-col lg:order-1 lg:col-span-5">
         <div className="mb-8 flex flex-col gap-3 md:mb-10">
-          <h2 className="max-w-lg text-3xl font-semibold tracking-tight text-primary md:text-4xl">
+          <h2 className="max-w-lg text-4xl font-semibold tracking-tight text-primary md:text-5xl lg:text-6xl">
             Semua yang penting, dalam satu alur.
           </h2>
-          <p className="max-w-md text-base leading-7 text-muted-foreground">
+          <p className="max-w-md text-base leading-7 text-muted-foreground sm:text-xl sm:leading-8">
             Berpindah dari ringkasan ke detail tanpa kehilangan konteks
             finansial Anda.
           </p>
@@ -189,6 +189,7 @@ export function VerticalTabs() {
                 onKeyDown={(event) => handleTabKeyDown(event, index)}
                 className={cn(
                   "group relative flex min-h-11 items-start gap-4 border-t border-border py-5 pl-6 text-left outline-none transition-colors first:border-t-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background md:py-6",
+                  isActive && "rounded-xl bg-mint/20 shadow-sm ring-1 ring-primary/15",
                   isActive
                     ? "text-foreground"
                     : "text-muted-foreground hover:text-foreground"
@@ -215,11 +216,21 @@ export function VerticalTabs() {
                   ) : null}
                 </span>
 
-                <span className="mt-1 text-[10px] font-medium tabular-nums opacity-60">
-                  /{screen.number}
+                <span
+                  aria-hidden="true"
+                  className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-mint/15 text-xs font-semibold tracking-[0.08em] text-primary"
+                >
+                  {screen.number}
                 </span>
                 <span className="flex flex-1 flex-col gap-2">
-                  <span className="text-2xl font-medium tracking-tight md:text-3xl">
+                  <span
+                    className={cn(
+                      "text-2xl font-medium tracking-tight md:text-3xl",
+                      isActive
+                        ? "text-3xl font-semibold text-primary md:text-4xl"
+                        : null
+                    )}
+                  >
                     {screen.title}
                   </span>
                   <AnimatePresence initial={false}>
@@ -244,7 +255,7 @@ export function VerticalTabs() {
         </div>
       </div>
 
-      <div className="order-1 lg:order-2 lg:col-span-7 lg:pt-2">
+      <div className="order-1 self-end lg:order-2 lg:col-span-7 lg:pt-2">
         <div
           id={`feature-panel-${activeScreen.id}`}
           role="tabpanel"

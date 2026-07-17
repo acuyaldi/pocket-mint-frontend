@@ -20,6 +20,11 @@ describe("Pocket Mint authentication page contract", () => {
     }
   });
 
+  it("opens signup mode from the registration deep link", () => {
+    expect(loginPage).toContain('searchParams.get("mode") === "register"');
+    expect(loginPage).toContain('? "signup" : "signin"');
+  });
+
   it("preserves field and autocomplete contracts", () => {
     for (const name of ["name", "email", "password", "confirmPassword"]) {
       expect(loginPage).toContain(`name="${name}"`);
@@ -53,6 +58,15 @@ describe("Pocket Mint authentication page contract", () => {
     expect(loginPage).not.toContain("radial-gradient");
     expect(loginPage).not.toContain("SECURE FINTECH WORKSPACE");
     expect(loginPage).not.toContain("ENCRYPTED ACCESS | PRIVACY-FIRST");
+  });
+
+  it("places pulse beams only behind the information panel", () => {
+    expect(loginPage).toContain(
+      'import { PulseBeams } from "@/components/ui/pulse-beams"'
+    );
+    expect(loginPage).toContain('<PulseBeams variant="panel"');
+    expect(loginPage).toContain("isolate overflow-hidden");
+    expect(loginPage).toContain("relative z-10");
   });
 
   it("contains no em dash in visible source copy", () => {

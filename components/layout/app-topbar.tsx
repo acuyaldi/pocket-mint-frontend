@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -16,7 +16,12 @@ function formatTopbarDate(date: Date) {
 
 export function AppTopbar() {
   const [accountLabel, setAccountLabel] = useState("Akun");
-  const currentDate = useMemo(() => formatTopbarDate(new Date()), []);
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -34,21 +39,28 @@ export function AppTopbar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-20 hidden h-16 shrink-0 items-center justify-between bg-background/85 px-10 backdrop-blur-sm md:flex">
-      <div className="flex flex-col">
-        <p className="text-xs text-muted-foreground">
-          Welcome{" "}
-          <span className="font-semibold text-primary">{accountLabel}</span>
-        </p>
-        <p className="mt-0.5 text-xs text-muted-foreground">{currentDate}</p>
+    <header className="sticky top-0 z-20 hidden h-16 shrink-0 bg-background/85 px-10 backdrop-blur-sm md:block">
+      <div className="mx-auto flex h-full w-full max-w-[1280px] items-center justify-between">
+        <div className="flex flex-col">
+          <p className="text-xs text-muted-foreground">
+            Welcome{" "}
+            <span className="font-semibold text-primary">{accountLabel}</span>
+          </p>
+          <p
+            suppressHydrationWarning
+            className="mt-0.5 text-xs tabular-nums text-muted-foreground"
+          >
+            {formatTopbarDate(now)}
+          </p>
+        </div>
+        <button
+          type="button"
+          aria-label="Notifikasi"
+          className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-surface-high hover:text-primary active:scale-95"
+        >
+          <Bell className="size-5" />
+        </button>
       </div>
-      <button
-        type="button"
-        aria-label="Notifikasi"
-        className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-surface-high hover:text-primary active:scale-95"
-      >
-        <Bell className="size-5" />
-      </button>
     </header>
   );
 }

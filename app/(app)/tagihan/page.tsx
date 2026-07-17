@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { AlertTriangle, CalendarClock, CircleDollarSign, LoaderCircle } from "lucide-react";
 
 import { formatCurrency } from "@/lib/utils";
+import { PageHeader } from "@/components/layout/page-header";
 import {
   countDueSoon,
   getJakartaDateKey,
@@ -53,12 +54,10 @@ export default function TagihanPage() {
 
   return (
     <div className="space-y-8">
-      <header>
-        <h1 className="text-[32px] font-semibold leading-10 text-primary">Tagihan</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Pantau semua pemakaian kartu kredit dan paylater, baik satu kali bayar maupun cicilan.
-        </p>
-      </header>
+      <PageHeader
+        title="Tagihan"
+        description="Pantau semua pemakaian kartu kredit dan paylater, baik satu kali bayar maupun cicilan."
+      />
 
       {dueSoonCount > 0 ? (
         <div className="flex items-center gap-3 rounded-xl border border-amber/30 bg-amber/10 p-4" role="status">

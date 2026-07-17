@@ -104,7 +104,17 @@ export default function DashboardPage() {
   const wallets = useMemo(() => walletsData ?? [], [walletsData]);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addModalType, setAddModalType] =
+    useState<AddTransactionData["type"]>("EXPENSE");
+  // Key naik tiap buka: modal remount bersih dengan tab awal sesuai aksi cepat
+  const [addModalKey, setAddModalKey] = useState(0);
   const [isCreating, setIsCreating] = useState(false);
+
+  const openAddModal = useCallback((type: AddTransactionData["type"]) => {
+    setAddModalType(type);
+    setAddModalKey((key) => key + 1);
+    setIsAddModalOpen(true);
+  }, []);
 
   const handleAddSubmit = useCallback(
     async (transactionData: AddTransactionData) => {
@@ -123,10 +133,10 @@ export default function DashboardPage() {
   );
 
   useEffect(() => {
-    const handler = () => setIsAddModalOpen(true);
+    const handler = () => openAddModal("EXPENSE");
     window.addEventListener("fab-add-transaction", handler);
     return () => window.removeEventListener("fab-add-transaction", handler);
-  }, []);
+  }, [openAddModal]);
 
   const { totalAssets, totalDebts, netWorth } = useMemo(() => {
     const assets = wallets
@@ -247,7 +257,7 @@ export default function DashboardPage() {
           </Link>
           <button
             type="button"
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => openAddModal("TRANSFER")}
             className="group flex h-14 items-center justify-center gap-3 rounded-lg border border-border/60 bg-card px-4 text-sm font-semibold transition-all hover:border-primary/40 hover:bg-surface-low"
           >
             <Repeat2 className="size-5 text-primary transition-transform group-hover:scale-110" />
@@ -262,10 +272,10 @@ export default function DashboardPage() {
           </Link>
           <button
             type="button"
-            onClick={() => setIsAddModalOpen(true)}
-            className="group flex h-14 items-center justify-center gap-3 rounded-lg border border-border/60 bg-card px-4 text-sm font-semibold transition-all hover:border-primary/40 hover:bg-surface-low"
+            onClick={() => openAddModal("EXPENSE")}
+            className="group flex h-14 items-center justify-center gap-3 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:opacity-90"
           >
-            <Plus className="size-5 text-primary transition-transform group-hover:scale-110" />
+            <Plus className="size-5 transition-transform group-hover:scale-110" />
             Transaksi
           </button>
         </div>
@@ -342,6 +352,8 @@ export default function DashboardPage() {
                   >
                     {transaction.type === "INCOME" ? (
                       <ArrowUpRight className="size-5 text-mint" />
+                    ) : transaction.type === "TRANSFER" ? (
+                      <Repeat2 className="size-5 text-primary" />
                     ) : (
                       <ArrowDownLeft className="size-5 text-muted-foreground" />
                     )}
@@ -365,10 +377,14 @@ export default function DashboardPage() {
                 </p>
                 <p
                   className={`text-left text-sm font-bold tabular-nums md:text-right ${
-                    transaction.type === "INCOME" ? "text-mint" : "text-coral"
+                    transaction.type === "INCOME"
+                      ? "text-mint"
+                      : transaction.type === "TRANSFER"
+                      ? "text-foreground"
+                      : "text-coral"
                   }`}
                 >
-                  {transaction.type === "EXPENSE" ? "-" : "+"}
+                  {transaction.type === "EXPENSE" ? "-" : transaction.type === "INCOME" ? "+" : ""}
                   {formatCurrency(transaction.amount)}
                 </p>
               </div>
@@ -389,9 +405,11 @@ export default function DashboardPage() {
       </section>
 
       <AddTransactionModal
+        key={addModalKey}
         isOpen={isAddModalOpen}
         isCreating={isCreating}
         wallets={wallets}
+        initialType={addModalType}
         onClose={() => setIsAddModalOpen(false)}
         onSubmit={handleAddSubmit}
       />

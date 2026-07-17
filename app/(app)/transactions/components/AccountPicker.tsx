@@ -93,7 +93,7 @@ export function AccountPicker({
           type="button"
           aria-labelledby={`${labelId} ${valueId}`}
           aria-haspopup="menu"
-          className="grid min-h-14 w-full grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3 rounded-lg border border-border/70 bg-card px-3 py-2 text-left outline-none hover:bg-surface-low focus:border-primary focus:ring-2 focus:ring-primary/15"
+          className="grid min-h-14 w-full grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3 rounded-xl border border-border/70 bg-card px-3 py-2 text-left outline-none hover:bg-surface-low focus:border-primary focus:ring-2 focus:ring-primary/15"
         >
           {selectedWallet ? (
             <>

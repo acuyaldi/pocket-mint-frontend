@@ -24,7 +24,8 @@ describe("add transaction source contract", () => {
   });
 
   it("makes the category placeholder impossible to submit", () => {
-    expect(modalSource).toContain('<option value="" disabled hidden>');
+    // Placeholder hanya teks trigger dropdown, bukan item yang bisa dipilih
+    expect(modalSource).toContain('"Pilih kategori"');
     expect(modalSource).toContain("!categoryId");
     expect(modalSource).toContain("Pilih kategori.");
   });
