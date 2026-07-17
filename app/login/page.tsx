@@ -103,18 +103,6 @@ function LoginForm() {
     async () => (await signInWithGoogle()) ?? null,
     null
   );
-  // React runs form actions inside a transition, so useState updates made
-  // during the action don't paint until it settles; a manual "loading" flag
-  // never shows. useActionState's pending flag does paint, and stays true
-  // through the server-side redirect to /dashboard.
-  const [, submitAction, submitPending] = useActionState(
-    async (_prev: null, formData: FormData) => {
-      await handleSubmit(formData);
-      return null;
-    },
-    null
-  );
-
   // Show the first available error: a submit/validation error, a Google
   // init error, or an OAuth failure bounced back from /auth/callback (?error=).
   const displayError = error ?? googleState?.error ?? searchParams.get("error");
@@ -180,6 +168,18 @@ function LoginForm() {
       setError(result.error);
     }
   }
+
+  // React runs form actions inside a transition, so useState updates made
+  // during the action don't paint until it settles; a manual "loading" flag
+  // never shows. useActionState's pending flag does paint, and stays true
+  // through the server-side redirect to /dashboard.
+  const [, submitAction, submitPending] = useActionState(
+    async (_prev: null, formData: FormData) => {
+      await handleSubmit(formData);
+      return null;
+    },
+    null
+  );
 
   const busy = submitPending || googlePending;
 
