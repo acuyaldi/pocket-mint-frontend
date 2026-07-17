@@ -6,8 +6,6 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   CalendarClock,
-  CheckCircle2,
-  Filter,
   Plus,
   ReceiptText,
   Repeat2,
@@ -161,18 +159,6 @@ export default function DashboardPage() {
     [wallets],
   );
 
-  const reportingCutoff = useMemo(
-    () =>
-      new Intl.DateTimeFormat("id-ID", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      }).format(new Date()),
-    [],
-  );
-
   return (
     <div
       className="space-y-6"
@@ -192,8 +178,7 @@ export default function DashboardPage() {
             </h2>
           </div>
           <div className="text-sm text-white/45 md:text-right">
-            <p>Cutoff: {reportingCutoff}</p>
-            <p className="mt-1">Terakhir diperbarui: sekarang</p>
+            <p>Terakhir diperbarui: sekarang</p>
           </div>
         </div>
         <div className="grid gap-8 border-t border-white/10 pt-8 md:grid-cols-3">
@@ -220,26 +205,20 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border/30 bg-surface-low px-6 py-4">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-          <div className="flex items-center gap-2">
-            <ReceiptText className="size-[18px] text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              {transactions.length} transaksi tercatat
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <CalendarClock className="size-[18px] text-amber" />
-            <span className="text-sm text-muted-foreground">
-              {activeBills.length > 0
-                ? `${activeBills.length} tagihan aktif`
-                : "Tidak ada tagihan aktif"}
-            </span>
-          </div>
+      <section className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-xl border border-border/30 bg-surface-low px-6 py-4">
+        <div className="flex items-center gap-2">
+          <ReceiptText className="size-[18px] text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">
+            {transactions.length} transaksi tercatat
+          </span>
         </div>
-        <div className="flex items-center gap-2 rounded-full bg-mint/10 px-3 py-1 text-mint">
-          <CheckCircle2 className="size-4" />
-          <span className="text-xs font-semibold">Data sinkron</span>
+        <div className="flex items-center gap-2">
+          <CalendarClock className="size-[18px] text-amber" />
+          <span className="text-sm text-muted-foreground">
+            {activeBills.length > 0
+              ? `${activeBills.length} tagihan aktif`
+              : "Tidak ada tagihan aktif"}
+          </span>
         </div>
       </section>
 
@@ -255,14 +234,7 @@ export default function DashboardPage() {
             <Wallet className="size-5 text-primary transition-transform group-hover:scale-110" />
             Dompet
           </Link>
-          <button
-            type="button"
-            onClick={() => openAddModal("TRANSFER")}
-            className="group flex h-14 items-center justify-center gap-3 rounded-lg border border-border/60 bg-card px-4 text-sm font-semibold transition-all hover:border-primary/40 hover:bg-surface-low"
-          >
-            <Repeat2 className="size-5 text-primary transition-transform group-hover:scale-110" />
-            Transfer
-          </button>
+  
           <Link
             href="/tagihan"
             className="group flex h-14 items-center justify-center gap-3 rounded-lg border border-border/60 bg-card px-4 text-sm font-semibold transition-all hover:border-primary/40 hover:bg-surface-low"
@@ -270,6 +242,14 @@ export default function DashboardPage() {
             <ReceiptText className="size-5 text-primary transition-transform group-hover:scale-110" />
             Tagihan
           </Link>
+                  <button
+            type="button"
+            onClick={() => openAddModal("TRANSFER")}
+            className="group flex h-14 items-center justify-center gap-3 rounded-lg border border-border/60 bg-card px-4 text-sm font-semibold transition-all hover:border-primary/40 hover:bg-surface-low"
+          >
+            <Repeat2 className="size-5 text-primary transition-transform group-hover:scale-110" />
+            Transfer
+          </button>
           <button
             type="button"
             onClick={() => openAddModal("EXPENSE")}
@@ -324,13 +304,12 @@ export default function DashboardPage() {
           <h3 className="text-xl font-semibold text-foreground">
             Aktivitas terakhir
           </h3>
-          <button
-            type="button"
-            aria-label="Filter aktivitas"
-            className="rounded-lg border border-border/60 p-2 text-muted-foreground transition-colors hover:bg-surface-low"
+          <Link
+            href="/transactions"
+            className="text-[12px] font-semibold text-primary/70 transition-colors hover:text-primary"
           >
-            <Filter className="size-5" />
-          </button>
+            Lihat semua
+          </Link>
         </div>
         <div className="overflow-hidden rounded-xl border border-border/60 bg-card">
           <div className="hidden grid-cols-[1fr_180px_180px] border-b border-border/40 bg-surface-low/50 px-6 py-4 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground md:grid">
@@ -347,7 +326,11 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-4">
                   <div
                     className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${
-                      transaction.type === "INCOME" ? "bg-mint/12" : "bg-surface-high"
+                      transaction.type === "INCOME"
+                        ? "bg-mint/12"
+                        : transaction.type === "EXPENSE"
+                        ? "bg-coral/10"
+                        : "bg-surface-high"
                     }`}
                   >
                     {transaction.type === "INCOME" ? (
@@ -355,7 +338,7 @@ export default function DashboardPage() {
                     ) : transaction.type === "TRANSFER" ? (
                       <Repeat2 className="size-5 text-primary" />
                     ) : (
-                      <ArrowDownLeft className="size-5 text-muted-foreground" />
+                      <ArrowDownLeft className="size-5 text-coral" />
                     )}
                   </div>
                   <div className="min-w-0">

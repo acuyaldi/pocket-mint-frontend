@@ -32,13 +32,15 @@ describe("Pocket Mint public experience contract", () => {
   it("uses every approved local product screen", () => {
     for (const asset of [
       "dashboard.png",
-      "wallet.png",
-      "transaction.png",
+      "wallets.png",
+      "transactions.png",
       "installment.png",
       "analytics.png",
     ]) {
-      expect(existsSync(root + `public/landing/${asset}`)).toBe(true);
-      expect(page + hero + verticalTabs).toContain(`/landing/${asset}`);
+      expect(existsSync(root + `playwright/screenshots/${asset}`)).toBe(true);
+      expect(page + hero + verticalTabs).toContain(
+        `@/playwright/screenshots/${asset}`
+      );
     }
   });
 
@@ -54,9 +56,9 @@ describe("Pocket Mint public experience contract", () => {
   });
 
   it("uses one top-aligned media frame for every feature", () => {
-    expect(verticalTabs).toMatch(/aspect-\[[^\]]+\]/);
+    expect(verticalTabs).toContain("aspect-16/10");
     expect(verticalTabs).toContain("items-start");
-    expect(verticalTabs).toContain("w-full h-auto");
+    expect(verticalTabs).toContain("h-full w-full object-contain object-top");
     expect(verticalTabs).not.toContain("VISIBLE_IMAGE_RATIO");
     expect(verticalTabs).not.toContain("activeScreen.height *");
     expect(verticalTabs).toContain("ArrowLeft");
@@ -223,7 +225,7 @@ describe("Pocket Mint public experience contract", () => {
 
   it("opens registration directly with the primary CTA sweep", () => {
     expect(hero).toContain('href="/login?mode=register"');
-    expect(hero).toMatch(/landing-cta-sweep[^\n]*min-h-11 rounded-full/);
+    expect(hero).toMatch(/landing-cta-sweep[^\n]*min-h-11 rounded-\[40px\]/);
   });
 
   it("contains no em dash in visible source copy", () => {
