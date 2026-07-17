@@ -113,6 +113,7 @@ besar core flow, dengan gap yang jelas dan dapat dilacak.
 | Analitik (cash flow, kategori, komposisi dompet) — **periode/rentang salah, lihat `PM-STAB-002`** | `app/(app)/analytics/page.tsx` | dihitung dari data `/transactions` (auto-filtered bulan berjalan, bukan `/transactions/all`), `/wallets`, `/bills` (tidak ada endpoint khusus) | — |
 | Kategori (daftar tetap, read-only) | `useCategories` | `GET /categories` | `categoryService.test.ts`, `categoryController.test.ts` |
 | Net worth = assets − outstanding debt (PD-001) | `wallets`/`dashboard` (backend service) | `calculateNetWorth` (`utils/financial.ts`) | `dashboardQueryService.test.ts:69-73` |
+| CHANGELOG / release notes (`pocket-mint-fe`, PM-STAB-010B) | `src/lib/changelog.ts` (`RELEASES`), `app/changelog/page.tsx`, ringkasan di `app/page.tsx` | — (data statis, tidak ada backend) | `tests/changelog.test.ts` |
 
 ### Partially Implemented
 
@@ -134,7 +135,7 @@ besar core flow, dengan gap yang jelas dan dapat dilacak.
 | --- | --- |
 | Ekspor laporan Analitik | Tombol ada di UI (`app/(app)/analytics/page.tsx` baris ~276–282), tanpa `onClick` atau logic ekspor. |
 | Manajemen kategori (create/update/delete) | Tidak ada route/controller/UI untuk ini. Kategori adalah daftar tetap sesuai `skills/financial-logic.skill.md` ("Category is optional metadata") — kemungkinan besar ini memang bukan gap, melainkan scope yang disengaja. |
-| CHANGELOG / release notes | Tidak ada file di kedua repo. |
+| CHANGELOG / release notes (`pocket-mint-be`) | Belum ada struktur changelog di backend. Lihat baris terpisah di "Implemented" untuk status `pocket-mint-fe` (PM-STAB-010B). |
 
 ### Needs Verification
 

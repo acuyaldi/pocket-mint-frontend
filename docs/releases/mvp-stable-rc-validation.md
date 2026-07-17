@@ -1,0 +1,399 @@
+# Pocket Mint — MVP Stable Release Candidate Validation (PM-STAB-010D)
+
+Audit tanggal: **18 Juli 2026**. Ini adalah audit akhir untuk menentukan
+apakah Pocket Mint siap menjadi **MVP Stable**. Sesuai instruksi task, status
+**tidak** langsung diubah menjadi MVP Stable dalam dokumen ini — dokumen ini
+hanya memvalidasi dan merekomendasikan.
+
+Release candidate yang divalidasi: **`v0.3.0-rc.1`** (label evidensi untuk HEAD
+kedua repo pada tanggal audit — lihat §9 untuk apa yang termasuk dan catatan
+tentang versi/tag yang belum benar-benar dibuat).
+
+Referensi silang: `known-issues.md` (PM-STAB-001–010), `release-status.md`,
+`stable-criteria.md`, `mvp-stability-audit.md`,
+`pocket-mint-be/docs/deployment-runbook.md`,
+`pocket-mint-be/docs/prisma-migration-reconciliation.md`,
+`pocket-mint-be/docs/backup-restore-runbook.md`.
+
+---
+
+## 1. Ringkasan eksekutif
+
+**Keputusan akhir: Ready for another RC.** Bukan Not Ready (mayoritas
+temuan Critical/High core-flow dari audit sebelumnya sudah diperbaiki dan
+diverifikasi ulang dengan bukti langsung hari ini), dan bukan Ready to
+promote (dua kriteria wajib eksplisit gagal: **credential rotation High masih
+terbuka**, dan **tidak ada production smoke test sungguhan** karena tidak ada
+deployment staging/production yang benar-benar berjalan. Lihat §7 dan §8).
+
+Temuan baru paling penting dari audit ini (di luar 10 blocker existing):
+
+- **[Blocker baru, mempengaruhi "Integration test aktif"]** Seluruh
+  infrastruktur backup/restore, guard `TEST_DATABASE_URL`, runner integration
+  test, dan wiring CI untuk Postgres service **ada di working tree tapi belum
+  di-commit** ke git `pocket-mint-be`. Lihat §4 dan §6.
+
+---
+
+## 2. Full backend test
+
+```
+cd pocket-mint-be && npx vitest run
+```
+
+**Hasil:** `42 test files passed, 1 skipped (43)` / `381 tests passed, 11 skipped (392)`
+tanpa `TEST_DATABASE_URL` (11 skip = seluruh isi `test/prismaAdapter.integration.test.ts`,
+`describe.skipIf(!TEST_DATABASE_URL)`).
+
+Dijalankan ulang dengan `TEST_DATABASE_URL` mengarah ke database disposable
+baru (lihat §5): **392/392 lulus, 0 skip, 0 gagal.**
+
+**Status: PASS.**
+
+## 3. Full frontend test
+
+```
+cd pocket-mint-fe && npx vitest run
+```
+
+**Hasil:** `27 test files passed (27)` / `170 tests passed (170)`, 0 gagal, 0 skip.
+
+**Status: PASS.**
+
+## 4. Typecheck
+
+```
+npx tsc --noEmit
+```
+
+- Backend: bersih, tanpa error.
+- Frontend: bersih, tanpa error.
+
+**Status: PASS.**
+
+## 5. Lint
+
+- Backend: tidak ada script/config lint (tidak ada ESLint config di repo) —
+  tidak dijalankan, tidak ada regresi yang bisa dideteksi lint di sisi ini.
+- Frontend: `npm run lint` (`eslint .`) → bersih, tanpa error/warning.
+
+**Status: PASS** (frontend). Backend **N/A** (tidak ada lint yang dikonfigurasi
+— bukan kegagalan, tapi dicatat sebagai gap tooling).
+
+## 6. Production build
+
+```
+# Backend
+npx prisma generate && tsc && node src/scripts/copy-prisma-client.cjs
+# Frontend
+next build
+```
+
+- Backend: build sukses. `dist/generated/prisma/client.js` ada dan
+  `require('./dist/generated/prisma/client')` berhasil (verifikasi packaging
+  sesuai `agent-rules.skill.md`). `npx prisma validate` → schema valid.
+- Frontend: `next build` (Turbopack) sukses, seluruh 14 route (10 halaman +
+  proxy middleware) ter-generate tanpa error TypeScript.
+
+**Status: PASS.**
+
+⚠️ **Catatan git state ditemukan selama build (bukan hasil audit ini, kondisi
+working tree saat ini):**
+- `pocket-mint-be`: `git status` menunjukkan **~29 path berubah/untracked**
+  yang **belum di-commit**, termasuk `package.json` (script `test:integration`,
+  `db:backup`, `db:restore`, `db:verify`, dependency `embedded-postgres`),
+  seluruh isi `scripts/` (`db-backup.mjs`, `db-restore.mjs`, `db-verify.mjs`,
+  `run-integration-tests.mjs`), `src/lib/assertTestDatabaseUrl.ts`,
+  `test/assertTestDatabaseUrl.test.ts`, `docs/backup-restore-runbook.md`,
+  `docs/database-testing.md`, dan perubahan `.github/workflows/ci.yml` yang
+  menambahkan Postgres service + `TEST_DATABASE_URL` untuk CI.
+- `pocket-mint-fe`: 5 file dokumentasi rilis (`README.md`, `known-issues.md`,
+  `release-checklist.md`, `release-status.md`,
+  `templates/release-template.md`) memiliki perubahan lokal belum di-commit.
+- **Dampak:** seluruh evidence backup/restore dan integration-test runner di
+  §4 dan §7 **valid secara fungsional** (sudah diverifikasi berjalan pada
+  sesi ini dan pada drill 18 Juli sebelumnya), tapi **tidak reproducible dari
+  clone/CI bersih** selama belum di-commit. CI yang ter-commit saat ini hanya
+  menjalankan `npx vitest run` tanpa Postgres service — integration suite
+  ter-skip di CI walau lulus secara lokal. Ini **memblokir prasyarat
+  "Integration test aktif"** sampai perubahan ini benar-benar masuk git
+  history. Lihat §11 blocker #1.
+
+## 7. Database provisioning dari kosong + migration deploy
+
+```
+EMBEDDED_PG_PORT=55491 node scripts/run-integration-tests.mjs
+```
+
+Menjalankan disposable PostgreSQL 18 (`embedded-postgres`), lalu
+`prisma migrate deploy` dari database benar-benar kosong:
+
+```
+5 migrations found in prisma/migrations
+Applying migration `20260710000000_baseline`
+Applying migration `20260711172700_remove_local_user_password`
+Applying migration `20260711223000_add_transaction_to_wallet`
+Applying migration `20260717000000_generalize_wallets_and_bills`
+Applying migration `20260718000000_drop_unused_transfer_model`
+All migrations have been successfully applied.
+```
+
+Diikuti test suite integrasi Prisma penuh terhadap database ini:
+`Test Files 1 passed (1)` / `Tests 11 passed (11)`.
+
+Catatan: migration ke-5 (`20260718000000_drop_unused_transfer_model`)
+mengonfirmasi model `Transfer` yang mati (PM-STAB-009) **sudah dihapus** dari
+schema via migration nyata, bukan hanya diedit di `schema.prisma`.
+
+**Status: PASS** untuk database baru/kosong. Provisioning staging/production
+nyata (`migrate resolve --applied` + `migrate deploy` terhadap database
+bersama) **masih belum dieksekusi** — tetap manual per
+`prisma-migration-reconciliation.md` §11 dan `deployment-runbook.md` §5, dan
+di luar cakupan yang aman untuk dijalankan tanpa akses/approval eksplisit ke
+database bersama. **Tidak ada seed minimal terpisah yang dibutuhkan** — Prisma
+migration sudah membentuk schema lengkap; tidak ada data seed wajib untuk
+smoke test (kategori transaksi diverifikasi ter-provision otomatis, lihat §8).
+
+## 8. Manual smoke test core flows (fresh DB) + Cross-user isolation
+
+Dijalankan end-to-end secara live terhadap server yang di-boot melawan
+database disposable di atas (server: `ts-node --transpile-only src/server.ts`,
+JWT HS256 lokal test-only, dua user berbeda A dan B). Ringkasan hasil nyata
+(bukan simulasi):
+
+| Langkah | Hasil |
+| --- | --- |
+| `POST /v1/users/sync` (user A, user B) | `201` masing-masing, dua user independen berhasil dibuat |
+| `POST /v1/wallets` (Dompet A — CASH, Dompet B — CASH) | `201` masing-masing, `userId` benar sesuai token |
+| `GET /v1/categories` | `200`, kategori default ter-provision (Bonus, Belanja, Hiburan, Kesehatan, Lainnya, Makanan, Tagihan, Transportasi) |
+| `POST /v1/transactions` INCOME (kategori sesuai) pada Dompet A | `201`, saldo bertambah |
+| `POST /v1/transactions` EXPENSE dengan kategori bertipe salah | `400 BAD_REQUEST` "Tipe kategori tidak sesuai dengan tipe transaksi" — validasi type-matching kategori bekerja |
+| `POST /v1/wallets` Kartu Kredit A (CREDIT_CARD, creditLimit 5.000.000) | `201` |
+| `POST /v1/transactions` INCOME ke wallet CREDIT_CARD (PM-STAB-007) | `400 BAD_REQUEST` "Pemasukan tidak bisa dicatat ke wallet utang (kartu kredit, paylater, atau pinjaman)" — **guard bekerja end-to-end via HTTP nyata** |
+| `GET /v1/dashboard/summary` (user A) | `200 {"total_aset":1250000,"total_utang":0,"net_worth":1250000}` — **PD-001 benar** (1.000.000 awal + 250.000 income) |
+| `GET /v1/wallets` (user B) | `200`, **hanya** mengembalikan Dompet B — tidak ada data user A bocor |
+| `PUT /v1/wallets/{walletA_id}` (token user B) | `404 NOT_FOUND` "Wallet with id ... not found" — user B tidak bisa mengubah wallet user A |
+| `DELETE /v1/wallets/{walletA_id}` (token user B) | `404 NOT_FOUND` — user B tidak bisa menghapus wallet user A |
+| `GET /v1/dashboard/summary` (user B) | `200 {"total_aset":500000,...}` — angka user B murni, tidak tercampur dengan user A |
+| `GET /v1/wallets` tanpa token | `401 UNAUTHORIZED` |
+
+**Status: PASS.** Core flow (identity bootstrap, wallet, transaksi
+income/expense, kategori, kartu kredit, dashboard PD-001) dan cross-user
+isolation (read, update, delete, dashboard) seluruhnya benar terhadap
+database yang benar-benar baru — bukan hanya lulus unit test terisolasi.
+
+## 9. Cross-user isolation
+
+Termasuk dalam tabel §8 di atas (baris `GET/PUT/DELETE` dengan token user B
+terhadap resource user A). Seluruhnya lulus: tidak ada baca, ubah, atau hapus
+lintas user yang berhasil; user B tidak pernah melihat data finansial user A.
+Ini konsisten dengan hasil audit sebelumnya (`mvp-stability-audit.md` bagian
+11, delapan test boundary/ownership) — sekarang diverifikasi ulang lewat
+permintaan HTTP nyata, bukan hanya lewat test unit.
+
+**Status: PASS.**
+
+## 10. Backup dan restore
+
+**Client tools (`pg_dump`/`pg_restore`/`psql`) tidak tersedia di lingkungan
+audit ini** (tidak ter-install, dan `embedded-postgres` sengaja tidak
+menyertakan binary client — lihat `backup-restore-runbook.md` §2). Drill baru
+tidak dijalankan ulang pada sesi ini karena keterbatasan lingkungan tersebut.
+
+Bukti yang dipakai untuk validasi ini adalah drill yang **sudah didokumentasikan
+dan bertanggal 18 Juli 2026 (hari yang sama)** di
+`pocket-mint-be/docs/backup-restore-runbook.md` §7, dijalankan terhadap
+PostgreSQL 18 disposable (bukan Supabase, bukan database bersama):
+
+- Backup (`pg_dump --format=custom`): sukses, 0.1s, ~20 KB.
+- Guard restore diuji (semua ditolak sesuai desain): tanpa `RESTORE_TARGET_URL`,
+  host `*.supabase.co`, nama database `postgres`, tanpa `CONFIRM_RESTORE=yes`,
+  restore ke database yang sudah berisi tabel tanpa `--force`.
+- Restore ke database kosong baru: sukses, 0.4s.
+- Verifikasi (`db-verify.mjs`): row count restored == source persis (users: 2,
+  wallets: 3, transactions: 3, installments: 1, categories: 3), 0 orphan FK, 9
+  FK constraint hadir.
+- Smoke test aplikasi terhadap database hasil restore: build + start server
+  → `GET /health` 200; `GET /v1/dashboard/summary` dan `GET /v1/wallets`
+  dengan JWT nyata → 200, nilai sesuai data yang direstore.
+
+**Status: PASS secara fungsional (evidence tervalidasi dan konsisten),
+tapi dengan syarat penting:** skrip yang menjalankan drill ini
+(`scripts/db-backup.mjs`, `db-restore.mjs`, `db-verify.mjs`) **belum
+di-commit ke git** (lihat §6). Backup/restore terbukti bekerja, tapi belum
+"terkunci" sebagai bagian permanen dari repository — lihat blocker #1 di §11.
+
+## 11. Deployment staging atau production candidate
+
+Tidak ditemukan deployment staging/production yang benar-benar berjalan:
+tidak ada URL Railway/Vercel/hosting lain yang ter-referensi di repo maupun
+env, dan `deployment-runbook.md` §5–§8 secara eksplisit menandai migration
+staging/production sebagai **manual, belum dieksekusi** (butuh akses
+database bersama + jendela backup + approval eksplisit — di luar cakupan
+yang aman untuk task audit ini).
+
+Yang **bisa** dan **sudah** diverifikasi sebagai kandidat:
+- Production build lokal (backend `dist/`, frontend `next build`) — PASS
+  (§6).
+- Server production build backend, dijalankan langsung dari `dist/server.js`
+  (bukan `ts-node`), start bersih dan `/health` 200 (dibuktikan ulang lewat
+  drill backup/restore §10, bagian smoke-test aplikasi).
+
+**Status: TIDAK ADA production/staging environment nyata untuk diuji.**
+Ini secara eksplisit memblokir kriteria "production smoke test Pass" yang
+disyaratkan untuk status Ready to promote — build lokal bukan pengganti sah
+untuk smoke test production sungguhan.
+
+## 12. Responsive test desktop dan mobile
+
+Dijalankan ulang **hari ini** (bukan memakai screenshot lama 17 Juli, yang
+mendahului fix Net Worth) memakai `scripts/capture-authenticated-pages.mjs`
+(desktop, 1440×900) dan skrip tambahan sesi ini untuk viewport mobile
+(390×844), login sungguhan dengan akun `e2e@pocketmint.test` terhadap
+dev server yang sudah berjalan (`localhost:4000` FE, `localhost:5001` BE).
+
+- **Desktop:** Dashboard, Dompet, Transaksi, Cicilan, Analitik — seluruhnya
+  ter-capture ulang. Dashboard menunjukkan **Rp 28.664.000** sebagai "Posisi
+  keuangan bersih" = Rp 60.950.000 (aset) − Rp 32.286.000 (utang) — **PD-001
+  benar secara visual di UI produksi**, bukan hanya di response API
+  (mengonfirmasi PM-STAB-001 selesai secara end-to-end).
+- **Mobile (390×844):** kelima halaman ter-capture, bottom navigation
+  tampil dengan 5 ikon, tidak ada horizontal overflow terlihat, Net Worth di
+  Hero Card konsisten dengan desktop, filter "6 bulan" pada Analitik
+  menampilkan data cash flow yang terisi (bukan kosong seperti sebelum
+  PM-STAB-002 diperbaiki).
+- Tombol "Ekspor laporan" di halaman Analitik **masih tanpa handler**
+  (`KI-EXPORT`, Medium, sudah tercatat sebelumnya, tidak baru).
+- Label navigasi 5-item menampilkan **Analitik**, bukan **Akun** yang
+  diwajibkan `skills/design.md`/`skills/ui-system.skill.md` — deviasi ini
+  sudah tercatat di `src/lib/changelog.ts` `knownIssues` (item terkait
+  "Label navigasi Analitik") sehingga bukan temuan baru, tapi dikonfirmasi
+  masih ada di build hari ini.
+
+**Status: PASS** untuk fungsi dan tidak ada regresi visual/overflow;
+deviasi label nav dan tombol ekspor tetap Medium/Low tercatat, tidak
+blocking.
+
+## 13. Review known issues lengkap (PM-STAB-001 s.d. 010) + prasyarat lain
+
+| ID | Severity | Status hasil audit ini | Bukti |
+| --- | --- | --- | --- |
+| PM-STAB-001 | Critical | **Resolved** (kode + screenshot + live API hari ini) | §12, §8 (`dashboardA` net_worth benar) |
+| PM-STAB-002 | High | **Resolved** (kode `period.ts`, `/transactions/all`, screenshot Analitik "6 bulan" terisi) | §12 |
+| PM-STAB-003 | High | **Masih Open** — rotasi kredensial & purge history masih "PENDING EXPLICIT APPROVAL (do not execute)" per `deployment-runbook.md` §10–11, tidak ada dokumen lebih baru yang mengonfirmasi selesai | tidak berubah sejak audit sebelumnya |
+| PM-STAB-004 | High | **Resolved untuk database baru/kosong** (§7); **masih Open untuk staging/production** karena belum ada environment staging/production nyata sama sekali untuk dijalankan | §7, §11 |
+| PM-STAB-005 | High | **Resolved** — `profile/page.tsx` memanggil `signInWithPassword` + `updateUser` sungguhan, 19 test kontrak, bagian dari 170 test FE yang lulus | kode + test suite §3 |
+| PM-STAB-006 | Medium | **Resolved secara kode dan test** (bagian dari 392 test BE yang lulus, termasuk kasus PM-STAB-006 di `installmentPaymentService.test.ts`) | §2 |
+| PM-STAB-007 | Medium | **Resolved** — dikonfirmasi lewat unit test **dan** smoke test HTTP langsung (§8: `txIncomeToDebtRejected` → 400) | §2, §8 |
+| PM-STAB-008 | Medium | **Resolved dengan 1 sisa cacat kecil**: `pocket-mint-fe/skills/financial-logic.skill.md` dan `.claude/skills/financial-logic.skill.md` masih menulis `PAYLOAD` (typo) alih-alih `PAYLATER` pada baris daftar tipe wallet DEBT (baris ~18), padahal dua baris di bawahnya di file yang sama sudah benar menulis `PAYLATER` — kontradiksi internal kecil dalam satu file. Backend punya versi yang benar. | ditemukan sesi ini, lihat §11 blocker #2 |
+| PM-STAB-009 | Low | **Sebagian resolved** — model Prisma `Transfer` **sudah dihapus** via migration `20260718000000_drop_unused_transfer_model` (dikonfirmasi §7); label nav "Cicilan" sudah benar. Sisa deviasi: nav 5-item menampilkan "Analitik", bukan "Akun" yang diwajibkan kontrak desain — sudah tercatat di `changelog.ts`, dikonfirmasi masih ada (§12). | §7, §12 |
+| PM-STAB-010 | Low | Sub-item 1 (integration test skip) **resolved secara fungsional** (392/392 lulus dengan `TEST_DATABASE_URL`, §2/§7) **tapi belum aktif secara permanen** karena runner + CI wiring belum di-commit (§6 blocker #1). Sub-item 2 (changelog FE) **resolved**, changelog BE tetap belum ada (minor, tidak blocking). Sub-item 3 (backup/restore) **resolved secara evidence** (§10) dengan syarat commit yang sama. | §2, §6, §10 |
+
+**Prasyarat tambahan dari task ini:**
+
+- ✅ Password flow nyata tersedia (PM-STAB-005 resolved, bukan dihapus dari UI — direplace dengan flow nyata).
+- ⚠️ Financial documentation sinkron — **hampir**: benar secara substansi
+  (formula, aturan, guard semuanya cocok dengan kode), tapi ada 1 typo
+  `PAYLOAD`/`PAYLATER` yang belum diperbaiki di 2 salinan file FE (lihat
+  PM-STAB-008 di atas).
+- ✅ Integration test **ada dan lulus** secara fungsional, tapi ⚠️ **belum
+  "aktif" dalam artian permanen/CI** karena kodenya belum di-commit — lihat
+  blocker #1.
+- ✅ Backup dan restore **sudah diuji** (evidence tervalidasi, §10), dengan
+  syarat commit yang sama.
+- ✅ Changelog tersedia (`pocket-mint-fe/src/lib/changelog.ts`, versi `0.1.0`
+  MVP Beta); **belum ada entri untuk RC ini** — lihat §14.
+
+---
+
+## 14. Matriks Pass/Fail ringkas
+
+| Item | Hasil |
+| --- | --- |
+| Full backend test | ✅ PASS (392/392 dengan DB, 381/381 tanpa DB) |
+| Full frontend test | ✅ PASS (170/170) |
+| Typecheck (BE+FE) | ✅ PASS |
+| Lint (FE) | ✅ PASS |
+| Lint (BE) | ➖ N/A (tidak dikonfigurasi) |
+| Production build (BE+FE) | ✅ PASS |
+| Provisioning database kosong + migration deploy | ✅ PASS |
+| Seed minimal | ➖ Tidak dibutuhkan (tidak ada seed wajib di luar migration) |
+| Manual smoke test core flow | ✅ PASS |
+| Cross-user isolation | ✅ PASS |
+| Backup | ✅ PASS (evidence 18 Juli 2026, kode belum di-commit) |
+| Restore ke database baru | ✅ PASS (evidence 18 Juli 2026, kode belum di-commit) |
+| Smoke test database hasil restore | ✅ PASS (evidence 18 Juli 2026) |
+| Deployment staging/production nyata | ❌ TIDAK ADA — hanya production build lokal |
+| Responsive desktop | ✅ PASS |
+| Responsive mobile | ✅ PASS |
+| Critical open | ✅ 0 |
+| High core-flow open | ✅ 0 (PM-STAB-001/002/005 resolved) |
+| High non-core-flow open | ❌ 2 (PM-STAB-003 kredensial, PM-STAB-004 staging/production) |
+| Known issues tersisa hanya Medium/Low | ❌ Tidak — 2 High masih terbuka (di atas) |
+
+---
+
+## 15. Blocker tersisa (menuju Ready to promote)
+
+1. **[Blocker, prioritas tertinggi]** Commit seluruh infrastruktur backup/restore,
+   integration-test runner, guard `TEST_DATABASE_URL`, dan wiring CI Postgres
+   di `pocket-mint-be` (§6) ke git. Tanpa ini, "Integration test aktif" dan
+   "Backup dan restore telah diuji" tidak bertahan lebih lama dari sesi lokal
+   ini — CI dan kontributor lain tidak akan melihatnya.
+2. **[Blocker, High, PM-STAB-003]** Eksekusi rotasi kredensial database
+   Supabase dan API key lama, lalu putuskan/eksekusi rencana purge git
+   history (`deployment-runbook.md` §10–11) — perlu persetujuan eksplisit
+   dan akses di luar repo (Supabase dashboard).
+3. **[Blocker, High, PM-STAB-004 sisa]** Jalankan `migrate resolve --applied`
+   + `migrate deploy` terhadap database staging/production nyata begitu
+   environment tersebut ada — atau, jika belum ada environment staging/
+   production sama sekali, buat environment tersebut lebih dulu (di luar
+   cakupan audit ini, butuh keputusan/infra terpisah).
+4. **[Blocker untuk "production smoke test Pass"]** Deploy ke staging atau
+   production sungguhan dan jalankan smoke-test matrix
+   (`deployment-runbook.md` §9) terhadap deployment nyata tersebut. Build
+   lokal yang sudah PASS (§6) tidak dapat menggantikan ini.
+5. **[Minor, tidak blocking promosi tapi harus diperbaiki sebelum RC berikut]**
+   Perbaiki typo `PAYLOAD` → `PAYLATER` di
+   `pocket-mint-fe/skills/financial-logic.skill.md` dan
+   `pocket-mint-fe/.claude/skills/financial-logic.skill.md` (baris ~18).
+6. **[Kosmetik, Low, sudah tercatat]** Selaraskan label navigasi 5-item
+   dengan kontrak desain (`Akun` vs `Analitik` saat ini) atau perbarui
+   `skills/design.md`/`skills/ui-system.skill.md` jika keputusan produk
+   memang menambah item ke-6/menukar item — perlu keputusan produk eksplisit,
+   bukan sekadar perbaikan kode.
+7. **[Kosmetik, Low, sudah tercatat]** Tombol "Ekspor laporan" di Analitik
+   (`KI-EXPORT`) masih tanpa fungsi.
+
+## 16. Rekomendasi keputusan
+
+### Ready for another RC
+
+Alasan:
+- Seluruh Critical dan seluruh High **core-flow** (net worth, analytics
+  period, password) tertutup dengan bukti kode, test otomatis, **dan**
+  verifikasi end-to-end langsung (HTTP nyata + screenshot) pada sesi audit
+  ini — bukan hanya klaim dokumen lama.
+- Financial integrity, migration database baru, cross-user isolation, build,
+  dan backup/restore (secara evidence) seluruhnya **PASS** dengan bukti
+  konkret dan dapat ditelusuri.
+- Namun **dua kriteria wajib untuk Ready to promote gagal secara eksplisit**:
+  tidak ada production smoke test sungguhan (tidak ada deployment nyata untuk
+  diuji), dan masih ada 2 known issue **High** yang terbuka (kredensial,
+  migration staging/production) — bukan hanya Medium/Low seperti disyaratkan.
+- Temuan baru (infrastruktur backup/restore & integration test belum
+  di-commit) berarti sebagian bukti yang sudah valid secara fungsional belum
+  "terkunci" ke dalam repository — risiko regresi diam-diam jika working
+  tree ini hilang.
+
+**Rekomendasi konkret sebelum RC berikutnya:** selesaikan 4 blocker di §15
+(commit infra, rotasi kredensial, migration staging/production, deployment +
+smoke test production nyata), lalu jalankan ulang validasi ini. Setelah itu,
+"Ready to promote to MVP Stable" menjadi realistis tanpa syarat tambahan yang
+berat.
+
+**v0.3.0-rc.1 tidak di-tag/commit dalam task ini** (task eksplisit meminta
+tidak membuat rilis final, dan `pocket-mint-be` memiliki working tree yang
+belum bersih — lihat §6). Nomor versi ini adalah label evidensi untuk hasil
+validasi di dokumen ini; keputusan untuk benar-benar melakukan version bump +
+git tag diserahkan ke pemilik repo setelah blocker #1 (commit) diselesaikan.
