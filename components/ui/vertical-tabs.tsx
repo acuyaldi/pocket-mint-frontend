@@ -72,7 +72,7 @@ const SCREENS = [
   },
 ] as const;
 
-const AUTO_PLAY_DURATION = 3000;
+const AUTO_PLAY_DURATION = 5000;
 
 export function VerticalTabs() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -194,7 +194,7 @@ export function VerticalTabs() {
                 onKeyDown={(event) => handleTabKeyDown(event, index)}
                 className={cn(
                   "group relative flex min-h-11 items-start gap-4 border-t border-border py-5 pl-6 text-left outline-none transition-colors first:border-t-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background md:py-6",
-                  isActive && "rounded-xl bg-mint/20 shadow-sm ring-1 ring-primary/15",
+                  isActive && "bg-mint/10 shadow-sm",
                   isActive
                     ? "text-foreground"
                     : "text-muted-foreground hover:text-foreground"
@@ -202,22 +202,31 @@ export function VerticalTabs() {
               >
                 <span
                   aria-hidden="true"
-                  className={cn(
-                    "absolute inset-y-0 left-0 w-0.5 bg-border",
-                    isActive && "bg-primary/25"
-                  )}
+                  className="absolute inset-y-0 left-0 w-1 bg-border"
                 >
                   {isActive ? (
-                    <motion.span
-                      key={`${screen.id}-${isPaused}`}
-                      className="absolute inset-x-0 top-0 h-full origin-top bg-primary"
-                      initial={{ scaleY: 0 }}
-                      animate={{ scaleY: isPaused ? 0 : 1 }}
-                      transition={{
-                        duration: isPaused ? 0.15 : AUTO_PLAY_DURATION / 1000,
-                        ease: "linear",
-                      }}
-                    />
+                    <>
+                      <motion.span
+                        key={`${screen.id}-fill-${isPaused}`}
+                        className="absolute inset-0 origin-top bg-mint"
+                        initial={{ scaleY: 0 }}
+                        animate={{ scaleY: isPaused ? 0 : 1 }}
+                        transition={{
+                          duration: isPaused ? 0.15 : AUTO_PLAY_DURATION / 1000,
+                          ease: "linear",
+                        }}
+                      />
+                      <motion.span
+                        key={`${screen.id}-dot-${isPaused}`}
+                        className="absolute left-1/2 z-10 -ml-3 -mt-3 size-6 rounded-full border-[3px] border-mint bg-background shadow-sm"
+                        initial={{ top: "0%" }}
+                        animate={{ top: isPaused ? "0%" : "100%" }}
+                        transition={{
+                          duration: isPaused ? 0.15 : AUTO_PLAY_DURATION / 1000,
+                          ease: "linear",
+                        }}
+                      />
+                    </>
                   ) : null}
                 </span>
 
@@ -316,5 +325,3 @@ export function VerticalTabs() {
     </div>
   );
 }
-
-export default VerticalTabs;
