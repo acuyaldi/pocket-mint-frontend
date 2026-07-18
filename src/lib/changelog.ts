@@ -36,9 +36,9 @@ export const RELEASES: Release[] = [
       "CI mencakup typecheck, test, build, dan pemindaian artefak autentikasi lama pada bundle produksi",
     ],
     knownIssues: [
-      "Form ubah password di halaman Profil belum benar-benar memanggil API (lihat docs/releases/known-issues.md #1)",
-      "Tombol \"Ekspor laporan\" di halaman Analitik belum berfungsi (known-issues.md #2)",
-      "Label navigasi \"Analitik\" menyimpang dari kontrak desain 5-item (known-issues.md #5)",
+      "Tombol \"Ekspor laporan\" di halaman Analitik belum berfungsi (known-issues.md KI-EXPORT)",
+      "Label navigasi menyimpang dari kontrak desain 5-item (known-issues.md PM-STAB-009)",
+      "Rotasi kredensial database dan migration staging/production belum dieksekusi — memblokir promosi ke MVP Stable (known-issues.md PM-STAB-003, PM-STAB-004)",
     ],
   },
 ];
