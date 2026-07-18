@@ -34,6 +34,16 @@ Severity: **Critical** (data/keamanan salah atau bocor), **High** (menyesatkan
 pengguna atau memblokir rilis), **Medium** (fungsional tapi tidak lengkap),
 **Low** (kosmetik/dokumentasi).
 
+**Update 19 Juli 2026 (penutupan `PM-STAB-004`):** Migrasi database
+production dijalankan dan diverifikasi (`prisma migrate status` → "Database
+schema is up to date!"; `prisma migrate diff --from-config-datasource
+--to-schema prisma/schema.prisma --script` → "This is an empty migration.";
+deployment Railway production sehat; `GET /health` → `200`). `PM-STAB-004`
+diperbarui menjadi **Resolved** — lihat entri di bawah untuk detail closure.
+Dengan `PM-STAB-003` dan `PM-STAB-004` sama-sama tidak lagi Open, tidak ada
+lagi blocker High/Critical menuju MVP Stable; lihat `release-status.md`
+untuk status terkini (**MVP Stable**, `0.3.0`, 19 Juli 2026).
+
 Issue PM-STAB-001 s.d. PM-STAB-010 adalah **blocker menuju MVP Stable**,
 diurutkan dari severity/risiko tertinggi ke terendah, sesuai
 `mvp-stability-audit.md` bagian "Blocker terurut dari risiko tertinggi". ID
@@ -222,11 +232,24 @@ ditambahkan pada audit `v0.3.0-rc.2` sebagai temuan Medium **non-blocking**
   menghilangkan residual visibility di atas, tapi bukan blocker keamanan
   karena tidak ada kredensial privileged yang perlu dilindungi olehnya.
 
-## PM-STAB-004 — [High → partially resolved] Database baseline migration is incomplete
+## PM-STAB-004 — [Resolved] Database baseline migration is incomplete
 
-- **Status:** Open — narrowed. *(Severity dinaikkan dari Medium menjadi
-  High — lihat catatan rekonsiliasi di bawah. Diperbarui 18 Juli 2026 setelah
-  perbaikan langsung pada migration baseline; lihat catatan verifikasi.)*
+- **Status:** **Resolved** (19 Juli 2026). *(Severity history: Medium → High
+  (18 Juli 2026, lihat catatan rekonsiliasi di bawah) → Resolved (19 Juli
+  2026, migrasi production dijalankan — lihat "Penutupan" di bawah).)*
+- **Penutupan (19 Juli 2026):** Sub-item terakhir yang menahan status Open —
+  `migrate resolve --applied` + `migrate deploy` terhadap database production
+  nyata — sudah dijalankan dan diverifikasi:
+  - `npx prisma migrate status` → `Database schema is up to date!`
+  - `npx prisma migrate diff --from-config-datasource --to-schema
+    prisma/schema.prisma --script` → `-- This is an empty migration.`
+  - Deployment Railway production sehat.
+  - `GET /health` → `200`.
+  Acceptance criteria PM-STAB-004 (lihat di bawah) sekarang terpenuhi
+  sepenuhnya — baseline migration terverifikasi **dan** `migrate resolve
+  --applied` + `migrate deploy` sudah dijalankan terhadap production nyata.
+  Lihat juga Addendum "Penutupan PM-STAB-004" di
+  `mvp-stable-rc-validation.md` dan `release-status.md`.
 - **Affected area:** `pocket-mint-be/prisma/migrations`, prosedur
   provisioning database staging/production.
 - **Expected behavior:** `prisma migrate status` bersih pada database baru;
@@ -286,20 +309,22 @@ ditambahkan pada audit `v0.3.0-rc.2` sebagai temuan Medium **non-blocking**
   migration repository. Tidak ada dampak langsung ke pengguna existing selama
   database production saat ini tidak diprovision ulang dari nol.
 - **Sisa pekerjaan sebelum acceptance criteria PM-STAB-004 terpenuhi
-  sepenuhnya:** `migrate resolve --applied 20260710000000_baseline` +
-  `migrate deploy` (untuk 3 migration terbaru, termasuk migration ke-4) masih
-  ditandai eksplisit **"⚠ MANUAL — run yourself after review"** dan **belum
-  dieksekusi** terhadap staging/production nyata — ini butuh akses ke
-  database bersama, backup/PITR window, dan persetujuan eksplisit yang di
-  luar cakupan task ini (lihat `agent-rules.skill.md`: migration command
-  hanya boleh dijalankan terhadap database disposable). Jangan tandai
-  PM-STAB-004 resolved sampai langkah staging/production ini benar-benar
-  dijalankan dan diverifikasi.
+  sepenuhnya (historis, per 18 Juli 2026 — lihat "Penutupan (19 Juli 2026)"
+  di atas untuk status terkini):** `migrate resolve --applied
+  20260710000000_baseline` + `migrate deploy` (untuk 3 migration terbaru,
+  termasuk migration ke-4) masih ditandai eksplisit **"⚠ MANUAL — run
+  yourself after review"** dan **belum dieksekusi** terhadap staging/production
+  nyata — ini butuh akses ke database bersama, backup/PITR window, dan
+  persetujuan eksplisit yang di luar cakupan task ini (lihat
+  `agent-rules.skill.md`: migration command hanya boleh dijalankan terhadap
+  database disposable). Jangan tandai PM-STAB-004 resolved sampai langkah
+  staging/production ini benar-benar dijalankan dan diverifikasi. **(Ini
+  sudah terjadi 19 Juli 2026 — lihat "Penutupan" di atas.)**
 - **Acceptance criteria:** Baseline migration direkonstruksi agar cocok
   dengan skema remote (**terpenuhi** — dan sekarang terverifikasi mencakup
   seluruh 4 migration, bukan hanya 3); `migrate resolve --applied` +
-  `migrate deploy` dijalankan dan diverifikasi pada staging nyata (**belum
-  terpenuhi** — lihat "Sisa pekerjaan" di atas).
+  `migrate deploy` dijalankan dan diverifikasi pada production nyata
+  (**terpenuhi 19 Juli 2026** — lihat "Penutupan" di atas).
 - **Required regression tests:** `prismaAdapter.integration.test.ts`
   dijalankan dengan `TEST_DATABASE_URL` (lihat PM-STAB-010) — **sudah
   dijalankan hari ini, 4/4 lulus**. Belum ada smoke test provisioning
