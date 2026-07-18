@@ -15,6 +15,21 @@ ada migration baru dibuat, tidak ada schema/kode aplikasi diubah. Issue ini
 manual dan belum dieksekusi. Issue lain di bawah tidak disentuh pada update
 ini.
 
+**Update 18 Juli 2026 (sinkronisasi final, `v0.3.0-rc.2`):** Statuses di bawah
+disinkronkan dengan hasil audit final independen §17 pada
+`mvp-stable-rc-validation.md` (sumber kebenaran validasi saat ini). PM-STAB-001
+dan PM-STAB-002 diturunkan ke **Resolved** — keduanya sudah dikonfirmasi lewat
+pembacaan kode langsung, automated test, smoke test HTTP nyata, dan capture
+screenshot desktop/mobile pada sesi audit tersebut, bukan hanya klaim. PM-STAB-006
+dan PM-STAB-007 diturunkan dari "needs confirmation" ke **Resolved** karena
+konfirmasi eksplisit yang diminta (angka before/after) sudah diperoleh lewat
+smoke test HTTP §17.6. PM-STAB-010 diturunkan ke **Resolved** karena seluruh
+3 sub-item (integration test ter-commit permanen, changelog, backup/restore
+dengan client tools nyata) sudah tuntas. PM-STAB-003 dan PM-STAB-004 (sisa
+staging/production) **tetap Open/High** — keduanya butuh akses/persetujuan di
+luar repository dan tidak berubah sejak rc.1. Tidak ada issue yang ditandai
+selesai hanya berdasarkan perubahan kode tanpa bukti validasi terpisah.
+
 Severity: **Critical** (data/keamanan salah atau bocor), **High** (menyesatkan
 pengguna atau memblokir rilis), **Medium** (fungsional tapi tidak lengkap),
 **Low** (kosmetik/dokumentasi).
@@ -23,14 +38,25 @@ Issue PM-STAB-001 s.d. PM-STAB-010 adalah **blocker menuju MVP Stable**,
 diurutkan dari severity/risiko tertinggi ke terendah, sesuai
 `mvp-stability-audit.md` bagian "Blocker terurut dari risiko tertinggi". ID
 ini adalah identitas resmi yang dipakai lintas dokumen (`release-status.md`,
-`stable-criteria.md`) — jangan diganti nomor lain di masa depan.
+`stable-criteria.md`) — jangan diganti nomor lain di masa depan. PM-STAB-011
+ditambahkan pada audit `v0.3.0-rc.2` sebagai temuan Medium **non-blocking**
+(bukan bagian dari 10 blocker asli), lihat entri di bawah.
 
 ---
 
 ## PM-STAB-001 — [Critical] Dashboard Net Worth ignores debt
 
-- **Status:** Open.
-- **Affected area:** Frontend — `app/(app)/dashboard/page.tsx` (Hero Card,
+- **Status:** Resolved (18 Juli 2026).
+- **Resolution:** `dashboard/page.tsx` sekarang memanggil
+  `useDashboardSummary` → `GET /v1/dashboard/summary` untuk Net Worth,
+  bukan menghitung ulang lokal. Dikonfirmasi lewat pembacaan kode langsung,
+  smoke test HTTP nyata (`mvp-stable-rc-validation.md` §17.6:
+  `net_worth == total_aset - total_utang`, selisih 0), dan capture
+  screenshot desktop **dan** mobile hari ini yang menunjukkan
+  **Rp 28.664.000** = Rp 60.950.000 (aset) − Rp 32.286.000 (utang) di UI
+  produksi (§17.8) — bukan hanya di response API.
+- **Evidence:** `mvp-stable-rc-validation.md` §17.1, §17.6, §17.8.
+- **Affected area (historis):** Frontend — `app/(app)/dashboard/page.tsx` (Hero Card,
   label "Posisi keuangan bersih").
 - **Expected behavior:** `netWorth = totalAssets − totalDebts` (PD-001),
   identik dengan yang sudah benar dan teruji di backend
@@ -63,8 +89,16 @@ ini adalah identitas resmi yang dipakai lintas dokumen (`release-status.md`,
 
 ## PM-STAB-002 — [High] Analytics period uses current-month transaction dataset
 
-- **Status:** Open.
-- **Affected area:** Frontend — `app/(app)/analytics/page.tsx` (filter
+- **Status:** Resolved (18 Juli 2026).
+- **Resolution:** `analytics/page.tsx` sekarang memakai `useAllTransactions`
+  → `GET /transactions/all` (bukan `GET /transactions` yang auto-filtered
+  bulan berjalan), dengan filter tanggal di sisi client. Dikonfirmasi lewat
+  pembacaan kode langsung dan capture screenshot mobile hari ini: filter
+  "6 bulan" pada Analitik menampilkan Cash Flow **+Rp 23.944.000** dengan
+  badge "Real data" dan grafik cash flow terisi lintas bulan, bukan kosong
+  seperti sebelum perbaikan (`mvp-stable-rc-validation.md` §17.8).
+- **Evidence:** `mvp-stable-rc-validation.md` §17.1, §17.8.
+- **Affected area (historis):** Frontend — `app/(app)/analytics/page.tsx` (filter
   periode, grafik arus kas); turut berdampak ke hitungan "transaksi
   tercatat" di `dashboard/page.tsx:212`.
 - **Expected behavior:** Memilih periode "3 bulan"/"6 bulan" mengambil
@@ -130,6 +164,13 @@ ini adalah identitas resmi yang dipakai lintas dokumen (`release-status.md`,
   **High** karena memblokir kriteria Security di `stable-criteria.md`
   secara langsung ("Secret tidak tersimpan di repository"). Dokumen ini
   mengikuti penilaian audit terbaru.
+- **Update 18 Juli 2026 (audit final `v0.3.0-rc.2`):** Dikonfirmasi ulang
+  **tetap Open, tidak berubah** — `deployment-runbook.md` §10 masih
+  menandai rotasi "required ... still in history", §11 masih "PENDING
+  EXPLICIT APPROVAL (do not execute)". Butuh akses Supabase dashboard nyata
+  dan persetujuan eksplisit di luar cakupan audit berbasis-repo
+  (`mvp-stable-rc-validation.md` §17.1). Ini adalah salah satu dari dua
+  blocker High yang tersisa menuju "Ready to promote to MVP Stable".
 
 ## PM-STAB-004 — [High → partially resolved] Database baseline migration is incomplete
 
@@ -222,6 +263,15 @@ ini adalah identitas resmi yang dipakai lintas dokumen (`release-status.md`,
   diperbarui 18 Juli 2026 untuk mencerminkan verifikasi ulang di atas, tanpa
   menutup issue karena langkah staging/production tetap manual dan belum
   dijalankan.
+- **Update 18 Juli 2026 (audit final `v0.3.0-rc.2`):** Bagian database
+  kosong/baru dikonfirmasi ulang independen — **Resolved untuk kasus ini**
+  (5 migrasi, termasuk migration ke-5 yang menghapus model `Transfer`,
+  ter-apply bersih dari nol; `prisma migrate status` "up to date";
+  `mvp-stable-rc-validation.md` §17.5). Bagian staging/production **tetap
+  Open, tidak berubah** — tidak ada environment staging/production nyata
+  yang bisa dijalankan `migrate resolve --applied` + `migrate deploy`
+  terhadapnya (§17.1). Ini adalah blocker High kedua yang tersisa menuju
+  "Ready to promote to MVP Stable", bersama PM-STAB-003.
 
 ## PM-STAB-005 — [High] Profile password form does not perform password update
 
@@ -255,7 +305,7 @@ ini adalah identitas resmi yang dipakai lintas dokumen (`release-status.md`,
 
 ## PM-STAB-006 — [Medium] Installment final payment leaves rounding remainder
 
-- **Status:** Open — code fix in place; needs confirmation.
+- **Status:** Resolved (18 Juli 2026).
 - **Update 18 Juli 2026 (PM-STAB-008 reconciliation):** Code fix found
   already in `installment-payment.service.ts:60-72`. `payInstallment` now
   computes `expectedAmount` via `computeFinalMonthlyAmount` for the final
@@ -263,22 +313,27 @@ ini adalah identitas resmi yang dipakai lintas dokumen (`release-status.md`,
   Test `installmentPaymentService.test.ts` covers the PM-STAB-006 case
   (non-divisible grandTotal, finalMonthlyAmount used, debt wallet reaches
   exactly zero after SETTLED). Schema unchanged — `finalMonthlyAmount` is
-  derived from stored fields at payment time. Acceptance criteria met in
-  code; awaiting explicit confirmation no remaining edge cases.
+  derived from stored fields at payment time.
+- **Update 18 Juli 2026 (audit final, explicit confirmation):** HTTP smoke
+  test independen membayar cicilan sampai termin terakhir (3/3) dan
+  memverifikasi outstanding/balance dompet cicilan = **0 tepat**, bukan sisa
+  pembulatan (`mvp-stable-rc-validation.md` §17.6). Ini menutup satu-satunya
+  item "awaiting confirmation" yang tersisa.
 - **Affected area:** Backend — `installment-payment.service.ts:payInstallment`,
   domain `domain/installment.ts` (`computeInstallmentPlan`,
   `computeFinalMonthlyAmount`).
 - **Evidence / lokasi kode:** `installment-payment.service.ts:60-72`
   (final term detection + expectedAmount),
-  `installmentPaymentService.test.ts` (PM-STAB-006 test cases).
+  `installmentPaymentService.test.ts` (PM-STAB-006 test cases),
+  `mvp-stable-rc-validation.md` §17.6 (HTTP confirmation).
 - **Acceptance criteria:** ✅ `finalMonthlyAmount` used in final term
   validation; ✅ regular `monthlyAmount` rejected on final term; ✅ debt
-  wallet = 0 after SETTLED; ⏳ Explicit confirmation.
+  wallet = 0 after SETTLED, confirmed via HTTP.
 - **Required regression tests:** Already in `installmentPaymentService.test.ts`.
 
 ## PM-STAB-007 — [Medium] Backend allows INCOME targeting DEBT wallet
 
-- **Status:** Open — code fix in place; needs confirmation.
+- **Status:** Resolved (18 Juli 2026).
 - **Update 18 Juli 2026 (PM-STAB-008 reconciliation):** Code fix found
   already in `transaction.service.ts:141-143`. Backend now rejects INCOME
   targeting CREDIT_CARD, PAYLATER, or LOAN (`classifyWalletForNetWorth(wallet.type)
@@ -286,16 +341,21 @@ ini adalah identitas resmi yang dipakai lintas dokumen (`release-status.md`,
   active on the update path (re-targeting and type-flip cases). Tested:
   `transactionService.test.ts` — 5 PM-STAB-007 cases covering create
   (ASSET allowed, all 3 DEBT types rejected, user isolation) and update
-  (re-target, type-flip). Acceptance criteria met in code; awaiting explicit
-  confirmation.
+  (re-target, type-flip).
+- **Update 18 Juli 2026 (audit final, explicit confirmation):** HTTP smoke
+  test independen — `POST /v1/transactions` INCOME ke wallet CREDIT_CARD →
+  `400 BAD_REQUEST` end-to-end lewat request HTTP nyata, bukan hanya unit
+  test (`mvp-stable-rc-validation.md` §17.6, §8). Ini menutup satu-satunya
+  item "awaiting confirmation" yang tersisa.
 - **Affected area:** Backend — `transaction.service.ts:createTransaction`
   (line 141-143) and `updateTransaction` (line 342-344).
 - **Evidence / lokasi kode:** `transaction.service.ts:141-143`
   (`classifyWalletForNetWorth(wallet.type) === 'DEBT'` guard),
-  `transactionService.test.ts` (PM-STAB-007 test cases).
+  `transactionService.test.ts` (PM-STAB-007 test cases),
+  `mvp-stable-rc-validation.md` §17.6 (HTTP confirmation).
 - **Acceptance criteria:** ✅ Backend rejects INCOME to all three DEBT types;
   ✅ Guard fires before any write (no `$transaction` call); ✅ User isolation
-  preserved; ✅ Update path also guarded; ⏳ Explicit confirmation.
+  preserved; ✅ Update path also guarded; ✅ Confirmed via HTTP smoke test.
 - **Required regression tests:** Already in `transactionService.test.ts`.
 
 ## PM-STAB-008 — [Medium] Financial documentation conflicts with implementation
@@ -339,6 +399,14 @@ ini adalah identitas resmi yang dipakai lintas dokumen (`release-status.md`,
 - **Required regression tests:** Tidak ada — perbaikan dokumentasi murni.
   Test eksisting (`dashboardQueryService.test.ts`, `installmentPaymentService.test.ts`,
   `transactionService.test.ts`) tetap menjadi acuan kebenaran.
+- **Update 18 Juli 2026 (audit final, residual typo):** Audit `v0.3.0-rc.2`
+  menemukan typo `PAYLOAD` (seharusnya `PAYLATER`) masih tersisa di baris
+  ~18 pada dua salinan `financial-logic.skill.md`
+  (`pocket-mint-fe/skills/` dan `pocket-mint-fe/.claude/skills/`) —
+  kontradiksi internal kecil dengan baris lain di file yang sama. Diperbaiki
+  langsung pada sesi audit tersebut (`mvp-stable-rc-validation.md` §17.1,
+  §17.9). Status Resolved di atas tetap berlaku; ini catatan bahwa satu
+  residual minor sempat lolos sebelum ditutup permanen.
 
 ## PM-STAB-009 — [Low] Unused Transfer model and inconsistent navigation label
 
@@ -376,12 +444,41 @@ ini adalah identitas resmi yang dipakai lintas dokumen (`release-status.md`,
   tidak ada referensi tersisa (`grep` schema + kode) dan migration test
   Prisma tetap hijau. Bila label nav diganti, tambahkan/perbarui test
   navigasi yang menegaskan label persis sesuai `skills/design.md`.
+- **Update 18 Juli 2026 (audit final, sub-item 1 resolved):** Model Prisma
+  `Transfer` **sudah dihapus** via migration nyata
+  `20260718000000_drop_unused_transfer_model` (dikonfirmasi replay dari
+  database kosong, `mvp-stable-rc-validation.md` §7, §17.1). Sub-item 1
+  ditutup. Sub-item 2 (label navigasi) **tetap Open** dan makin dikonfirmasi
+  pada audit final: bottom nav mobile sekarang menampilkan **6 ikon**
+  (Dashboard, Dompet, Transaksi, Cicilan, Analitik, + trigger dropdown akun
+  terpisah) — bukan 5 item "Akun" sesuai kontrak desain
+  (`mvp-stable-rc-validation.md` §17.8). Butuh keputusan produk eksplisit,
+  bukan sekadar perbaikan kode.
 
-## PM-STAB-010 — [Low → narrowed] Missing integration test coverage, backup, and restore validation
+## PM-STAB-010 — [Low] Missing integration test coverage, backup, and restore validation
 
-- **Status:** Open — narrowed. *(Updated 18 Juli 2026, PM-STAB-010B: bagian
-  changelog resolved di `pocket-mint-fe`, lihat sub-item 2 di bawah. Sisa
-  sub-item 1 dan 3 tetap Open.)*
+- **Status:** Resolved (18 Juli 2026, audit final `v0.3.0-rc.2`).
+- **Update 18 Juli 2026 (audit final):** Seluruh 3 sub-item sekarang tuntas
+  dengan bukti:
+  1. **Sub-item 1 (integration test) — Resolved.** Test integrasi Prisma
+     tidak lagi skip: 11/11 lulus (`npm run test:integration`), **dan**
+     seluruh infrastruktur pendukungnya (`scripts/run-integration-tests.mjs`,
+     guard `TEST_DATABASE_URL`, wiring CI Postgres service) sudah **ter-commit
+     permanen** ke git (commit `0c6c370 ci: wire disposable Postgres service
+     for Prisma integration tests`) — bukan lagi working-tree lokal yang bisa
+     hilang. Lihat `mvp-stable-rc-validation.md` §17.1, §17.3.
+  2. **Sub-item 2 (changelog `pocket-mint-fe`) — Resolved** (tidak berubah
+     dari update sebelumnya, lihat di bawah).
+  3. **Sub-item 3 (backup/restore) — Resolved.** Drill penuh dijalankan
+     ulang dengan client tools nyata (`pg_dump`/`pg_restore`/`psql`, bukan
+     hanya mengutip log lama): backup sukses, restore ke database kosong
+     sukses, guard restore ditolak sesuai desain, row count sumber dan hasil
+     restore **identik persis** (users: 8, wallets: 12, transactions: 21,
+     installments: 3, categories: 96), 0 orphan FK, smoke test aplikasi
+     terhadap database hasil restore → `200` di seluruh endpoint yang diuji.
+     Lihat `mvp-stable-rc-validation.md` §17.7.
+- **Update 18 Juli 2026, PM-STAB-010B (historis):** bagian changelog
+  resolved di `pocket-mint-fe`, lihat sub-item 2 di atas.
 - **Affected area:** Operasional — `pocket-mint-be` test suite, prosedur
   disaster recovery. (Sub-item changelog sebelumnya di sini sudah
   diselesaikan di `pocket-mint-fe`; lihat catatan sub-item 2.)
@@ -389,12 +486,13 @@ ini adalah identitas resmi yang dipakai lintas dokumen (`release-status.md`,
   lulus dengan bukti; changelog/release notes tersedia
   (`stable-criteria.md` — Release Readiness); backup dan proses pemulihan
   data telah diuji (`stable-criteria.md` — Reliability).
-- **Actual behavior:**
+- **Actual behavior (historis, sebelum resolved):**
   1. Empat test integrasi Prisma di-skip:
      `pocket-mint-be/test/prismaAdapter.integration.test.ts` memakai
      `describe.skipIf(!TEST_DATABASE_URL)`; `npx vitest run` melaporkan
      366 lulus, 0 gagal, **4 skip** karena `TEST_DATABASE_URL` tidak diset
-     di lingkungan audit. **Masih Open.**
+     di lingkungan audit. **Resolved 18 Juli 2026 — lihat update audit
+     final di atas** (11/11 lulus, infra ter-commit permanen).
   2. **Resolved (18 Juli 2026, PM-STAB-010B) untuk `pocket-mint-fe`:**
      source of truth changelog terstruktur ditambahkan di
      `pocket-mint-fe/src/lib/changelog.ts` (array `RELEASES`, tervalidasi
@@ -410,27 +508,66 @@ ini adalah identitas resmi yang dipakai lintas dokumen (`release-status.md`,
      aktivitas yang mendekati adalah replay migrasi skema pada database
      PostgreSQL disposable lokal
      (`docs/prisma-migration-reconciliation.md` §6) — itu uji migrasi
-     skema, bukan uji backup/restore data pengguna. **Masih Open.**
+     skema, bukan uji backup/restore data pengguna. **Resolved 18 Juli
+     2026 — lihat update audit final di atas** (drill penuh dengan
+     `pg_dump`/`pg_restore`/`psql` nyata, row count identik, smoke test
+     database hasil restore PASS).
 - **Evidence / lokasi kode:**
   `pocket-mint-be/test/prismaAdapter.integration.test.ts`;
   `pocket-mint-fe/src/lib/changelog.ts`, `pocket-mint-fe/src/types/changelog.ts`,
   `pocket-mint-fe/app/changelog/page.tsx`, `pocket-mint-fe/app/page.tsx`,
   `pocket-mint-fe/tests/changelog.test.ts` (sub-item 2, FE);
-  `pocket-mint-be/docs/prisma-migration-reconciliation.md` §6 (sub-item 3).
-- **User impact:** Sub-item 2 tidak lagi menghambat Release Readiness untuk
-  `pocket-mint-fe`. Sub-item 1 dan 3 tetap tidak memblokir fungsi produk
-  saat ini, tapi menghambat kriteria Reliability dan meninggalkan disaster
-  recovery data finansial pengguna belum terbukti dari repository.
-- **Acceptance criteria:** 4 test integrasi Prisma dijalankan dengan
-  `TEST_DATABASE_URL` dan hasilnya didokumentasikan; ✅ changelog
-  terstruktur ditambahkan dan dipelihara per rilis di `pocket-mint-fe`
-  (belum di `pocket-mint-be`); uji backup/restore data produksi (bukan
-  hanya skema) dilakukan dan hasilnya didokumentasikan dengan tanggal.
-- **Required regression tests:** Jalankan
-  `TEST_DATABASE_URL=<disposable-db-url> npx vitest run` di CI atau lokal
-  dan pastikan 370/370 lulus (0 skip); `tests/changelog.test.ts` sudah ada
-  untuk sub-item 2 (FE); tidak ada test kode baru untuk backup, itu adalah
-  aktivitas operasional yang didokumentasikan terpisah.
+  `pocket-mint-be/docs/prisma-migration-reconciliation.md` §6 (sub-item 3,
+  historis); `mvp-stable-rc-validation.md` §17.3, §17.7 (sub-item 1 dan 3,
+  bukti resolved).
+- **User impact:** Ketiga sub-item tidak lagi menghambat Release Readiness
+  atau kriteria Reliability — integration test permanen ter-CI, changelog
+  terstruktur tersedia, dan disaster recovery data finansial pengguna sudah
+  terbukti lewat drill nyata dari repository.
+- **Acceptance criteria:** ✅ 4→11 test integrasi Prisma dijalankan dengan
+  `TEST_DATABASE_URL` dan hasilnya didokumentasikan (permanen di CI); ✅
+  changelog terstruktur ditambahkan dan dipelihara per rilis di
+  `pocket-mint-fe` (backend tetap tidak punya struktur setara — minor, tidak
+  blocking, backend tidak memiliki changelog konsumen publik); ✅ uji
+  backup/restore data produksi (bukan hanya skema) dilakukan dan hasilnya
+  didokumentasikan dengan tanggal.
+- **Required regression tests:** `npm run test:integration` (CI-wired) —
+  11/11 lulus; `tests/changelog.test.ts` untuk sub-item 2 (FE); `npm run
+  db:backup` / `db:restore` / `db:verify` untuk sub-item 3, didokumentasikan
+  di `backup-restore-runbook.md` §7.
+
+## PM-STAB-011 — [Medium] `createWallet` response serializes Decimal fields as string, inconsistent with GET/PUT
+
+- **Status:** Open. *(Baru, ditemukan audit final `v0.3.0-rc.2`, non-blocking.)*
+- **Affected area:** Backend — `pocket-mint-be/src/controllers/account.controller.ts`
+  (`createWallet`, sekitar baris 197–200).
+- **Expected behavior:** Field `Decimal` (`balance`, `creditLimit`, dst.)
+  diserialisasi dengan tipe JSON yang konsisten di seluruh endpoint wallet.
+- **Actual behavior:** Respons `createWallet` (`POST /v1/wallets`)
+  menyerialisasi field `Decimal` sebagai **string** (mis. `"1000000"`),
+  sedangkan `GET /v1/wallets` dan `PUT /v1/wallets/:id` menjalankan field
+  yang sama lewat `serializeWallet` sehingga menjadi **number**. Nilai tetap
+  eksak di kedua kasus — ini bukan bug financial-integrity — tapi
+  perbedaan tipe data antar-endpoint dapat menjebak client frontend yang
+  strict-typed.
+- **Evidence / lokasi kode:** `account.controller.ts` (`createWallet` vs
+  `serializeWallet`); ditemukan dan didokumentasikan di
+  `mvp-stable-rc-validation.md` §17.9.
+- **User impact:** Tidak ada dampak finansial nyata (nilai eksak, hanya
+  representasi tipe berbeda). Berpotensi menyebabkan bug integrasi di sisi
+  client bila kode frontend mengasumsikan tipe `number` secara konsisten
+  dari respons `POST /v1/wallets`.
+- **Severity rationale:** Diklasifikasikan **Medium** (bukan Low) karena ini
+  adalah inkonsistensi kontrak API yang nyata dan dapat memicu bug runtime
+  di client strict-typed — bukan sekadar kosmetik/dokumentasi. **Bukan
+  blocker promosi** ke MVP Stable kecuali ditemukan dampak finansial nyata
+  di masa depan.
+- **Acceptance criteria:** `createWallet` menggunakan `serializeWallet` yang
+  sama dengan `GET`/`PUT` sehingga tipe field `Decimal` konsisten `number`
+  di seluruh endpoint wallet.
+- **Required regression tests:** Tambahkan assertion tipe (`typeof balance
+  === "number"`) pada test controller `POST /v1/wallets` yang menegaskan
+  konsistensi dengan `GET`/`PUT`.
 
 ---
 

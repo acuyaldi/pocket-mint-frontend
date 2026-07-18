@@ -9,6 +9,13 @@ Release candidate yang divalidasi: **`v0.3.0-rc.1`** (label evidensi untuk HEAD
 kedua repo pada tanggal audit — lihat §9 untuk apa yang termasuk dan catatan
 tentang versi/tag yang belum benar-benar dibuat).
 
+> **⚠️ Lihat §17 untuk audit final independen (sesi terpisah, tanggal sama)
+> yang menjalankan ulang seluruh verifikasi di atas dari nol, mengonfirmasi
+> blocker #1 (infra belum di-commit) sudah selesai, dan menetapkan keputusan
+> akhir serta rekomendasi versi `v0.3.0-rc.2`. §1–§16 di bawah adalah hasil
+> sesi validasi pertama dan dipertahankan sebagai evidence historis — §17
+> adalah sumber kebenaran saat ini.**
+
 Referensi silang: `known-issues.md` (PM-STAB-001–010), `release-status.md`,
 `stable-criteria.md`, `mvp-stability-audit.md`,
 `pocket-mint-be/docs/deployment-runbook.md`,
@@ -397,3 +404,315 @@ tidak membuat rilis final, dan `pocket-mint-be` memiliki working tree yang
 belum bersih — lihat §6). Nomor versi ini adalah label evidensi untuk hasil
 validasi di dokumen ini; keputusan untuk benar-benar melakukan version bump +
 git tag diserahkan ke pemilik repo setelah blocker #1 (commit) diselesaikan.
+
+---
+
+## 17. Audit final independen (sesi terpisah, 18 Juli 2026) — sumber kebenaran saat ini
+
+Ini adalah audit final terpisah yang menjalankan ulang **seluruh** verifikasi
+di §1–§16 dari nol (bukan mempercayai hasil sesi sebelumnya begitu saja),
+memverifikasi klaim kode secara langsung (baca file, bukan hanya baca
+dokumen lain), dan memutuskan status akhir sesuai kriteria di
+`stable-criteria.md`/instruksi task. Tidak ada fitur baru ditambahkan; hanya
+verifikasi, plus dua perbaikan dokumentasi trivial (lihat §17.9).
+
+### 17.1 Yang berubah sejak §1–§16 (rc.1)
+
+- **Blocker #1 (§15 poin 1) — RESOLVED.** Seluruh infrastruktur backup/restore,
+  integration-test runner, guard `TEST_DATABASE_URL`, dan wiring CI Postgres
+  di `pocket-mint-be` **sudah ter-commit**: `git log --oneline -3 -- scripts/
+  .github/workflows/ci.yml` menunjukkan commit `0c6c370 ci: wire disposable
+  Postgres service for Prisma integration tests` sebagai commit teratas.
+  `pocket-mint-be` working tree **bersih** (`git status` clean) di awal dan
+  akhir audit ini — bukan lagi ~29 path uncommitted seperti temuan rc.1 §6.
+- **Blocker #2 (§15 poin 5, typo `PAYLOAD`/`PAYLATER`) — RESOLVED sesi ini.**
+  Diperbaiki di `pocket-mint-fe/skills/financial-logic.skill.md:18` dan
+  `pocket-mint-fe/.claude/skills/financial-logic.skill.md:18` (`PAYLOAD` →
+  `PAYLATER`), konsisten dengan baris lain di file yang sama dan dengan
+  backend. Perubahan dokumentasi murni, tidak menyentuh kode aplikasi.
+- **Blocker kredensial (PM-STAB-003, §15 poin 2) — TETAP OPEN, tidak berubah.**
+  `docs/deployment-runbook.md` §10 (baris 316) masih menandai password
+  database Supabase "Rotation required ... still in history"; §11 (baris 326)
+  masih "PENDING EXPLICIT APPROVAL (do not execute)". Ini butuh akses
+  Supabase dashboard nyata dan persetujuan eksplisit di luar cakupan audit
+  berbasis-repo — tidak dieksekusi di sesi ini, sesuai batas kewenangan yang
+  sama seperti rc.1.
+- **Blocker staging/production (PM-STAB-004 sisa, §15 poin 3–4) — TETAP OPEN,
+  tidak berubah.** Tidak ada environment staging/production nyata untuk
+  di-deploy atau diuji; tetap di luar cakupan audit ini.
+
+### 17.2 Full backend test — re-run independen
+
+```
+cd pocket-mint-be && npm run test
+```
+
+`42 test files passed, 1 skipped (43)` / `382 tests passed, 11 skipped (393)`
+tanpa `TEST_DATABASE_URL` (naik 1 test dari hasil rc.1 yang mencatat 381 —
+bukan regresi, hanya cakupan test yang bertambah sejak rc.1).
+
+**Status: PASS.**
+
+### 17.3 Integration test Prisma — re-run independen via `npm run test:integration`
+
+`node scripts/run-integration-tests.mjs` (kini ter-commit, lihat §17.1) dengan
+`EMBEDDED_PG_PORT=55433` (port default 55432 terpakai socket basi tak terkait
+aplikasi di mesin ini). 5 migrasi diterapkan ke database kosong
+(`20260710000000_baseline` s.d. `20260718000000_drop_unused_transfer_model`),
+diikuti `All migrations have been successfully applied.`, lalu
+`Test Files 1 passed (1)` / `Tests 11 passed (11)`.
+
+**Status: PASS.**
+
+### 17.4 Typecheck, lint, production build — re-run independen
+
+- Backend: `npx tsc --noEmit` bersih. `npm run build` sukses;
+  `dist/generated/prisma/client.js` ada dan `require(...)` berhasil. Tidak ada
+  lint script/config di backend — tetap N/A, tidak ditambahkan (di luar
+  cakupan audit ini).
+- Frontend: `npx vitest run` → `27 test files passed (27)` / `170 tests
+  passed (170)`. `npx tsc --noEmit` bersih. `npm run lint` bersih. `next
+  build` sukses, 14 route ter-generate (cocok dengan hitungan rc.1).
+
+**Status: PASS (semua).**
+
+### 17.5 Provisioning database kosong + `migrate deploy` + `migrate status`
+
+Database embedded-postgres baru (port 55440) di-provision dari kosong,
+`prisma migrate deploy` menerapkan seluruh 5 migrasi, lalu `prisma migrate
+status` dijalankan terhadap database yang sama dan mengonfirmasi:
+**"Database schema is up to date!"**.
+
+*(Catatan lingkungan, bukan defect: `npx prisma migrate deploy` melalui
+wrapper shell lokal sesi ini kadang mencetak banner `[FAIL]` palsu meski
+migrasi benar-benar sukses — dikonfirmasi salah lewat `migrate status`
+berikutnya dan lewat pemanggilan langsung `node
+node_modules/prisma/build/index.js migrate deploy`. Ini noise proxy/hook
+shell lokal, bukan kegagalan Prisma atau aplikasi.)*
+
+**Status: PASS.**
+
+### 17.6 Manual smoke test, cross-user isolation, dan financial integrity — re-run independen (37/37 check)
+
+Server backend (`ts-node --transpile-only src/server.ts`) di-boot melawan
+database disposable baru (port 55440), JWT HS256 lokal test-only, dua user
+berbeda A dan B. Seluruh 37 pemeriksaan berikut **lulus**:
+
+**Core flow:**
+- Sync dua user independen (201, lalu re-sync idempotent 200).
+- Wallet CRUD: dompet aset `CASH`, dompet utang `CREDIT_CARD` (`creditLimit`
+  5.000.000), update, delete (dan delete-oleh-user-lain ditolak — lihat
+  isolasi di bawah).
+- INCOME 200.000 dan EXPENSE 50.000 pada dompet aset, keduanya `201` dengan
+  nilai integer eksak.
+- Pembuatan cicilan: EXPENSE 300.000 / 3 termin pada dompet `CREDIT_CARD`.
+- Pembayaran cicilan sampai termin terakhir (3/3).
+- Pembayaran utang via TRANSFER dari dompet aset ke dompet utang.
+- Dashboard summary.
+
+**Financial integrity (kriteria wajib task ini):**
+- **Net Worth = total aset − total utang**: diverifikasi eksak lewat
+  `GET /v1/dashboard/summary` (`net_worth == total_aset - total_utang`,
+  selisih dihitung eksplisit = 0).
+- **Transfer tidak mengubah Net Worth**: transfer 100.000 antar dompet milik
+  user yang sama — net worth **identik** sebelum dan sesudah transfer,
+  dikonfirmasi lewat perbandingan langsung.
+- **Pembayaran cicilan terakhir menghasilkan outstanding tepat nol**:
+  outstanding dan balance dompet cicilan setelah termin 3/3 = **0 tepat**,
+  bukan sisa pembulatan (PM-STAB-006 dikonfirmasi selesai).
+- **Pembayaran debt tidak double deduction**: outstanding turun dari
+  **75.000 → 45.000**, penurunan tepat **30.000** (sama dengan nilai
+  transfer), diverifikasi sekali, tidak ada pengurangan ganda.
+- **Transaksi gagal tidak meninggalkan partial write**: transaksi dengan
+  nominal negatif dan transaksi tanpa nominal wajib keduanya ditolak `400`,
+  saldo dompet **tidak berubah** setelah kedua percobaan gagal tersebut.
+- **Tidak ada floating-point drift**: seluruh nilai uang pada respons wallet
+  dan transaction diperiksa — tidak ditemukan nilai seperti
+  `1499999.9999999998`; semua nilai integer/desimal eksak.
+- **Kategori tipe-mismatch ditolak**: EXPENSE dengan kategori bertipe salah
+  → `400`.
+- **Guard INCOME ke DEBT wallet**: `400` (PM-STAB-007 dikonfirmasi bekerja
+  lewat HTTP nyata).
+
+**Cross-user isolation:**
+- Daftar dompet user B tidak pernah berisi id dompet user A.
+- `PUT`/`DELETE` dompet A dengan token user B → `404` keduanya; dompet A
+  tidak berubah setelahnya.
+- Dashboard user A dan user B murni terpisah, tidak tercampur.
+- Request tanpa token ke route terproteksi → `401`.
+
+**Status: PASS (37/37).** Sepenuhnya konsisten dengan §8/§9 rc.1, kini
+dengan angka before/after eksplisit untuk setiap kriteria financial-integrity
+yang diminta task ini (bukan hanya "PASS" generik).
+
+### 17.7 Backup dan restore — re-run independen dengan client tools nyata
+
+Berbeda dari sesi rc.1 (§10) yang **tidak** memiliki `pg_dump`/`pg_restore`/
+`psql` di lingkungan audit, sesi ini menemukan binary tersebut di
+`C:\Program Files\PostgreSQL\18\bin\` dan benar-benar menjalankan drill
+penuh (bukan hanya mengutip drill lama):
+
+- `npm run db:backup` terhadap database smoke test terisi (port 55440) →
+  sukses, file `.dump` custom-format ~0.02 MiB, 0.2 detik.
+- Database kosong baru ke-2 di-provision (port 55441).
+- `npm run db:restore` (`CONFIRM_RESTORE=yes`, `RESTORE_TARGET_URL` diarahkan
+  ke database kosong tersebut) → sukses, 0.3 detik.
+- Guard restore diuji ulang secara eksplisit: tanpa `CONFIRM_RESTORE` →
+  ditolak exit 1; host menyerupai Supabase (`db.abcdefgh.supabase.co`) →
+  ditolak exit 1.
+- `npm run db:verify` pada source **dan** target hasil restore — row count
+  **identik persis**: `users: 8, wallets: 12, transactions: 21,
+  installments: 3, categories: 96`; 0 baris FK orphan; 9 FK constraint hadir
+  di kedua database; `VERIFY OK` pada keduanya.
+- Backend di-start melawan database hasil restore (port 5502) —
+  `GET /health` → `200 {"status":"ok"}`; `GET /v1/dashboard/summary` dengan
+  JWT nyata untuk user hasil restore → data tersaji benar dari database yang
+  dipulihkan.
+
+**Status: PASS — evidence lebih kuat dari rc.1** karena dijalankan
+end-to-end sungguhan sesi ini dengan client tools nyata, bukan mengandalkan
+log drill tertulis sebelumnya.
+
+### 17.8 Responsive desktop dan mobile — re-run independen
+
+Dev server (`localhost:4000` FE, `localhost:5001` BE) dan Supabase project
+nyata dikonfirmasi reachable. Login sungguhan dengan akun
+`e2e@pocketmint.test`, capture ulang Dashboard, Dompet, Transaksi, Cicilan,
+Analitik pada 1440×900 dan 390×844 lewat Playwright.
+
+- Tidak ada horizontal overflow pada 5 halaman × 2 viewport (10 pemeriksaan).
+- Dashboard (mobile, capture baru sesi ini): "Posisi keuangan bersih" =
+  **Rp 28.664.000** = Rp 60.950.000 (aset) − Rp 32.286.000 (utang) — cocok
+  persis dengan angka rc.1, dikonfirmasi ulang secara live.
+- Analitik filter "6 bulan": Cash Flow **+Rp 23.944.000**, badge "Real data",
+  Savings Rate 89%, Debt Ratio 92% — terisi, bukan kosong.
+- Bottom nav mobile: **6 ikon** (Dashboard, Dompet, Transaksi, Cicilan,
+  Analitik, + trigger dropdown akun terpisah) — deviasi dari kontrak desain
+  5-item "Akun" tetap ada dan tetap tercatat sebagai PM-STAB-009/Low
+  (`changelog.ts` `knownIssues`), bukan temuan baru.
+- Tombol "Ekspor laporan" tetap tanpa handler (`KI-EXPORT`, Medium, sudah
+  tercatat).
+
+**Status: PASS**, tidak ada regresi visual/overflow.
+
+### 17.9 Temuan baru sesi ini (di luar 10 blocker existing)
+
+Perbaikan dokumentasi diterapkan langsung (trivial, tidak menyentuh kode
+aplikasi):
+
+- **[Diperbaiki]** Typo `PAYLOAD` → `PAYLATER` di dua salinan
+  `financial-logic.skill.md` (lihat §17.1). Ini menutup sisa cacat kecil
+  PM-STAB-008.
+
+Temuan yang **dilaporkan tapi sengaja tidak diperbaiki** (di luar cakupan
+audit — audit hanya memvalidasi, tidak menambah/mengubah fitur atau
+memperbaiki bug produk):
+
+- **[Dokumentasi tidak sinkron, Low]** `pocket-mint-fe/src/lib/changelog.ts`
+  `knownIssues` (baris ~38–42) masih mendaftarkan "form ubah password belum
+  memanggil API" sebagai issue terbuka, padahal PM-STAB-005 sudah **Resolved**
+  (kode memanggil `supabase.auth.signInWithPassword` +
+  `auth.updateUser` sungguhan — dikonfirmasi baca kode langsung,
+  `app/(app)/profile/page.tsx:110,122`). Perlu diperbarui sebelum copy
+  changelog RC berikutnya ditulis.
+- **[Dokumentasi tidak sinkron, sudah ada sejak rc.1, dikonfirmasi lagi]**
+  `docs/releases/known-issues.md` masih menandai PM-STAB-001, PM-STAB-002
+  sebagai **Status: Open**, padahal kode dan smoke test langsung (§17.6,
+  §17.8) mengonfirmasi keduanya **sudah resolved** secara fungsional
+  (`app/(app)/dashboard/page.tsx:168-169` memanggil `useDashboardSummary` →
+  `GET /v1/dashboard/summary`, bukan menghitung ulang lokal; `analytics/
+  page.tsx` memakai `useAllTransactions` → `/transactions/all`). Dokumen ini
+  ditulis dalam commit yang sama dengan `mvp-stable-rc-validation.md` (§1–§16)
+  namun isinya tidak diperbarui untuk mencerminkan hasil validasi tersebut —
+  **rekomendasi: pemilik repo memperbarui `known-issues.md` agar konsisten
+  dengan §13 dokumen ini**, sebelum RC berikutnya dipotong, supaya kedua
+  dokumen tidak lagi saling bertentangan.
+- **[Bug minor, tidak memengaruhi financial integrity]**
+  `src/controllers/account.controller.ts` — respons `createWallet` (POST
+  `/v1/wallets`, sekitar baris 197–200) menyerialisasi field `Decimal`
+  (`balance`, `creditLimit`, dst.) sebagai **string** JSON (mis. `"1000000"`),
+  sedangkan `GET /v1/wallets` dan `PUT /v1/wallets/:id` menjalankan field yang
+  sama lewat `serializeWallet` sehingga menjadi **number**. Nilai tetap eksak
+  di kedua kasus (bukan financial-integrity bug), tapi tipe data berbeda
+  antar-endpoint bisa menjebak client frontend yang strict-typed. Layak
+  dibuatkan ticket terpisah, tidak blocking RC ini.
+
+### 17.10 Matriks Pass/Fail final (menggantikan §14 untuk keputusan akhir)
+
+| Item | Hasil |
+| --- | --- |
+| Full backend test | ✅ PASS (382/382 tanpa DB terpisah, 11 skip butuh `TEST_DATABASE_URL`) |
+| Integration test Prisma | ✅ PASS (11/11), **kini permanen ter-commit** (bukan lagi working-tree lokal) |
+| Full frontend test | ✅ PASS (170/170) |
+| Typecheck (BE+FE) | ✅ PASS |
+| Lint (FE) | ✅ PASS |
+| Lint (BE) | ➖ N/A (tidak dikonfigurasi, bukan kegagalan) |
+| Production build (BE+FE) | ✅ PASS |
+| Provisioning database kosong + `migrate deploy` | ✅ PASS |
+| `migrate status` | ✅ PASS ("Database schema is up to date!") |
+| Generate Prisma Client | ✅ PASS |
+| Start backend dengan database baru | ✅ PASS |
+| Smoke test seluruh core flow | ✅ PASS (37/37 check) |
+| Cross-user isolation | ✅ PASS |
+| Financial integrity (7 kriteria task ini) | ✅ PASS — seluruh 7 kriteria diverifikasi eksplisit dengan angka before/after (§17.6) |
+| Backup | ✅ PASS — dijalankan sungguhan dengan client tools nyata sesi ini (lebih kuat dari rc.1) |
+| Restore ke database kosong | ✅ PASS |
+| Smoke test database hasil restore | ✅ PASS |
+| Deployment staging/production nyata | ❌ TIDAK ADA — tetap hanya production build lokal, tidak berubah dari rc.1 |
+| Responsive desktop | ✅ PASS |
+| Responsive mobile | ✅ PASS |
+| Critical open | ✅ 0 |
+| High core-flow open | ✅ 0 |
+| High non-core-flow open | ❌ 2 — PM-STAB-003 (kredensial, tetap open), PM-STAB-004 sisa (migration staging/production, tetap open) |
+| Known issues tersisa hanya Medium/Low | ❌ Tidak — 2 High di atas masih terbuka |
+| Infrastruktur test/backup ter-commit permanen | ✅ PASS — blocker #1 rc.1 **resolved** sesi ini |
+
+### 17.11 Keputusan akhir
+
+**Ready for another RC.**
+
+Tidak berubah dari rekomendasi rc.1, dengan alasan yang sama persis dan
+masih berlaku: seluruh Critical/High core-flow tertutup dengan bukti kuat
+(diverifikasi ulang independen sesi ini, bukan hanya dikutip dari rc.1), dan
+seluruh 20 langkah verifikasi yang diminta task (§1–§20 pada instruksi) **PASS**
+kecuali langkah yang secara struktural membutuhkan environment
+staging/production nyata (yang belum ada sama sekali di luar repo ini). Dua
+known issue **High** (`PM-STAB-003` rotasi kredensial, `PM-STAB-004` sisa
+migration staging/production) tetap terbuka dan **bukan** sesuatu yang bisa
+diselesaikan lewat perubahan kode di repo — keduanya butuh akses/approval di
+luar repository (Supabase dashboard, environment infra baru).
+
+Bukan **Not Ready**: tidak ada regresi ditemukan, tidak ada Critical/High
+core-flow baru, seluruh test/build/migration/smoke/isolation/financial-
+integrity/backup-restore lulus 100% dengan bukti langsung hari ini.
+
+Bukan **Ready to promote to MVP Stable**: kriteria wajib "known issues
+tersisa hanya Medium/Low" **gagal** secara eksplisit (2 High terbuka), dan
+kriteria implisit "production smoke test Pass" tidak dapat dipenuhi karena
+tidak ada deployment staging/production nyata untuk diuji — build lokal
+bukan pengganti sah untuk ini, konsisten dengan penilaian rc.1.
+
+**Versi yang direkomendasikan: `v0.3.0-rc.2`** (naik dari `v0.3.0-rc.1` sesuai
+instruksi task — RC sebelumnya sudah ada di §1–§16, dan HEAD kedua repo
+sudah berubah sejak rc.1: blocker #1 resolved lewat commit `0c6c370`, plus dua
+typo fix dokumentasi sesi ini). Seperti rc.1, **versi ini tidak di-tag/commit
+sebagai rilis** dalam audit ini — task eksplisit meminta status tidak
+langsung dinaikkan; ini murni label evidensi untuk hasil validasi §17.
+
+**Sebelum RC berikutnya dapat menjadi "Ready to promote":**
+1. Eksekusi rotasi kredensial Supabase (PM-STAB-003) — butuh akses dashboard
+   dan persetujuan eksplisit di luar repo.
+2. Sediakan environment staging/production nyata, jalankan `migrate resolve
+   --applied` + `migrate deploy` terhadapnya (PM-STAB-004 sisa), lalu deploy
+   dan jalankan smoke-test matrix production sungguhan
+   (`deployment-runbook.md` §9).
+3. Perbarui `known-issues.md` dan `src/lib/changelog.ts` `knownIssues` agar
+   konsisten dengan status resolved yang sudah diverifikasi (§17.9) — murni
+   dokumentasi, tidak blocking secara teknis tapi penting untuk kejelasan
+   sebelum promosi.
+4. (Opsional, tidak blocking) Perbaiki inkonsistensi tipe respons
+   `createWallet` (§17.9) dan selaraskan label navigasi 5-item dengan
+   kontrak desain jika keputusan produk mengonfirmasi itu yang diinginkan.
+
+Tidak ada blocker teknis baru yang ditemukan di dalam kendali repo ini —
+seluruh yang tersisa membutuhkan tindakan/akses di luar kode.
