@@ -8,6 +8,19 @@ pemilihan status" di bawah. Sumber: kode di `pocket-mint-fe` dan
 `mvp-stable-rc-validation.md` §17, `docs/deployment-runbook.md`, dan
 `docs/prisma-migration-reconciliation.md` di `pocket-mint-be`.
 
+**Update 19 Juli 2026 — promosi ke MVP Stable:** Migrasi database production
+telah dijalankan dan diverifikasi (`prisma migrate status` → "Database schema
+is up to date!"; `prisma migrate diff --from-config-datasource --to-schema
+prisma/schema.prisma --script` → "This is an empty migration."), deployment
+Railway production sehat, dan `GET /health` mengembalikan `200`. `PM-STAB-004`
+sekarang **Resolved** (lihat `known-issues.md`). Dengan `PM-STAB-003` dan
+`PM-STAB-004` sama-sama tidak lagi Open, tidak ada High/Critical yang tersisa
+— Pocket Mint `0.3.0` **dipromosikan ke MVP Stable** per 19 Juli 2026 (lihat
+`src/lib/changelog.ts`). Bagian di bawah yang menyatakan status "MVP Beta"/
+"Ready for another RC" mencerminkan titik waktu audit 18 Juli 2026 sebelum
+promosi ini — dipertahankan sebagai catatan historis, lihat tabel "Status
+saat ini" untuk status terkini.
+
 Metodologi: setiap fitur diverifikasi dengan menelusuri rute frontend →
 hook/API client → route backend → controller/service, bukan hanya dari
 keberadaan komponen UI. Lihat `known-issues.md` untuk rincian temuan
@@ -18,12 +31,12 @@ keberadaan komponen UI. Lihat `known-issues.md` untuk rincian temuan
 
 | | |
 | --- | --- |
-| **Current status** | **MVP Beta** |
-| **Current release candidate** | `v0.3.0-rc.2` (label evidensi validasi — belum di-tag/commit sebagai rilis, lihat `mvp-stable-rc-validation.md` §17.11) |
-| **Validation decision** | **Ready for another RC** (bukan Not Ready, bukan Ready to promote — lihat `mvp-stable-rc-validation.md` §17.11) |
-| **Promotion ke MVP Stable diblokir oleh** | `PM-STAB-004` sisa (migration staging/production, High, Open) — butuh akses/persetujuan di luar repository, bukan perubahan kode. `PM-STAB-003` (rotasi kredensial) **Resolved after forensic verification** 19 Juli 2026 — lihat `known-issues.md`; tidak lagi blocker. |
+| **Current status** | **MVP Stable** (per 19 Juli 2026) |
+| **Current release** | `0.3.0` — "MVP Stable", `publishedAt` 2026-07-19 (lihat `src/lib/changelog.ts`). `v0.3.0-rc.2` adalah label evidensi validasi RC yang mendahuluinya (`mvp-stable-rc-validation.md` §17.11), tidak dipublikasikan terpisah ke changelog publik sesuai `README.md` §1a. |
+| **Validation decision** | **Promoted to MVP Stable** (19 Juli 2026) — lihat Addendum "Penutupan PM-STAB-004" di `mvp-stable-rc-validation.md`. Keputusan audit `Ready for another RC` di §17.11 mencerminkan titik waktu 18 Juli 2026, sebelum migrasi production dijalankan. |
+| **Promotion ke MVP Stable diblokir oleh** | Tidak ada lagi. `PM-STAB-004` (migration staging/production, High) **Resolved** 19 Juli 2026 — migrasi production dijalankan dan diverifikasi (lihat `known-issues.md`). `PM-STAB-003` (rotasi kredensial) **Resolved after forensic verification** 19 Juli 2026 — lihat `known-issues.md`. |
 
-## Status yang direkomendasikan: **MVP Beta**
+## Status yang direkomendasikan: **MVP Stable**
 
 ### Definisi status yang dipakai di dokumen ini
 
@@ -59,8 +72,8 @@ keberadaan komponen UI. Lihat `known-issues.md` untuk rincian temuan
   (`pocket-mint-be/src/middlewares/error.middleware.ts`), diuji di
   `errorHandler.test.ts`.
 
-**Yang mencegah MVP Stable saat ini (1 High tersisa, ID resmi mengikuti
-`known-issues.md`):**
+**Yang sebelumnya mencegah MVP Stable (ID resmi mengikuti `known-issues.md`,
+kedua item di bawah sekarang Resolved — lihat Update 19 Juli 2026 di atas):**
 
 - **[Resolved after forensic verification, `PM-STAB-003`]** Full-history
   forensic scan (19 Juli 2026) atas kedua repo menemukan tidak ada
@@ -70,14 +83,16 @@ keberadaan komponen UI. Lihat `known-issues.md` untuk rincian temuan
   blocker — lihat `known-issues.md` PM-STAB-003 untuk rincian, Lessons
   Learned, dan Residual Risk yang tersisa (config publik Development dan
   API key lama yang belum di-purge dari history, non-blocking).
-- **[High, `PM-STAB-004`, Open — narrowed]** Reconciliation migration
-  database **staging/production nyata** ditandai eksplisit sebagai
-  **manual, belum dijalankan**. Provisioning database *kosong/baru* sudah
-  **Resolved dan terverifikasi** (5 migrasi ter-apply bersih dari nol,
-  `prisma migrate status` "up to date" — `mvp-stable-rc-validation.md`
-  §17.5), tapi `migrate resolve --applied` + `migrate deploy` terhadap
-  environment staging/production nyata belum pernah dijalankan karena
-  environment tersebut belum ada. Lihat `known-issues.md` PM-STAB-004.
+- **[Resolved, `PM-STAB-004`]** Reconciliation migration database
+  **production nyata** sekarang sudah dijalankan dan diverifikasi (19 Juli
+  2026): `prisma migrate status` → "Database schema is up to date!";
+  `prisma migrate diff --from-config-datasource --to-schema
+  prisma/schema.prisma --script` → "This is an empty migration."; deployment
+  Railway production sehat; `GET /health` → `200`. Provisioning database
+  *kosong/baru* sudah **Resolved dan terverifikasi** sebelumnya (5 migrasi
+  ter-apply bersih dari nol, `prisma migrate status` "up to date" —
+  `mvp-stable-rc-validation.md` §17.5). Bukan lagi blocker — lihat
+  `known-issues.md` PM-STAB-004.
 
 Tidak ada lagi issue **Critical** atau **High core-flow** yang terbuka:
 `PM-STAB-001` (Net Worth), `PM-STAB-002` (Analytics period), dan
@@ -95,14 +110,15 @@ finansial nyata. Rincian lengkap: `known-issues.md`.
 Rincian lengkap seluruh 10 blocker (`PM-STAB-001`–`PM-STAB-010`) plus
 `PM-STAB-011` (Medium, non-blocking), termasuk evidence, acceptance
 criteria, dan regression test yang dibutuhkan, ada di `known-issues.md`.
-`PM-STAB-003` **Resolved after forensic verification** 19 Juli 2026 (lihat
-`known-issues.md`). Karena 1 High (`PM-STAB-004` sisa) masih terbuka — butuh
-akses/persetujuan operasional di luar repository, bukan perubahan kode —
-Pocket Mint **belum dapat dinyatakan MVP Stable**, walau tidak ada lagi
-Critical atau High core-flow terbuka. Bukti yang ada mendukung status Beta
-yang solid untuk seluruh core flow, dengan satu gap operasional yang jelas
-dan dapat dilacak. Keputusan validasi resmi: **Ready for another RC**
-(`mvp-stable-rc-validation.md` §17.11), bukan Ready to promote.
+`PM-STAB-003` **Resolved after forensic verification** 19 Juli 2026 dan
+`PM-STAB-004` **Resolved** 19 Juli 2026 (migrasi production dijalankan dan
+diverifikasi — lihat `known-issues.md`). Tidak ada lagi High atau Critical
+yang terbuka, sehingga Pocket Mint `0.3.0` **dinyatakan MVP Stable** per 19
+Juli 2026 — lihat "Update 19 Juli 2026" di bagian atas dokumen ini dan
+Addendum "Penutupan PM-STAB-004" di `mvp-stable-rc-validation.md`. Keputusan
+validasi **Ready for another RC** (`mvp-stable-rc-validation.md` §17.11)
+mencerminkan titik waktu audit 18 Juli 2026, sebelum migrasi production
+dijalankan — dipertahankan sebagai catatan historis.
 
 ## Ringkasan fitur
 
@@ -152,11 +168,13 @@ password) sebelumnya berada di kategori ini — sudah dipindahkan ke
 
 ### Needs Verification
 
+Tidak ada lagi item terkait `PM-STAB-004` di tabel ini — reconciliation
+migration production dan deployment sudah dijalankan dan diverifikasi
+(lihat "Update 19 Juli 2026" di atas dan `known-issues.md` PM-STAB-004).
+
 | Item | Alasan | Blocker ID |
 | --- | --- | --- |
-| Reconciliation migration di staging/production | `docs/prisma-migration-reconciliation.md` §11 menyatakan langkah `migrate resolve --applied` dan `migrate deploy` terhadap database staging/production bersifat manual dan tidak ada bukti eksekusi di repo. Provisioning database kosong/baru sudah Resolved dan terverifikasi (`mvp-stable-rc-validation.md` §17.5). | `PM-STAB-004` (High, narrowed) |
 | Purge git history (residual, non-blocking) | `docs/deployment-runbook.md` §11 — config publik Development dan API key lama yang retired masih terlihat di history, purge masih "PENDING EXPLICIT APPROVAL (do not execute)". Bukan blocker: forensic re-verification 19 Juli 2026 mengonfirmasi tidak ada kredensial privileged (`DATABASE_URL`/`DIRECT_URL`/service-role key) di history manapun — lihat `known-issues.md` PM-STAB-003 (Resolved after forensic verification) dan §10 runbook. | Residual Risk terkait `PM-STAB-003` (Resolved, tidak lagi blocker) |
-| Deployment production aktif | Runbook bersifat prosedural (langkah yang harus dijalankan), tidak ada laporan hasil deployment sungguhan di repo. | terkait `PM-STAB-004` |
 
 Uji backup & restore data **tidak lagi berada di tabel ini** — sudah
 Resolved dengan drill nyata memakai `pg_dump`/`pg_restore`/`psql`

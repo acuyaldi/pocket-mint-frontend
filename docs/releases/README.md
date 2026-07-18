@@ -36,6 +36,31 @@ dependency, perbaikan typo di kode yang tidak terlihat pengguna. Jika
 ragu, tanyakan: "apakah pengguna atau operator perlu tahu ini terjadi?" —
 kalau tidak, bukan entri changelog.
 
+## 1a. Dokumen internal dan RC tidak otomatis masuk changelog publik
+
+Menyelesaikan dokumentasi rilis internal — `release-status.md`,
+`mvp-stable-rc-validation.md`, laporan validasi RC lainnya di
+`docs/releases/` — **tidak** membuat entri apa pun muncul di changelog
+publik. Kedua hal ini terpisah secara sengaja:
+
+- Dokumen internal mencatat **bukti dan status audit** untuk keperluan tim
+  (apakah kriteria stable terpenuhi, apa yang masih blocker, dsb.).
+- `src/lib/changelog.ts` mencatat **apa yang diumumkan ke pengguna**, dan
+  hanya berubah lewat langkah eksplisit di bagian 6 di bawah.
+
+Ini adalah akar masalah yang menyebabkan rilis MVP Stable 0.3.0 sempat
+tidak punya entri changelog publik meski dokumentasi rilis internalnya
+sudah lengkap — lihat `release-checklist.md` untuk gerbang wajib yang kini
+mencegah ini terulang.
+
+**Release candidate (RC)** — versi berakhiran `-rc.N` yang dicatat di
+`release-status.md`/laporan validasi — **tidak** ditambahkan ke
+`src/lib/changelog.ts`, kecuali produk secara sengaja memutuskan untuk
+mempublikasikan pre-release ke pengguna publik (mis. beta program publik).
+Jika RC tersebut kemudian dipromosikan menjadi rilis publik, entri
+changelog dibuat untuk **versi finalnya** (tanpa suffix `-rc.N`), bukan
+untuk RC-nya.
+
 ## 2. Cara menentukan patch, minor, dan major
 
 Format versi: `MAJOR.MINOR.PATCH` (SemVer).
@@ -102,6 +127,22 @@ pengisi.
 
 Lihat `release-checklist.md`. Wajib dicentang seluruhnya sebelum tag
 dibuat dan rilis diumumkan.
+
+**Kenapa langkah ini bukan CI gate otomatis:** CI (`.github/workflows/ci.yml`)
+sudah menjalankan `npx vitest run` (termasuk `tests/changelog.test.ts`),
+`npx tsc --noEmit`, dan `npm run build` di setiap PR ke `dev`/`main` — jadi
+entri changelog yang **sudah ditambahkan** selalu tervalidasi otomatis.
+Tapi mewajibkan CI untuk **mendeteksi bahwa suatu PR seharusnya berisi
+entri changelog baru** ditolak secara sengaja: satu-satunya sinyal murah
+yang tersedia adalah heuristik nama file (mis. "jika `release-status.md`
+berubah, wajib ada versi baru di `changelog.ts`"), dan itu rapuh — akan
+salah positif untuk PR yang mengedit `release-status.md` karena alasan lain
+(koreksi audit, update known-issues) dan salah negatif untuk rilis yang
+lupa menyentuh `release-status.md` sama sekali. Tidak ada sinyal terpercaya
+di repo yang menandai "PR ini adalah rilis publik" tanpa keterlibatan
+manusia. Karena itu `release-checklist.md` bagian "Sebelum membuat tag"
+tetap menjadi gerbang otoritatif untuk syarat ini, ditegakkan lewat review
+PR rilis, bukan lewat CI.
 
 ## 6. Cara memperbarui source of truth changelog
 
