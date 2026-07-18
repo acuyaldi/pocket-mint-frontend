@@ -272,6 +272,34 @@ ditambahkan pada audit `v0.3.0-rc.2` sebagai temuan Medium **non-blocking**
   yang bisa dijalankan `migrate resolve --applied` + `migrate deploy`
   terhadapnya (§17.1). Ini adalah blocker High kedua yang tersisa menuju
   "Ready to promote to MVP Stable", bersama PM-STAB-003.
+- **Update 18 Juli 2026 (sesi staging validation, `v0.3.0-rc.2-staging-validation.md`):**
+  Keputusan produk dikonfirmasi ke pemilik repo: Pocket Mint **tidak akan
+  punya environment staging cloud terpisah** (proyek pribadi) — hanya
+  local/dev dan production. Ini menggantikan asumsi lama di
+  `agent-rules.skill.md` backend ("`dev` branch → Railway Staging") yang
+  **tidak pernah benar-benar dibuat** (dikonfirmasi ulang: tidak ada config
+  Railway/Vercel/Fly/Docker di kedua repo). Sesi ini menjalankan validasi
+  penuh terhadap **database PostgreSQL disposable lokal yang benar-benar
+  di-provision dan dijalankan** (bukan mock, bukan hanya `npx vitest run`)
+  sebagai pengganti staging cloud: `prisma migrate deploy` dari kosong
+  (5 migrasi, PASS), aplikasi di-boot dan `/health` 200, **42/42 HTTP smoke
+  test PASS** (auth, wallet, transaksi, cicilan, dashboard, analytics,
+  isolasi, operational — lihat detail lengkap di
+  `v0.3.0-rc.2-staging-validation.md` §4), dan **backup/restore penuh
+  dengan `pg_dump`/`pg_restore` nyata PASS** (row count identik, 0 orphan
+  FK, smoke test terhadap database hasil restore 200 dengan data benar).
+  **Status TETAP Open** — validasi ini memperkuat bukti "provisioning
+  database kosong" (sudah Resolved sejak sebelumnya) tapi **tidak**
+  menjalankan sub-item inti yang menahan Resolved: `migrate resolve
+  --applied` + `migrate deploy` terhadap database **production yang sudah
+  berjalan** dan berisi data pengguna nyata (Supabase, `.env`
+  `DATABASE_URL`) — ini sengaja tidak disentuh pada sesi ini karena
+  membutuhkan persetujuan eksplisit terpisah dan jendela backup sebelum
+  migration dijalankan terhadap data pengguna nyata, sesuai
+  `agent-rules.skill.md` ("Common Mistakes": jangan jalankan migration
+  terhadap `.env` "untuk testing"). Lihat
+  `v0.3.0-rc.2-staging-validation.md` untuk matriks lengkap dan keputusan
+  "Staging Validation Pass with Non-blocking Issues".
 
 ## PM-STAB-005 — [High] Profile password form does not perform password update
 

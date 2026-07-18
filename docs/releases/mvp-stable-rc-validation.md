@@ -716,3 +716,273 @@ langsung dinaikkan; ini murni label evidensi untuk hasil validasi §17.
 
 Tidak ada blocker teknis baru yang ditemukan di dalam kendali repo ini —
 seluruh yang tersisa membutuhkan tindakan/akses di luar kode.
+
+---
+
+## 18. Staging validation (sesi terpisah, 18 Juli 2026) — lihat `v0.3.0-rc.2-staging-validation.md`
+
+Sesi validasi terpisah menjalankan langkah §2 rekomendasi §17.11 di atas
+("Sediakan environment staging/production nyata... jalankan smoke-test
+matrix") dengan cakupan yang disesuaikan keputusan produk baru: **Pocket
+Mint tidak akan memiliki environment staging cloud terpisah** (proyek
+pribadi — hanya local/dev dan production; lihat
+`v0.3.0-rc.2-staging-validation.md` §0).
+
+Ringkasan (detail lengkap ada di dokumen terpisah tersebut, tidak diduplikasi
+di sini):
+
+- Migration dijalankan nyata dari database kosong (bukan lagi hanya via
+  `run-integration-tests.mjs` yang dikutip §17.5, melainkan sesi provisioning
+  terpisah): 5 migrasi PASS, `migrate status` "up to date".
+- Aplikasi (`ts-node --transpile-only src/server.ts`, `NODE_ENV=production`)
+  di-boot melawan database tersebut, `/health` 200.
+- **42/42 HTTP smoke test PASS** — cakupan lebih luas dari §17.6 (37/37):
+  menambahkan pemeriksaan operational eksplisit (validasi error 400 bukan
+  500, tidak ada stack trace/connection string di response error) dan
+  konfirmasi ulang seluruh kriteria financial integrity (Net Worth, transfer
+  tidak mengubah Net Worth, outstanding cicilan tepat nol, guard INCOME→DEBT).
+- **Backup/restore diulang dengan drill baru** (bukan mengutip §17.7): row
+  count source vs restored identik (`users: 2, wallets: 3, transactions: 6,
+  installments: 1, categories: 24`), 0 orphan FK, smoke test HTTP terhadap
+  database hasil restore mengembalikan data yang benar.
+- Frontend build/lint/test (170/170) dan backend unit test (382/382, 11
+  skip) re-run bersih, tidak ada regresi.
+
+**Keputusan sesi staging validation: "Staging Validation Pass with
+Non-blocking Issues"** — bukan "Ready to promote" karena sub-item inti
+PM-STAB-004 (menjalankan `migrate resolve --applied` terhadap database
+production yang **sudah berjalan** dan berisi data pengguna nyata) sengaja
+tidak dijalankan pada sesi ini — itu membutuhkan persetujuan eksplisit
+terpisah dan jendela backup sebelum menyentuh data produksi sungguhan, bukan
+sesuatu yang aman dieksekusi otomatis. PM-STAB-003 dan PM-STAB-004 karenanya
+**tetap Open** dan keputusan akhir §17.11 ("Ready for another RC", bukan
+"Ready to promote") **tidak berubah** oleh sesi ini.
+
+---
+
+## 19. Audit final independen v0.3.0-rc.2 — sesi verifikasi ulang (18 Juli 2026, ~22:00–22:20 WIB)
+
+**Konteks tugas:** Sesi ini diminta sebagai "final validation setelah
+penyelesaian PM-STAB-003 dan PM-STAB-004", dengan instruksi eksplisit untuk
+tidak mempercayai hasil validasi sebelumnya dan menjalankan ulang seluruh
+pemeriksaan yang relevan. **Temuan pertama sesi ini: premis tugas tersebut
+tidak akurat** — tidak ada bukti di repository bahwa PM-STAB-003 atau
+PM-STAB-004 sudah selesai; keduanya **tetap Open**, identik dengan status di
+§17–§18. `docs/security/credential-rotation-log.md` yang diminta untuk
+dibaca **tidak ada di repository manapun** (`pocket-mint-fe`,
+`pocket-mint-be`, `pocket-mint-docs`) — dikonfirmasi dengan pencarian
+menyeluruh berbasis nama file dan grep isi (`credential.rotation`,
+`PM-STAB-003`) di seluruh repo. Laporan ini melanjutkan sebagai audit
+independen sesuai instruksi, bukan menerima premis "sudah selesai" begitu
+saja.
+
+### 19.1 Repository state
+
+| Item | Hasil |
+| --- | --- |
+| Commit `pocket-mint-fe` (HEAD saat audit) | `37f8f076cd3a89477d8273f14e208aaae65cc509` |
+| Commit `pocket-mint-be` (HEAD saat audit) | `1c47213cdd90b424627005495d926edbb51fd945` |
+| Working tree `pocket-mint-fe` | **TIDAK bersih** — `docs/releases/known-issues.md` dan `docs/releases/mvp-stable-rc-validation.md` modified (belum di-commit), `docs/releases/v0.3.0-rc.2-staging-validation.md` untracked (isinya sudah dikutip di §18, tapi file itu sendiri belum pernah di-commit) |
+| Working tree `pocket-mint-be` | **TIDAK bersih** — `src/controllers/account.controller.ts`, `test/walletControllerBoundary.test.ts`, `test/walletUpdate.test.ts`, `dist/controllers/account.controller.{js,js.map,d.ts.map}`, `docs/architecture-wallet-service.md` modified. Diperiksa: ini adalah perbaikan `serializeWallet()` untuk PM-STAB-011 (inkonsistensi tipe respons `createWallet`/`updateWallet`, Medium non-blocking) — perbaikan sah, tapi **belum di-commit**, sehingga bertentangan langsung dengan acceptance criteria `v0.3.0-rc.2-repository-baseline.md` ("Working tree release bersih ... `git status` clean") |
+| Clean clone reproducible | **Tidak diverifikasi ulang pada sesi ini** (working tree dirty membuat clean-clone-dari-HEAD tidak representatif dari apa yang sedang diaudit; evidence lama di `v0.3.0-rc.2-repository-baseline.md` tetap valid untuk commit `ca50d6a1`/`1c47213c` yang ia deskripsikan, tapi HEAD FE sudah maju 2 commit sejak itu) |
+| Secret di repository (HEAD, tracked files) | **Tidak ditemukan** — grep pola `postgres://user:pass@`, kunci literal, dsb. pada file ter-track hanya menemukan placeholder di `.env.example` dan `TEST_DATABASE_URL` test/CI (`postgres:postgres@localhost`, bukan credential nyata). `.env`/`.env.local` tetap git-ignored, tidak ter-track sejak commit `a900b69` (perilaku tidak berubah, riwayat lama sebelum commit itu masih berisi secret lama sesuai §10 runbook — itulah PM-STAB-003) |
+| CI | `.github/workflows/ci.yml` ada di kedua repo (config-level verified); **tidak dijalankan live** pada sesi ini (tidak ada akses GitHub Actions dari sandbox lokal) |
+
+**Kesimpulan 19.1:** Kriteria "frontend working tree clean; backend working
+tree clean" **GAGAL** pada saat audit ini dijalankan — regresi dari kondisi
+bersih yang didokumentasikan di `v0.3.0-rc.2-repository-baseline.md`. Ini
+harus diperbaiki (commit atau discard) sebelum snapshot berikutnya diberi
+label RC.
+
+### 19.2 Backend — dijalankan ulang independen
+
+| Pemeriksaan | Perintah | Hasil |
+| --- | --- | --- |
+| Unit test | `npx vitest run` | **PASS (386) / FAIL (0) / skipped (11)** |
+| Prisma integration test (database kosong disposable, embedded-postgres, port lokal terpisah) | `npm run test:integration` | 5 migrasi ter-apply bersih dari nol, **11/11 PASS** |
+| Typecheck | `npx tsc --noEmit` | No errors |
+| Prisma schema validate | `prisma validate` | Schema valid |
+| Lint | — | N/A, tidak dikonfigurasi di backend (tidak berubah dari §17) |
+| Production build | `npm run build` (`prisma generate && tsc && copy-prisma-client.cjs`) | PASS, Prisma Client packaging (`dist/generated/prisma/client.js`) ter-verifikasi `require()`-able |
+
+### 19.3 Frontend — dijalankan ulang independen
+
+| Pemeriksaan | Perintah | Hasil |
+| --- | --- | --- |
+| Test | `npx vitest run` | **PASS (170) / FAIL (0)** |
+| Typecheck | `npx tsc --noEmit` | No errors |
+| Lint | `npx eslint .` | No issues |
+| Production build | `npx next build` (dengan 4 env var `NEXT_PUBLIC_*` placeholder, public/client-safe) | PASS — **14 routes** ter-generate (dikonfirmasi lewat output mentah `next build`, bukan ringkasan proxy tool lokal yang sempat melaporkan angka salah "1 routes" pada percobaan pertama — known tooling quirk, bukan masalah build) |
+
+### 19.4 Database — provisioning kosong, independen dari sesi manapun sebelumnya
+
+Instance PostgreSQL disposable baru (`embedded-postgres`, port lokal
+terpisah dari sesi §17/§18, dibongkar otomatis setelah selesai):
+
+- `prisma migrate deploy` dari database kosong → **5 migrasi ter-apply
+  tanpa error** (`20260710000000_baseline` s.d.
+  `20260718000000_drop_unused_transfer_model`).
+- `prisma migrate status` → **"Database schema is up to date!"**.
+- Backend (`ts-node --transpile-only src/server.ts`) berhasil start melawan
+  database ini, `GET /health` → `200`.
+
+Konsisten dengan §17.5/§18 — tidak ada regresi.
+
+### 19.5 HTTP smoke test — end-to-end nyata terhadap database disposable di atas
+
+Dijalankan dengan skrip Node sekali-pakai (JWT HS256 di-mint langsung
+memakai `jose`, meniru token Supabase asli persis seperti pola
+`test/helpers.ts`; **bukan mock** — request HTTP nyata ke server yang
+sedang berjalan). Dua identitas user independen dipakai untuk isolasi.
+
+| # | Pemeriksaan | Hasil |
+| --- | --- | --- |
+| 1 | Backend start + `/health` 200 | PASS |
+| 2 | Auth: bootstrap user via JWT terverifikasi (`POST /v1/users/sync`, 2 user) | PASS |
+| 3 | Auth: request tanpa token ditolak 401 | PASS |
+| 4 | Wallet: create CASH, BANK, CREDIT_CARD (dengan `creditLimit`/`cutoffDay`/`paymentDueDay`) | PASS (semua) |
+| 5 | Income: `POST /v1/transactions` type INCOME ke wallet ASSET | PASS |
+| 6 | Expense: `POST /v1/transactions` type EXPENSE ke wallet ASSET | PASS |
+| 7 | Transfer: asset→asset, satu baris `TRANSFER` dengan `toWalletId` | PASS |
+| 8 | Debt: EXPENSE kredit pada wallet `CREDIT_CARD` (`installmentMonths: 3`) membuat installment | PASS |
+| 9 | Debt guard: INCOME ke wallet `CREDIT_CARD` ditolak `400 BAD_REQUEST` | PASS |
+| 10 | Installment: `GET /v1/installments?status=ACTIVE` menampilkan installment yang baru dibuat | PASS |
+| 11 | Installment: `POST /v1/installments/:id/pay` (`sourceWalletId`) — bayar sampai lunas | PASS |
+| 12 | Net Worth: `GET /v1/dashboard/summary` — `net_worth == total_aset − total_utang` diverifikasi angka eksplisit (1.650.000 − 300.000 = 1.350.000 sebelum bayar cicilan; 1.350.000 − 0 = 1.350.000 setelah cicilan lunas — outstanding tepat nol, konsisten dengan PM-STAB-006) | PASS |
+| 13 | Historical analytics: `GET /v1/transactions/all` mengembalikan seluruh riwayat lintas tipe transaksi (5 transaksi: income, expense, transfer, debt-expense, tanpa filter bulan) | PASS |
+| 14 | User isolation: user B tidak melihat wallet user A di `GET /v1/wallets` | PASS |
+| 15 | User isolation: user B tidak bisa `PUT` wallet milik user A (`404 NOT_FOUND`, bukan bocor lewat `403` vs `404` yang membedakan eksistensi — desain existing, bukan regresi) | PASS |
+| 16 | Password change | **Tidak dapat diuji lewat backend HTTP by design** — kredensial dimiliki penuh oleh Supabase Auth, tidak ada kolom password maupun endpoint ubah-password di backend Pocket Mint (konsisten dengan `financial-logic.skill.md` dan resolusi PM-STAB-005 yang diuji di level frontend via `tests/profile-page.test.ts`, 19 assertion — bukan gap, melainkan batas arsitektur yang terdokumentasi) |
+
+**Hasil akhir: 22/22 pemeriksaan PASS** (setelah 3 iterasi memperbaiki bug
+pada skrip smoke test itu sendiri — field `categoryId` wajib untuk
+income/expense, `cutoffDay`/`paymentDueDay` wajib untuk membuat installment
+dari wallet kredit, dan `sourceWalletId` bukan `walletId` pada endpoint
+pembayaran cicilan; ketiganya adalah kesalahan penulisan skrip audit, bukan
+bug produk — dikonfirmasi dengan membaca kontrak request langsung dari
+`src/controllers/*.ts` sebelum revisi). Tidak ada temuan baru yang
+mengontradiksi PM-STAB-001, 002, 005, 006, 007 yang sudah diklaim Resolved
+di §17 — seluruhnya berperilaku benar pada percobaan independen ini.
+
+### 19.6 Staging / production
+
+Tidak ada environment staging cloud terpisah (keputusan produk permanen,
+lihat §18 §0) dan **tidak ada bukti deployment production aktif** di
+repository manapun pada sesi ini (tidak ada config Railway/Vercel/Fly/Docker,
+tidak ada laporan deployment bertanggal). "Staging validation" dalam
+pengertian literal (verifikasi commit yang di-deploy, health endpoint di URL
+staging nyata, log server nyata) **tidak dapat dijalankan** karena target
+tersebut tidak ada — bukan kegagalan pemeriksaan, melainkan tidak-ada-nya
+subjek yang diperiksa. §19.4–§19.5 di atas adalah pengganti yang sama
+persis dengan metodologi §18 (database disposable lokal yang benar-benar
+di-provision dan dijalankan, bukan mock).
+
+### 19.7 Security — PM-STAB-003
+
+- **Status: tetap Open, TIDAK ada evidence rotasi.**
+- `pocket-mint-be/docs/deployment-runbook.md` §10 ("Credential rotation")
+  masih eksplisit menandai password database Supabase sebagai "Rotation
+  required — was in git-tracked `.env`, still in history" dan API key lama
+  sebagai "Retired" (bukan "Rotated" — tidak ada perubahan status).
+- §11 ("Git-history purge plan") masih **"PENDING EXPLICIT APPROVAL (do not
+  execute)"**, tanggal tidak berubah dari 13 Juli 2026.
+- `docs/security/credential-rotation-log.md` **tidak ada** di repository
+  manapun — dicari dengan nama file dan isi di seluruh working directory,
+  nihil.
+- Tidak ada dokumen operasional baru (di luar repo atau di dalam repo) yang
+  mengonfirmasi rotasi Supabase dashboard sudah dieksekusi.
+- **Kesimpulan: PM-STAB-003 belum terpenuhi. "Old credential invalid" tidak
+  dapat diverifikasi Pass karena tidak ada bukti rotasi terjadi sama
+  sekali** — bukan "Pass dengan evidence tersembunyi", melainkan "belum
+  dikerjakan", persis seperti yang sudah dilaporkan sejak rc.1.
+
+### 19.8 Operational — PM-STAB-004
+
+- Sub-item database kosong/baru: **Resolved dan diverifikasi ulang
+  independen ketiga kalinya** (§17.5, §18, §19.4 — tiga sesi terpisah,
+  hasil konsisten).
+- Sub-item staging/production nyata (`migrate resolve --applied` +
+  `migrate deploy` terhadap database yang sudah berjalan dan berisi data
+  pengguna): **tetap tidak pernah dijalankan**. Tidak ada environment
+  staging terpisah (keputusan produk, §18 §0); production nyata sengaja
+  tidak disentuh (butuh persetujuan eksplisit + jendela backup terpisah,
+  sesuai `agent-rules.skill.md`).
+- Rollback procedure: `docs/backup-restore-runbook.md` dan
+  `scripts/db-backup.mjs`/`db-restore.mjs`/`db-verify.mjs` tersedia dan
+  ter-commit (tidak dijalankan ulang end-to-end pada sesi ini — sudah
+  divalidasi nyata di §17.7 dan §18 dengan `pg_dump`/`pg_restore` sungguhan,
+  tidak ada indikasi regresi).
+- **Kesimpulan: PM-STAB-004 (sisa staging/production) belum terpenuhi**,
+  identik dengan status sejak rc.1.
+
+### 19.9 Documentation sync
+
+- `known-issues.md`, `release-status.md`, `src/lib/changelog.ts` saling
+  konsisten: PM-STAB-003 dan PM-STAB-004 (sisa) sama-sama tercatat
+  High/Open di ketiganya; `changelog.ts` `knownIssues` untuk versi "0.1.0"
+  secara eksplisit masih menyebut kedua blocker ini — tidak ada klaim
+  palsu bahwa keduanya selesai.
+- Tidak ditemukan issue Resolved yang ternyata masih rusak pada
+  pemeriksaan ulang independen (§19.5) — PM-STAB-001, 002, 005, 006, 007
+  seluruhnya berperilaku benar.
+- Tidak ditemukan "fake known issue" (klaim masalah yang sebenarnya tidak
+  ada) pada tinjauan `known-issues.md`.
+- `release-status.md` "Validation decision" masih **"Ready for another
+  RC"** — konsisten dengan temuan sesi ini, tidak perlu diubah.
+- **Satu gap dokumentasi ditemukan:** tidak ada dokumen manapun yang
+  mencatat bahwa working tree FE dan BE saat ini **tidak bersih** (lihat
+  §19.1) — ini adalah regresi state yang terjadi setelah
+  `v0.3.0-rc.2-repository-baseline.md` ditulis, dan belum tercatat di
+  tempat lain.
+
+### 19.10 Matriks Pass/Fail final
+
+| Kriteria | Hasil |
+| --- | --- |
+| Critical open | **0** |
+| High open | **2** (`PM-STAB-003`, `PM-STAB-004` sisa staging/production) — **tidak nol** |
+| Automated tests (BE unit + integration, FE) | **Pass** (386+11 BE, 170 FE, 0 gagal) |
+| Financial integrity (net worth, transfer, debt, cicilan lunas) | **Pass** (diverifikasi ulang via HTTP nyata, §19.5) |
+| User isolation | **Pass** |
+| Fresh migration (database kosong) | **Pass** |
+| Staging migration (environment nyata) | **Tidak berlaku / tidak dapat dijalankan** — tidak ada environment staging (keputusan produk); production nyata sengaja tidak disentuh |
+| Staging smoke test | Diganti dengan smoke test terhadap database disposable lokal — **Pass** (22/22, §19.5), bukan staging cloud sungguhan |
+| Credential rotation | **Fail / belum dikerjakan** |
+| Backup/restore | **Pass** (evidence §17.7/§18, tidak diulang di sesi ini, tidak ada indikasi regresi) |
+| Production build (BE+FE) | **Pass** |
+| Repository working tree bersih | **Fail** (§19.1 — regresi baru) |
+| Known issues tersisa hanya Medium/Low | **Fail** — 2 High (`PM-STAB-003`, `PM-STAB-004`) masih Open |
+
+### 19.11 Keputusan
+
+Karena **dua issue High masih terbuka** (`PM-STAB-003`, `PM-STAB-004` sisa
+staging/production) — dan sesuai instruksi eksplisit tugas ini ("Jika ada
+satu High/Critical issue terbuka, jangan promosikan") — keputusan
+**bukan** "Ready to promote to MVP Stable", terlepas dari seluruh hasil
+teknis lain yang Pass bersih pada audit independen ini.
+
+Antara "Not Ready" dan "Ready for another RC": seluruh core flow, financial
+integrity, user isolation, dan fresh-migration lulus bersih pada
+pemeriksaan independen ulang (bukan sekadar mengutip klaim lama) — tidak
+ada regresi fungsional. Dua blocker yang tersisa murni operasional
+(butuh akses/persetujuan di luar repository), persis seperti kondisi sejak
+rc.1, sehingga **tidak ada alasan baru untuk menurunkan status ke "Not
+Ready"** dari sisi produk.
+
+**Keputusan: Ready for another RC** (tidak berubah dari §17.11/§18) —
+dengan syarat tambahan yang harus dipenuhi SEBELUM snapshot RC berikutnya
+diambil:
+
+1. Commit atau discard perubahan working tree yang saat ini pending di
+   kedua repo (§19.1) — sebuah RC harus berasal dari commit yang bersih,
+   bukan working tree yang sedang berubah.
+2. `docs/security/credential-rotation-log.md` yang direferensikan oleh
+   instruksi validasi **harus benar-benar dibuat setelah rotasi
+   dieksekusi** — saat ini tidak ada, dan tidak boleh diasumsikan ada.
+3. PM-STAB-003 dan PM-STAB-004 (sisa) tetap memblokir "Ready to promote"
+   sampai keduanya dieksekusi dan diverifikasi dengan bukti operasional
+   nyata di luar repository — bukan sesuatu yang bisa diselesaikan lewat
+   perubahan kode lagi.
+
+**v0.3.0 belum dapat dipromosikan ke MVP Stable pada titik waktu audit
+ini.**
