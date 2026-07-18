@@ -1018,3 +1018,27 @@ publik Development di history, API key lama belum di-purge): lihat
 
 `PM-STAB-004` (sisa staging/production) **tidak terpengaruh oleh addendum
 ini** dan tetap Open — lihat §19.8/§19.10 di atas, tidak berubah.
+
+## Addendum — 19 Juli 2026: Penutupan PM-STAB-004 (migrasi production)
+
+§19.8/§19.10/§19.11 di atas mencatat status `PM-STAB-004` **pada titik waktu
+audit tersebut (18 Juli 2026)**, saat langkah staging/production masih
+manual dan belum dijalankan — entri-entri itu **tidak diubah** di sini, agar
+jejak audit historis tetap apa adanya.
+
+Setelah audit ini, migrasi production dijalankan dan diverifikasi:
+
+- `npx prisma migrate status` → `Database schema is up to date!`
+- `npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script` → `-- This is an empty migration.`
+- Deployment Railway production sehat.
+- `GET /health` → `200`.
+
+Berdasarkan evidence ini, `PM-STAB-004` diperbarui menjadi **Resolved** di
+`known-issues.md` dan `release-status.md` (19 Juli 2026) — satu-satunya sub-item
+yang sebelumnya menahan status Open (`migrate resolve --applied` + `migrate
+deploy` terhadap database production nyata) sudah dieksekusi dan diverifikasi.
+Dengan `PM-STAB-003` dan `PM-STAB-004` sama-sama tidak lagi Open, tidak ada
+lagi High/Critical yang memblokir promosi — Pocket Mint `0.3.0` dipromosikan
+ke **MVP Stable** (lihat `release-status.md`, `src/lib/changelog.ts`). Ini
+tidak mengubah kesimpulan §19.11 pada titik waktu audit tersebut; ini adalah
+peristiwa yang terjadi setelahnya.

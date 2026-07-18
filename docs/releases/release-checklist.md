@@ -7,25 +7,54 @@ Lihat `README.md` di folder ini untuk penjelasan tiap langkah.
 
 ## Sebelum membuat tag
 
-- [ ] Seluruh automated test lulus di repo yang dirilis (`npx vitest run`
-      atau setara).
+- [ ] **[WAJIB, release-blocking]** `src/lib/changelog.ts` (`RELEASES`)
+      diperbarui dengan entri publik baru untuk versi ini, mengikuti bentuk
+      pada `templates/release-template.md`. Dokumen internal di
+      `docs/releases/` (termasuk RC validation report, audit status, dan
+      dokumen sejenis) **tidak pernah otomatis muncul** di changelog
+      publik — menyelesaikan dokumentasi internal bukan pengganti langkah
+      ini. Lihat README.md bagian 1 dan 1a.
+- [ ] Nomor versi (`version`) pada entri baru sesuai aturan patch/minor/major
+      di `README.md` bagian 2, termasuk aturan major tetap `0` selama belum
+      Public Stable, dan **cocok persis** dengan versi yang akan di-tag.
+- [ ] Status (`status: "internal" | "beta" | "stable"`) dan `publishedAt`
+      pada entri baru sesuai dengan status rilis sebenarnya di
+      `release-status.md` terkini — jangan menulis `"stable"` jika
+      `release-status.md` masih menyatakan status lebih rendah, dan jangan
+      menulis tanggal publikasi sebelum rilis benar-benar akan diumumkan.
+- [ ] Entri rilis lama pada array `RELEASES` **tidak diubah** — hanya entri
+      baru yang ditambahkan. Riwayat rilis sebelumnya adalah catatan
+      historis dan harus tetap seperti apa adanya.
+- [ ] Jika rilis ini adalah release candidate (RC) yang **tidak**
+      dipublikasikan secara sengaja sebagai pre-release publik, entri RC
+      tersebut **tidak** ditambahkan ke `src/lib/changelog.ts` — lihat
+      README.md bagian 1a untuk kapan RC boleh dipublikasikan.
+- [ ] Setelah entri ditambahkan, jalankan urutan validasi berikut dan
+      pastikan semua lulus:
+      1. `npx vitest run tests/changelog.test.ts` (validasi field wajib,
+         format versi/tanggal, dan versi duplikat pada `RELEASES`).
+      2. `npx tsc --noEmit` (typecheck).
+      3. `npm run test` (seluruh suite test frontend, bukan hanya
+         `changelog.test.ts`).
+      4. `npm run build` (production build).
 - [ ] Tidak ada bug **Critical** yang masih terbuka dan relevan dengan
       scope rilis ini (cek `known-issues.md`).
-- [ ] Nomor versi ditentukan sesuai aturan patch/minor/major di
-      `README.md` bagian 2, termasuk aturan major tetap `0` selama belum
-      Public Stable.
-- [ ] `src/lib/changelog.ts` (`RELEASES`) diperbarui dengan entri baru,
-      mengikuti bentuk pada `templates/release-template.md`.
-- [ ] `npx vitest run tests/changelog.test.ts` lulus (validasi field wajib,
-      format versi/tanggal, dan versi duplikat).
 - [ ] Setiap entri `added`/`improved`/`fixed`/`security` sudah diverifikasi
       end-to-end (bukan UI-only) — lihat README.md bagian 10.
 - [ ] `knownIssues` pada entri rilis konsisten dengan `known-issues.md`
       (tidak ada temuan relevan yang hilang atau disembunyikan).
-- [ ] Status rilis (`internal` / `beta` / `stable`) dicantumkan dan sesuai
-      dengan `release-status.md` terkini.
+- [ ] Setelah entri ditambahkan, verifikasi secara visual (lokal atau
+      preview) bahwa rilis baru ini muncul **paling atas** (newest-first) di
+      landing page ("Yang Baru di Pocket Mint") **dan** di `/changelog`, dan
+      bahwa entri rilis lama masih tampil di bawahnya tanpa perubahan.
 - [ ] Perubahan `src/lib/changelog.ts` sudah direview dan merge ke branch
       utama.
+
+**Release-blocking:** rilis publik ini tidak boleh dipromosikan ke `main`
+sampai entri `src/lib/changelog.ts` untuk versi ini ada, lulus
+`tests/changelog.test.ts`, dan langkah verifikasi newest-first di atas
+selesai. Dokumentasi rilis internal yang lengkap (`release-status.md`,
+laporan validasi RC, dsb.) **tidak menggantikan** syarat ini.
 
 ## Tag dan deployment
 

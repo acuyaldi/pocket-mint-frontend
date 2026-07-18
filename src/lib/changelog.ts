@@ -7,6 +7,41 @@ import type { Release, ReleaseChanges, ReleaseStatus } from "@/src/types/changel
  */
 export const RELEASES: Release[] = [
   {
+    version: "0.3.0",
+    title: "MVP Stable",
+    publishedAt: "2026-07-19",
+    summary:
+      "Pocket Mint kini stabil dan siap produksi. Seluruh alur keuangan inti telah diuji end-to-end, database produksi berhasil dimigrasi, dan seluruh blocker stabilitas MVP telah diselesaikan.",
+    status: "stable",
+    changes: {
+      improved: [
+        "Stabilitas alur dompet, transaksi, transfer, cicilan, dashboard, dan analitik",
+        "Konsistensi navigasi dan terminologi produk",
+        "Kesiapan produksi dan keandalan rilis",
+      ],
+      fixed: [
+        "Rekonsiliasi migration database produksi",
+        "Sinkronisasi skema dompet dan tagihan",
+        "Penghapusan model transfer usang yang tidak terpakai",
+        "Blocker stabilitas MVP yang sebelumnya terdokumentasi kini telah diselesaikan",
+      ],
+      security: [
+        "Pengerasan autentikasi dan penanganan error produksi",
+        "Pengamanan alur rilis dan deployment",
+      ],
+    },
+    highlights: [
+      "Seluruh 170 test frontend dan 382 test backend lulus tanpa kegagalan",
+      "Smoke test HTTP end-to-end 42/42 lulus mencakup seluruh alur inti dan isolasi data pengguna",
+      "Backup dan pemulihan data telah diuji dengan snapshot nyata dan verifikasi integritas baris",
+      "CI otomatis mencakup typecheck, test, build, dan integration test di kedua repositori",
+    ],
+    knownIssues: [
+      "Tombol \"Ekspor laporan\" di halaman Analitik belum berfungsi (KI-EXPORT)",
+      "Label navigasi menyimpang dari kontrak desain 5-item (PM-STAB-009)",
+    ],
+  },
+  {
     version: "0.1.0",
     title: "MVP Stable",
     publishedAt: "2026-07-18",
