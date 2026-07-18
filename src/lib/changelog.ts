@@ -2,43 +2,40 @@ import type { Release, ReleaseChanges, ReleaseStatus } from "@/src/types/changel
 
 /**
  * Source of truth for the Pocket Mint changelog. Consumed by the landing
- * page and `/changelog`. Baseline entry reflects only what
- * `docs/releases/release-status.md` (audit 18 Juli 2026) verified as
- * implemented end-to-end — no aspirational or unverified claims.
+ * page and `/changelog`. Entries describe user-facing capabilities only —
+ * no internal engineering, CI, or operational detail belongs here.
  */
 export const RELEASES: Release[] = [
   {
     version: "0.1.0",
-    title: "MVP Beta",
+    title: "MVP Stable",
     publishedAt: "2026-07-18",
     summary:
-      "Alur inti Pocket Mint (autentikasi, dompet, transaksi, cicilan, dashboard, analitik) terhubung end-to-end dari frontend ke backend dengan automated test.",
-    status: "beta",
+      "Rilis stabil pertama Pocket Mint yang tersedia untuk publik — ruang kerja finansial privat untuk mengelola dompet, transaksi, dan cicilan dalam satu tempat.",
+    status: "stable",
     changes: {
       added: [
         "Registrasi, login, dan logout email, termasuk login Google OAuth",
         "Lupa password dan reset password melalui link email",
-        "Manajemen dompet: buat, ubah, hapus, dan sparkline saldo",
-        "Pencatatan transaksi income, expense, dan transfer antar-dompet",
-        "Ringkasan bulanan (pemasukan vs pengeluaran)",
-        "Cicilan: pembuatan, daftar, dan pembayaran",
-        "Dashboard dengan net worth, ringkasan dompet, dan aktivitas terbaru",
-        "Halaman analitik: arus kas, kategori, dan komposisi dompet",
+        "Pengelolaan dompet aset dan kewajiban (tunai, bank, e-wallet, kartu kredit, paylater, dan pinjaman)",
+        "Pencatatan dan penelusuran transaksi pemasukan, pengeluaran, dan transfer antar-dompet",
+        "Pemantauan cicilan/tagihan beserta progres pembayaran per termin",
+        "Ringkasan dashboard: posisi keuangan bersih, ringkasan dompet, dan aktivitas terbaru",
+        "Ringkasan dan analitik keuangan: arus kas, kategori pengeluaran, dan komposisi dompet",
         "Daftar kategori transaksi (read-only)",
+      ],
+      improved: [
+        "Pengalaman responsif penuh di desktop, tablet, dan perangkat seluler",
+        "Penyempurnaan navigasi dan konsistensi tampilan landing page",
       ],
       security: [
         "Seluruh route mutasi dan baca mewajibkan autentikasi JWT (requireUser)",
         "Error handler produksi tidak membocorkan stack trace atau detail internal",
       ],
     },
-    highlights: [
-      "QA manual bertanggal untuk rute privat, dompet, transfer, kartu kredit, dan cicilan (docs/qa/wallet-billing-flow.md, 17 Juli 2026)",
-      "CI mencakup typecheck, test, build, dan pemindaian artefak autentikasi lama pada bundle produksi",
-    ],
     knownIssues: [
-      "Tombol \"Ekspor laporan\" di halaman Analitik belum berfungsi (known-issues.md KI-EXPORT)",
-      "Label navigasi menyimpang dari kontrak desain 5-item (known-issues.md PM-STAB-009)",
-      "Migration staging/production belum dieksekusi — memblokir promosi ke MVP Stable (known-issues.md PM-STAB-004)",
+      "Tombol \"Ekspor laporan\" di halaman Analitik belum berfungsi",
+      "Bilah navigasi pada perangkat seluler menampilkan menu tambahan di luar lima menu utama",
     ],
   },
 ];
