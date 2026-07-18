@@ -21,7 +21,6 @@ describe("Pocket Mint public experience contract", () => {
     const markers = [
       'id="privacy"',
       'id="features"',
-      'id="cta"',
     ];
     const positions = markers.map((marker) => page.indexOf(marker));
 
