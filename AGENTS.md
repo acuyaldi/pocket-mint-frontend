@@ -6,8 +6,13 @@ may all differ from your training data. Read the relevant guide in
 Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+<!-- BEGIN:agent-rules -->
+@.claude/skills/agent-rules.skill.md
+<!-- END:agent-rules -->
 
-
+<!-- BEGIN:git-workflow -->
+@.claude/skills/git-workflow.skill.md
+<!-- END:git-workflow -->
 
 <!-- BEGIN:api-design -->
 @skills/design.md
