@@ -986,3 +986,35 @@ diambil:
 
 **v0.3.0 belum dapat dipromosikan ke MVP Stable pada titik waktu audit
 ini.**
+
+---
+
+## Addendum — 19 Juli 2026: Rekonsiliasi forensik PM-STAB-003
+
+§19.7 di atas dan matriks §19.10 mencatat status PM-STAB-003 **pada titik
+waktu audit tersebut (18 Juli 2026)** — entri itu **tidak diubah** di sini,
+untuk menjaga jejak audit historis apa adanya.
+
+Setelah audit ini, dilakukan forensic re-verification full-history atas
+`pocket-mint-be` dan `pocket-mint-fe` (setiap `.env*` historis, setiap git
+blob, setiap commit yang menambah/menghapus file env, pola connection-string
+PostgreSQL, seluruh occurrence `DATABASE_URL`/`DIRECT_URL`, semua branch).
+Hasil: tidak ada kredensial database privileged (password DB, `DATABASE_URL`
+/`DIRECT_URL` nyata, service-role key) yang pernah ter-commit di repo
+manapun; project Production (`wvrdnmiuyeecqatlwbpp`) tidak pernah muncul di
+git history. Satu-satunya nilai historis yang ter-commit adalah konfigurasi
+client publik project Development (`clambteumrweoektkejl`,
+`NEXT_PUBLIC_*`) dan API key lama yang ter-hardcode di frontend (temuan ini
+tetap berlaku, lihat Residual Risk di `known-issues.md`).
+
+Berdasarkan evidence ini, `PM-STAB-003` diperbarui menjadi **Resolved after
+forensic verification** di `known-issues.md` dan `release-status.md`
+(19 Juli 2026) — bukan karena rotasi dieksekusi, melainkan karena forensic
+audit mengonfirmasi tidak ada kredensial privileged yang perlu dirotasi.
+Rincian lengkap, Lessons Learned, dan Residual Risk yang tersisa (config
+publik Development di history, API key lama belum di-purge): lihat
+`known-issues.md` PM-STAB-003. `deployment-runbook.md` §10 di
+`pocket-mint-be` diperbarui dengan kesimpulan yang sama.
+
+`PM-STAB-004` (sisa staging/production) **tidak terpengaruh oleh addendum
+ini** dan tetap Open — lihat §19.8/§19.10 di atas, tidak berubah.

@@ -209,3 +209,34 @@ Jika tidak yakin suatu fitur benar-benar berfungsi end-to-end, verifikasi
 dulu ke kode (FE hook → API client → route backend → service) sebelum
 menulis entri — jangan menulis dari asumsi bahwa komponen UI berarti
 fitur sudah bekerja.
+
+## 11. Cara membuat GitHub Release
+
+Langkah "GitHub Release" di `release-checklist.md` (urutan production, setelah
+"Tag release") merujuk ke prosedur berikut. Berlaku sama untuk `pocket-mint-fe`
+dan `pocket-mint-be` (lihat `pocket-mint-be/docs/deployment-runbook.md` §13
+untuk ringkasan sisi backend) — hanya repository dan isi body yang berbeda.
+
+- **Dibuat di mana:** GitHub Release dibuat di repository yang tag-nya berasal
+  — rilis FE di `pocket-mint-fe`, rilis BE di `pocket-mint-be`. Tidak ada
+  release gabungan lintas repo; masing-masing repo punya riwayat Release
+  sendiri, sejalan dengan aturan tag independen di bagian 7.
+- **Kapan:** setelah tag annotated dibuat (bagian 7) **dan** langkah verifikasi
+  deployment (bagian 8) selesai dengan hasil baik — bukan sebelum production
+  terverifikasi sehat.
+- **Draft vs published:** boleh disiapkan sebagai **draft** sambil menulis body
+  release, tapi harus di-**publish** sebelum rilis dianggap selesai di
+  `release-checklist.md`. Draft yang tidak pernah di-publish tidak memenuhi
+  langkah "GitHub Release" pada checklist.
+- **Format judul:** `Pocket Mint FE vX.Y.Z` (atau `Pocket Mint BE vX.Y.Z` di
+  repo backend), sama persis dengan versi pada tag.
+- **Isi body:** ringkasan `Added`/`Improved`/`Fixed`/`Security`/`Known Issues`
+  untuk rilis tersebut, level bahasa dan larangan yang sama seperti bagian 4
+  dan 10 di atas (dampak ke pengguna/operator, bukan istilah implementasi;
+  tidak ada klaim fitur yang belum terhubung end-to-end).
+- **Hubungan dengan changelog:** body GitHub Release **bukan** sumber data
+  baru — ia meringkas entri yang sudah ada di `src/lib/changelog.ts` (bagian 6)
+  untuk versi yang sama. Jangan menulis entri changelog hanya di body GitHub
+  Release tanpa menambahkannya ke `src/lib/changelog.ts` terlebih dahulu;
+  `src/lib/changelog.ts` tetap satu-satunya source of truth yang ditampilkan
+  di `/changelog` dan landing page.

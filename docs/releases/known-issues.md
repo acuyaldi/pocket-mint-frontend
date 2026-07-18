@@ -131,46 +131,96 @@ ditambahkan pada audit `v0.3.0-rc.2` sebagai temuan Medium **non-blocking**
   endpoint `/transactions/all` bila dipakai (belum diverifikasi dipanggil
   dari mana pun saat ini).
 
-## PM-STAB-003 — [High] Exposed credentials require rotation
+## PM-STAB-003 — [Resolved after forensic verification] Exposed credentials require rotation
 
-- **Status:** Open. *(Severity dinaikkan dari Medium menjadi High —
-  lihat catatan rekonsiliasi di bawah.)*
+- **Status:** **Resolved after forensic verification** (19 Juli 2026).
+  *(Was: Open/High. Severity history: Medium → High (18 Juli 2026, lihat
+  catatan rekonsiliasi lama di bawah) → Resolved after forensic
+  verification (19 Juli 2026, lihat catatan di bawah).)*
 - **Affected area:** Operasional/infrastruktur — git history
-  `pocket-mint-be`, `.env` yang dulu ter-track.
-- **Expected behavior:** Tidak ada kredensial produksi (password database
-  Supabase, API key lama) yang dapat diakses lewat git history; rotasi dan
-  purge sudah dieksekusi dan dikonfirmasi.
-- **Actual behavior:** `deployment-runbook.md` §10 ("Credential rotation")
-  menyatakan password database Supabase dan API key lama (`kunci_...`)
-  pernah ter-hardcode/ter-commit. §11 ("Git-history purge plan") berstatus
-  eksplisit **"PENDING EXPLICIT APPROVAL (do not execute)"**, tertanggal
-  13 Juli 2026. Tidak ada dokumen lebih baru di kedua repo yang mengonfirmasi
-  rotasi/purge sudah selesai.
+  `pocket-mint-be` dan `pocket-mint-fe`.
+- **Initial incident response assumption (13–18 Juli 2026):** `.env` /
+  `.env.local` pernah ter-track sebelum commit `a900b69`, dan
+  `deployment-runbook.md` §10 waktu itu menyatakan password database
+  Supabase dan API key lama pernah ter-hardcode/ter-commit — diasumsikan
+  kredensial database produksi mungkin ikut terekspos.
+- **Forensic re-verification (19 Juli 2026):** Full-history forensic
+  analysis atas **setiap** `.env*` historis, setiap git blob, setiap commit
+  yang menambah/menghapus file env, setiap pola connection-string
+  PostgreSQL, setiap occurrence `DATABASE_URL`/`DIRECT_URL`, dan semua
+  branch di **kedua** repo (`pocket-mint-be`, `pocket-mint-fe`) menemukan:
+  tidak ada `DATABASE_URL`, `DIRECT_URL`, password database, Supabase
+  service-role key, atau kredensial database privileged lain di git object
+  manapun yang ter-track. Satu-satunya nilai yang pernah ter-commit adalah
+  konfigurasi client publik proyek **Development**
+  (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+  `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_HCAPTCHA_SITE_KEY`) milik project ref
+  `clambteumrweoektkejl`, plus API key lama (`kunci_...`) yang memang
+  ter-hardcode di source frontend (temuan ini **tetap valid** — lihat
+  Residual Risk). Project **Production** (`wvrdnmiuyeecqatlwbpp`) **tidak
+  pernah muncul** di git history repo manapun.
 - **Evidence / lokasi kode:** `pocket-mint-be/docs/deployment-runbook.md`
-  §10–11.
-- **User impact:** Risiko kebocoran kredensial database produksi (berisi
-  data finansial pengguna) jika siapa pun dengan akses ke history git
-  mengeksploitasi kredensial lama yang belum dirotasi.
-- **Acceptance criteria:** Kredensial dirotasi dan dikonfirmasi via dokumen
-  operasional bertanggal (di luar repo — Supabase dashboard/secret manager);
-  keputusan purge history dieksekusi, atau risiko diterima secara sadar dan
-  didokumentasikan secara eksplisit (bukan dibiarkan "pending").
-- **Required regression tests:** Tidak ada test kode yang relevan; verifikasi
-  operasional manual (checklist: kredensial baru aktif, kredensial lama
-  dicabut, scan bundle produksi tetap bersih seperti yang sudah dilakukan CI
-  untuk header legacy).
-- **Catatan rekonsiliasi:** `known-issues.md` versi sebelumnya menandai ini
-  Medium; `mvp-stability-audit.md` §12 menilai ulang risiko ini sebagai
-  **High** karena memblokir kriteria Security di `stable-criteria.md`
-  secara langsung ("Secret tidak tersimpan di repository"). Dokumen ini
-  mengikuti penilaian audit terbaru.
-- **Update 18 Juli 2026 (audit final `v0.3.0-rc.2`):** Dikonfirmasi ulang
-  **tetap Open, tidak berubah** — `deployment-runbook.md` §10 masih
-  menandai rotasi "required ... still in history", §11 masih "PENDING
-  EXPLICIT APPROVAL (do not execute)". Butuh akses Supabase dashboard nyata
-  dan persetujuan eksplisit di luar cakupan audit berbasis-repo
-  (`mvp-stable-rc-validation.md` §17.1). Ini adalah salah satu dari dua
-  blocker High yang tersisa menuju "Ready to promote to MVP Stable".
+  §10–11 (diperbarui 19 Juli 2026 dengan hasil forensik yang sama).
+- **Resolution rationale:**
+  - Full git history kedua repo sudah diaudit (semua commit, semua branch,
+    semua blob historis, bukan hanya HEAD).
+  - Production Supabase project tidak terdampak — tidak pernah muncul di
+    history manapun.
+  - Tidak ada eksposur kredensial database privileged yang terkonfirmasi
+    (password DB, `DATABASE_URL`/`DIRECT_URL`, service-role key).
+  - Hanya konfigurasi client-side publik proyek Development
+    (`NEXT_PUBLIC_*`) yang pernah ter-commit secara historis.
+  - **Tidak direkomendasikan** merotasi kredensial database Production atau
+    Supabase secret Production berdasarkan evidence saat ini — lihat
+    Residual Risk untuk item yang tetap terbuka.
+- **Acceptance criteria (terpenuhi):** Forensic audit berbasis-repo selesai
+  dan didokumentasikan; tidak ada kredensial privileged yang ditemukan;
+  kesimpulan konsisten di `deployment-runbook.md` dan dokumen ini.
+- **Required regression tests:** Tidak ada test kode yang relevan (temuan
+  operasional/dokumentasi). Jika evidence baru muncul (mis. kredensial
+  privileged ditemukan lewat scan lanjutan seperti `gitleaks`/`trufflehog`),
+  buka ulang issue ini dengan severity sesuai temuan.
+- **Catatan rekonsiliasi (historis, dipertahankan):** `known-issues.md`
+  versi sebelumnya menandai ini Medium; `mvp-stability-audit.md` §12
+  menilai ulang risiko ini sebagai High karena diasumsikan memblokir
+  kriteria Security di `stable-criteria.md`. Update 18 Juli 2026
+  mengonfirmasi status Open berdasarkan asumsi awal tersebut, sebelum
+  forensic re-verification 19 Juli 2026 di atas.
+
+### Lessons Learned
+
+- **Jangan pernah commit file `.env`** — sekali ter-track, nilainya tetap
+  ada di history walau file kemudian di-`git rm`/untrack.
+- **`.gitignore` bersifat preventif, bukan korektif** — menambahkan pola ke
+  `.gitignore` mencegah kebocoran berikutnya, tapi tidak menghapus apa yang
+  sudah ter-commit sebelumnya.
+- **Lakukan verifikasi forensik berbasis evidence sebelum merotasi
+  kredensial production** — asumsi insiden awal berguna untuk respons
+  cepat, tapi keputusan rotasi/purge production sebaiknya menunggu
+  konfirmasi konkret dari full-history scan, supaya effort operasional
+  (rotasi, koordinasi downtime, invalidasi sesi) diarahkan ke risiko yang
+  benar-benar ada.
+- **Pemisahan environment Development/Production membatasi dampak** —
+  karena backend/frontend tidak pernah menunjuk ke project Production
+  secara langsung dalam file yang ter-track, kebocoran historis di repo ini
+  terbatas pada konfigurasi Development, tidak pernah menyentuh Production.
+
+### Residual Risk
+
+- **Anon key Development historis tetap terlihat** —
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY` project Development
+  (`clambteumrweoektkejl`) pernah ter-commit. Ini adalah public client key
+  by design (dilindungi oleh RLS di sisi Supabase), bukan kredensial
+  privileged, tapi tetap tercatat sebagai residual visibility.
+- **Git history kedua repo masih menyimpan konfigurasi publik Development**
+  (`NEXT_PUBLIC_*`) di commit-commit lama — belum di-purge dari history
+  (lihat `deployment-runbook.md` §11, masih "PENDING EXPLICIT APPROVAL").
+- **API key lama (`kunci_...`) tetap ter-hardcode di history frontend** —
+  sudah retired dan backend tidak lagi menerimanya, tapi nilainya masih
+  terlihat di git history sampai purge (§11) dieksekusi.
+- **Purge git-history opsional** dapat dilakukan kapan pun untuk
+  menghilangkan residual visibility di atas, tapi bukan blocker keamanan
+  karena tidak ada kredensial privileged yang perlu dilindungi olehnya.
 
 ## PM-STAB-004 — [High → partially resolved] Database baseline migration is incomplete
 

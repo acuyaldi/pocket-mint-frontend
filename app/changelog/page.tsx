@@ -73,7 +73,7 @@ function ReleaseCard({ release }: { release: Release }) {
   const categories = CHANGE_ORDER.filter((key) => (release.changes[key]?.length ?? 0) > 0);
 
   return (
-    <Card>
+    <Card className="shadow-sm shadow-primary/5 transition-[transform,background-color,box-shadow] duration-300 motion-safe:hover:-translate-y-1 hover:bg-muted/40 hover:shadow-md hover:ring-primary/30 focus-within:bg-muted/40 focus-within:ring-primary/30">
       <CardHeader className="gap-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
