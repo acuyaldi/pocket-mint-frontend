@@ -60,7 +60,7 @@ jobs:
         run: |
           set +e
           matches=$(git grep -n -I -i -E \
-            'x-api-key|x-user-id|x-user-email|kunci_rahasia_pocket_mint_2026' \
+            'x-api-key|x-user-id|x-user-email|API_KEY|AUTH_REQUIRE_JWT' \
             -- app components lib src proxy.ts 2>&1)
           status=$?
           set -e
@@ -89,7 +89,7 @@ jobs:
 
           set +e
           matches=$(grep -RInaE --exclude='*.map' \
-            'x-api-key|x-user-id|x-user-email|kunci_rahasia_pocket_mint_2026|localhost:5001|127\.0\.0\.1:5001' \
+            'x-api-key|x-user-id|x-user-email|API_KEY|AUTH_REQUIRE_JWT|localhost:5001|127\.0\.0\.1:5001' \
             .next/server .next/static 2>&1)
           status=$?
           set -e
