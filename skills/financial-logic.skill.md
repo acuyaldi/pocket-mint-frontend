@@ -15,7 +15,7 @@ rules the frontend must follow.
 - `isAssetWallet` / `ASSET_WALLET_TYPES` in `src/types/wallet.ts`.
 
 ### DEBT
-- Types: `CREDIT_CARD`, `PAYLOAD`, `LOAN`
+- Types: `CREDIT_CARD`, `PAYLATER`, `LOAN`
 - **Outstanding is stored as a NEGATIVE balance** — display `Math.abs(balance)` in Coral.
 - `isDebtWallet` in `src/types/wallet.ts`.
 - `spendable = creditLimit - |balance|` (for asset wallets: `spendable = balance`).
