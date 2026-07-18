@@ -6,9 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { LockKeyhole } from "lucide-react";
 
 import { PocketMintLogo } from "@/components/Logo";
-import { buttonVariants } from "@/components/ui/button";
 import { PulseBeams } from "@/components/ui/pulse-beams";
-import { cn } from "@/lib/utils";
 import dashboard from "@/playwright/screenshots/dashboard.png";
 
 
@@ -41,14 +39,14 @@ export function PocketMintHero() {
               <PocketMintLogo />
             </Link>
             <div className="hidden items-center gap-6 md:flex">
-              <Link href="#features" className={landingNavLink}>
-                Fitur
-              </Link>
               <Link href="#privacy" className={landingNavLink}>
                 Privasi
               </Link>
-              <Link href="#about" className={landingNavLink}>
-                Tentang Kami
+              <Link href="#features" className={landingNavLink}>
+                Fitur
+              </Link>
+              <Link href="#whats-new" className={landingNavLink}>
+                Changelog
               </Link>
             </div>
           </div>
@@ -61,10 +59,7 @@ export function PocketMintHero() {
             </Link>
             <Link
               href="/login?mode=register"
-              className={cn(
-                buttonVariants({ size: "lg" }),
-                "landing-cta-sweep min-h-11 rounded-[40px] px-[50px] py-[17px] text-base shadow-sm shadow-primary/20 hover:text-primary focus-visible:text-primary"
-              )}
+              className="landing-cta-sweep inline-flex min-h-11 rounded-[40px] items-center justify-center bg-primary px-[50px] py-[17px] text-base font-medium leading-[27px] text-primary-foreground shadow-sm hover:text-primary focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:bg-primary/85"
             >
               <span>Daftar</span>
             </Link>
@@ -108,10 +103,7 @@ export function PocketMintHero() {
             >
               <Link
                 href="/login"
-                className={cn(
-                  buttonVariants({ size: "lg" }),
-                  "landing-cta-sweep min-h-11 rounded-[40px] px-[50px] py-[17px] text-base shadow-sm shadow-primary/20 hover:text-primary focus-visible:text-primary"
-                )}
+                className="landing-cta-sweep inline-flex min-h-11 rounded-[40px] items-center justify-center bg-primary px-[50px] py-[17px] text-base font-medium leading-[27px] text-primary-foreground shadow-sm hover:text-primary focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:bg-primary/85"
               >
                 <span>Mulai Sekarang</span>
               </Link>

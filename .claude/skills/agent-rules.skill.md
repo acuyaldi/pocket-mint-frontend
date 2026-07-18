@@ -4,8 +4,9 @@
 ## Skill Load Order
 Before any task, read in this order:
 1. `agent-rules.skill.md` ← this file
-2. `ui-system.skill.md` ← for any frontend/component work
-3. `financial-logic.skill.md` ← for any wallet/transaction/installment work
+2. `git-workflow.skill.md` ← branching, PR, and release process — read before any task that will create commits or a PR
+3. `ui-system.skill.md` ← for any frontend/component work
+4. `financial-logic.skill.md` ← for any wallet/transaction/installment work
 
 ## Behavior Rules
 
@@ -36,10 +37,11 @@ Before any task, read in this order:
 - Loading state required for every data-fetching component
 
 ### Git & Pull Request Conventions (Staging vs Production)
-- **Branch Roles:** Branch `master` adalah Production (Live App) dan branch `dev` adalah Staging (Development/Testing).
-- **Feature Branching:** Setiap kali mulai mengerjakan task baru, Agent **WAJIB** membuat branch baru dari base `dev` (misal: `feature/nama-fitur` atau `fix/nama-bug`). JANGAN PERNAH commit atau push langsung ke branch `dev` atau `master`.
-- **Target Pull Request:** Saat membuat Pull Request (PR), pastikan source branch-nya adalah branch fitur baru tersebut, dan **TARGET BRANCH-nya HARUS `dev` (Staging)**.
-- **Pengecualian:** JANGAN PERNAH menargetkan PR ke branch `master` kecuali ada perintah tertulis eksplisit dari pengguna untuk kebutuhan rilis hotfix produksi.
+Full process lives in `git-workflow.skill.md` — this is the summary:
+- **Branch Roles:** Branch `main` adalah Production (Live App), branch `dev` adalah Staging/pre-production (Development/Testing), dan branch `master` sudah **retired** (jangan dipakai untuk task baru).
+- **Feature Branching:** Setiap kali mulai mengerjakan task baru, Agent **WAJIB** membuat branch baru dari base `dev` (misal: `feature/nama-fitur` atau `fix/nama-bug`). JANGAN PERNAH commit atau push langsung ke branch `dev` atau `main`.
+- **Target Pull Request:** Saat membuat Pull Request (PR) tanpa base/head eksplisit, source branch-nya adalah branch task saat ini, dan **TARGET BRANCH-nya HARUS `dev` (Staging)**. Jangan merge PR kecuali diminta eksplisit.
+- **Pengecualian:** JANGAN PERNAH menargetkan PR ke branch `main` kecuali ada perintah tertulis eksplisit dari pengguna untuk rilis produksi (`dev` → `main`).
 
 ### Documentation Maintenance
 - **Automated Audit Update:** Setiap kali Agent melakukan modifikasi, penambahan, atau penghapusan file halaman baru di dalam direktori `apps/frontend/app/` atau mengubah struktur komponen utama, Agent **WAJIB** langsung memperbarui berkas peta fitur di `docs/audit.md`.
@@ -55,8 +57,9 @@ A task is DONE only when:
 - [ ] No regressions to existing features
 
 ## Common Mistakes to Avoid
-- **SALAH ALUR GIT:** Membuat Pull Request langsung menuju branch `master` (Alur yang benar: Bikin branch dari `dev`, push, lalu buat PR dengan target merge ke `dev`).
-- Melakukan commit atau push langsung (*direct push*) ke branch `dev` atau `master`.
+- **SALAH ALUR GIT:** Membuat Pull Request langsung menuju branch `main` (Alur yang benar: Bikin branch dari `dev`, push, lalu buat PR dengan target merge ke `dev`; PR ke `main` hanya untuk rilis eksplisit).
+- Melakukan commit atau push langsung (*direct push*) ke branch `dev` atau `main`.
+- Menganggap `master` masih menjadi branch produksi — branch itu sudah retired.
 - Lupa mengupdate berkas `docs/audit.md` setelah selesai melakukan tweak/refactor komponen halaman frontend.
 - Starting frontend before backend is ready
 - Forgetting to recalculate net worth after wallet mutation

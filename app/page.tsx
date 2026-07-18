@@ -6,8 +6,6 @@ import { PocketMintHero } from "@/components/ui/pocket-mint-hero";
 import { PrivacyCommitments } from "@/components/ui/privacy-commitments";
 import { VerticalTabs } from "@/components/ui/vertical-tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { getReleases } from "@/src/lib/changelog";
 import type { Release, ReleaseChanges } from "@/src/types/changelog";
 
@@ -34,15 +32,15 @@ function WhatsNewSection() {
       id="whats-new"
       className="scroll-mt-20 border-t border-border py-16 md:py-24"
     >
-      <div className="flex flex-col items-center text-center">
+      <div className="flex flex-col items-center text-center gap-3">
         <span className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-secondary">
           <Sparkles aria-hidden="true" className="size-4" strokeWidth={1.75} />
           <span className="text-xs font-medium tracking-[0.02em]">Perkembangan Produk</span>
         </span>
-        <h2 className="mt-5 max-w-2xl text-4xl font-semibold tracking-tight text-primary md:text-5xl">
+          <h2 className="max-w text-5xl font-semibold tracking-tight text-primary md:text-5xl lg:text-6xl">
           Yang Baru di Pocket Mint
         </h2>
-        <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground">
+        <p className="max-w text-base leading-7 text-muted-foreground sm:text-xl sm:leading-8">
           Pocket Mint terus dikembangkan. Berikut ringkasan rilis terbaru kami.
         </p>
       </div>
@@ -50,7 +48,10 @@ function WhatsNewSection() {
       {releases.length > 0 ? (
         <div className="mt-10 grid gap-5 md:grid-cols-3">
           {releases.map((release) => (
-            <Card key={release.version} className="text-left">
+            <Card
+              key={release.version}
+              className="text-left shadow-sm shadow-primary/5 transition-[transform,background-color,box-shadow] duration-300 motion-safe:hover:-translate-y-1 hover:bg-muted/40 hover:shadow-md hover:ring-primary/30 focus-within:bg-muted/40 focus-within:ring-primary/30"
+            >
               <CardHeader className="gap-1.5">
                 <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
                   <span className="font-semibold">v{release.version}</span>
@@ -75,14 +76,8 @@ function WhatsNewSection() {
       ) : null}
 
       <div className="mt-10 flex justify-center">
-        <Link
-          href="/changelog"
-          className={cn(
-            buttonVariants({ variant: "outline", size: "lg" }),
-            "min-h-11 rounded-[40px] px-8 py-[17px] text-base"
-          )}
-        >
-          Lihat semua perubahan
+        <Link href="/changelog" className={largePrimaryButton}>
+          <span>Lihat semua perubahan</span>
         </Link>
       </div>
     </section>
@@ -123,17 +118,7 @@ export default function LandingPage() {
 
         <WhatsNewSection />
 
-        <section
-          id="cta"
-          className="border-t border-border py-20 text-center md:py-28"
-        >
-          <h2 className="mx-auto max-w-2xl text-3xl font-semibold tracking-tight text-primary md:text-4xl">
-            Mulai bangun ruang kerja finansial privat Anda.
-          </h2>
-          <Link href="/login" className={`${largePrimaryButton} mt-8`}>
-            <span>Mulai Sekarang</span>
-          </Link>
-        </section>
+      
       </main>
 
       <footer id="about" className="scroll-mt-20 w-full border-t border-border bg-muted">
