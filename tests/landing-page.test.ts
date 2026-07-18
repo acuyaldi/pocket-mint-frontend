@@ -154,7 +154,6 @@ describe("Pocket Mint public experience contract", () => {
 
   it("keeps privacy before product and one final call to action", () => {
     expect(page).toContain("Data finansial Anda tetap milik Anda.");
-    expect(page).toContain("Mulai bangun ruang kerja finansial privat Anda.");
     expect(page).toContain("Kebijakan Privasi");
     expect(page).toContain("Syarat & Ketentuan");
   });

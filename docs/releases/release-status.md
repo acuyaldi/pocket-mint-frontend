@@ -21,7 +21,7 @@ keberadaan komponen UI. Lihat `known-issues.md` untuk rincian temuan
 | **Current status** | **MVP Beta** |
 | **Current release candidate** | `v0.3.0-rc.2` (label evidensi validasi — belum di-tag/commit sebagai rilis, lihat `mvp-stable-rc-validation.md` §17.11) |
 | **Validation decision** | **Ready for another RC** (bukan Not Ready, bukan Ready to promote — lihat `mvp-stable-rc-validation.md` §17.11) |
-| **Promotion ke MVP Stable diblokir oleh** | `PM-STAB-003` (rotasi kredensial, High, Open) dan `PM-STAB-004` sisa (migration staging/production, High, Open) — keduanya butuh akses/persetujuan di luar repository, bukan perubahan kode |
+| **Promotion ke MVP Stable diblokir oleh** | `PM-STAB-004` sisa (migration staging/production, High, Open) — butuh akses/persetujuan di luar repository, bukan perubahan kode. `PM-STAB-003` (rotasi kredensial) **Resolved after forensic verification** 19 Juli 2026 — lihat `known-issues.md`; tidak lagi blocker. |
 
 ## Status yang direkomendasikan: **MVP Beta**
 
@@ -59,15 +59,17 @@ keberadaan komponen UI. Lihat `known-issues.md` untuk rincian temuan
   (`pocket-mint-be/src/middlewares/error.middleware.ts`), diuji di
   `errorHandler.test.ts`.
 
-**Yang mencegah MVP Stable saat ini (2 High tersisa, ID resmi mengikuti
+**Yang mencegah MVP Stable saat ini (1 High tersisa, ID resmi mengikuti
 `known-issues.md`):**
 
-- **[High, `PM-STAB-003`, Open]** Rotasi kredensial database Supabase dan
-  API key lama **belum dieksekusi**. `docs/deployment-runbook.md` §10–11
-  masih menandai rotasi "required ... still in history" dan purge git
-  history "PENDING EXPLICIT APPROVAL (do not execute)". Butuh akses
-  Supabase dashboard nyata dan persetujuan eksplisit di luar cakupan
-  perubahan kode. Lihat `known-issues.md` PM-STAB-003.
+- **[Resolved after forensic verification, `PM-STAB-003`]** Full-history
+  forensic scan (19 Juli 2026) atas kedua repo menemukan tidak ada
+  kredensial database privileged (`DATABASE_URL`/`DIRECT_URL`, password DB,
+  service-role key) yang pernah ter-commit; project Production
+  (`wvrdnmiuyeecqatlwbpp`) tidak pernah muncul di git history. Bukan lagi
+  blocker — lihat `known-issues.md` PM-STAB-003 untuk rincian, Lessons
+  Learned, dan Residual Risk yang tersisa (config publik Development dan
+  API key lama yang belum di-purge dari history, non-blocking).
 - **[High, `PM-STAB-004`, Open — narrowed]** Reconciliation migration
   database **staging/production nyata** ditandai eksplisit sebagai
   **manual, belum dijalankan**. Provisioning database *kosong/baru* sudah
@@ -93,13 +95,14 @@ finansial nyata. Rincian lengkap: `known-issues.md`.
 Rincian lengkap seluruh 10 blocker (`PM-STAB-001`–`PM-STAB-010`) plus
 `PM-STAB-011` (Medium, non-blocking), termasuk evidence, acceptance
 criteria, dan regression test yang dibutuhkan, ada di `known-issues.md`.
-Karena 2 High (`PM-STAB-003`, `PM-STAB-004` sisa) masih terbuka — keduanya
-butuh akses/persetujuan operasional di luar repository, bukan perubahan
-kode — Pocket Mint **belum dapat dinyatakan MVP Stable**, walau tidak ada
-lagi Critical atau High core-flow terbuka. Bukti yang ada mendukung status
-Beta yang solid untuk seluruh core flow, dengan hanya dua gap operasional
-yang jelas dan dapat dilacak. Keputusan validasi resmi: **Ready for another
-RC** (`mvp-stable-rc-validation.md` §17.11), bukan Ready to promote.
+`PM-STAB-003` **Resolved after forensic verification** 19 Juli 2026 (lihat
+`known-issues.md`). Karena 1 High (`PM-STAB-004` sisa) masih terbuka — butuh
+akses/persetujuan operasional di luar repository, bukan perubahan kode —
+Pocket Mint **belum dapat dinyatakan MVP Stable**, walau tidak ada lagi
+Critical atau High core-flow terbuka. Bukti yang ada mendukung status Beta
+yang solid untuk seluruh core flow, dengan satu gap operasional yang jelas
+dan dapat dilacak. Keputusan validasi resmi: **Ready for another RC**
+(`mvp-stable-rc-validation.md` §17.11), bukan Ready to promote.
 
 ## Ringkasan fitur
 
@@ -152,7 +155,7 @@ password) sebelumnya berada di kategori ini — sudah dipindahkan ke
 | Item | Alasan | Blocker ID |
 | --- | --- | --- |
 | Reconciliation migration di staging/production | `docs/prisma-migration-reconciliation.md` §11 menyatakan langkah `migrate resolve --applied` dan `migrate deploy` terhadap database staging/production bersifat manual dan tidak ada bukti eksekusi di repo. Provisioning database kosong/baru sudah Resolved dan terverifikasi (`mvp-stable-rc-validation.md` §17.5). | `PM-STAB-004` (High, narrowed) |
-| Rotasi kredensial & purge git history | `docs/deployment-runbook.md` §10–11 (13 Juli 2026) menyatakan password database dan API key lama masih ada di history, purge "PENDING EXPLICIT APPROVAL (do not execute)". Tidak ada dokumen yang lebih baru mengonfirmasi penyelesaian. | `PM-STAB-003` (High) |
+| Purge git history (residual, non-blocking) | `docs/deployment-runbook.md` §11 — config publik Development dan API key lama yang retired masih terlihat di history, purge masih "PENDING EXPLICIT APPROVAL (do not execute)". Bukan blocker: forensic re-verification 19 Juli 2026 mengonfirmasi tidak ada kredensial privileged (`DATABASE_URL`/`DIRECT_URL`/service-role key) di history manapun — lihat `known-issues.md` PM-STAB-003 (Resolved after forensic verification) dan §10 runbook. | Residual Risk terkait `PM-STAB-003` (Resolved, tidak lagi blocker) |
 | Deployment production aktif | Runbook bersifat prosedural (langkah yang harus dijalankan), tidak ada laporan hasil deployment sungguhan di repo. | terkait `PM-STAB-004` |
 
 Uji backup & restore data **tidak lagi berada di tabel ini** — sudah

@@ -38,7 +38,7 @@ export const RELEASES: Release[] = [
     knownIssues: [
       "Tombol \"Ekspor laporan\" di halaman Analitik belum berfungsi (known-issues.md KI-EXPORT)",
       "Label navigasi menyimpang dari kontrak desain 5-item (known-issues.md PM-STAB-009)",
-      "Rotasi kredensial database dan migration staging/production belum dieksekusi — memblokir promosi ke MVP Stable (known-issues.md PM-STAB-003, PM-STAB-004)",
+      "Migration staging/production belum dieksekusi — memblokir promosi ke MVP Stable (known-issues.md PM-STAB-004)",
     ],
   },
 ];

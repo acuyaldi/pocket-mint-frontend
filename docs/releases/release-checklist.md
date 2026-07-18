@@ -47,3 +47,56 @@ Lihat `README.md` di folder ini untuk penjelasan tiap langkah.
 
 Jangan lanjutkan pengumuman rilis. Tangani kegagalan dulu, atau jalankan
 rollback (README.md bagian 9) jika kegagalan ditemukan setelah deploy.
+
+## Urutan rilis Production (promosi ke MVP Stable)
+
+Untuk rilis yang mencakup promosi ke branch `main` / production — termasuk,
+bila berlaku, reconciliation migration database (lihat
+`pocket-mint-be/docs/prisma-migration-reconciliation.md` §0 dan
+`pocket-mint-be/docs/deployment-runbook.md` §6–§9) — checklist di atas
+dijalankan **di dalam** urutan tetap berikut. Setiap tahap harus selesai dan
+terverifikasi sebelum lanjut ke tahap berikutnya:
+
+```text
+Database backup completed
+        ↓
+Migration executed
+        ↓
+Migration verified
+        ↓
+Backend deployed
+        ↓
+Frontend deployed
+        ↓
+Smoke tests passed
+        ↓
+Tag release
+        ↓
+GitHub Release
+        ↓
+Pocket Mint MVP Stable
+```
+
+Setiap panah adalah gerbang, bukan formalitas — jangan lanjut ke langkah
+berikutnya jika langkah sebelumnya gagal atau belum terverifikasi. Jika
+kegagalan ditemukan setelah "Backend deployed" atau "Frontend deployed",
+ikuti rollback (README.md bagian 9) sebelum mencoba lanjut lagi dari awal
+urutan.
+
+**Catatan urutan (agar tidak tampak kontradiktif dengan dokumen BE):**
+
+- **"Migration executed"** di atas bukan satu langkah atomik — untuk detail
+  urutan migrasi additive/destruktif di dalamnya (mis. migrasi additive
+  dijalankan sebelum backend deploy, migrasi destruktif setelahnya), ikuti
+  `pocket-mint-be/docs/deployment-runbook.md` §6.
+- **"Backend deployed → Frontend deployed"** di atas adalah urutan **default**
+  untuk rilis yang backend-nya backward-compatible (endpoint/kontrak lama
+  tetap berfungsi untuk frontend versi sebelumnya). Untuk rilis yang mengubah
+  kontrak auth/API secara breaking di backend — seperti migrasi JWT-only yang
+  dijelaskan sebagai "golden rule" di awal
+  `pocket-mint-be/docs/deployment-runbook.md` — urutan itu **terbalik**:
+  frontend yang Bearer-capable harus deploy lebih dulu, baru backend JWT-only.
+  Ini satu-satunya pengecualian yang sah terhadap urutan default di atas;
+  tentukan di awal perencanaan rilis mana yang berlaku dan catat itu secara
+  eksplisit di rencana rilis, jangan asumsikan default tanpa memeriksa apakah
+  rilis ini mengubah kontrak backend secara breaking.
