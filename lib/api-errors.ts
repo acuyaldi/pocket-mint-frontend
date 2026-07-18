@@ -6,7 +6,7 @@
  */
 
 /** Base class for errors raised by the API client. */
-export class ApiError extends Error {
+class ApiError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "ApiError";

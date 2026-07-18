@@ -21,7 +21,7 @@ const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Dompet", href: "/wallets", icon: Wallet },
   { label: "Transaksi", href: "/transactions", icon: ArrowLeftRight },
-  { label: "Tagihan", href: "/tagihan", icon: CalendarClock },
+  { label: "Cicilan", href: "/tagihan", icon: CalendarClock },
   { label: "Analitik", href: "/analytics", icon: BarChart3 },
 ];
 
@@ -82,7 +82,7 @@ export function AppSidebar() {
               {item.label}
               {item.href === "/tagihan" && dueBillCount > 0 ? (
                 <span
-                  aria-label={`${dueBillCount} tagihan perlu diperhatikan`}
+                  aria-label={`${dueBillCount} cicilan perlu diperhatikan`}
                   className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-coral px-1.5 py-0.5 text-[10px] font-bold leading-none text-white"
                 >
                   {dueBillCount > 9 ? "9+" : dueBillCount}

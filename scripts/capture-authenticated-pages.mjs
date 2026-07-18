@@ -57,7 +57,7 @@ const pages = [
   ["dashboard", "/dashboard", "Posisi keuangan bersih"],
   ["wallets", "/wallets", "Dompet"],
   ["transactions", "/transactions", "Transaksi"],
-  ["tagihan", "/tagihan", "Tagihan"],
+  ["tagihan", "/tagihan", "Cicilan"],
   ["analytics", "/analytics", "Analitik"],
 ];
 

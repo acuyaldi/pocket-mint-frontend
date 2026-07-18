@@ -43,7 +43,7 @@ export function BillCard({ bill, onPay }: { bill: BillDto; onPay: (bill: BillDto
 
       <div className="mt-5 space-y-3">
         <div className="flex items-baseline justify-between gap-4">
-          <span className="text-xs text-muted-foreground">Tagihan termin ini</span>
+          <span className="text-xs text-muted-foreground">Cicilan termin ini</span>
           <strong className="text-lg tabular-nums text-foreground">{formatCurrency(bill.amountPerTerm)}</strong>
         </div>
         <div className="flex items-center justify-between gap-4">
@@ -69,7 +69,7 @@ export function BillCard({ bill, onPay }: { bill: BillDto; onPay: (bill: BillDto
           onClick={() => onPay(bill)}
           className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground"
         >
-          <Banknote className="size-4" /> Bayar Tagihan
+          <Banknote className="size-4" /> Bayar Cicilan
         </button>
       ) : null}
     </article>

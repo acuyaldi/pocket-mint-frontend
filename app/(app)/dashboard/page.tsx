@@ -21,12 +21,14 @@ import {
 } from "@/src/features/transactions/hooks/useTransactions";
 import { useWallets } from "@/src/features/wallets/hooks/useWallets";
 import { useBills } from "@/src/features/bills/hooks/useBills";
+import { useDashboardSummary } from "@/src/features/dashboard/hooks/useDashboardSummary";
 import { formatCurrency } from "@/lib/utils";
 import { isDebtWallet, type Wallet as WalletType } from "@/src/types/wallet";
 import {
   AddTransactionModal,
   type AddTransactionData,
 } from "@/app/(app)/transactions/components/AddTransactionModal";
+import { DashboardHeroCard } from "@/app/(app)/dashboard/components/DashboardHeroCard";
 
 function getWalletKind(walletItem: WalletType) {
   if (isDebtWallet(walletItem.type)) {
@@ -136,16 +138,11 @@ export default function DashboardPage() {
     return () => window.removeEventListener("fab-add-transaction", handler);
   }, [openAddModal]);
 
-  const { totalAssets, totalDebts, netWorth } = useMemo(() => {
-    const assets = wallets
-      .filter((walletItem) => !isDebtWallet(walletItem.type))
-      .reduce((sum, walletItem) => sum + walletItem.balance, 0);
-    const debts = wallets
-      .filter((walletItem) => isDebtWallet(walletItem.type))
-      .reduce((sum, walletItem) => sum + Math.abs(walletItem.balance), 0);
-
-    return { totalAssets: assets, totalDebts: debts, netWorth: assets };
-  }, [wallets]);
+  const {
+    data: dashboardSummary,
+    isLoading: isSummaryLoading,
+    isError: isSummaryError,
+  } = useDashboardSummary();
 
   const { data: summary } = useMonthlySummary();
   const netSavings = summary?.netSavings ?? 0;
@@ -167,43 +164,14 @@ export default function DashboardPage() {
         transition: "opacity 0.2s ease-in-out",
       }}
     >
-      <section className="rounded-xl border border-primary/20 bg-primary p-6 text-primary-foreground shadow-sm md:p-8">
-        <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-          <div>
-            <p className="text-[12px] font-medium uppercase tracking-[0.12em] text-white/60">
-              Posisi keuangan bersih
-            </p>
-            <h2 className="mt-3 text-[32px] font-semibold leading-tight tabular-nums md:text-[40px]">
-              {formatCurrency(netWorth)}
-            </h2>
-          </div>
-          <div className="text-sm text-white/45 md:text-right">
-            <p>Terakhir diperbarui: sekarang</p>
-          </div>
-        </div>
-        <div className="grid gap-8 border-t border-white/10 pt-8 md:grid-cols-3">
-          <div>
-            <p className="text-[12px] font-semibold text-mint">Total aset</p>
-            <p className="mt-1 text-xl font-semibold tabular-nums">
-              {formatCurrency(totalAssets)}
-            </p>
-          </div>
-          <div>
-            <p className="text-[12px] font-semibold text-coral">Total hutang</p>
-            <p className="mt-1 text-xl font-semibold tabular-nums">
-              {formatCurrency(totalDebts)}
-            </p>
-          </div>
-          <div>
-            <p className="text-[12px] font-semibold text-white/60">
-              Selisih bulan ini
-            </p>
-            <p className="mt-1 text-xl font-semibold tabular-nums">
-              {formatCurrency(netSavings)}
-            </p>
-          </div>
-        </div>
-      </section>
+      <DashboardHeroCard
+        netWorth={dashboardSummary?.netWorth ?? 0}
+        totalAssets={dashboardSummary?.totalAssets ?? 0}
+        totalDebts={dashboardSummary?.totalDebts ?? 0}
+        netSavings={netSavings}
+        isLoading={isSummaryLoading && !dashboardSummary}
+        isError={isSummaryError}
+      />
 
       <section className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-xl border border-border/30 bg-surface-low px-6 py-4">
         <div className="flex items-center gap-2">
@@ -216,8 +184,8 @@ export default function DashboardPage() {
           <CalendarClock className="size-[18px] text-amber" />
           <span className="text-sm text-muted-foreground">
             {activeBills.length > 0
-              ? `${activeBills.length} tagihan aktif`
-              : "Tidak ada tagihan aktif"}
+              ? `${activeBills.length} cicilan aktif`
+              : "Tidak ada cicilan aktif"}
           </span>
         </div>
       </section>
@@ -240,7 +208,7 @@ export default function DashboardPage() {
             className="group flex h-14 items-center justify-center gap-3 rounded-lg border border-border/60 bg-card px-4 text-sm font-semibold transition-all hover:border-primary/40 hover:bg-surface-low"
           >
             <ReceiptText className="size-5 text-primary transition-transform group-hover:scale-110" />
-            Tagihan
+            Cicilan
           </Link>
                   <button
             type="button"
