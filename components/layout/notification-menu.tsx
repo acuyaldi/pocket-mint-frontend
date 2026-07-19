@@ -34,12 +34,16 @@ function NotificationRow({
   const t = useTranslations("notificationCenter");
   const locale = useLocale();
   const isUnread = !notification.readAt;
-  const isCompleted = !!notification.completedAt;
+  const isCompleted = notification.completed;
+  const isInstallment = !!notification.installmentId;
+  const name = isInstallment
+    ? notification.installmentDescription ?? notification.installmentWalletName ?? ""
+    : notification.templateName ?? "";
 
   return (
     <div className="flex items-start gap-2 rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-muted/70 focus-visible:bg-muted/70">
       <Link
-        href="/transactions/rutin"
+        href={isInstallment ? "/tagihan" : "/transactions/rutin"}
         onClick={() => {
           if (isUnread) onMarkRead(notification.id);
         }}
@@ -52,14 +56,14 @@ function NotificationRow({
         <CalendarClock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
         <span className="flex flex-col gap-0.5">
           <span className={cn("text-foreground", isUnread && "font-semibold")}>
-            {t("reminderMessage", { name: notification.templateName })}
+            {t("reminderMessage", { name })}
           </span>
           <span className="text-xs text-muted-foreground">
             {formatOccurrenceDate(notification.occurrenceDate, locale)}
           </span>
         </span>
       </Link>
-      {isCompleted ? (
+      {isInstallment ? null : isCompleted ? (
         <span className="mt-1 shrink-0 text-xs font-semibold text-muted-foreground">{t("completed")}</span>
       ) : (
         <Button

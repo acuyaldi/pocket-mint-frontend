@@ -38,7 +38,7 @@ describe("notification center hooks", () => {
 
 describe("notification menu", () => {
   it("marks a notification as read only when it was unread, then navigates to the template", () => {
-    expect(menuSource).toContain('href="/transactions/rutin"');
+    expect(menuSource).toContain('href={isInstallment ? "/tagihan" : "/transactions/rutin"}');
     expect(menuSource).toContain("if (isUnread) onMarkRead(notification.id);");
   });
 
@@ -68,8 +68,8 @@ describe("confirm reminder hook", () => {
 });
 
 describe("notification menu — quick confirm", () => {
-  it("shows a Confirm action for pending reminders and a Completed label once completedAt is set", () => {
-    expect(menuSource).toContain("const isCompleted = !!notification.completedAt;");
+  it("shows a Confirm action for pending reminders and a Completed label once completed is derived true", () => {
+    expect(menuSource).toContain("const isCompleted = notification.completed;");
     expect(menuSource).toContain('t("completed")');
     expect(menuSource).toContain('t("confirm")');
   });
@@ -91,8 +91,33 @@ describe("notification menu — quick confirm", () => {
   it("stops the confirm click from also triggering the row's navigation link", () => {
     expect(menuSource).toContain("event.preventDefault();\n            event.stopPropagation();\n            onConfirm(notification);");
   });
+});
 
-  it("disables the confirm button while a confirmation is in flight", () => {
+describe("notification menu — installment reminders (Phase 7)", () => {
+  it("links installment rows to /tagihan instead of /transactions/rutin", () => {
+    expect(menuSource).toContain('href={isInstallment ? "/tagihan" : "/transactions/rutin"}');
+  });
+
+  it("marks the notification read via the same row click used for template reminders", () => {
+    expect(menuSource).toContain("if (isUnread) onMarkRead(notification.id);");
+  });
+
+  it("does not import or render PayBillModal", () => {
+    expect(menuSource).not.toContain("PayBillModal");
+  });
+
+  it("does not call usePayBill or reference bills/wallets for the pay flow", () => {
+    expect(menuSource).not.toContain("usePayBill");
+    expect(menuSource).not.toContain("useBills");
+    expect(menuSource).not.toContain("useWallets");
+    expect(menuSource).not.toContain("setPayTarget");
+  });
+
+  it("renders no action (Pay, Confirm, or Mark Paid) for installment rows", () => {
+    expect(menuSource).toContain("{isInstallment ? null : isCompleted ? (");
+  });
+
+  it("disables the confirm button while a confirmation is in flight (template reminders only)", () => {
     expect(menuSource).toContain("disabled={isConfirming}");
     expect(menuSource).toContain("confirmReminder.isPending && confirmReminder.variables?.id === notification.id");
   });

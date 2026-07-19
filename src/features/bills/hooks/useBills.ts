@@ -96,6 +96,10 @@ export function usePayBill() {
         ["transactions"],
         ["dashboard"],
         ["analytics"],
+        // Installment reminder completion is derived from the installment's
+        // nextDueDate/status (see notification.controller.ts), so a payment
+        // must refresh the notification list too.
+        ["notifications"],
       ]) {
         queryClient.invalidateQueries({ queryKey });
       }

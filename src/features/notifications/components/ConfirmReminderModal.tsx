@@ -65,7 +65,7 @@ export function ConfirmReminderModal({ notification, isSaving, onClose, onSubmit
           <header className="border-b border-border/50 bg-surface-low px-6 py-4">
             <DialogTitle className="text-xl font-semibold text-foreground">{t("title")}</DialogTitle>
             <DialogDescription className="mt-1 text-sm text-muted-foreground">
-              {t("description", { name: notification.templateName })}
+              {t("description", { name: notification.templateName ?? "" })}
             </DialogDescription>
           </header>
 
