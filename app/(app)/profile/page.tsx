@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   CheckCircle2,
   Info,
@@ -15,6 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { mapAuthErrorKey } from "@/lib/auth/map-auth-error";
 
 type FormState = {
   currentPassword: string;
@@ -29,6 +31,8 @@ const initialState: FormState = {
 };
 
 export default function ProfilePage() {
+  const t = useTranslations("profile");
+  const tRoot = useTranslations();
   const router = useRouter();
   const [form, setForm] = useState<FormState>(initialState);
   const [loading, setLoading] = useState(false);
@@ -64,11 +68,11 @@ export default function ProfilePage() {
   const accountEmail = authUser?.email ?? "—";
 
   const passwordStrength = useMemo(() => {
-    if (form.newPassword.length >= 12) return "Strong";
-    if (form.newPassword.length >= 8) return "Good";
-    if (form.newPassword.length > 0) return "Weak";
-    return "Pending";
-  }, [form.newPassword]);
+    if (form.newPassword.length >= 12) return t("changePassword.strength.strong");
+    if (form.newPassword.length >= 8) return t("changePassword.strength.good");
+    if (form.newPassword.length > 0) return t("changePassword.strength.weak");
+    return t("changePassword.strength.pending");
+  }, [form.newPassword, t]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -77,27 +81,27 @@ export default function ProfilePage() {
 
     // ── Client-side validation ───────────────────────────────────
     if (!form.currentPassword || !form.newPassword || !form.confirmPassword) {
-      setError("Lengkapi semua field password terlebih dahulu.");
+      setError(t("errors.fillAllFields"));
       return;
     }
 
     if (form.newPassword.length < 8) {
-      setError("Password baru minimal 8 karakter.");
+      setError(t("errors.passwordMinLength"));
       return;
     }
 
     if (form.newPassword !== form.confirmPassword) {
-      setError("Konfirmasi password baru belum cocok.");
+      setError(t("errors.passwordMismatch"));
       return;
     }
 
     if (form.newPassword === form.currentPassword) {
-      setError("Password baru tidak boleh sama dengan password saat ini.");
+      setError(t("errors.samePassword"));
       return;
     }
 
     if (!authUser?.email) {
-      setError("Session tidak valid. Silakan login kembali.");
+      setError(t("errors.invalidSession"));
       return;
     }
 
@@ -114,7 +118,7 @@ export default function ProfilePage() {
 
     if (signInError) {
       setLoading(false);
-      setError("Password saat ini salah.");
+      setError(t("errors.wrongCurrentPassword"));
       return;
     }
 
@@ -125,7 +129,7 @@ export default function ProfilePage() {
 
     if (updateError) {
       setLoading(false);
-      setError(updateError.message);
+      setError(tRoot(`authErrors.${mapAuthErrorKey(updateError.message)}`));
       return;
     }
 
@@ -133,12 +137,10 @@ export default function ProfilePage() {
     await supabase.auth.signOut();
     setLoading(false);
     setForm(initialState);
-    setSuccess("Password berhasil diubah. Mengarahkan ke halaman login...");
+    setSuccess(t("successChanged"));
 
     router.replace(
-      `/login?message=${encodeURIComponent(
-        "Password berhasil diubah. Silakan login dengan password baru."
-      )}`
+      `/login?message=${encodeURIComponent(t("successChangedRedirectMessage"))}`
     );
   }
 
@@ -148,27 +150,26 @@ export default function ProfilePage() {
         <div>
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 font-mono text-[11px] tracking-[0.08em] text-primary">
             <ShieldCheck className="size-3.5" />
-            ACCOUNT SECURITY
+            {t("badge")}
           </div>
           <h1 className="font-heading text-3xl font-semibold text-foreground">
-            Edit Profile
+            {t("title")}
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Kelola kredensial akun dengan surface yang ringkas, kontras tinggi,
-            dan mudah dibaca.
+            {t("subtitle")}
           </p>
         </div>
 
         <div className="rounded-xl border border-border bg-card px-4 py-3">
           <p className="font-mono text-[11px] tracking-[0.08em] text-muted-foreground">
-            LOGIN METHOD
+            {t("loginMethod")}
           </p>
           <p className="mt-2 text-sm text-primary">
             {authLoading
               ? "…"
               : isGoogleUser
-                ? "Google Auth"
-                : "Email & Password"}
+                ? t("loginMethodGoogle")
+                : t("loginMethodEmail")}
           </p>
         </div>
       </div>
@@ -182,12 +183,12 @@ export default function ProfilePage() {
             </div>
             <div>
               <CardTitle className="text-xl font-semibold text-foreground">
-                Account Identity
+                {t("identity.title")}
               </CardTitle>
               <p className="mt-1 text-sm text-muted-foreground">
                 {isGoogleUser
-                  ? "Data ini terhubung langsung dengan akun Google kamu."
-                  : "Detail akun yang saat ini kamu gunakan untuk masuk."}
+                  ? t("identity.subtitleGoogle")
+                  : t("identity.subtitleEmail")}
               </p>
             </div>
           </div>
@@ -200,7 +201,7 @@ export default function ProfilePage() {
                 htmlFor="accountEmail"
                 className="text-sm font-medium text-foreground"
               >
-                Email
+                {t("identity.email")}
               </label>
               <Input
                 id="accountEmail"
@@ -216,7 +217,7 @@ export default function ProfilePage() {
                 htmlFor="accountName"
                 className="text-sm font-medium text-foreground"
               >
-                {isGoogleUser ? "Name" : "Username / Name"}
+                {isGoogleUser ? t("identity.nameGoogle") : t("identity.nameEmail")}
               </label>
               <Input
                 id="accountName"
@@ -235,7 +236,7 @@ export default function ProfilePage() {
         <Card className="surface-card max-w-2xl border border-white/80 py-0 shadow-none">
           <CardContent className="flex items-center gap-2 px-6 py-8 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" />
-            Memuat metode login...
+            {t("loadingMethod")}
           </CardContent>
         </Card>
       ) : isGoogleUser ? (
@@ -247,10 +248,10 @@ export default function ProfilePage() {
               </div>
               <div>
                 <CardTitle className="text-xl font-semibold text-foreground">
-                  Change Password
+                  {t("changePassword.title")}
                 </CardTitle>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Kredensial dikelola oleh penyedia Google Auth.
+                  {t("changePassword.subtitleGoogle")}
                 </p>
               </div>
             </div>
@@ -260,8 +261,7 @@ export default function ProfilePage() {
             <div className="flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-4">
               <ShieldCheck className="mt-0.5 size-4 shrink-0 text-warning" />
               <p className="text-sm font-semibold text-foreground">
-                Password cannot be changed because you are logged in using Google
-                Auth.
+                {t("changePassword.googleNotice")}
               </p>
             </div>
           </CardContent>
@@ -275,10 +275,10 @@ export default function ProfilePage() {
               </div>
               <div>
                 <CardTitle className="text-xl font-semibold text-foreground">
-                  Change Password
+                  {t("changePassword.title")}
                 </CardTitle>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Gunakan password yang unik untuk menjaga akses tetap aman.
+                  {t("changePassword.subtitleEmail")}
                 </p>
               </div>
             </div>
@@ -292,7 +292,7 @@ export default function ProfilePage() {
                     htmlFor="currentPassword"
                     className="text-sm font-medium text-foreground"
                   >
-                    Current Password
+                    {t("changePassword.currentPassword")}
                   </label>
                   <Input
                     id="currentPassword"
@@ -306,7 +306,7 @@ export default function ProfilePage() {
                       }))
                     }
                     className="h-11 border-border bg-input px-3 text-foreground placeholder:text-muted-foreground"
-                    placeholder="Masukkan password saat ini"
+                    placeholder={t("changePassword.currentPasswordPlaceholder")}
                   />
                 </div>
 
@@ -316,7 +316,7 @@ export default function ProfilePage() {
                       htmlFor="newPassword"
                       className="text-sm font-medium text-foreground"
                     >
-                      New Password
+                      {t("changePassword.newPassword")}
                     </label>
                     <span className="font-mono text-[11px] tracking-[0.08em] text-primary">
                       {passwordStrength}
@@ -334,7 +334,7 @@ export default function ProfilePage() {
                       }))
                     }
                     className="h-11 border-border bg-input px-3 text-foreground placeholder:text-muted-foreground"
-                    placeholder="Minimal 8 karakter"
+                    placeholder={t("changePassword.newPasswordPlaceholder")}
                   />
                 </div>
 
@@ -343,7 +343,7 @@ export default function ProfilePage() {
                     htmlFor="confirmPassword"
                     className="text-sm font-medium text-foreground"
                   >
-                    Confirm New Password
+                    {t("changePassword.confirmNewPassword")}
                   </label>
                   <Input
                     id="confirmPassword"
@@ -357,7 +357,7 @@ export default function ProfilePage() {
                       }))
                     }
                     className="h-11 border-border bg-input px-3 text-foreground placeholder:text-muted-foreground"
-                    placeholder="Ulangi password baru"
+                    placeholder={t("changePassword.confirmNewPasswordPlaceholder")}
                   />
                 </div>
               </div>
@@ -377,8 +377,7 @@ export default function ProfilePage() {
 
               <div className="flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-muted-foreground">
-                  Password akan diverifikasi dan diubah melalui Supabase Auth.
-                  Anda akan diminta login kembali setelah perubahan berhasil.
+                  {t("changePassword.footerNote")}
                 </p>
                 <Button
                   type="submit"
@@ -389,10 +388,10 @@ export default function ProfilePage() {
                   {loading ? (
                     <>
                       <Loader2 className="size-4 animate-spin" />
-                      Updating...
+                      {t("changePassword.submitting")}
                     </>
                   ) : (
-                    "Update Password"
+                    t("changePassword.submit")
                   )}
                 </Button>
               </div>

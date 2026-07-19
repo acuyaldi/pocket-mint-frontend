@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -9,6 +10,7 @@ import {
   Shuffle,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { INTL_LOCALE } from "@/i18n/config";
 import { PageHeader } from "@/components/layout/page-header";
 import {
   useCreateTransaction,
@@ -25,27 +27,24 @@ import { TransactionDetailPanel } from "./components/TransactionDetailPanel";
 
 type TypeFilter = "all" | "INCOME" | "EXPENSE" | "TRANSFER";
 
-const TYPE_FILTERS: { key: TypeFilter; label: string }[] = [
-  { key: "all", label: "Semua" },
-  { key: "INCOME", label: "Pemasukan" },
-  { key: "EXPENSE", label: "Pengeluaran" },
-  { key: "TRANSFER", label: "Transfer" },
-];
-
 function txDateKey(transaction: Transaction) {
   return new Date(transaction.date).toISOString().slice(0, 10);
 }
 
-function formatGroupTitle(dateKey: string) {
+function formatGroupTitle(
+  dateKey: string,
+  intlLocale: string,
+  labels: { today: string; yesterday: string },
+) {
   const date = new Date(`${dateKey}T00:00:00`);
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
 
-  if (date.toDateString() === today.toDateString()) return "Hari Ini";
-  if (date.toDateString() === yesterday.toDateString()) return "Kemarin";
+  if (date.toDateString() === today.toDateString()) return labels.today;
+  if (date.toDateString() === yesterday.toDateString()) return labels.yesterday;
 
-  return new Intl.DateTimeFormat("id-ID", {
+  return new Intl.DateTimeFormat(intlLocale, {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -63,6 +62,15 @@ function TransactionIcon({ type }: { type: Transaction["type"] }) {
 }
 
 export default function TransactionsPage() {
+  const t = useTranslations("transactions");
+  const locale = useLocale();
+  const intlLocale = INTL_LOCALE[locale as keyof typeof INTL_LOCALE];
+  const TYPE_FILTERS: { key: TypeFilter; label: string }[] = [
+    { key: "all", label: t("filters.all") },
+    { key: "INCOME", label: t("filters.income") },
+    { key: "EXPENSE", label: t("filters.expense") },
+    { key: "TRANSFER", label: t("filters.transfer") },
+  ];
   const { data, isLoading } = useTransactions();
   const { data: walletsData } = useWallets();
   const updateTransaction = useUpdateTransaction();
@@ -164,7 +172,7 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Transaksi" description="Jurnal keuangan Anda" />
+      <PageHeader title={t("pageTitle")} description={t("pageDescription")} />
 
       <div className="space-y-3">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -174,7 +182,7 @@ export default function TransactionsPage() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               className="h-10 w-full rounded-lg border border-border bg-card py-2 pl-10 pr-4 text-sm outline-none transition-all focus:ring-1 focus:ring-primary"
-              placeholder="Cari transaksi..."
+              placeholder={t("searchPlaceholder")}
               type="text"
             />
           </div>
@@ -184,7 +192,7 @@ export default function TransactionsPage() {
             className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
           >
             <Plus className="size-4" />
-            Tambah Transaksi
+            {t("addTransaction")}
           </button>
         </div>
 
@@ -218,10 +226,13 @@ export default function TransactionsPage() {
             <section key={dateKey}>
               <div className="mb-4 flex items-center justify-between border-b border-border pb-2">
                 <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                  {formatGroupTitle(dateKey)}
+                  {formatGroupTitle(dateKey, intlLocale, {
+                    today: t("today"),
+                    yesterday: t("yesterday"),
+                  })}
                 </h2>
                 <span className="text-xs tabular-nums text-muted-foreground">
-                  Total: {formatCurrency(total)}
+                  {t("total", { amount: formatCurrency(total, intlLocale) })}
                 </span>
               </div>
               <div className="space-y-2">
@@ -246,12 +257,12 @@ export default function TransactionsPage() {
                       </div>
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-foreground">
-                          {transaction.description || "Transaksi"}
+                          {transaction.description || t("defaultLabel")}
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {transaction.type === "TRANSFER"
-                            ? "Transfer"
-                            : transaction.category?.name ?? "Tanpa kategori"}
+                            ? t("filters.transfer")
+                            : transaction.category?.name ?? t("noCategory")}
                         </p>
                       </div>
                     </div>
@@ -270,7 +281,7 @@ export default function TransactionsPage() {
                       }`}
                     >
                       {transaction.type === "INCOME" ? "+" : transaction.type === "EXPENSE" ? "-" : ""}
-                      {formatCurrency(transaction.amount)}
+                      {formatCurrency(transaction.amount, intlLocale)}
                     </p>
                   </button>
                 ))}
@@ -282,12 +293,12 @@ export default function TransactionsPage() {
 
       {filteredTransactions.length === 0 && !isLoading ? (
         <p className="rounded-xl border border-dashed border-border bg-card py-10 text-center text-sm text-muted-foreground">
-          Tidak ada transaksi yang cocok.
+          {t("noMatches")}
         </p>
       ) : null}
       {isLoading ? (
         <p className="rounded-xl border border-border bg-card py-10 text-center text-sm text-muted-foreground">
-          Memuat transaksi...
+          {t("loading")}
         </p>
       ) : null}
 

@@ -9,6 +9,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import dashboard from "@/playwright/screenshots/dashboard.png";
 import wallet from "@/playwright/screenshots/wallets.png";
@@ -19,62 +20,24 @@ import analytics from "@/playwright/screenshots/analytics.png";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const SCREENS = [
-  {
-    id: "dashboard",
-    number: "01",
-    title: "Dashboard",
-    description: "Lihat posisi keuangan Anda dalam satu ringkasan.",
-    image: dashboard,
-    alt: "Tampilan Dashboard Pocket Mint",
-    width: 1280,
-    height: 1312,
-  },
-  {
-    id: "wallet",
-    number: "02",
-    title: "Wallet",
-    description: "Semua aset dan kewajiban dalam satu ledger.",
-    image: wallet,
-    alt: "Tampilan Wallet Pocket Mint",
-    width: 1384,
-    height: 1600,
-  },
-  {
-    id: "transaction",
-    number: "03",
-    title: "Transaction",
-    description: "Riwayat yang cepat dicari dan mudah diperbaiki.",
-    image: transaction,
-    alt: "Tampilan Transaction Pocket Mint",
-    width: 1489,
-    height: 1600,
-  },
-  {
-    id: "installment",
-    number: "04",
-    title: "Installment",
-    description: "Pantau kewajiban tanpa kehilangan tanggal jatuh tempo.",
-    image: installment,
-    alt: "Tampilan Installment Pocket Mint",
-    width: 1600,
-    height: 1280,
-  },
-  {
-    id: "analytics",
-    number: "05",
-    title: "Analytics",
-    description: "Baca pola pemasukan dan pengeluaran dengan lebih jelas.",
-    image: analytics,
-    alt: "Tampilan Analytics Pocket Mint",
-    width: 676,
-    height: 541,
-  },
+const SCREEN_META = [
+  { id: "dashboard", number: "01", image: dashboard, width: 1280, height: 1312 },
+  { id: "wallet", number: "02", image: wallet, width: 1384, height: 1600 },
+  { id: "transaction", number: "03", image: transaction, width: 1489, height: 1600 },
+  { id: "installment", number: "04", image: installment, width: 1600, height: 1280 },
+  { id: "analytics", number: "05", image: analytics, width: 676, height: 541 },
 ] as const;
 
 const AUTO_PLAY_DURATION = 5000;
 
 export function VerticalTabs() {
+  const t = useTranslations("landing.features");
+  const SCREENS = SCREEN_META.map((meta) => ({
+    ...meta,
+    title: t(`screens.${meta.id}.title`),
+    description: t(`screens.${meta.id}.description`),
+    alt: t(`screens.${meta.id}.alt`),
+  }));
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [isPointerPaused, setIsPointerPaused] = useState(false);
@@ -94,13 +57,13 @@ export function VerticalTabs() {
 
   const handleNext = useCallback(() => {
     setDirection(1);
-    setActiveIndex((current) => (current + 1) % SCREENS.length);
+    setActiveIndex((current) => (current + 1) % SCREEN_META.length);
   }, []);
 
   const handlePrevious = useCallback(() => {
     setDirection(-1);
     setActiveIndex(
-      (current) => (current - 1 + SCREENS.length) % SCREENS.length
+      (current) => (current - 1 + SCREEN_META.length) % SCREEN_META.length
     );
   }, []);
 
@@ -164,17 +127,16 @@ export function VerticalTabs() {
       <div className="order-2 flex flex-col lg:order-1 lg:col-span-5">
         <div className="mb-8 flex flex-col gap-3 md:mb-10">
           <h2 className="max-w-lg text-4xl font-semibold tracking-tight text-primary md:text-5xl lg:text-6xl">
-            Semua yang penting, dalam satu alur.
+            {t("title")}
           </h2>
           <p className="max-w-md text-base leading-7 text-muted-foreground sm:text-xl sm:leading-8">
-            Berpindah dari ringkasan ke detail tanpa kehilangan konteks
-            finansial Anda.
+            {t("subtitle")}
           </p>
         </div>
 
         <div
           role="tablist"
-          aria-label="Fitur Pocket Mint"
+          aria-label={t("ariaLabel")}
           aria-orientation="vertical"
           className="flex flex-col"
         >
@@ -304,7 +266,7 @@ export function VerticalTabs() {
               variant="outline"
               size="icon-lg"
               className="size-11 rounded-full shadow-sm transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
-              aria-label="Fitur sebelumnya"
+              aria-label={t("previous")}
               onClick={handlePrevious}
             >
               <ArrowLeft />
@@ -314,7 +276,7 @@ export function VerticalTabs() {
               variant="outline"
               size="icon-lg"
               className="size-11 rounded-full shadow-sm transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
-              aria-label="Fitur berikutnya"
+              aria-label={t("next")}
               onClick={handleNext}
             >
               <ArrowRight />

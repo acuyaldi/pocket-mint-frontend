@@ -1,3 +1,4 @@
+import { NextIntlClientProvider } from "next-intl";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -6,6 +7,7 @@ import {
   AccountPicker,
   type AccountPickerProps,
 } from "@/app/(app)/transactions/components/AccountPicker";
+import messages from "@/messages/id.json";
 import type { Wallet } from "@/src/types/wallet";
 
 const bankWallet: Wallet = {
@@ -24,14 +26,19 @@ const bankWallet: Wallet = {
 
 function renderPicker(overrides: Partial<AccountPickerProps> = {}) {
   return renderToStaticMarkup(
-    React.createElement(AccountPicker, {
-      id: "transfer-source",
-      label: "Dompet sumber",
-      wallets: [bankWallet],
-      selectedId: "bank",
-      emptyLabel: "Pilih dompet sumber",
-      onSelect: () => undefined,
-      ...overrides,
+    // eslint-disable-next-line react/no-children-prop -- required prop on NextIntlClientProvider's type; createElement can't pass it positionally
+    React.createElement(NextIntlClientProvider, {
+      locale: "id",
+      messages,
+      children: React.createElement(AccountPicker, {
+        id: "transfer-source",
+        label: "Dompet sumber",
+        wallets: [bankWallet],
+        selectedId: "bank",
+        emptyLabel: "Pilih dompet sumber",
+        onSelect: () => undefined,
+        ...overrides,
+      }),
     }),
   );
 }

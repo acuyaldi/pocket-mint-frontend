@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Wallet } from "@/src/types/wallet";
@@ -16,6 +17,10 @@ export default function DeleteWalletModal({
   onClose: () => void;
   onConfirm: () => void;
 }) {
+  const t = useTranslations("walletModals.delete");
+  const tWallets = useTranslations("wallets");
+  const tCommon = useTranslations("common");
+
   const handleClose = () => {
     if (!isDeleting) onClose();
   };
@@ -52,15 +57,10 @@ export default function DeleteWalletModal({
                 id="delete-wallet-title"
                 className="text-xl font-semibold text-foreground"
               >
-                Hapus Akun?
+                {t("title")}
               </h2>
               <p className="mx-auto mt-2 max-w-xs text-sm text-muted-foreground">
-                Akun{" "}
-                <strong className="font-semibold text-foreground">
-                  {wallet.name}
-                </strong>{" "}
-                beserta riwayat transaksinya akan dihapus permanen. Tindakan ini
-                tidak dapat dibatalkan.
+                {t("description", { name: wallet.name })}
               </p>
             </div>
             <footer className="flex flex-col-reverse gap-3 border-t border-border/50 bg-surface-low px-6 py-4 sm:flex-row">
@@ -71,7 +71,7 @@ export default function DeleteWalletModal({
                 disabled={isDeleting}
                 className="h-11 flex-1 bg-card"
               >
-                Batal
+                {tCommon("actions.cancel")}
               </Button>
               <Button
                 type="button"
@@ -83,12 +83,12 @@ export default function DeleteWalletModal({
                 {isDeleting ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    Menghapus
+                    {tCommon("actions.deleting")}
                   </>
                 ) : (
                   <>
                     <Trash2 className="size-4" />
-                    Hapus Akun
+                    {tWallets("deleteAccount")}
                   </>
                 )}
               </Button>

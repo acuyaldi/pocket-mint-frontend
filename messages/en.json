@@ -1,0 +1,538 @@
+{
+  "common": {
+    "workspaceTagline": "Private Financial Workspace",
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "saveChanges": "Save Changes",
+      "saving": "Saving",
+      "deleting": "Deleting",
+      "seeAll": "See all",
+      "add": "Add"
+    },
+    "states": {
+      "loading": "Loading...",
+      "empty": "No data yet"
+    },
+    "currencyPrefix": "IDR"
+  },
+  "nav": {
+    "ariaMain": "Main navigation",
+    "dashboard": "Dashboard",
+    "wallets": "Wallets",
+    "transactions": "Transactions",
+    "installments": "Installments",
+    "analytics": "Analytics",
+    "account": "Account",
+    "accountSettings": "Account Settings",
+    "logout": "Sign out",
+    "notifications": "Notifications",
+    "language": "Change language",
+    "welcome": "Welcome",
+    "dueBillsAria": "{count} installments need attention",
+    "editProfile": "Edit Profile",
+    "logoutFailed": "Sign-out failed — check your connection and try again."
+  },
+  "auth": {
+    "backToLanding": "Back to landing page",
+    "backToLogin": "Back to sign in",
+    "workspaceLabel": "PRIVATE FINANCIAL WORKSPACE",
+    "heroTitle": "Your numbers stay readable, private, and under your control.",
+    "heroSubtitle": "Return to one workspace for assets, debt, transactions, and installments.",
+    "highlights": {
+      "encrypted": { "label": "Encrypted access", "value": "Secure email and Google sign-in" },
+      "readable": { "label": "Readable obligations", "value": "Assets, debt, and installments in one workspace" },
+      "private": { "label": "Private by default", "value": "Your financial data stays under your control" }
+    },
+    "signInTitle": "Welcome back",
+    "signInSubtitle": "Enter your credentials to access your workspace.",
+    "signUpTitle": "Create your account",
+    "signUpSubtitle": "Set up your Pocket Mint workspace in a few seconds.",
+    "forgotTitle": "Reset your password",
+    "forgotSubtitle": "Enter your account email and we'll send you a password reset link.",
+    "fields": {
+      "name": "Name",
+      "namePlaceholder": "Your name",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "password": "Password",
+      "passwordPlaceholderSignup": "At least 8 characters",
+      "passwordPlaceholderSignin": "Enter password",
+      "confirmPassword": "Confirm password",
+      "confirmPasswordPlaceholder": "Re-enter password"
+    },
+    "forgotPassword": "Forgot password?",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "resetSentMessage": "Check your email inbox for the password reset link.",
+    "rememberedPassword": "Remembered your password?",
+    "backToSignIn": "Back to sign in",
+    "orContinueWith": "or continue with",
+    "continueWithGoogle": "Continue with Google",
+    "alreadyHaveAccount": "Already have an account?",
+    "noAccount": "Don't have an account?",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "sendingLink": "Sending link...",
+    "creatingAccount": "Creating account...",
+    "signingIn": "Signing in...",
+    "sendResetLink": "Send reset link",
+    "createAccount": "Create Account",
+    "privacyNotice": "Protected by encrypted sessions. Your financial data stays private and under your control.",
+    "errors": {
+      "nameRequired": "Please enter your name.",
+      "invalidEmail": "Please enter a valid email address.",
+      "passwordMinLength": "Password must be at least 8 characters.",
+      "passwordMismatch": "Passwords do not match."
+    },
+    "resetPassword": {
+      "badge": "SECURE RESET",
+      "title": "Set a new password",
+      "subtitle": "Choose a new password for your Pocket Mint account. Use at least 8 characters.",
+      "verifying": "Verifying your reset link...",
+      "invalidLink": "This reset link is invalid or has expired. Request a new link from the login page.",
+      "newPassword": "New Password",
+      "newPasswordPlaceholder": "At least 8 characters",
+      "confirmNewPassword": "Confirm New Password",
+      "confirmNewPasswordPlaceholder": "Re-enter new password",
+      "updating": "Updating password...",
+      "submit": "Update Password",
+      "successRedirect": "Password updated. Please sign in with your new password."
+    }
+  },
+  "profile": {
+    "badge": "ACCOUNT SECURITY",
+    "title": "Edit Profile",
+    "subtitle": "Manage your account credentials with a clean, high-contrast, easy-to-read surface.",
+    "loginMethod": "LOGIN METHOD",
+    "loginMethodGoogle": "Google Auth",
+    "loginMethodEmail": "Email & Password",
+    "identity": {
+      "title": "Account Identity",
+      "subtitleGoogle": "This data is linked directly to your Google account.",
+      "subtitleEmail": "The account details you currently use to sign in.",
+      "email": "Email",
+      "nameGoogle": "Name",
+      "nameEmail": "Username / Name"
+    },
+    "loadingMethod": "Loading login method...",
+    "changePassword": {
+      "title": "Change Password",
+      "subtitleGoogle": "Credentials are managed by the Google Auth provider.",
+      "subtitleEmail": "Use a unique password to keep your access secure.",
+      "googleNotice": "Password can't be changed because you're signed in with a Google account.",
+      "currentPassword": "Current Password",
+      "currentPasswordPlaceholder": "Enter your current password",
+      "newPassword": "New Password",
+      "newPasswordPlaceholder": "At least 8 characters",
+      "confirmNewPassword": "Confirm New Password",
+      "confirmNewPasswordPlaceholder": "Re-enter new password",
+      "strength": { "strong": "Strong", "good": "Good", "weak": "Weak", "pending": "Pending" },
+      "footerNote": "Your password will be verified and changed through Supabase Auth. You'll be asked to sign in again once it's updated.",
+      "submit": "Update Password",
+      "submitting": "Updating..."
+    },
+    "language": {
+      "title": "Language",
+      "subtitle": "Choose the app's display language.",
+      "id": "Bahasa Indonesia",
+      "en": "English"
+    },
+    "errors": {
+      "fillAllFields": "Fill in all password fields first.",
+      "passwordMinLength": "New password must be at least 8 characters.",
+      "passwordMismatch": "New password confirmation doesn't match.",
+      "samePassword": "New password can't be the same as your current password.",
+      "invalidSession": "Session expired. Please sign in again.",
+      "wrongCurrentPassword": "Current password is incorrect."
+    },
+    "successChanged": "Password changed successfully. Redirecting to sign in...",
+    "successChangedRedirectMessage": "Password changed successfully. Please sign in with your new password."
+  },
+  "authErrors": {
+    "invalidCredentials": "Incorrect email or password.",
+    "emailNotConfirmed": "Email not confirmed yet. Check your inbox.",
+    "userAlreadyRegistered": "This email is already registered. Please sign in.",
+    "weakPassword": "Password must be at least 6 characters.",
+    "samePassword": "New password must be different from the old one.",
+    "generic": "Something went wrong. Please try again."
+  },
+  "walletKind": {
+    "creditCard": "Credit card",
+    "loan": "Loan",
+    "bankAndCash": "Cash & Bank",
+    "bank": "Bank",
+    "eWallet": "E-Wallet",
+    "cash": "Cash",
+    "paylater": "Paylater",
+    "outstandingBalance": "Outstanding balance",
+    "activeAsset": "Active asset"
+  },
+  "dashboard": {
+    "financialPosition": "Net financial position",
+    "failedToLoadSummary": "Failed to load your financial summary.",
+    "lastUpdated": "Last updated: just now",
+    "totalAssets": "Total assets",
+    "totalDebts": "Total debt",
+    "monthDelta": "This month's change",
+    "failedToLoad": "Failed to load",
+    "transactionsRecorded": "{count} transactions recorded",
+    "activeInstallments": "{count} active installments",
+    "noActiveInstallments": "No active installments",
+    "quickActions": "Quick actions",
+    "addFirstWallet": "Add wallet",
+    "wallets": "Wallets",
+    "recentActivity": "Recent activity",
+    "tableHeader": {
+      "categoryDescription": "Category & description",
+      "wallet": "Wallet",
+      "amount": "Amount"
+    },
+    "defaultTransactionLabel": "Transaction",
+    "noTransactions": "No transactions yet"
+  },
+  "wallets": {
+    "pageTitle": "Wallets",
+    "pageDescription": "Manage all your financial accounts",
+    "searchPlaceholder": "Search wallets or accounts...",
+    "addAccount": "Add Account",
+    "filters": {
+      "all": "All",
+      "bank": "Cash & Bank",
+      "ewallet": "E-Wallet",
+      "credit": "Credit Card",
+      "paylater": "Paylater",
+      "loan": "Loan"
+    },
+    "accountMenuAria": "{name} account menu",
+    "editAccount": "Edit Account",
+    "deleteAccount": "Delete Account",
+    "billing": "Balance due",
+    "remainingLimit": "Remaining limit",
+    "utilizationOfLimit": "Utilization of {limit} limit",
+    "remainingObligation": "Remaining obligation",
+    "activeAsset": "Active asset",
+    "badgeAsset": "Asset",
+    "badgeLiability": "Liability",
+    "sections": {
+      "bank": "Cash & Bank",
+      "ewallet": "E-Wallet",
+      "credit": "Credit Card",
+      "paylater": "Paylater",
+      "loan": "Loan"
+    },
+    "addFirstAccount": "Add your first account",
+    "toastAccountAdded": "Account \"{name}\" added",
+    "toastAccountAddFailed": "Couldn't add the account. Try again.",
+    "toastAccountDeleted": "Account \"{name}\" deleted",
+    "toastAccountDeleteFailed": "Couldn't delete the account. Try again."
+  },
+  "walletModals": {
+    "create": {
+      "title": "Add Account",
+      "description": "Add a cash, bank, e-wallet, credit, or loan account.",
+      "closeAria": "Close add account dialog",
+      "chooseType": "Choose Account Type",
+      "accountDetails": "Account Details",
+      "accountName": "Account Name",
+      "accountNamePlaceholder": "e.g. Cash, BCA, SPaylater",
+      "initialBalance": "Starting Balance",
+      "loanAmount": "Loan Amount",
+      "loanNote": "The loan balance will be recorded as a liability.",
+      "creditLimit": "Credit Limit",
+      "creditNotePaylater": "The starting balance is always IDR 0 and grows as you spend. Each purchase is due 30 days after its transaction date by default. Existing balances are recorded one transaction at a time.",
+      "creditNoteDefault": "The starting balance is always IDR 0 and grows as you spend.",
+      "cutoffDate": "Cutoff Date (Optional)",
+      "dueDate": "Due Date (Optional)",
+      "institution": "Institution (Optional)",
+      "types": {
+        "cash": "Cash",
+        "bank": "Bank",
+        "eWallet": "E-Wallet",
+        "creditCard": "Credit Card",
+        "paylater": "Paylater",
+        "loan": "Loan"
+      },
+      "institutions": {
+        "none": "No institution",
+        "other": "Other"
+      },
+      "submit": "Save Account"
+    },
+    "edit": {
+      "title": "Edit Account",
+      "description": "Balance and billing only change through transactions.",
+      "closeAria": "Close dialog",
+      "accountName": "Account Name",
+      "creditLimit": "Credit Limit",
+      "cutoffDate": "Cutoff Date",
+      "dueDate": "Due Date",
+      "optional": "Optional",
+      "paylaterDueNote": "Paylater due dates are calculated automatically, 30 days after each transaction.",
+      "genericError": "Couldn't save your changes. Try again.",
+      "toastSaved": "Changes to \"{name}\" saved",
+      "submit": "Save Changes"
+    },
+    "delete": {
+      "title": "Delete Account?",
+      "description": "The account {name} and its transaction history will be permanently deleted. This action can't be undone."
+    }
+  },
+  "transactions": {
+    "pageTitle": "Transactions",
+    "pageDescription": "Your financial journal",
+    "searchPlaceholder": "Search transactions...",
+    "addTransaction": "Add Transaction",
+    "filters": {
+      "all": "All",
+      "income": "Income",
+      "expense": "Expense",
+      "transfer": "Transfer"
+    },
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "total": "Total: {amount}",
+    "defaultLabel": "Transaction",
+    "noCategory": "No category",
+    "noMatches": "No matching transactions.",
+    "loading": "Loading transactions..."
+  },
+  "transactionModals": {
+    "detail": {
+      "title": "Transaction Details",
+      "untitled": "Untitled",
+      "installmentActive": "Installment Plan Active",
+      "status": "Status",
+      "cleared": "Cleared",
+      "date": "Date",
+      "wallet": "Wallet",
+      "category": "Category",
+      "installmentProgress": "Installment Progress",
+      "months": "months",
+      "mapLocation": "MAP LOCATION",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "edit": {
+      "title": "Edit Transaction",
+      "subtitle": "Update transaction details",
+      "description": "Description",
+      "descriptionPlaceholder": "Transaction description",
+      "amount": "Amount",
+      "type": "Type",
+      "typeExpense": "Expense",
+      "typeIncome": "Income",
+      "date": "Date",
+      "saving": "Saving...",
+      "submit": "Save Changes"
+    },
+    "delete": {
+      "title": "Delete Transaction?",
+      "description": "Deleting a transaction will reverse the wallet balance. This action can't be undone.",
+      "deleting": "Deleting...",
+      "submit": "Delete"
+    },
+    "add": {
+      "title": "Add Transaction",
+      "subtitle": "Record money movement without leaving the page.",
+      "closeAria": "Close dialog",
+      "typeNavAria": "Transaction type",
+      "typeExpense": "Expense",
+      "typeIncome": "Income",
+      "typeTransfer": "Transfer",
+      "amount": "Amount",
+      "date": "Date",
+      "category": "Category",
+      "chooseCategoryAria": "Choose category",
+      "chooseCategory": "Choose category",
+      "noWalletsForTransferTitle": "No wallets available for transfer",
+      "noWalletsForTransferBody": "Add a Cash, Bank, or E-Wallet account as a transfer source.",
+      "noWalletsTitle": "No wallets yet",
+      "noWalletsBody": "Create a wallet first so transactions can be recorded to the right funding source.",
+      "addWallet": "Add wallet",
+      "sourceWallet": "Source wallet",
+      "destinationWallet": "Destination wallet",
+      "noOtherSourceWallet": "No other source wallets available.",
+      "chooseSourceWallet": "Choose source wallet",
+      "noOtherDestinationWallet": "No other destination wallets available.",
+      "chooseDestinationWallet": "Choose destination wallet",
+      "insufficientBalance": "Insufficient balance",
+      "swapWalletsAria": "Swap source and destination wallets",
+      "chooseWallet": "Choose wallet",
+      "noWalletsAvailable": "No wallets available.",
+      "description": "Description",
+      "descriptionPlaceholder": "e.g. Weekly groceries",
+      "billingMethod": "How you'll pay this off",
+      "remainingLimit": "Remaining limit: {amount}",
+      "payFull": "Pay in full",
+      "payInstallment": "Installments",
+      "tenor": "Tenor",
+      "months": "months",
+      "interestPerMonth": "Interest % / month",
+      "adminFeePercent": "Admin fee %",
+      "presetNote": "Interest and admin fee are pre-filled from {name}'s preset; you can still edit them.",
+      "estimate": "Estimate:",
+      "perMonth": "/month",
+      "adminOneTime": "one-time admin fee",
+      "autoDueDate": "Automatic due date:",
+      "autoDueDateNote": "{days} days after the transaction date.",
+      "firstDueDate": "First due date",
+      "firstDueDateRequired": "Required because this account's cutoff or due date isn't set yet.",
+      "saving": "Saving",
+      "submit": "Save transaction",
+      "errors": {
+        "chooseCategory": "Choose a category.",
+        "fillFirstDueDate": "Fill in the first due date for this account.",
+        "differentWallets": "Choose different source and destination wallets.",
+        "transferFromCreditNotAllowed": "Transfers can't be made from a credit card or paylater account.",
+        "incomeToDebtNotAllowed": "Income can't be recorded to a credit card or paylater account.",
+        "insufficientBalance": "{name}'s balance isn't enough.",
+        "genericSaveFailed": "Couldn't save the transaction. Try again."
+      },
+      "toastTransferSuccess": "Transfer recorded",
+      "toastIncomeSuccess": "Income recorded",
+      "toastExpenseSuccess": "Expense recorded"
+    },
+    "accountPicker": {
+      "noWalletsAvailable": "No transfer wallets available.",
+      "insufficientBalance": "Insufficient balance"
+    }
+  },
+  "tagihan": {
+    "loadingAria": "Loading installments",
+    "pageTitle": "Installments",
+    "pageDescription": "Track every credit card and paylater charge, whether paid in full or in installments.",
+    "dueSoonWarning": "{count} installments are overdue or due within the next 3 days.",
+    "activeInstallments": "Active Installments",
+    "activeInstallmentsHelper": "One-time charges and installment plans",
+    "nextPayment": "Next Payment",
+    "nextPaymentHelper": "{count} need attention",
+    "totalOutstanding": "Total Outstanding",
+    "totalOutstandingHelper": "Sum of all active installments",
+    "listTitle": "Installment List",
+    "emptyTitle": "No active installments yet.",
+    "emptyBody": "Credit card and paylater charges will show up here.",
+    "card": {
+      "oneTime": "Pay in full",
+      "installment": "Installments",
+      "overdue": "Overdue",
+      "settled": "Settled",
+      "active": "Active",
+      "termAmount": "This term's payment",
+      "dueDate": "Due date",
+      "termsPaid": "{paid}/{total} terms paid",
+      "remaining": "{amount} remaining",
+      "pay": "Pay Installment"
+    },
+    "payModal": {
+      "title": "Pay Installment",
+      "closeAria": "Close payment",
+      "paymentAmount": "Payment amount",
+      "paymentSource": "Payment source",
+      "insufficientBalance": "Insufficient balance",
+      "noSourceWallets": "Add a Cash, Bank, or E-Wallet account to pay this installment.",
+      "paymentDate": "Payment date",
+      "genericError": "Couldn't process the payment. Try again.",
+      "cancel": "Cancel",
+      "confirm": "Confirm"
+    }
+  },
+  "analytics": {
+    "pageTitle": "Analytics",
+    "pageDescription": "Track your financial trends and performance",
+    "periods": { "month": "This month", "quarter": "3 months", "sixMonths": "6 months" },
+    "exportReport": "Export report",
+    "realData": "Real data",
+    "savingsRate": "Savings rate",
+    "savingsRateHelper": "{amount} cash flow left this period",
+    "cashFlow": "Cash flow",
+    "cashFlowHelper": "{income} in · {expenses} out",
+    "debtRatio": "Debt ratio",
+    "debtRatioHelper": "{debt} of {limit} limit",
+    "cashFlowChart": {
+      "title": "Cash flow",
+      "subtitle": "Income and expenses over the last 6 months",
+      "income": "Income",
+      "expenses": "Expenses",
+      "empty": "No transactions yet to build a cash flow chart.",
+      "incomeTooltip": "Income {month}: {amount}",
+      "expenseTooltip": "Expenses {month}: {amount}"
+    },
+    "allocation": {
+      "title": "Spending allocation",
+      "subtitle": "Largest categories for the selected period",
+      "empty": "No expenses yet for this period.",
+      "noCategory": "No category"
+    },
+    "composition": {
+      "title": "Wallet composition",
+      "subtitle": "Assets and liabilities from current balances",
+      "assets": "Assets",
+      "liabilities": "Liabilities"
+    },
+    "insights": {
+      "title": "Insights",
+      "subtitle": "Automatic summary from the data available",
+      "noTransactions": "No transactions yet for this period.",
+      "positiveCashFlow": "Cash flow is positive this period, at {amount}.",
+      "negativeCashFlow": "Expenses exceeded income by {amount}.",
+      "expenseRatio": "Spending is at {percent} of income.",
+      "topCategory": "Biggest category: {label}, at {amount}.",
+      "activeInstallments": "{count} active installments need monitoring."
+    }
+  },
+  "changelog": {
+    "metaTitle": "Changelog - Pocket Mint",
+    "metaDescription": "Release history and progress of Pocket Mint, the private financial workspace, from new features to fixes.",
+    "backToHome": "Back to home",
+    "pageTitle": "Changelog",
+    "pageDescription": "Release history and progress of Pocket Mint, newest first.",
+    "status": { "internal": "Internal", "beta": "Beta", "stable": "Stable" },
+    "changeType": { "added": "Added", "improved": "Improved", "fixed": "Fixed", "security": "Security" },
+    "knownIssues": "Known issues",
+    "emptyTitle": "No release notes yet.",
+    "emptyBody": "Updates will appear here once published."
+  },
+  "landing": {
+    "nav": { "ariaLabel": "Main navigation", "privacy": "Privacy", "features": "Features", "changelog": "Changelog", "login": "Login", "signUp": "Sign Up" },
+    "hero": {
+      "badge": "Private & Secured",
+      "title": "Clarity Over Complexity",
+      "subtitle": "Understand what you own, what you owe, and what needs attention. Without distraction.",
+      "cta": "Get Started",
+      "dashboardAlt": "Pocket Mint Dashboard"
+    },
+    "privacy": {
+      "title": "Your financial data stays yours.",
+      "subtitle": "Pocket Mint helps you read your financial standing without ads, marketing trackers, or unnecessary data collection.",
+      "ariaLabel": "Pocket Mint privacy commitments",
+      "points": ["No ads.", "No marketing trackers.", "Only the data your workspace needs."]
+    },
+    "features": {
+      "ariaLabel": "Pocket Mint features",
+      "title": "Everything that matters, in one flow.",
+      "subtitle": "Move from summary to detail without losing your financial context.",
+      "previous": "Previous feature",
+      "next": "Next feature",
+      "screens": {
+        "dashboard": { "title": "Dashboard", "description": "See your financial position in one summary.", "alt": "Pocket Mint Dashboard view" },
+        "wallet": { "title": "Wallets", "description": "Every asset and liability in one ledger.", "alt": "Pocket Mint Wallets view" },
+        "transaction": { "title": "Transactions", "description": "History that's quick to search and easy to fix.", "alt": "Pocket Mint Transactions view" },
+        "installment": { "title": "Installments", "description": "Track obligations without missing a due date.", "alt": "Pocket Mint Installments view" },
+        "analytics": { "title": "Analytics", "description": "Read your income and spending patterns more clearly.", "alt": "Pocket Mint Analytics view" }
+      }
+    },
+    "whatsNew": {
+      "badge": "Product Updates",
+      "title": "What's New in Pocket Mint",
+      "subtitle": "Pocket Mint keeps evolving. Here's a summary of our latest releases.",
+      "seeAll": "See all changes"
+    },
+    "footer": {
+      "copyright": "© 2024 Pocket Mint. All rights reserved.",
+      "links": { "privacyPolicy": "Privacy Policy", "terms": "Terms & Conditions", "help": "Help", "contact": "Contact" }
+    }
+  }
+}

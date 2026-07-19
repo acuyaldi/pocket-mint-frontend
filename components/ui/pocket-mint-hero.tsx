@@ -3,10 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { LockKeyhole } from "lucide-react";
 
 import { PocketMintLogo } from "@/components/Logo";
 import { PulseBeams } from "@/components/ui/pulse-beams";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import dashboard from "@/playwright/screenshots/dashboard.png";
 
 
@@ -25,13 +27,14 @@ const landingNavLink =
   "relative inline-flex min-h-11 items-center text-sm font-medium text-foreground transition-colors duration-200 ease-out after:absolute after:inset-x-0 after:bottom-1.5 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-full after:bg-mint after:transition-transform after:duration-200 after:ease-out hover:text-primary hover:after:scale-x-100 focus-visible:after:scale-x-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring";
 
 export function PocketMintHero() {
+  const t = useTranslations("landing");
   const reducedMotion = useReducedMotion() ?? false;
 
   return (
     <>
       <header className="sticky top-4 z-30 mx-auto mt-4 w-[calc(100%-2.5rem)] max-w-7xl">
         <nav
-          aria-label="Navigasi utama"
+          aria-label={t("nav.ariaLabel")}
           className="flex min-h-16 items-center justify-between rounded-xl border border-border bg-background/95 px-4 py-2 shadow-sm backdrop-blur-md"
         >
           <div className="flex items-center gap-6">
@@ -40,28 +43,29 @@ export function PocketMintHero() {
             </Link>
             <div className="hidden items-center gap-6 md:flex">
               <Link href="#privacy" className={landingNavLink}>
-                Privasi
+                {t("nav.privacy")}
               </Link>
               <Link href="#features" className={landingNavLink}>
-                Fitur
+                {t("nav.features")}
               </Link>
               <Link href="#whats-new" className={landingNavLink}>
-                Changelog
+                {t("nav.changelog")}
               </Link>
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <LanguageSwitcher />
             <Link
               href="/login"
               className="inline-flex min-h-11 items-center px-3 text-sm font-medium text-muted-foreground transition-colors duration-200 ease-out hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
             >
-              Login
+              {t("nav.login")}
             </Link>
             <Link
               href="/login?mode=register"
               className="landing-cta-sweep inline-flex min-h-11 rounded-[40px] items-center justify-center bg-primary px-[50px] py-[17px] text-base font-medium leading-[27px] text-primary-foreground shadow-sm hover:text-primary focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:bg-primary/85"
             >
-              <span>Daftar</span>
+              <span>{t("nav.signUp")}</span>
             </Link>
           </div>
         </nav>
@@ -80,21 +84,21 @@ export function PocketMintHero() {
               className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-secondary"
             >
               <LockKeyhole aria-hidden="true" className="size-4" strokeWidth={1.75} />
-              <span className="text-xs font-medium tracking-[0.02em]">Private &amp; Secured</span>
+              <span className="text-xs font-medium tracking-[0.02em]">{t("hero.badge")}</span>
             </motion.div>
 
             <motion.h1
               {...enter(0.2, 20, reducedMotion)}
               className="max-w-5xl text-balance text-[clamp(3rem,7vw,5.5rem)] font-semibold leading-[0.98] tracking-[-0.045em] text-primary"
             >
-              Clarity Over Complexity
+              {t("hero.title")}
             </motion.h1>
 
             <motion.p
               {...enter(0.3, 20, reducedMotion)}
               className="mx-auto max-w-2xl text-base leading-6 text-muted-foreground sm:text-xl sm:leading-8"
             >
-              Pahami apa yang Anda miliki, apa yang Anda tanggung, dan apa yang perlu diperhatikan. Tanpa distraksi.
+              {t("hero.subtitle")}
             </motion.p>
 
             <motion.div
@@ -105,7 +109,7 @@ export function PocketMintHero() {
                 href="/login"
                 className="landing-cta-sweep inline-flex min-h-11 rounded-[40px] items-center justify-center bg-primary px-[50px] py-[17px] text-base font-medium leading-[27px] text-primary-foreground shadow-sm hover:text-primary focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring active:bg-primary/85"
               >
-                <span>Mulai Sekarang</span>
+                <span>{t("hero.cta")}</span>
               </Link>
 
             </motion.div>
@@ -119,7 +123,7 @@ export function PocketMintHero() {
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
               <Image
                 src={dashboard}
-                alt="Dashboard Pocket Mint"
+                alt={t("hero.dashboardAlt")}
                 width={569}
                 height={552}
                 sizes="(max-width: 1024px) calc(100vw - 40px), 1024px"

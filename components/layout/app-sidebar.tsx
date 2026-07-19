@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   ArrowLeftRight,
   BarChart3,
@@ -17,18 +18,20 @@ import { PocketMintLogo } from "@/components/Logo";
 import { createClient } from "@/lib/supabase/client";
 import { useDueBillCount } from "@/src/features/bills/hooks/useBills";
 
-const NAV_ITEMS = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Dompet", href: "/wallets", icon: Wallet },
-  { label: "Transaksi", href: "/transactions", icon: ArrowLeftRight },
-  { label: "Cicilan", href: "/tagihan", icon: CalendarClock },
-  { label: "Analitik", href: "/analytics", icon: BarChart3 },
-];
-
 export function AppSidebar() {
+  const t = useTranslations("nav");
+  const tCommon = useTranslations("common");
   const pathname = usePathname();
   const dueBillCount = useDueBillCount();
-  const [accountLabel, setAccountLabel] = useState("Akun");
+  const [accountLabel, setAccountLabel] = useState(t("account"));
+
+  const NAV_ITEMS = [
+    { label: t("dashboard"), href: "/dashboard", icon: LayoutDashboard },
+    { label: t("wallets"), href: "/wallets", icon: Wallet },
+    { label: t("transactions"), href: "/transactions", icon: ArrowLeftRight },
+    { label: t("installments"), href: "/tagihan", icon: CalendarClock },
+    { label: t("analytics"), href: "/analytics", icon: BarChart3 },
+  ];
 
   useEffect(() => {
     const supabase = createClient();
@@ -37,13 +40,13 @@ export function AppSidebar() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!active || !user) return;
       const meta = user.user_metadata ?? {};
-      setAccountLabel(meta.full_name || meta.name || user.email || "Akun");
+      setAccountLabel(meta.full_name || meta.name || user.email || t("account"));
     });
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [t]);
 
   async function handleLogout() {
     const result = await logout();
@@ -57,11 +60,11 @@ export function AppSidebar() {
       <div className="mb-8 px-4">
         <PocketMintLogo wrapperClassName="text-primary" />
         <p className="mt-1.5 text-[11px] font-medium tracking-wide text-muted-foreground">
-          Private Financial Workspace
+          {tCommon("workspaceTagline")}
         </p>
       </div>
 
-      <nav aria-label="Navigasi utama" className="flex-grow space-y-1">
+      <nav aria-label={t("ariaMain")} className="flex-grow space-y-1">
         {NAV_ITEMS.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -82,7 +85,7 @@ export function AppSidebar() {
               {item.label}
               {item.href === "/tagihan" && dueBillCount > 0 ? (
                 <span
-                  aria-label={`${dueBillCount} cicilan perlu diperhatikan`}
+                  aria-label={t("dueBillsAria", { count: dueBillCount })}
                   className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-coral px-1.5 py-0.5 text-[10px] font-bold leading-none text-white"
                 >
                   {dueBillCount > 9 ? "9+" : dueBillCount}
@@ -107,7 +110,7 @@ export function AppSidebar() {
               {accountLabel}
             </span>
             <span className="block text-xs text-muted-foreground">
-              Pengaturan Akun
+              {t("accountSettings")}
             </span>
           </span>
         </Link>
@@ -117,7 +120,7 @@ export function AppSidebar() {
           className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-destructive transition-colors hover:bg-destructive/10"
         >
           <LogOut className="size-5" />
-          Keluar
+          {t("logout")}
         </button>
       </div>
     </aside>

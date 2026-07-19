@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { Sparkles } from "lucide-react";
 
 import { PocketMintLogo } from "@/components/Logo";
@@ -6,6 +7,7 @@ import { PocketMintHero } from "@/components/ui/pocket-mint-hero";
 import { PrivacyCommitments } from "@/components/ui/privacy-commitments";
 import { VerticalTabs } from "@/components/ui/vertical-tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { INTL_LOCALE } from "@/i18n/config";
 import { getReleases } from "@/src/lib/changelog";
 import type { Release, ReleaseChanges } from "@/src/types/changelog";
 
@@ -18,13 +20,16 @@ function topChanges(release: Release, max = 3): string[] {
   return CHANGE_ORDER.flatMap((key) => release.changes[key] ?? []).slice(0, max);
 }
 
-function formatReleaseDate(isoDate: string): string {
-  return new Intl.DateTimeFormat("id-ID", { dateStyle: "long" }).format(
+function formatReleaseDate(isoDate: string, intlLocale: string): string {
+  return new Intl.DateTimeFormat(intlLocale, { dateStyle: "long" }).format(
     new Date(`${isoDate}T00:00:00`)
   );
 }
 
 function WhatsNewSection() {
+  const t = useTranslations("landing.whatsNew");
+  const locale = useLocale();
+  const intlLocale = INTL_LOCALE[locale as keyof typeof INTL_LOCALE];
   const releases = getReleases().slice(0, 3);
 
   return (
@@ -35,13 +40,13 @@ function WhatsNewSection() {
       <div className="flex flex-col items-center text-center gap-3">
         <span className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-secondary">
           <Sparkles aria-hidden="true" className="size-4" strokeWidth={1.75} />
-          <span className="text-xs font-medium tracking-[0.02em]">Perkembangan Produk</span>
+          <span className="text-xs font-medium tracking-[0.02em]">{t("badge")}</span>
         </span>
           <h2 className="max-w text-5xl font-semibold tracking-tight text-primary md:text-5xl lg:text-6xl">
-          Yang Baru di Pocket Mint
+          {t("title")}
         </h2>
         <p className="max-w text-base leading-7 text-muted-foreground sm:text-xl sm:leading-8">
-          Pocket Mint terus dikembangkan. Berikut ringkasan rilis terbaru kami.
+          {t("subtitle")}
         </p>
       </div>
 
@@ -55,7 +60,7 @@ function WhatsNewSection() {
               <CardHeader className="gap-1.5">
                 <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
                   <span className="font-semibold">v{release.version}</span>
-                  <time dateTime={release.publishedAt}>{formatReleaseDate(release.publishedAt)}</time>
+                  <time dateTime={release.publishedAt}>{formatReleaseDate(release.publishedAt, intlLocale)}</time>
                 </div>
                 <CardTitle className="text-base">{release.title}</CardTitle>
                 <CardDescription>{release.summary}</CardDescription>
@@ -77,7 +82,7 @@ function WhatsNewSection() {
 
       <div className="mt-10 flex justify-center">
         <Link href="/changelog" className={largePrimaryButton}>
-          <span>Lihat semua perubahan</span>
+          <span>{t("seeAll")}</span>
         </Link>
       </div>
     </section>
@@ -85,6 +90,7 @@ function WhatsNewSection() {
 }
 
 export default function LandingPage() {
+  const t = useTranslations("landing");
   return (
     <div className="min-h-dvh bg-background text-foreground">
       <PocketMintHero />
@@ -97,12 +103,10 @@ export default function LandingPage() {
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.55fr)] lg:items-stretch">
             <div className="flex flex-col lg:justify-center lg:py-2">
               <h2 className="max-w-2xl text-4xl font-semibold tracking-tight text-primary md:text-5xl lg:text-6xl">
-                Data finansial Anda tetap milik Anda.
+                {t("privacy.title")}
               </h2>
               <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-                Pocket Mint membantu Anda membaca kondisi finansial tanpa
-                iklan, pelacakan marketing, atau pengumpulan data yang tidak
-                diperlukan.
+                {t("privacy.subtitle")}
               </p>
             </div>
             <PrivacyCommitments />
@@ -128,21 +132,24 @@ export default function LandingPage() {
               <PocketMintLogo />
             </Link>
             <p className="mt-2 text-xs text-muted-foreground">
-              © 2024 Pocket Mint. Seluruh hak cipta dilindungi.
+              {t("footer.copyright")}
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-x-8 gap-y-4">
-            {["Kebijakan Privasi", "Syarat & Ketentuan", "Bantuan", "Kontak"].map(
-              (label) => (
-                <Link
-                  key={label}
-                  href="#"
-                  className="text-xs text-muted-foreground transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
-                >
-                  {label}
-                </Link>
-              )
-            )}
+            {[
+              t("footer.links.privacyPolicy"),
+              t("footer.links.terms"),
+              t("footer.links.help"),
+              t("footer.links.contact"),
+            ].map((label) => (
+              <Link
+                key={label}
+                href="#"
+                className="text-xs text-muted-foreground transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+              >
+                {label}
+              </Link>
+            ))}
           </div>
         </div>
       </footer>

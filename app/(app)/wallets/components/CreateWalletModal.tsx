@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Banknote,
   Coins,
@@ -46,34 +47,6 @@ const PAYLATER_PRESETS: Record<string, { interestRate: number; adminFee: number 
   "BCA PayLater": { interestRate: 1.25, adminFee: 0 },
   "Mandiri Paylater": { interestRate: 1.5, adminFee: 0 },
 };
-
-const ACCOUNT_TYPES: Array<{
-  value: WalletType;
-  label: string;
-  Icon: typeof Landmark;
-  tone: string;
-  icon: string;
-}> = [
-  { value: "CASH", label: "Tunai", Icon: Banknote, tone: "text-mint", icon: "banknote" },
-  { value: "BANK", label: "Bank", Icon: Landmark, tone: "text-mint", icon: "landmark" },
-  { value: "E_WALLET", label: "E-Wallet", Icon: Smartphone, tone: "text-primary", icon: "smartphone" },
-  { value: "CREDIT_CARD", label: "Kartu Kredit", Icon: CreditCard, tone: "text-coral", icon: "creditcard" },
-  { value: "PAYLATER", label: "Paylater", Icon: Coins, tone: "text-coral", icon: "coins" },
-  { value: "LOAN", label: "Pinjaman", Icon: HandCoins, tone: "text-amber", icon: "handcoins" },
-];
-
-const INSTITUTIONS = [
-  { value: "none", label: "Tanpa institusi" },
-  { value: "Bank Central Asia (BCA)", label: "Bank Central Asia (BCA)" },
-  { value: "Bank Mandiri", label: "Bank Mandiri" },
-  { value: "Bank Negara Indonesia (BNI)", label: "Bank Negara Indonesia (BNI)" },
-  { value: "GoPay", label: "GoPay" },
-  { value: "OVO", label: "OVO" },
-  { value: "SPaylater", label: "SPaylater" },
-  { value: "Kredivo", label: "Kredivo" },
-  { value: "Akulaku", label: "Akulaku" },
-  { value: "Lainnya", label: "Lainnya" },
-];
 
 const parseRupiahToNumber = (value: string): number => {
   const cleaned = value.replace(/[^0-9]/g, "");
@@ -125,6 +98,36 @@ export default function CreateWalletModal({
   onClose,
   onSuccess,
 }: CreateWalletModalProps) {
+  const t = useTranslations("walletModals.create");
+  const tCommon = useTranslations("common");
+  const ACCOUNT_TYPES: Array<{
+    value: WalletType;
+    label: string;
+    Icon: typeof Landmark;
+    tone: string;
+    icon: string;
+  }> = [
+    { value: "CASH", label: t("types.cash"), Icon: Banknote, tone: "text-mint", icon: "banknote" },
+    { value: "BANK", label: t("types.bank"), Icon: Landmark, tone: "text-mint", icon: "landmark" },
+    { value: "E_WALLET", label: t("types.eWallet"), Icon: Smartphone, tone: "text-primary", icon: "smartphone" },
+    { value: "CREDIT_CARD", label: t("types.creditCard"), Icon: CreditCard, tone: "text-coral", icon: "creditcard" },
+    { value: "PAYLATER", label: t("types.paylater"), Icon: Coins, tone: "text-coral", icon: "coins" },
+    { value: "LOAN", label: t("types.loan"), Icon: HandCoins, tone: "text-amber", icon: "handcoins" },
+  ];
+
+  const INSTITUTIONS = [
+    { value: "none", label: t("institutions.none") },
+    { value: "Bank Central Asia (BCA)", label: "Bank Central Asia (BCA)" },
+    { value: "Bank Mandiri", label: "Bank Mandiri" },
+    { value: "Bank Negara Indonesia (BNI)", label: "Bank Negara Indonesia (BNI)" },
+    { value: "GoPay", label: "GoPay" },
+    { value: "OVO", label: "OVO" },
+    { value: "SPaylater", label: "SPaylater" },
+    { value: "Kredivo", label: "Kredivo" },
+    { value: "Akulaku", label: "Akulaku" },
+    { value: "Lainnya", label: t("institutions.other") },
+  ];
+
   const [accountType, setAccountType] = useState<WalletType>("CASH");
   const [walletName, setWalletName] = useState("");
   const [amount, setAmount] = useState("");
@@ -190,14 +193,14 @@ export default function CreateWalletModal({
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <header className="flex items-center justify-between border-b border-border/50 bg-surface-low px-6 py-4">
             <div>
-              <DialogTitle className="text-xl font-semibold text-foreground">Tambah Akun</DialogTitle>
+              <DialogTitle className="text-xl font-semibold text-foreground">{t("title")}</DialogTitle>
               <DialogDescription className="mt-1 text-sm text-muted-foreground">
-                Tambahkan kas, bank, e-wallet, kredit, atau pinjaman.
+                {t("description")}
               </DialogDescription>
             </div>
             <button
               type="button"
-              aria-label="Tutup modal tambah akun"
+              aria-label={t("closeAria")}
               onClick={handleClose}
               className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface-high hover:text-foreground"
             >
@@ -208,7 +211,7 @@ export default function CreateWalletModal({
           <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6">
             <section>
               <h3 className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                Pilih Jenis Akun
+                {t("chooseType")}
               </h3>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                 {ACCOUNT_TYPES.map((item) => {
@@ -241,51 +244,51 @@ export default function CreateWalletModal({
 
             <section className="space-y-4">
               <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                Rincian Akun
+                {t("accountDetails")}
               </h3>
 
               <div className="space-y-1.5">
-                <FieldLabel>Nama Akun</FieldLabel>
+                <FieldLabel>{t("accountName")}</FieldLabel>
                 <input
                   value={walletName}
                   onChange={(event) => setWalletName(event.target.value)}
                   required={["none", "Lainnya"].includes(institution)}
                   className="h-12 w-full rounded-lg border border-border/70 bg-card px-4 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15"
-                  placeholder="Contoh: Uang Tunai, BCA, SPaylater"
+                  placeholder={t("accountNamePlaceholder")}
                   type="text"
                 />
               </div>
 
               {isAsset ? (
                 <div className="space-y-1.5">
-                  <FieldLabel>Saldo Awal</FieldLabel>
+                  <FieldLabel>{t("initialBalance")}</FieldLabel>
                   <MoneyInput value={amount} onChange={setAmount} />
                 </div>
               ) : null}
 
               {isLoan ? (
                 <div className="space-y-1.5">
-                  <FieldLabel>Nominal Pinjaman</FieldLabel>
+                  <FieldLabel>{t("loanAmount")}</FieldLabel>
                   <MoneyInput value={amount} onChange={setAmount} required />
-                  <p className="text-xs text-muted-foreground">Saldo pinjaman akan tercatat sebagai kewajiban.</p>
+                  <p className="text-xs text-muted-foreground">{t("loanNote")}</p>
                 </div>
               ) : null}
 
               {isCredit ? (
                 <>
                   <div className="space-y-1.5">
-                    <FieldLabel>Limit Kredit</FieldLabel>
+                    <FieldLabel>{t("creditLimit")}</FieldLabel>
                     <MoneyInput value={creditLimit} onChange={setCreditLimit} required />
                     <p className="text-xs text-muted-foreground">
                       {accountType === "PAYLATER"
-                        ? "Tagihan awal selalu Rp0 dan bertambah saat dipakai. Jatuh tempo tiap pembelian otomatis 30 hari setelah tanggal transaksi. Hutang berjalan yang sudah ada dicatat lewat transaksi satu per satu."
-                        : "Tagihan awal selalu Rp0 dan bertambah saat dipakai."}
+                        ? t("creditNotePaylater")
+                        : t("creditNoteDefault")}
                     </p>
                   </div>
                   {accountType === "CREDIT_CARD" ? (
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">
-                      <FieldLabel>Tanggal Cutoff (Opsional)</FieldLabel>
+                      <FieldLabel>{t("cutoffDate")}</FieldLabel>
                       <input
                         type="number"
                         min="1"
@@ -297,7 +300,7 @@ export default function CreateWalletModal({
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <FieldLabel>Tanggal Jatuh Tempo (Opsional)</FieldLabel>
+                      <FieldLabel>{t("dueDate")}</FieldLabel>
                       <input
                         type="number"
                         min="1"
@@ -314,7 +317,7 @@ export default function CreateWalletModal({
               ) : null}
 
               <div className="space-y-1.5">
-                <FieldLabel>Institusi (Opsional)</FieldLabel>
+                <FieldLabel>{t("institution")}</FieldLabel>
                 <select
                   value={institution}
                   onChange={(event) => setInstitution(event.target.value)}
@@ -330,10 +333,10 @@ export default function CreateWalletModal({
 
           <footer className="flex flex-col-reverse gap-3 border-t border-border/50 bg-surface-low px-6 py-4 sm:flex-row">
             <Button type="button" variant="outline" onClick={handleClose} className="h-11 flex-1 bg-card">
-              Batal
+              {tCommon("actions.cancel")}
             </Button>
             <Button type="submit" className="h-11 flex-1">
-              Simpan Akun
+              {t("submit")}
             </Button>
           </footer>
         </form>

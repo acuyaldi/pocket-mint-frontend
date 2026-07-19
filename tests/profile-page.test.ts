@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
+import enMessages from "@/messages/en.json";
+import idMessages from "@/messages/id.json";
+
 const root = fileURLToPath(new URL("../", import.meta.url));
 const profilePage = readFileSync(root + "app/(app)/profile/page.tsx", "utf8");
 
@@ -21,8 +24,9 @@ describe("Pocket Mint profile page contract", () => {
   });
 
   it("redirects to login with success message after password change", () => {
-    expect(profilePage).toContain(
-      "Password berhasil diubah. Silakan login dengan password baru."
+    expect(profilePage).toContain('t("successChangedRedirectMessage")');
+    expect(idMessages.profile.successChangedRedirectMessage).toBe(
+      "Password berhasil diubah. Silakan masuk dengan password baru."
     );
   });
 
@@ -37,34 +41,46 @@ describe("Pocket Mint profile page contract", () => {
   // ── Validation contract ────────────────────────────────────────────
 
   it("validates all fields are filled", () => {
-    expect(profilePage).toContain(
-      "Lengkapi semua field password terlebih dahulu."
+    expect(profilePage).toContain('t("errors.fillAllFields")');
+    expect(idMessages.profile.errors.fillAllFields).toBe(
+      "Lengkapi semua kolom password terlebih dahulu."
     );
   });
 
   it("rejects password shorter than 8 characters", () => {
-    expect(profilePage).toContain("Password baru minimal 8 karakter.");
+    expect(profilePage).toContain('t("errors.passwordMinLength")');
+    expect(idMessages.profile.errors.passwordMinLength).toBe(
+      "Password baru minimal 8 karakter."
+    );
   });
 
   it("rejects mismatched confirmation", () => {
-    expect(profilePage).toContain("Konfirmasi password baru belum cocok.");
+    expect(profilePage).toContain('t("errors.passwordMismatch")');
+    expect(idMessages.profile.errors.passwordMismatch).toBe(
+      "Konfirmasi password baru belum cocok."
+    );
   });
 
   it("rejects new password equal to current password", () => {
-    expect(profilePage).toContain(
+    expect(profilePage).toContain('t("errors.samePassword")');
+    expect(idMessages.profile.errors.samePassword).toBe(
       "Password baru tidak boleh sama dengan password saat ini."
     );
   });
 
   it("handles wrong current password with a generic safe message", () => {
-    expect(profilePage).toContain("Password saat ini salah.");
+    expect(profilePage).toContain('t("errors.wrongCurrentPassword")');
+    expect(idMessages.profile.errors.wrongCurrentPassword).toBe(
+      "Password saat ini salah."
+    );
     // Must not leak whether the account exists or other internal details.
     expect(profilePage).not.toContain("Invalid login credentials");
   });
 
   it("handles invalid session by prompting re-login", () => {
-    expect(profilePage).toContain(
-      "Session tidak valid. Silakan login kembali."
+    expect(profilePage).toContain('t("errors.invalidSession")');
+    expect(idMessages.profile.errors.invalidSession).toBe(
+      "Sesi tidak valid. Silakan masuk kembali."
     );
   });
 
@@ -102,13 +118,14 @@ describe("Pocket Mint profile page contract", () => {
   // ── UI integrity contract ───────────────────────────────────────────
 
   it("preserves the profile layout with Account Identity card", () => {
-    expect(profilePage).toContain("Account Identity");
+    expect(profilePage).toContain('t("identity.title")');
+    expect(enMessages.profile.identity.title).toBe("Account Identity");
   });
 
   it("shows Google Auth notice for Google-authenticated users", () => {
-    expect(profilePage).toContain("you are logged in using Google");
-    expect(profilePage).toContain(
-      "Password cannot be changed because you are logged in using Google"
+    expect(profilePage).toContain('t("changePassword.googleNotice")');
+    expect(enMessages.profile.changePassword.googleNotice).toBe(
+      "Password can't be changed because you're signed in with a Google account."
     );
   });
 

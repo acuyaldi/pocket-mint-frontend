@@ -3,6 +3,7 @@
 import { useCallback, FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowDownLeft,
   ArrowLeftRight,
@@ -28,6 +29,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toaster";
+import { formatCurrency } from "@/lib/utils";
+import { INTL_LOCALE } from "@/i18n/config";
 import { useCategories } from "@/src/features/categories/hooks/useCategories";
 import { usePaylaterRates } from "@/src/features/installments/hooks/useInstallments";
 import {
@@ -52,30 +55,6 @@ type TxType = "EXPENSE" | "INCOME" | "TRANSFER";
 type Tab = TxType;
 
 const TENORS = [3, 6, 12];
-
-const TYPE_OPTIONS = [
-  {
-    type: "EXPENSE" as Tab,
-    label: "Pengeluaran",
-    Icon: ArrowDownLeft,
-    activeClass: "bg-coral text-white shadow-sm",
-    iconClass: "text-coral",
-  },
-  {
-    type: "INCOME" as Tab,
-    label: "Pemasukan",
-    Icon: ArrowUpRight,
-    activeClass: "bg-mint text-primary shadow-sm",
-    iconClass: "text-mint",
-  },
-  {
-    type: "TRANSFER" as Tab,
-    label: "Transfer",
-    Icon: ArrowLeftRight,
-    activeClass: "bg-primary text-primary-foreground shadow-sm",
-    iconClass: "text-primary",
-  },
-];
 
 const remainingCredit = (wallet: Wallet) =>
   wallet.remainingCredit ??
@@ -102,9 +81,9 @@ function addDays(dateStr: string, days: number) {
   return `${next.getFullYear()}-${m}-${d}`;
 }
 
-function formatDateId(dateStr: string) {
+function formatDateId(dateStr: string, intlLocale: string) {
   const [year, month, day] = dateStr.split("-").map(Number);
-  return new Date(year, month - 1, day).toLocaleDateString("id-ID", {
+  return new Date(year, month - 1, day).toLocaleDateString(intlLocale, {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -139,13 +118,13 @@ function getInstallmentDefaults(
   };
 }
 
-function getWalletKind(wallet: Wallet) {
-  if (wallet.type === "BANK") return "Bank";
-  if (wallet.type === "E_WALLET") return "E-Wallet";
-  if (wallet.type === "CASH") return "Kas";
-  if (wallet.type === "CREDIT_CARD") return "Kartu Kredit";
-  if (wallet.type === "PAYLATER") return "Paylater";
-  return "Pinjaman";
+function getWalletKind(wallet: Wallet, tKind: (key: string) => string) {
+  if (wallet.type === "BANK") return tKind("bank");
+  if (wallet.type === "E_WALLET") return tKind("eWallet");
+  if (wallet.type === "CASH") return tKind("cash");
+  if (wallet.type === "CREDIT_CARD") return tKind("creditCard");
+  if (wallet.type === "PAYLATER") return tKind("paylater");
+  return tKind("loan");
 }
 
 function getWalletIcon(wallet: Wallet) {
@@ -155,15 +134,21 @@ function getWalletIcon(wallet: Wallet) {
   return WalletIcon;
 }
 
-function formatWalletAmount(wallet: Wallet) {
+function formatWalletAmount(
+  wallet: Wallet,
+  intlLocale: string,
+  tAdd: (key: string, values?: Record<string, string | number>) => string,
+) {
   // Kartu kredit/paylater dipakai sebagai sumber dana: yang relevan adalah sisa limit
   if (isCreditWallet(wallet.type)) {
-    return `Sisa limit Rp ${formatRupiah(String(remainingCredit(wallet)))}`;
+    return tAdd("remainingLimit", {
+      amount: formatCurrency(remainingCredit(wallet), intlLocale),
+    });
   }
   const amount = isDebtWallet(wallet.type)
     ? wallet.outstanding ?? Math.abs(wallet.balance)
     : wallet.balance;
-  return `Rp ${formatRupiah(String(amount))}`;
+  return formatCurrency(amount, intlLocale);
 }
 
 export interface AddTransactionData {
@@ -204,7 +189,7 @@ function WalletSelectionList({
   selected,
   emptyLabel,
   isDisabled,
-  disabledTitle = "Saldo tidak cukup",
+  disabledTitle,
   onSelect,
 }: {
   wallets: Wallet[];
@@ -214,6 +199,12 @@ function WalletSelectionList({
   disabledTitle?: string;
   onSelect: (id: string) => void;
 }) {
+  const t = useTranslations("transactionModals.add");
+  const tKind = useTranslations("walletKind");
+  const locale = useLocale();
+  const intlLocale = INTL_LOCALE[locale as keyof typeof INTL_LOCALE];
+  const resolvedDisabledTitle = disabledTitle ?? t("insufficientBalance");
+
   if (wallets.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-surface-low p-4 text-sm text-muted-foreground">
@@ -235,7 +226,7 @@ function WalletSelectionList({
             key={wallet.id}
             type="button"
             disabled={disabled}
-            title={disabled ? disabledTitle : undefined}
+            title={disabled ? resolvedDisabledTitle : undefined}
             onClick={() => onSelect(active ? "" : wallet.id)}
             className={`group flex min-h-[76px] items-center gap-3 rounded-xl border p-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-45 ${
               active
@@ -255,8 +246,8 @@ function WalletSelectionList({
                 {wallet.name}
               </span>
               <span className="mt-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                <span>{getWalletKind(wallet)}</span>
-                <span className="tabular-nums">{formatWalletAmount(wallet)}</span>
+                <span>{getWalletKind(wallet, tKind)}</span>
+                <span className="tabular-nums">{formatWalletAmount(wallet, intlLocale, t)}</span>
               </span>
             </span>
           </button>
@@ -274,6 +265,35 @@ export function AddTransactionModal({
   onClose,
   onSubmit,
 }: AddTransactionModalProps) {
+  const t = useTranslations("transactionModals.add");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const intlLocale = INTL_LOCALE[locale as keyof typeof INTL_LOCALE];
+
+  const TYPE_OPTIONS = [
+    {
+      type: "EXPENSE" as Tab,
+      label: t("typeExpense"),
+      Icon: ArrowDownLeft,
+      activeClass: "bg-coral text-white shadow-sm",
+      iconClass: "text-coral",
+    },
+    {
+      type: "INCOME" as Tab,
+      label: t("typeIncome"),
+      Icon: ArrowUpRight,
+      activeClass: "bg-mint text-primary shadow-sm",
+      iconClass: "text-mint",
+    },
+    {
+      type: "TRANSFER" as Tab,
+      label: t("typeTransfer"),
+      Icon: ArrowLeftRight,
+      activeClass: "bg-primary text-primary-foreground shadow-sm",
+      iconClass: "text-primary",
+    },
+  ];
+
   const [amount, setAmount] = useState("");
   const [type, setType] = useState<Tab>(initialType ?? "EXPENSE");
   const [walletId, setWalletId] = useState("");
@@ -438,27 +458,27 @@ export function AddTransactionModal({
     const asInstallment = isInstallment && asCreditExpense;
 
     if (!isTransfer && !categoryId) {
-      setError("Pilih kategori.");
+      setError(t("errors.chooseCategory"));
       return;
     }
 
     if (asCreditExpense && needsManualDueDate && !firstDueDate) {
-      setError("Isi jatuh tempo pertama untuk akun ini.");
+      setError(t("errors.fillFirstDueDate"));
       return;
     }
 
     if (isTransfer && !isValidTransferPair(walletId, toWalletId)) {
-      setError("Pilih dompet sumber dan tujuan yang berbeda.");
+      setError(t("errors.differentWallets"));
       return;
     }
 
     if (isTransfer && srcWallet && !ASSET_WALLET_TYPES.includes(srcWallet.type)) {
-      setError("Transfer tidak bisa dilakukan dari kartu kredit atau paylater.");
+      setError(t("errors.transferFromCreditNotAllowed"));
       return;
     }
 
     if (type === "INCOME" && srcWallet && isDebtWallet(srcWallet.type)) {
-      setError("Pemasukan tidak bisa dicatat ke kartu kredit atau paylater.");
+      setError(t("errors.incomeToDebtNotAllowed"));
       return;
     }
 
@@ -468,7 +488,7 @@ export function AddTransactionModal({
         : parsedAmount;
 
       if (spendable(srcWallet) < requiredAmount) {
-        setError(`Saldo ${srcWallet.name} tidak cukup.`);
+        setError(t("errors.insufficientBalance", { name: srcWallet.name }));
         return;
       }
     }
@@ -499,16 +519,16 @@ export function AddTransactionModal({
     } catch (err) {
       const message = (err as { response?: { data?: { error?: { message?: string } } } })
         ?.response?.data?.error?.message;
-      setError(message ?? "Transaksi gagal disimpan. Coba lagi.");
+      setError(message ?? t("errors.genericSaveFailed"));
       return;
     }
 
     toast(
       type === "TRANSFER"
-        ? "Transfer berhasil dicatat"
+        ? t("toastTransferSuccess")
         : type === "INCOME"
-        ? "Pemasukan berhasil dicatat"
-        : "Pengeluaran berhasil dicatat",
+        ? t("toastIncomeSuccess")
+        : t("toastExpenseSuccess"),
     );
 
     setAmount("");
@@ -549,15 +569,15 @@ export function AddTransactionModal({
             <header className="flex items-center justify-between border-b border-border/50 bg-surface-low px-6 py-4">
               <div>
                 <h2 className="text-xl font-semibold text-foreground">
-                  Tambah Transaksi
+                  {t("title")}
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Catat arus uang tanpa keluar dari halaman.
+                  {t("subtitle")}
                 </p>
               </div>
               <button
                 type="button"
-                aria-label="Tutup modal"
+                aria-label={t("closeAria")}
                 onClick={handleClose}
                 className="flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface-high hover:text-foreground"
               >
@@ -571,7 +591,7 @@ export function AddTransactionModal({
             >
               <div className="flex-1 space-y-6 overflow-y-auto p-6">
                 <nav
-                  aria-label="Jenis transaksi"
+                  aria-label={t("typeNavAria")}
                   className="grid grid-cols-3 rounded-lg bg-surface-high p-1"
                 >
                   {TYPE_OPTIONS.map(({ type: optionType, label, Icon, activeClass }) => {
@@ -596,7 +616,7 @@ export function AddTransactionModal({
                 </nav>
 
                 <section className="space-y-2">
-                  <FieldLabel>Jumlah</FieldLabel>
+                  <FieldLabel>{t("amount")}</FieldLabel>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl text-muted-foreground">
                       Rp
@@ -615,7 +635,7 @@ export function AddTransactionModal({
 
                 <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div className={`space-y-2 ${cats.length > 0 ? "" : "md:col-span-2"}`}>
-                    <FieldLabel>Tanggal</FieldLabel>
+                    <FieldLabel>{t("date")}</FieldLabel>
                     <div className="relative">
                       <CalendarDays className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                       <input
@@ -630,11 +650,11 @@ export function AddTransactionModal({
 
                   {cats.length > 0 && (
                     <div className="space-y-2">
-                      <FieldLabel>Kategori</FieldLabel>
+                      <FieldLabel>{t("category")}</FieldLabel>
                       <DropdownMenu>
                         <DropdownMenuTrigger
                           type="button"
-                          aria-label="Pilih kategori"
+                          aria-label={t("chooseCategoryAria")}
                           className="flex h-12 w-full items-center justify-between gap-2 rounded-xl border border-border/70 bg-card px-3 text-sm outline-none transition-colors hover:bg-surface-low focus:border-primary focus:ring-2 focus:ring-primary/15"
                         >
                           <span
@@ -643,7 +663,7 @@ export function AddTransactionModal({
                             }
                           >
                             {cats.find((cat) => cat.id === categoryId)?.name ??
-                              "Pilih kategori"}
+                              t("chooseCategory")}
                           </span>
                           <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
                         </DropdownMenuTrigger>
@@ -684,10 +704,10 @@ export function AddTransactionModal({
                       <WalletIcon className="size-6" />
                     </div>
                     <h3 className="text-base font-semibold text-foreground">
-                      Tidak ada dompet untuk transfer
+                      {t("noWalletsForTransferTitle")}
                     </h3>
                     <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                      Tambahkan dompet Kas, Bank, atau E-Wallet sebagai sumber transfer.
+                      {t("noWalletsForTransferBody")}
                     </p>
                     <Button
                       type="button"
@@ -695,7 +715,7 @@ export function AddTransactionModal({
                       className="mt-4 h-10 gap-2 px-4"
                     >
                       <Plus className="size-4" />
-                      Tambah dompet
+                      {t("addWallet")}
                     </Button>
                   </section>
                 ) : hasNoWallets ? (
@@ -704,11 +724,10 @@ export function AddTransactionModal({
                       <WalletIcon className="size-6" />
                     </div>
                     <h3 className="text-base font-semibold text-foreground">
-                      Belum ada dompet
+                      {t("noWalletsTitle")}
                     </h3>
                     <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                      Buat dompet dulu supaya transaksi bisa dicatat ke sumber
-                      dana yang benar.
+                      {t("noWalletsBody")}
                     </p>
                     <Button
                       type="button"
@@ -716,29 +735,29 @@ export function AddTransactionModal({
                       className="mt-4 h-10 gap-2 px-4"
                     >
                       <Plus className="size-4" />
-                      Tambah dompet
+                      {t("addWallet")}
                     </Button>
                   </section>
                 ) : type === "TRANSFER" ? (
                   <section className="grid grid-cols-1 gap-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-end md:gap-3">
                     <AccountPicker
                       id="transfer-source"
-                      label="Dompet sumber"
+                      label={t("sourceWallet")}
                       wallets={sourcePickerWallets}
                       selectedId={walletId}
                       emptyLabel={
                         sourcePickerWallets.length === 0
-                          ? "Tidak ada dompet sumber lain yang tersedia."
-                          : "Pilih dompet sumber"
+                          ? t("noOtherSourceWallet")
+                          : t("chooseSourceWallet")
                       }
-                      disabledReason="Saldo tidak mencukupi"
+                      disabledReason={t("insufficientBalance")}
                       isDisabled={lacksFunds}
                       onSelect={handleSourceSelect}
                     />
                     <div className="flex justify-center md:mb-2">
                       <button
                         type="button"
-                        aria-label="Tukar dompet sumber dan tujuan"
+                        aria-label={t("swapWalletsAria")}
                         onClick={handleSwapWallets}
                         disabled={!ASSET_WALLET_TYPES.includes(
                           wallets.find((wallet) => wallet.id === toWalletId)?.type ?? "LOAN",
@@ -750,24 +769,24 @@ export function AddTransactionModal({
                     </div>
                     <AccountPicker
                       id="transfer-destination"
-                      label="Dompet tujuan"
+                      label={t("destinationWallet")}
                       wallets={destinationPickerWallets}
                       selectedId={toWalletId}
                       emptyLabel={
                         destinationPickerWallets.length === 0
-                          ? "Tidak ada dompet tujuan lain yang tersedia."
-                          : "Pilih dompet tujuan"
+                          ? t("noOtherDestinationWallet")
+                          : t("chooseDestinationWallet")
                       }
                       onSelect={handleDestinationSelect}
                     />
                   </section>
                 ) : (
                   <section className="space-y-2">
-                    <FieldLabel>Pilih dompet</FieldLabel>
+                    <FieldLabel>{t("chooseWallet")}</FieldLabel>
                     <WalletSelectionList
                       wallets={sourceWallets}
                       selected={walletId}
-                      emptyLabel="Tidak ada dompet yang tersedia."
+                      emptyLabel={t("noWalletsAvailable")}
                       isDisabled={lacksFunds}
                       onSelect={(id) => {
                         setWalletId(id);
@@ -780,10 +799,10 @@ export function AddTransactionModal({
                 )}
 
                 <section className="space-y-2">
-                  <FieldLabel>Deskripsi</FieldLabel>
+                  <FieldLabel>{t("description")}</FieldLabel>
                   <Input
                     type="text"
-                    placeholder="Contoh: Belanja mingguan"
+                    placeholder={t("descriptionPlaceholder")}
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
                     className="h-12 border-border/70 bg-card px-3 text-sm"
@@ -801,17 +820,22 @@ export function AddTransactionModal({
                           </span>
                           <div>
                             <h3 className="text-sm font-semibold text-foreground">
-                              Cara pembayaran tagihan
+                              {t("billingMethod")}
                             </h3>
                             <p className="mt-1 text-xs text-muted-foreground">
-                              Sisa limit: Rp {formatRupiah(String(remainingCredit(selectedWallet)))}
+                              {t("remainingLimit", {
+                                amount: formatCurrency(
+                                  remainingCredit(selectedWallet),
+                                  intlLocale,
+                                ),
+                              })}
                             </p>
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           {[
-                            { value: false, label: "Satu kali bayar" },
-                            { value: true, label: "Cicilan" },
+                            { value: false, label: t("payFull") },
+                            { value: true, label: t("payInstallment") },
                           ].map((mode) => (
                             <button
                               key={mode.label}
@@ -837,7 +861,7 @@ export function AddTransactionModal({
                       {isInstallment && (
                         <div className="mt-4 space-y-4 border-t border-border/60 pt-4">
                           <div className="space-y-2">
-                            <FieldLabel>Tenor</FieldLabel>
+                            <FieldLabel>{t("tenor")}</FieldLabel>
                             <div className="grid grid-cols-3 gap-2">
                               {TENORS.map((months) => {
                                 const active = installmentMonths === months;
@@ -852,7 +876,7 @@ export function AddTransactionModal({
                                         : "border-border bg-card text-muted-foreground hover:bg-surface-high"
                                     }`}
                                   >
-                                    {months} bulan
+                                    {months} {t("months")}
                                   </button>
                                 );
                               })}
@@ -861,7 +885,7 @@ export function AddTransactionModal({
 
                           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <div className="space-y-2">
-                              <FieldLabel>Bunga % / bulan</FieldLabel>
+                              <FieldLabel>{t("interestPerMonth")}</FieldLabel>
                               <Input
                                 type="text"
                                 inputMode="decimal"
@@ -876,7 +900,7 @@ export function AddTransactionModal({
                               />
                             </div>
                             <div className="space-y-2">
-                              <FieldLabel>Admin fee %</FieldLabel>
+                              <FieldLabel>{t("adminFeePercent")}</FieldLabel>
                               <Input
                                 type="text"
                                 inputMode="decimal"
@@ -894,24 +918,23 @@ export function AddTransactionModal({
 
                           {matchedPreset && (
                             <p className="text-xs text-muted-foreground">
-                              Bunga dan admin fee diisi dari preset{" "}
-                              {selectedWallet.name}; nilainya tetap bisa
-                              diedit.
+                              {t("presetNote", { name: selectedWallet.name })}
                             </p>
                           )}
 
                           {parsedAmount > 0 && (
                             <p className="rounded-lg bg-card px-3 py-2 text-xs text-muted-foreground">
-                              Estimasi:{" "}
+                              {t("estimate")}{" "}
                               <strong className="tabular-nums text-primary">
-                                Rp {formatRupiah(String(monthlyEst))}/bulan
+                                {formatCurrency(monthlyEst, intlLocale)}
+                                {t("perMonth")}
                               </strong>{" "}
-                              × {installmentMonths} bulan
+                              × {installmentMonths} {t("months")}
                               {adminRp > 0 && (
                                 <>
                                   {" "}
-                                  + Rp {formatRupiah(String(adminRp))} admin
-                                  sekali bayar
+                                  + {formatCurrency(adminRp, intlLocale)}{" "}
+                                  {t("adminOneTime")}
                                 </>
                               )}
                             </p>
@@ -924,17 +947,17 @@ export function AddTransactionModal({
                           <p className="flex items-center gap-2 text-xs text-muted-foreground">
                             <CalendarDays className="size-4 shrink-0" />
                             <span>
-                              Jatuh tempo otomatis:{" "}
+                              {t("autoDueDate")}{" "}
                               <strong className="font-semibold text-foreground">
-                                {formatDateId(paylaterDueDate)}
+                                {formatDateId(paylaterDueDate, intlLocale)}
                               </strong>{" "}
-                              — {PAYLATER_DUE_DAYS} hari setelah tanggal transaksi.
+                              — {t("autoDueDateNote", { days: PAYLATER_DUE_DAYS })}
                             </span>
                           </p>
                         </div>
                       ) : needsManualDueDate ? (
                         <div className="mt-4 space-y-2 border-t border-border/60 pt-4">
-                          <FieldLabel>Jatuh tempo pertama</FieldLabel>
+                          <FieldLabel>{t("firstDueDate")}</FieldLabel>
                           <Input
                             type="date"
                             value={firstDueDate}
@@ -944,7 +967,7 @@ export function AddTransactionModal({
                             className="h-11 border-border/70 bg-card"
                           />
                           <p className="text-xs text-muted-foreground">
-                            Wajib karena cutoff atau tanggal jatuh tempo akun belum lengkap.
+                            {t("firstDueDateRequired")}
                           </p>
                         </div>
                       ) : null}
@@ -966,7 +989,7 @@ export function AddTransactionModal({
                   disabled={isCreating}
                   className="h-11 flex-1 bg-card"
                 >
-                  Batal
+                  {tCommon("actions.cancel")}
                 </Button>
                 <Button
                   type="submit"
@@ -980,12 +1003,12 @@ export function AddTransactionModal({
                   {isCreating ? (
                     <>
                       <Loader2 className="size-4 animate-spin" />
-                      Menyimpan
+                      {t("saving")}
                     </>
                   ) : (
                     <>
                       <ActiveIcon className="size-4" />
-                      Simpan transaksi
+                      {t("submit")}
                     </>
                   )}
                 </Button>

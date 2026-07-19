@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
+import enMessages from "@/messages/en.json";
+
 const root = fileURLToPath(new URL("../", import.meta.url));
 const loginPage = readFileSync(root + "app/login/page.tsx", "utf8");
 
@@ -42,16 +44,20 @@ describe("Pocket Mint authentication page contract", () => {
   it("keeps accessible status and password controls", () => {
     expect(loginPage).toContain('role="alert"');
     expect(loginPage).toContain(
-      'showPassword ? "Hide password" : "Show password"'
+      'showPassword ? t("hidePassword") : t("showPassword")'
     );
     expect(loginPage).toContain("disabled={busy}");
-    expect(loginPage).toContain(
+    expect(loginPage).toContain('t("resetSentMessage")');
+    expect(enMessages.auth.hidePassword).toBe("Hide password");
+    expect(enMessages.auth.showPassword).toBe("Show password");
+    expect(enMessages.auth.resetSentMessage).toBe(
       "Check your email inbox for the password reset link."
     );
   });
 
   it("uses a quiet split shell with the form first on mobile", () => {
-    expect(loginPage).toContain("PRIVATE FINANCIAL WORKSPACE");
+    expect(loginPage).toContain('t("workspaceLabel")');
+    expect(enMessages.auth.workspaceLabel).toBe("PRIVATE FINANCIAL WORKSPACE");
     expect(loginPage).toContain("order-2");
     expect(loginPage).toContain("order-1");
     expect(loginPage).not.toContain("surface-grid");
