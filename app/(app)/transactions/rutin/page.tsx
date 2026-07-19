@@ -19,8 +19,20 @@ import type { RecurringTransaction } from "@/src/types/recurringTransaction";
 import { RecurringTransactionModal, type RecurringTransactionFormValues } from "./components/RecurringTransactionModal";
 import DeleteRecurringModal from "./components/DeleteRecurringModal";
 
-function dayOfMonth(startDate: string): number {
-  return new Date(startDate).getUTCDate();
+function reminderValueKey(reminderOffsetDays: number): "reminderOnDueDate" | "reminder1Day" | "reminder3Days" | "reminder7Days" {
+  if (reminderOffsetDays === 0) return "reminderOnDueDate";
+  if (reminderOffsetDays === 1) return "reminder1Day";
+  if (reminderOffsetDays === 3) return "reminder3Days";
+  return "reminder7Days";
+}
+
+function formatDueDate(value: string, intlLocale: string): string {
+  return new Intl.DateTimeFormat(intlLocale, {
+    timeZone: "Asia/Jakarta",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(`${value}T00:00:00Z`));
 }
 
 export default function RecurringTransactionsPage() {
@@ -129,8 +141,17 @@ export default function RecurringTransactionsPage() {
                 <p className="truncate text-sm font-semibold text-foreground">{template.name}</p>
                 <p className="mt-1 truncate text-xs text-muted-foreground">
                   {template.wallet?.name ?? "—"} · {template.category?.name ?? t("noCategory")} ·{" "}
-                  {t("monthlyDay", { day: dayOfMonth(template.startDate) })} ·{" "}
                   {template.isActive ? t("active") : t("paused")}
+                </p>
+                {template.isActive && template.nextDueDate ? (
+                  <p className="mt-1 truncate text-xs font-medium text-amber">
+                    {t("dueDate", { date: formatDueDate(template.nextDueDate, intlLocale) })}
+                  </p>
+                ) : null}
+                <p className="mt-1 truncate text-xs text-muted-foreground">
+                  {template.reminderEnabled && template.reminderOffsetDays !== null
+                    ? t("reminderLine", { value: t(reminderValueKey(template.reminderOffsetDays)) })
+                    : t("reminderNone")}
                 </p>
               </div>
             </div>
