@@ -46,6 +46,22 @@
     "reminderMessage": "{name} akan segera jatuh tempo",
     "confirm": "Konfirmasi",
     "completed": "Selesai",
+    "viewAll": "Lihat semua notifikasi",
+    "page": {
+      "title": "Notifikasi",
+      "description": "Semua pengingat transaksi rutin dan cicilan Anda.",
+      "back": "Kembali ke dashboard",
+      "filters": {
+        "all": "Semua",
+        "unread": "Belum dibaca"
+      },
+      "emptyUnread": "Tidak ada notifikasi yang belum dibaca.",
+      "error": "Gagal memuat notifikasi.",
+      "retry": "Coba lagi",
+      "previous": "Sebelumnya",
+      "next": "Berikutnya",
+      "pageIndicator": "Halaman {page} dari {totalPages}"
+    },
     "confirmModal": {
       "title": "Konfirmasi Transaksi",
       "description": "Masukkan jumlah untuk {name}",
