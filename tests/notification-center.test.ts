@@ -232,12 +232,14 @@ describe("notifications View All page", () => {
 
   it("paginates client-side over the full notification array with a fixed page size", () => {
     expect(pageSource).toContain("const PAGE_SIZE = 10;");
-    expect(pageSource).toContain("filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)");
+    expect(pageSource).toContain(
+      "filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)"
+    );
     expect(pageSource).toContain("Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))");
   });
 
   it("clamps the current page down when filtered results shrink", () => {
-    expect(pageSource).toContain("setPage((current) => Math.min(current, totalPages));");
+    expect(pageSource).toContain("const currentPage = Math.min(page, totalPages);");
   });
 
   it("links back to the dashboard", () => {
