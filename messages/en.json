@@ -10,7 +10,8 @@
       "saving": "Saving",
       "deleting": "Deleting",
       "seeAll": "See all",
-      "add": "Add"
+      "add": "Add",
+      "archiving": "Archiving"
     },
     "states": {
       "loading": "Loading...",
@@ -34,7 +35,8 @@
     "dueBillsAria": "{count} installments need attention",
     "unreadAria": "{count} unread notifications",
     "editProfile": "Edit Profile",
-    "logoutFailed": "Sign-out failed — check your connection and try again."
+    "logoutFailed": "Sign-out failed — check your connection and try again.",
+    "savingGoals": "Saving Goals"
   },
   "notificationCenter": {
     "title": "Notifications",
@@ -419,6 +421,79 @@
       "title": "Delete Template?",
       "description": "This will permanently delete the \"{name}\" template. This action can't be undone.",
       "confirm": "Delete"
+    }
+  },
+  "savingGoals": {
+    "pageTitle": "Saving Goals",
+    "pageDescription": "Manage your personal saving goals and track their progress.",
+    "addGoal": "Add Goal",
+    "empty": "No saving goals yet.",
+    "emptyDescription": "Create your first saving goal to start tracking progress.",
+    "loading": "Loading saving goals...",
+    "loadError": "Failed to load saving goals. Please try again.",
+    "sectionActive": "Active",
+    "sectionCompleted": "Completed",
+    "sectionArchived": "Archived",
+    "collected": "Collected",
+    "target": "Target Amount",
+    "remaining": "Remaining",
+    "targetDate": "Target Date",
+    "noTargetDate": "No target date",
+    "statusActive": "Active",
+    "statusCompleted": "Completed",
+    "statusArchived": "Archived",
+    "updateProgress": "Update Progress",
+    "edit": "Edit",
+    "archive": "Archive",
+    "progressNote": "This amount only records goal progress and does not change your wallet balance."
+  },
+  "savingGoalModals": {
+    "create": {
+      "title": "New Saving Goal",
+      "description": "Create a saving goal to plan your savings.",
+      "closeAria": "Close",
+      "name": "Goal Name",
+      "namePlaceholder": "e.g. New Laptop",
+      "targetAmount": "Target Amount",
+      "currentAmount": "Starting Amount (optional)",
+      "targetDate": "Target Date (optional)",
+      "notes": "Notes (optional)",
+      "notesPlaceholder": "e.g. Goal for work laptop",
+      "submit": "Create Goal",
+      "errors": {
+        "genericSaveFailed": "Failed to save saving goal. Please try again."
+      }
+    },
+    "edit": {
+      "title": "Edit Saving Goal",
+      "description": "Update the details of your saving goal.",
+      "closeAria": "Close",
+      "name": "Goal Name",
+      "namePlaceholder": "e.g. New Laptop",
+      "targetAmount": "Target Amount",
+      "targetDate": "Target Date (optional)",
+      "notes": "Notes (optional)",
+      "notesPlaceholder": "e.g. Goal for work laptop",
+      "submit": "Save Changes",
+      "errors": {
+        "genericSaveFailed": "Failed to save changes. Please try again."
+      }
+    },
+    "progress": {
+      "title": "Update Progress",
+      "description": "Record the latest saving progress for this goal.",
+      "closeAria": "Close",
+      "currentAmount": "Collected Amount",
+      "helper": "This amount only records goal progress and does not change your wallet balance.",
+      "submit": "Save Progress",
+      "errors": {
+        "genericSaveFailed": "Failed to update progress. Please try again."
+      }
+    },
+    "archive": {
+      "title": "Archive Saving Goal?",
+      "description": "\"{name}\" will be moved to the archive and can no longer be edited or updated.",
+      "confirm": "Archive"
     }
   },
   "transactionModals": {

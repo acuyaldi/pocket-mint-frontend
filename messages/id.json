@@ -10,7 +10,8 @@
       "saving": "Menyimpan",
       "deleting": "Menghapus",
       "seeAll": "Lihat semua",
-      "add": "Tambah"
+      "add": "Tambah",
+      "archiving": "Mengarsipkan"
     },
     "states": {
       "loading": "Memuat...",
@@ -34,7 +35,8 @@
     "dueBillsAria": "{count} cicilan perlu diperhatikan",
     "unreadAria": "{count} notifikasi belum dibaca",
     "editProfile": "Edit Profil",
-    "logoutFailed": "Keluar gagal — periksa koneksi lalu coba lagi."
+    "logoutFailed": "Keluar gagal — periksa koneksi lalu coba lagi.",
+    "savingGoals": "Target Tabungan"
   },
   "notificationCenter": {
     "title": "Notifikasi",
@@ -419,6 +421,79 @@
       "title": "Hapus Template?",
       "description": "Ini akan menghapus template \"{name}\" secara permanen. Tindakan ini tidak dapat dibatalkan.",
       "confirm": "Hapus"
+    }
+  },
+  "savingGoals": {
+    "pageTitle": "Target Tabungan",
+    "pageDescription": "Kelola target tabungan pribadi Anda dan pantau progresnya.",
+    "addGoal": "Tambah Target",
+    "empty": "Belum ada target tabungan.",
+    "emptyDescription": "Buat target tabungan pertama Anda untuk mulai memantau progres.",
+    "loading": "Memuat target tabungan...",
+    "loadError": "Gagal memuat target tabungan. Coba lagi.",
+    "sectionActive": "Aktif",
+    "sectionCompleted": "Selesai",
+    "sectionArchived": "Arsip",
+    "collected": "Terkumpul",
+    "target": "Target Nominal",
+    "remaining": "Sisa Target",
+    "targetDate": "Target Tanggal",
+    "noTargetDate": "Tanpa target tanggal",
+    "statusActive": "Aktif",
+    "statusCompleted": "Selesai",
+    "statusArchived": "Diarsipkan",
+    "updateProgress": "Perbarui Progres",
+    "edit": "Ubah",
+    "archive": "Arsip",
+    "progressNote": "Nominal ini hanya mencatat progres target dan tidak mengubah saldo dompet."
+  },
+  "savingGoalModals": {
+    "create": {
+      "title": "Target Tabungan Baru",
+      "description": "Buat target tabungan untuk merencanakan simpanan Anda.",
+      "closeAria": "Tutup",
+      "name": "Nama Target",
+      "namePlaceholder": "Contoh: Laptop Baru",
+      "targetAmount": "Target Nominal",
+      "currentAmount": "Nominal Awal (opsional)",
+      "targetDate": "Target Tanggal (opsional)",
+      "notes": "Catatan (opsional)",
+      "notesPlaceholder": "Contoh: Target laptop kerja",
+      "submit": "Buat Target",
+      "errors": {
+        "genericSaveFailed": "Gagal menyimpan target tabungan. Coba lagi."
+      }
+    },
+    "edit": {
+      "title": "Ubah Target Tabungan",
+      "description": "Perbarui detail target tabungan Anda.",
+      "closeAria": "Tutup",
+      "name": "Nama Target",
+      "namePlaceholder": "Contoh: Laptop Baru",
+      "targetAmount": "Target Nominal",
+      "targetDate": "Target Tanggal (opsional)",
+      "notes": "Catatan (opsional)",
+      "notesPlaceholder": "Contoh: Target laptop kerja",
+      "submit": "Simpan Perubahan",
+      "errors": {
+        "genericSaveFailed": "Gagal menyimpan perubahan. Coba lagi."
+      }
+    },
+    "progress": {
+      "title": "Perbarui Progres",
+      "description": "Catat progres tabungan terbaru untuk target ini.",
+      "closeAria": "Tutup",
+      "currentAmount": "Nominal Terkumpul",
+      "helper": "Nominal ini hanya mencatat progres target dan tidak mengubah saldo dompet.",
+      "submit": "Simpan Progres",
+      "errors": {
+        "genericSaveFailed": "Gagal memperbarui progres. Coba lagi."
+      }
+    },
+    "archive": {
+      "title": "Arsipkan Target Tabungan?",
+      "description": "\"{name}\" akan dipindahkan ke arsip dan tidak dapat diubah atau diperbarui lagi.",
+      "confirm": "Arsipkan"
     }
   },
   "transactionModals": {

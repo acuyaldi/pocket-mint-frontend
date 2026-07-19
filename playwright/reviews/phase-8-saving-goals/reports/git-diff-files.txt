@@ -1,0 +1,4 @@
+components/layout/app-sidebar.tsx
+components/layout/bottom-nav.tsx
+messages/en.json
+messages/id.json
