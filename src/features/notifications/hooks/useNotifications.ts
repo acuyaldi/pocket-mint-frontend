@@ -2,6 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { Notification } from '@/src/types/notification';
+import { invalidateTransactionDependents } from '@/src/features/transactions/hooks/useTransactions';
 
 const STALE_TIME = 60 * 1000;
 
@@ -61,8 +62,7 @@ export const useConfirmReminder = () => {
         .then((res) => res.data.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['wallets'] });
+      invalidateTransactionDependents(queryClient);
     },
   });
 };

@@ -1,10 +1,22 @@
 'use client';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { Transaction } from '@/src/types/transaction';
 
 // Stale time: 5 minutes (in milliseconds)
 const STALE_TIME = 5 * 60 * 1000;
+
+/**
+ * Query key prefixes that read transaction-derived data. Invalidate all of
+ * these after any successful transaction mutation (create/update/delete/
+ * confirm) so dependent views (dashboard net worth, wallet balances,
+ * installment bills) never require a manual reload.
+ */
+export const invalidateTransactionDependents = (queryClient: QueryClient) => {
+  for (const queryKey of [['transactions'], ['wallets'], ['dashboard'], ['bills']]) {
+    queryClient.invalidateQueries({ queryKey });
+  }
+};
 
 /**
  * Fetch all transactions.
@@ -84,10 +96,7 @@ export const useUpdateTransaction = () => {
   >({
     mutationFn: ({ id, ...updates }) =>
       api.put<{ status: string; data: Transaction }>(`/transactions/${id}`, updates).then((res) => res.data.data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['wallets'] });
-    },
+    onSuccess: () => invalidateTransactionDependents(queryClient),
   });
 };
 
@@ -100,13 +109,8 @@ export const useCreateTransaction = () => {
     CreateTransactionDto
   >({
     mutationFn: (newTx) => api.post<{ status: string; data: Transaction }>('/transactions', newTx).then((res) => res.data.data),
-    onSuccess: () => {
-        // Refetch the transaction list and wallets after creating a new one
-        queryClient.invalidateQueries({ queryKey: ['transactions'] });
-        queryClient.invalidateQueries({ queryKey: ['wallets'] });
-      },
-    }
-  );
+    onSuccess: () => invalidateTransactionDependents(queryClient),
+  });
 };
 
 export interface CreateTransactionDto {
@@ -134,9 +138,6 @@ export const useDeleteTransaction = () => {
   >({
     mutationFn: (id) =>
       api.delete<{ status: string; data: { id: string } }>(`/transactions/${id}`).then((res) => res.data.data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['wallets'] });
-    },
+    onSuccess: () => invalidateTransactionDependents(queryClient),
   });
 };
