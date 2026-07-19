@@ -9,6 +9,7 @@ import messages from "@/messages/id.json";
 
 function render(overrides: Partial<React.ComponentProps<typeof DashboardHeroCard>> = {}) {
   return renderToStaticMarkup(
+    // eslint-disable-next-line react/no-children-prop -- required prop on NextIntlClientProvider's type; createElement can't pass it positionally
     React.createElement(NextIntlClientProvider, {
       locale: "id",
       messages,

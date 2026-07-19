@@ -26,6 +26,7 @@ const bankWallet: Wallet = {
 
 function renderPicker(overrides: Partial<AccountPickerProps> = {}) {
   return renderToStaticMarkup(
+    // eslint-disable-next-line react/no-children-prop -- required prop on NextIntlClientProvider's type; createElement can't pass it positionally
     React.createElement(NextIntlClientProvider, {
       locale: "id",
       messages,
