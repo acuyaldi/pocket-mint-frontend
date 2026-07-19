@@ -32,8 +32,16 @@
     "language": "Ganti bahasa",
     "welcome": "Selamat datang",
     "dueBillsAria": "{count} cicilan perlu diperhatikan",
+    "unreadAria": "{count} notifikasi belum dibaca",
     "editProfile": "Edit Profil",
     "logoutFailed": "Keluar gagal — periksa koneksi lalu coba lagi."
+  },
+  "notificationCenter": {
+    "title": "Notifikasi",
+    "markAllRead": "Tandai semua dibaca",
+    "loading": "Memuat notifikasi…",
+    "empty": "Belum ada notifikasi.",
+    "reminderMessage": "{name} akan segera jatuh tempo"
   },
   "auth": {
     "backToLanding": "Kembali ke halaman utama",

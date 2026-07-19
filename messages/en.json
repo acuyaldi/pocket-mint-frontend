@@ -32,8 +32,16 @@
     "language": "Change language",
     "welcome": "Welcome",
     "dueBillsAria": "{count} installments need attention",
+    "unreadAria": "{count} unread notifications",
     "editProfile": "Edit Profile",
     "logoutFailed": "Sign-out failed — check your connection and try again."
+  },
+  "notificationCenter": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "loading": "Loading notifications…",
+    "empty": "No notifications yet.",
+    "reminderMessage": "{name} is due soon"
   },
   "auth": {
     "backToLanding": "Back to landing page",

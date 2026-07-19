@@ -5,6 +5,13 @@ import { useLocale, useTranslations } from "next-intl";
 import { Bell } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
+import { NotificationMenuItems } from "@/components/layout/notification-menu";
+import { useUnreadNotificationCount } from "@/src/features/notifications/hooks/useNotifications";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function formatTopbarDate(date: Date, locale: string) {
   return new Intl.DateTimeFormat(locale, {
@@ -21,6 +28,7 @@ export function AppTopbar() {
   const locale = useLocale();
   const [accountLabel, setAccountLabel] = useState(t("account"));
   const [now, setNow] = useState(() => new Date());
+  const unreadCount = useUnreadNotificationCount();
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -59,13 +67,30 @@ export function AppTopbar() {
         </div>
         <div className="flex items-center gap-1">
           <LanguageSwitcher />
-          <button
-            type="button"
-            aria-label={t("notifications")}
-            className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-surface-high hover:text-primary active:scale-95"
-          >
-            <Bell className="size-5" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <button
+                  type="button"
+                  aria-label={t("notifications")}
+                  className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-surface-high hover:text-primary active:scale-95"
+                >
+                  <Bell className="size-5" />
+                  {unreadCount > 0 ? (
+                    <span
+                      aria-label={t("unreadAria", { count: unreadCount })}
+                      className="absolute right-1 top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-coral px-1 text-[9px] font-bold leading-4 text-white"
+                    >
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  ) : null}
+                </button>
+              }
+            />
+            <DropdownMenuContent align="end" sideOffset={10}>
+              <NotificationMenuItems />
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
