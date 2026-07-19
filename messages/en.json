@@ -299,6 +299,90 @@
     "noMatches": "No matching transactions.",
     "loading": "Loading transactions..."
   },
+  "recurringTransactions": {
+    "pageTitle": "Recurring Transactions",
+    "pageDescription": "Manage monthly templates that repeat automatically.",
+    "backToTransactions": "Back to Transactions",
+    "openLink": "Recurring",
+    "addTemplate": "Add Template",
+    "empty": "No recurring templates yet.",
+    "loading": "Loading recurring templates...",
+    "monthly": "Monthly",
+    "active": "Active",
+    "paused": "Paused",
+    "nextDate": "Starts {date}",
+    "noCategory": "No category",
+    "delete": "Delete",
+    "edit": "Edit",
+    "flexibleAmount": "Flexible amount",
+    "monthlyDay": "Day {day}"
+  },
+  "recurringTransactionModals": {
+    "create": {
+      "title": "New Recurring Template",
+      "description": "Create a monthly template. It will not create a transaction by itself.",
+      "closeAria": "Close dialog",
+      "typeNavAria": "Transaction type",
+      "typeExpense": "Expense",
+      "typeIncome": "Income",
+      "name": "Template Name",
+      "namePlaceholder": "e.g. Rent, Salary",
+      "amountMode": "Amount Type",
+      "amountModeFixed": "Fixed",
+      "amountModeFlexible": "Flexible",
+      "flexibleAmountHint": "The amount will vary each month and won't be set here.",
+      "amount": "Amount",
+      "wallet": "Wallet",
+      "chooseWallet": "Choose a wallet",
+      "category": "Category",
+      "frequency": "Frequency",
+      "frequencyMonthlyOnly": "Monthly",
+      "startDate": "Start Date",
+      "endDate": "End Date (optional)",
+      "optionalDescription": "Description (optional)",
+      "descriptionPlaceholder": "Add a note",
+      "submit": "Create Template",
+      "errors": {
+        "genericSaveFailed": "Failed to save the template. Please try again."
+      }
+    },
+    "edit": {
+      "title": "Edit Recurring Template",
+      "description": "Update this monthly template. It will not create a transaction by itself.",
+      "closeAria": "Close dialog",
+      "typeNavAria": "Transaction type",
+      "typeExpense": "Expense",
+      "typeIncome": "Income",
+      "name": "Template Name",
+      "namePlaceholder": "e.g. Rent, Salary",
+      "amountMode": "Amount Type",
+      "amountModeFixed": "Fixed",
+      "amountModeFlexible": "Flexible",
+      "flexibleAmountHint": "The amount will vary each month and won't be set here.",
+      "amount": "Amount",
+      "wallet": "Wallet",
+      "chooseWallet": "Choose a wallet",
+      "category": "Category",
+      "frequency": "Frequency",
+      "frequencyMonthlyOnly": "Monthly",
+      "startDate": "Start Date",
+      "endDate": "End Date (optional)",
+      "status": "Status",
+      "statusActive": "Active",
+      "statusPaused": "Paused",
+      "optionalDescription": "Description (optional)",
+      "descriptionPlaceholder": "Add a note",
+      "submit": "Save Changes",
+      "errors": {
+        "genericSaveFailed": "Failed to save the template. Please try again."
+      }
+    },
+    "delete": {
+      "title": "Delete Template?",
+      "description": "This will permanently delete the \"{name}\" template. This action can't be undone.",
+      "confirm": "Delete"
+    }
+  },
   "transactionModals": {
     "detail": {
       "title": "Transaction Details",

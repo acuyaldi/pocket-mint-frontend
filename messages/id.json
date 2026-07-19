@@ -299,6 +299,90 @@
     "noMatches": "Tidak ada transaksi yang cocok.",
     "loading": "Memuat transaksi..."
   },
+  "recurringTransactions": {
+    "pageTitle": "Transaksi Rutin",
+    "pageDescription": "Kelola template bulanan yang berulang otomatis.",
+    "backToTransactions": "Kembali ke Transaksi",
+    "openLink": "Rutin",
+    "addTemplate": "Tambah Template",
+    "empty": "Belum ada template rutin.",
+    "loading": "Memuat template rutin...",
+    "monthly": "Bulanan",
+    "active": "Aktif",
+    "paused": "Dijeda",
+    "nextDate": "Mulai {date}",
+    "noCategory": "Tanpa kategori",
+    "delete": "Hapus",
+    "edit": "Ubah",
+    "flexibleAmount": "Jumlah fleksibel",
+    "monthlyDay": "Tanggal {day}"
+  },
+  "recurringTransactionModals": {
+    "create": {
+      "title": "Template Rutin Baru",
+      "description": "Buat template bulanan. Ini tidak akan langsung membuat transaksi.",
+      "closeAria": "Tutup modal",
+      "typeNavAria": "Jenis transaksi",
+      "typeExpense": "Pengeluaran",
+      "typeIncome": "Pemasukan",
+      "name": "Nama Template",
+      "namePlaceholder": "cth. Sewa, Gaji",
+      "amountMode": "Jenis Jumlah",
+      "amountModeFixed": "Tetap",
+      "amountModeFlexible": "Fleksibel",
+      "flexibleAmountHint": "Jumlahnya akan berbeda tiap bulan dan tidak diatur di sini.",
+      "amount": "Jumlah",
+      "wallet": "Dompet",
+      "chooseWallet": "Pilih dompet",
+      "category": "Kategori",
+      "frequency": "Frekuensi",
+      "frequencyMonthlyOnly": "Bulanan",
+      "startDate": "Tanggal Mulai",
+      "endDate": "Tanggal Berakhir (opsional)",
+      "optionalDescription": "Deskripsi (opsional)",
+      "descriptionPlaceholder": "Tambahkan catatan",
+      "submit": "Buat Template",
+      "errors": {
+        "genericSaveFailed": "Gagal menyimpan template. Silakan coba lagi."
+      }
+    },
+    "edit": {
+      "title": "Ubah Template Rutin",
+      "description": "Perbarui template bulanan ini. Ini tidak akan langsung membuat transaksi.",
+      "closeAria": "Tutup modal",
+      "typeNavAria": "Jenis transaksi",
+      "typeExpense": "Pengeluaran",
+      "typeIncome": "Pemasukan",
+      "name": "Nama Template",
+      "namePlaceholder": "cth. Sewa, Gaji",
+      "amountMode": "Jenis Jumlah",
+      "amountModeFixed": "Tetap",
+      "amountModeFlexible": "Fleksibel",
+      "flexibleAmountHint": "Jumlahnya akan berbeda tiap bulan dan tidak diatur di sini.",
+      "amount": "Jumlah",
+      "wallet": "Dompet",
+      "chooseWallet": "Pilih dompet",
+      "category": "Kategori",
+      "frequency": "Frekuensi",
+      "frequencyMonthlyOnly": "Bulanan",
+      "startDate": "Tanggal Mulai",
+      "endDate": "Tanggal Berakhir (opsional)",
+      "status": "Status",
+      "statusActive": "Aktif",
+      "statusPaused": "Dijeda",
+      "optionalDescription": "Deskripsi (opsional)",
+      "descriptionPlaceholder": "Tambahkan catatan",
+      "submit": "Simpan Perubahan",
+      "errors": {
+        "genericSaveFailed": "Gagal menyimpan template. Silakan coba lagi."
+      }
+    },
+    "delete": {
+      "title": "Hapus Template?",
+      "description": "Ini akan menghapus template \"{name}\" secara permanen. Tindakan ini tidak dapat dibatalkan.",
+      "confirm": "Hapus"
+    }
+  },
   "transactionModals": {
     "detail": {
       "title": "Detail Transaksi",

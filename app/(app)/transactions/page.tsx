@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowDownLeft,
   ArrowUpRight,
+  CalendarSync,
   Plus,
   Search,
   Shuffle,
@@ -63,6 +65,7 @@ function TransactionIcon({ type }: { type: Transaction["type"] }) {
 
 export default function TransactionsPage() {
   const t = useTranslations("transactions");
+  const tRecurring = useTranslations("recurringTransactions");
   const locale = useLocale();
   const intlLocale = INTL_LOCALE[locale as keyof typeof INTL_LOCALE];
   const TYPE_FILTERS: { key: TypeFilter; label: string }[] = [
@@ -186,14 +189,23 @@ export default function TransactionsPage() {
               type="text"
             />
           </div>
-          <button
-            type="button"
-            onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
-          >
-            <Plus className="size-4" />
-            {t("addTransaction")}
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/transactions/rutin"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-semibold text-foreground transition-colors hover:bg-surface-high"
+            >
+              <CalendarSync className="size-4" />
+              {tRecurring("openLink")}
+            </Link>
+            <button
+              type="button"
+              onClick={() => setIsAddModalOpen(true)}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
+            >
+              <Plus className="size-4" />
+              {t("addTransaction")}
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-2">

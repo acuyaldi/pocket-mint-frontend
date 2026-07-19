@@ -1,0 +1,159 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+import { describe, expect, it } from "vitest";
+
+import idMessages from "@/messages/id.json";
+import enMessages from "@/messages/en.json";
+
+const root = fileURLToPath(new URL("../", import.meta.url));
+const pageSource = readFileSync(root + "app/(app)/transactions/rutin/page.tsx", "utf8");
+const modalSource = readFileSync(
+  root + "app/(app)/transactions/rutin/components/RecurringTransactionModal.tsx",
+  "utf8",
+);
+const hookSource = readFileSync(
+  root + "src/features/recurring/hooks/useRecurringTransactions.ts",
+  "utf8",
+);
+const transactionsPageSource = readFileSync(root + "app/(app)/transactions/page.tsx", "utf8");
+const sidebarSource = readFileSync(root + "components/layout/app-sidebar.tsx", "utf8");
+const bottomNavSource = readFileSync(root + "components/layout/bottom-nav.tsx", "utf8");
+
+describe("recurring transaction modal (create/edit reuse one component)", () => {
+  it("derives create/edit copy from the mode prop via one shared translation namespace", () => {
+    expect(modalSource).toContain("useTranslations(`recurringTransactionModals.${mode}`)");
+    expect(idMessages.recurringTransactionModals.create.title).toBe("Template Rutin Baru");
+    expect(idMessages.recurringTransactionModals.edit.title).toBe("Ubah Template Rutin");
+    expect(idMessages.recurringTransactionModals.create.submit).toBe("Buat Template");
+    expect(idMessages.recurringTransactionModals.edit.submit).toBe("Simpan Perubahan");
+  });
+
+  it("only shows the active/paused status toggle in edit mode", () => {
+    expect(modalSource).toContain('mode === "edit" ?');
+    expect(modalSource).toContain("statusActive");
+    expect(modalSource).toContain("statusPaused");
+  });
+
+  it("does not duplicate the field-rendering JSX between create and edit — one component, mode-driven", () => {
+    // A single component file backs both modals; the page wires it up twice with mode="create"/"edit".
+    expect(pageSource).toContain('mode="create"');
+    expect(pageSource).toContain('mode="edit"');
+    const matches = modalSource.match(/export function RecurringTransactionModal/g) ?? [];
+    expect(matches.length).toBe(1);
+  });
+});
+
+describe("recurring transaction modal — amount mode logic", () => {
+  it("prefills every field from the template on mount (remounted fresh per open via a page-level key)", () => {
+    for (const field of [
+      "useState(() => template?.name ?? \"\")",
+      "useState<\"EXPENSE\" | \"INCOME\">(() => template?.type ?? \"EXPENSE\")",
+      "useState(() => template?.walletId ?? \"\")",
+      "useState<\"FIXED\" | \"FLEXIBLE\">(() => template?.amountMode ?? \"FIXED\")",
+      "useState(() => template?.isActive ?? true)",
+    ]) {
+      expect(modalSource).toContain(field);
+    }
+    // The page keys each modal so a fresh open always starts from the right prefill.
+    expect(pageSource).toContain('key={editTarget?.id ?? "edit-closed"}');
+    expect(pageSource).toContain('key={isAddModalOpen ? "create-open" : "create-closed"}');
+  });
+
+  it("sends amount only in FIXED mode; FLEXIBLE always omits it", () => {
+    expect(modalSource).toContain('amount: amountMode === "FIXED" ? parsedAmount : undefined');
+  });
+
+  it("blocks submit when FIXED mode has no positive amount", () => {
+    expect(modalSource).toContain('if (amountMode === "FIXED" && parsedAmount <= 0) return;');
+  });
+
+  it("shows a flexible-amount hint instead of the amount input when FLEXIBLE is selected", () => {
+    expect(modalSource).toContain('amountMode === "FIXED" ?');
+    expect(modalSource).toContain("flexibleAmountHint");
+  });
+
+  it("falls back to a localized error message when the save request fails", () => {
+    expect(modalSource).toContain('setError(message ?? t("errors.genericSaveFailed"))');
+  });
+});
+
+describe("recurring transaction list", () => {
+  it("shows an explicit empty state, not a fabricated row", () => {
+    expect(pageSource).toContain("templates.length === 0 && !isLoading");
+    expect(pageSource).toContain('t("empty")');
+  });
+
+  it("renders a fixed amount and a flexible-amount label distinctly", () => {
+    expect(pageSource).toContain('template.amountMode === "FIXED" && template.amount !== null');
+    expect(pageSource).toContain('t("flexibleAmount")');
+  });
+
+  it("renders active/inactive status", () => {
+    expect(pageSource).toContain('template.isActive ? t("active") : t("paused")');
+  });
+
+  it("shows wallet, category, and the monthly day derived from startDate", () => {
+    expect(pageSource).toContain("template.wallet?.name");
+    expect(pageSource).toContain("template.category?.name");
+    expect(pageSource).toContain('t("monthlyDay", { day: dayOfMonth(template.startDate) })');
+  });
+
+  it("exposes an edit action alongside delete", () => {
+    expect(pageSource).toContain("setEditTarget(template)");
+    expect(pageSource).toContain("setDeleteTarget(template)");
+  });
+
+  it("wires the delete confirmation modal before deleting", () => {
+    expect(pageSource).toContain("<DeleteRecurringModal");
+    expect(pageSource).toContain("deleteRecurring.mutateAsync(deleteTarget.id)");
+  });
+
+  it("refreshes the list after every successful mutation", () => {
+    const matches = hookSource.match(/invalidateQueries\(\{ queryKey: \['recurringTransactions'\] \}\)/g) ?? [];
+    expect(matches.length).toBe(3); // create, update, delete
+  });
+});
+
+describe("recurring transaction create/update contract", () => {
+  it("only ever sends the MONTHLY frequency", () => {
+    expect(modalSource).toContain('frequency: "MONTHLY"');
+    expect(modalSource).not.toContain('"DAILY"');
+    expect(modalSource).not.toContain('"WEEKLY"');
+    expect(modalSource).not.toContain('"YEARLY"');
+  });
+
+  it("supports optional end date and optional notes on create", () => {
+    expect(modalSource).toContain("endDate: endDate || undefined");
+    expect(modalSource).toContain("description: description.trim() || undefined");
+  });
+
+  it("hook DTO matches the backend amountMode contract", () => {
+    expect(hookSource).toContain("amountMode: RecurringTransaction['amountMode']");
+    expect(hookSource).toContain("amount?: number");
+  });
+});
+
+describe("recurring transaction entry point", () => {
+  it("links from Transactions without adding a primary navigation item", () => {
+    expect(transactionsPageSource).toContain('href="/transactions/rutin"');
+    expect(sidebarSource).not.toContain("rutin");
+    expect(bottomNavSource).not.toContain("rutin");
+  });
+});
+
+describe("recurring transaction i18n catalog parity", () => {
+  it("defines the new amountMode/edit keys in both catalogs", () => {
+    // Full id/en key-set parity across the whole app is covered by tests/i18n.test.ts;
+    // this just pins the specific keys this feature introduced.
+    for (const messages of [idMessages, enMessages]) {
+      for (const key of ["amountMode", "amountModeFixed", "amountModeFlexible", "flexibleAmountHint"] as const) {
+        expect(messages.recurringTransactionModals.create[key]).toBeTruthy();
+        expect(messages.recurringTransactionModals.edit[key]).toBeTruthy();
+      }
+      expect(messages.recurringTransactionModals.edit.status).toBeTruthy();
+      expect(messages.recurringTransactions.flexibleAmount).toBeTruthy();
+      expect(messages.recurringTransactions.monthlyDay).toContain("{day}");
+    }
+  });
+});
