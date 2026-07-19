@@ -93,10 +93,15 @@ describe("recurring transaction list", () => {
     expect(pageSource).toContain('template.isActive ? t("active") : t("paused")');
   });
 
-  it("shows wallet, category, and the monthly day derived from startDate", () => {
+  it("shows wallet, category, and status", () => {
     expect(pageSource).toContain("template.wallet?.name");
     expect(pageSource).toContain("template.category?.name");
-    expect(pageSource).toContain('t("monthlyDay", { day: dayOfMonth(template.startDate) })');
+    expect(pageSource).toContain('template.isActive ? t("active") : t("paused")');
+  });
+
+  it("shows the next due date for active templates, derived from the backend's nextDueDate", () => {
+    expect(pageSource).toContain("template.isActive && template.nextDueDate");
+    expect(pageSource).toContain('t("dueDate", { date: formatDueDate(template.nextDueDate, intlLocale) })');
   });
 
   it("exposes an edit action alongside delete", () => {
@@ -142,6 +147,42 @@ describe("recurring transaction entry point", () => {
   });
 });
 
+describe("recurring transaction modal — reminder settings", () => {
+  it("prefills reminder state from the template", () => {
+    expect(modalSource).toContain("useState(() => template?.reminderEnabled ?? false)");
+    expect(modalSource).toContain("useState<number | null>(() => template?.reminderOffsetDays ?? null)");
+  });
+
+  it("renders a radio group with the 5 allowed reminder options, not a dropdown/slider/free input", () => {
+    expect(modalSource).toContain('role="radiogroup"');
+    expect(modalSource).toContain('type="radio"');
+    expect(modalSource).toContain('{ key: "none", enabled: false, offset: null, label: t("reminderNone") }');
+    expect(modalSource).toContain('{ key: "0", enabled: true, offset: 0, label: t("reminderOnDueDate") }');
+    expect(modalSource).toContain('{ key: "1", enabled: true, offset: 1, label: t("reminder1Day") }');
+    expect(modalSource).toContain('{ key: "3", enabled: true, offset: 3, label: t("reminder3Days") }');
+    expect(modalSource).toContain('{ key: "7", enabled: true, offset: 7, label: t("reminder7Days") }');
+  });
+
+  it("submits reminderEnabled and reminderOffsetDays together", () => {
+    expect(modalSource).toContain("reminderEnabled,\n        reminderOffsetDays,");
+  });
+});
+
+describe("recurring transaction list — reminder display", () => {
+  it("shows a compact reminder line per template", () => {
+    expect(pageSource).toContain("template.reminderEnabled && template.reminderOffsetDays !== null");
+    expect(pageSource).toContain('t("reminderLine", { value: t(reminderValueKey(template.reminderOffsetDays)) })');
+    expect(pageSource).toContain('t("reminderNone")');
+  });
+});
+
+describe("recurring transaction create/update contract — reminder", () => {
+  it("hook DTO includes optional reminder fields", () => {
+    expect(hookSource).toContain("reminderEnabled?: boolean");
+    expect(hookSource).toContain("reminderOffsetDays?: number | null");
+  });
+});
+
 describe("recurring transaction i18n catalog parity", () => {
   it("defines the new amountMode/edit keys in both catalogs", () => {
     // Full id/en key-set parity across the whole app is covered by tests/i18n.test.ts;
@@ -154,6 +195,29 @@ describe("recurring transaction i18n catalog parity", () => {
       expect(messages.recurringTransactionModals.edit.status).toBeTruthy();
       expect(messages.recurringTransactions.flexibleAmount).toBeTruthy();
       expect(messages.recurringTransactions.monthlyDay).toContain("{day}");
+      expect(messages.recurringTransactions.dueDate).toContain("{date}");
+    }
+  });
+
+  it("defines the new reminder keys in both catalogs and modes", () => {
+    for (const messages of [idMessages, enMessages]) {
+      for (const key of [
+        "reminder",
+        "reminderNone",
+        "reminderOnDueDate",
+        "reminder1Day",
+        "reminder3Days",
+        "reminder7Days",
+      ] as const) {
+        expect(messages.recurringTransactionModals.create[key]).toBeTruthy();
+        expect(messages.recurringTransactionModals.edit[key]).toBeTruthy();
+      }
+      expect(messages.recurringTransactions.reminderLine).toContain("{value}");
+      expect(messages.recurringTransactions.reminderNone).toBeTruthy();
+      expect(messages.recurringTransactions.reminderOnDueDate).toBeTruthy();
+      expect(messages.recurringTransactions.reminder1Day).toBeTruthy();
+      expect(messages.recurringTransactions.reminder3Days).toBeTruthy();
+      expect(messages.recurringTransactions.reminder7Days).toBeTruthy();
     }
   });
 });

@@ -29,6 +29,9 @@ export interface CreateRecurringTransactionDto {
   frequency: RecurringTransaction['frequency'];
   startDate: string;
   endDate?: string;
+  reminderEnabled?: boolean;
+  /** Required when reminderEnabled is true; must be null when false. */
+  reminderOffsetDays?: number | null;
 }
 
 export const useCreateRecurringTransaction = () => {

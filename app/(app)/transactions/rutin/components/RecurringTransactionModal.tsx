@@ -86,6 +86,8 @@ export function RecurringTransactionModal({
   const [endDate, setEndDate] = useState(() => template?.endDate?.slice(0, 10) ?? "");
   const [description, setDescription] = useState(() => template?.description ?? "");
   const [isActive, setIsActive] = useState(() => template?.isActive ?? true);
+  const [reminderEnabled, setReminderEnabled] = useState(() => template?.reminderEnabled ?? false);
+  const [reminderOffsetDays, setReminderOffsetDays] = useState<number | null>(() => template?.reminderOffsetDays ?? null);
   const [error, setError] = useState("");
 
   const cats = categories.filter((category) => category.type === type);
@@ -116,6 +118,8 @@ export function RecurringTransactionModal({
         startDate,
         endDate: endDate || undefined,
         isActive,
+        reminderEnabled,
+        reminderOffsetDays,
       });
     } catch (err) {
       const message = (err as { response?: { data?: { error?: { message?: string } } } })
@@ -296,6 +300,39 @@ export function RecurringTransactionModal({
                   onChange={(event) => setEndDate(event.target.value)}
                   className="h-12 w-full rounded-lg border border-border/70 bg-card px-4 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
+              </div>
+            </section>
+
+            <section className="space-y-2">
+              <FieldLabel>{t("reminder")}</FieldLabel>
+              <div role="radiogroup" aria-label={t("reminder")} className="space-y-2">
+                {[
+                  { key: "none", enabled: false, offset: null, label: t("reminderNone") },
+                  { key: "0", enabled: true, offset: 0, label: t("reminderOnDueDate") },
+                  { key: "1", enabled: true, offset: 1, label: t("reminder1Day") },
+                  { key: "3", enabled: true, offset: 3, label: t("reminder3Days") },
+                  { key: "7", enabled: true, offset: 7, label: t("reminder7Days") },
+                ].map(({ key, enabled, offset, label }) => {
+                  const checked = reminderEnabled === enabled && reminderOffsetDays === offset;
+                  return (
+                    <label
+                      key={key}
+                      className="flex h-10 items-center gap-2 rounded-md border border-border/70 bg-card px-3 text-sm text-foreground has-checked:border-primary has-checked:bg-primary/5"
+                    >
+                      <input
+                        type="radio"
+                        name="reminder"
+                        checked={checked}
+                        onChange={() => {
+                          setReminderEnabled(enabled);
+                          setReminderOffsetDays(offset);
+                        }}
+                        className="size-4 accent-primary"
+                      />
+                      {label}
+                    </label>
+                  );
+                })}
               </div>
             </section>
 
