@@ -657,6 +657,7 @@
     "pageDescription": "Pantau tren dan performa finansial Anda",
     "periods": { "month": "Bulan ini", "quarter": "3 bulan", "sixMonths": "6 bulan" },
     "exportReport": "Ekspor laporan",
+    "exportFailed": "Ekspor laporan gagal. Coba lagi.",
     "realData": "Data nyata",
     "savingsRate": "Savings rate",
     "savingsRateHelper": "{amount} sisa arus kas periode ini",

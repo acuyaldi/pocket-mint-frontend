@@ -657,6 +657,7 @@
     "pageDescription": "Track your financial trends and performance",
     "periods": { "month": "This month", "quarter": "3 months", "sixMonths": "6 months" },
     "exportReport": "Export report",
+    "exportFailed": "Report export failed. Try again.",
     "realData": "Real data",
     "savingsRate": "Savings rate",
     "savingsRateHelper": "{amount} cash flow left this period",

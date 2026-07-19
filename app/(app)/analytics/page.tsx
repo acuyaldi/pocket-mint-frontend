@@ -14,6 +14,7 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import { INTL_LOCALE } from "@/i18n/config";
 import { PageHeader } from "@/components/layout/page-header";
+import { toast } from "@/components/ui/toaster";
 import { useBills } from "@/src/features/bills/hooks/useBills";
 import { exportTransactionsCsv, useAllTransactions } from "@/src/features/transactions/hooks/useTransactions";
 import { isDebtWallet } from "@/src/types/wallet";
@@ -261,9 +262,14 @@ export default function AnalyticsPage() {
           type="button"
           disabled={isExporting}
           onClick={async () => {
+            if (isExporting) return;
             setIsExporting(true);
             try {
               await exportTransactionsCsv(period, getJakartaMonthKey(new Date()));
+            } catch (caught) {
+              const message = (caught as { response?: { data?: { error?: { message?: string } } } })
+                ?.response?.data?.error?.message;
+              toast(message ?? t("exportFailed"), "error");
             } finally {
               setIsExporting(false);
             }
