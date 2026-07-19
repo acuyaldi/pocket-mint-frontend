@@ -15,12 +15,13 @@ import { formatCurrency } from "@/lib/utils";
 import { INTL_LOCALE } from "@/i18n/config";
 import { PageHeader } from "@/components/layout/page-header";
 import { useBills } from "@/src/features/bills/hooks/useBills";
-import { useAllTransactions } from "@/src/features/transactions/hooks/useTransactions";
+import { exportTransactionsCsv, useAllTransactions } from "@/src/features/transactions/hooks/useTransactions";
 import { isDebtWallet } from "@/src/types/wallet";
 import { useWallets } from "@/src/features/wallets/hooks/useWallets";
 import {
   buildMonthlyFlow,
   filterTransactionsByPeriod,
+  getJakartaMonthKey,
   getPeriodMonthKeys,
   type PeriodFilter,
 } from "./period";
@@ -92,6 +93,7 @@ export default function AnalyticsPage() {
     { key: "six-months", label: t("periods.sixMonths") },
   ];
   const [period, setPeriod] = useState<PeriodFilter>("six-months");
+  const [isExporting, setIsExporting] = useState(false);
   const { data: transactionData, isLoading: isTransactionsLoading } =
     useAllTransactions();
   const { data: walletData } = useWallets();
@@ -257,7 +259,16 @@ export default function AnalyticsPage() {
         </div>
         <button
           type="button"
-          className="flex h-11 items-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-low"
+          disabled={isExporting}
+          onClick={async () => {
+            setIsExporting(true);
+            try {
+              await exportTransactionsCsv(period, getJakartaMonthKey(new Date()));
+            } finally {
+              setIsExporting(false);
+            }
+          }}
+          className="flex h-11 items-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-low disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Download className="size-4" />
           {t("exportReport")}

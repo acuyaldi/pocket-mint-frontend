@@ -128,6 +128,28 @@ export interface CreateTransactionDto {
   interestRate?: number;
 }
 
+/**
+ * Download the Analytics page's currently selected period as a CSV, filtered
+ * on the backend (`GET /transactions/export`) — never fetched all-time and
+ * filtered client-side. `anchor` must be the same Asia/Jakarta `YYYY-MM`
+ * reporting-month key the Analytics page is displaying (see
+ * `getJakartaMonthKey` in `app/(app)/analytics/period.ts`), not a raw
+ * `Date` — a UTC instant can land on a different calendar month near a
+ * Jakarta month boundary.
+ */
+export const exportTransactionsCsv = async (period: 'month' | 'quarter' | 'six-months', anchor: string) => {
+  const response = await api.get<Blob>('/transactions/export', {
+    params: { period, anchor },
+    responseType: 'blob',
+  });
+  const url = URL.createObjectURL(response.data);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `transactions-${period}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
 export const useDeleteTransaction = () => {
   const queryClient = useQueryClient();
 
