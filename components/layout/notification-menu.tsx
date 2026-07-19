@@ -1,26 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { CalendarClock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  useConfirmReminder,
-  useMarkAllNotificationsRead,
-  useMarkNotificationRead,
-  useNotifications,
-} from "@/src/features/notifications/hooks/useNotifications";
+import { useNotifications, useRefreshNotifications } from "@/src/features/notifications/hooks/useNotifications";
+import { useNotificationActions } from "@/src/features/notifications/hooks/useNotificationActions";
 import { ConfirmReminderModal } from "@/src/features/notifications/components/ConfirmReminderModal";
 import type { Notification } from "@/src/types/notification";
 import { cn } from "@/lib/utils";
 
-function formatOccurrenceDate(value: string, locale: string) {
+export function formatOccurrenceDate(value: string, locale: string) {
   return new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(new Date(value));
 }
 
-function NotificationRow({
+export function NotificationRow({
   notification,
   onMarkRead,
   onConfirm,
@@ -88,24 +83,25 @@ function NotificationRow({
 
 export function NotificationMenuItems() {
   const t = useTranslations("notificationCenter");
-  const router = useRouter();
   const { data: notifications = [], isLoading } = useNotifications();
-  const markRead = useMarkNotificationRead();
-  const markAllRead = useMarkAllNotificationsRead();
-  const confirmReminder = useConfirmReminder();
-  const [flexibleTarget, setFlexibleTarget] = useState<Notification | null>(null);
+  const refresh = useRefreshNotifications();
+  const {
+    markRead,
+    markAllRead,
+    confirmReminder,
+    flexibleTarget,
+    setFlexibleTarget,
+    handleConfirm,
+    handleFlexibleSubmit,
+  } = useNotificationActions();
   const unreadCount = notifications.filter((n) => !n.readAt).length;
 
-  const handleConfirm = (notification: Notification) => {
-    if (notification.templateAmountMode === "FLEXIBLE") {
-      setFlexibleTarget(notification);
-      return;
-    }
-    confirmReminder.mutate(
-      { id: notification.id },
-      { onSuccess: () => router.push("/transactions") }
-    );
-  };
+  // Dropdown content only mounts while open (base-ui Menu), so this fires
+  // once per open — an explicit, targeted refresh, not polling.
+  useEffect(() => {
+    refresh.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="flex max-h-[70vh] w-80 flex-col">
@@ -139,16 +135,18 @@ export function NotificationMenuItems() {
           ))
         )}
       </div>
+      <Link
+        href="/notifications"
+        className="mt-1 rounded-lg px-3 py-2 text-center text-xs font-medium text-primary outline-none hover:bg-muted/70 hover:underline focus-visible:bg-muted/70"
+      >
+        {t("viewAll")}
+      </Link>
       {flexibleTarget ? (
         <ConfirmReminderModal
           notification={flexibleTarget}
           isSaving={confirmReminder.isPending}
           onClose={() => setFlexibleTarget(null)}
-          onSubmit={async (amount) => {
-            await confirmReminder.mutateAsync({ id: flexibleTarget.id, amount });
-            setFlexibleTarget(null);
-            router.push("/transactions");
-          }}
+          onSubmit={handleFlexibleSubmit}
         />
       ) : null}
     </div>

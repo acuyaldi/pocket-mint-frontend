@@ -46,6 +46,22 @@
     "reminderMessage": "{name} is due soon",
     "confirm": "Confirm",
     "completed": "Completed",
+    "viewAll": "View all notifications",
+    "page": {
+      "title": "Notifications",
+      "description": "All your recurring transaction and installment reminders.",
+      "back": "Back to dashboard",
+      "filters": {
+        "all": "All",
+        "unread": "Unread"
+      },
+      "emptyUnread": "No unread notifications.",
+      "error": "Couldn't load notifications.",
+      "retry": "Retry",
+      "previous": "Previous",
+      "next": "Next",
+      "pageIndicator": "Page {page} of {totalPages}"
+    },
     "confirmModal": {
       "title": "Confirm Transaction",
       "description": "Enter the amount for {name}",

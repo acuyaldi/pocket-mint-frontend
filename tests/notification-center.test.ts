@@ -9,9 +9,11 @@ import enMessages from "@/messages/en.json";
 const readNormalized = (path: string) => readFileSync(path, "utf8").replace(/\r\n/g, "\n");
 const root = fileURLToPath(new URL("../", import.meta.url));
 const hookSource = readNormalized(root + "src/features/notifications/hooks/useNotifications.ts");
+const actionsSource = readNormalized(root + "src/features/notifications/hooks/useNotificationActions.ts");
 const menuSource = readNormalized(root + "components/layout/notification-menu.tsx");
 const topbarSource = readNormalized(root + "components/layout/app-topbar.tsx");
 const modalSource = readNormalized(root + "src/features/notifications/components/ConfirmReminderModal.tsx");
+const pageSource = readNormalized(root + "app/(app)/notifications/page.tsx");
 
 describe("notification center hooks", () => {
   it("lists notifications from the reminder-events endpoint", () => {
@@ -34,6 +36,33 @@ describe("notification center hooks", () => {
     const invalidations = hookSource.match(/queryClient\.invalidateQueries\(\{ queryKey: \['notifications'\] \}\)/g) ?? [];
     expect(invalidations.length).toBe(3);
   });
+
+  it("refreshes via an explicit POST /notifications/refresh, not GET", () => {
+    expect(hookSource).toContain("api\n        .post<{ status: string; data: Notification[] }>('/notifications/refresh')");
+  });
+
+  it("seeds the notifications cache directly with the refreshed list instead of refetching", () => {
+    expect(hookSource).toContain("queryClient.setQueryData(['notifications'], data);");
+  });
+
+  it("dedupes concurrent refresh calls behind a shared in-flight promise", () => {
+    expect(hookSource).toContain("let inFlightRefresh: Promise<Notification[]> | null = null;");
+    expect(hookSource).toContain("if (inFlightRefresh) return inFlightRefresh;");
+  });
+
+  it("reuses the cache within the freshness window instead of hitting the network", () => {
+    expect(hookSource).toContain("const FRESHNESS_WINDOW_MS = 2 * 60 * 1000;");
+    expect(hookSource).toContain("if (Date.now() - lastRefreshAt < FRESHNESS_WINDOW_MS)");
+  });
+
+  it("only advances lastRefreshAt on a successful refresh, so a failed refresh can retry", () => {
+    expect(hookSource).toContain("lastRefreshAt = Date.now();");
+    expect(hookSource.indexOf("lastRefreshAt = Date.now();")).toBeGreaterThan(hookSource.indexOf(".post<"));
+  });
+
+  it("never uses polling primitives for refresh coordination", () => {
+    expect(hookSource).not.toMatch(/setInterval|setTimeout/);
+  });
 });
 
 describe("notification menu", () => {
@@ -50,6 +79,16 @@ describe("notification menu", () => {
   it("distinguishes loading, empty, and populated states", () => {
     expect(menuSource).toContain('t("loading")');
     expect(menuSource).toContain('t("empty")');
+  });
+
+  it("triggers a targeted refresh once when the dropdown mounts (opens), not on a polling interval", () => {
+    expect(menuSource).toContain("refresh.mutate();");
+    expect(menuSource).not.toMatch(/setInterval|setTimeout/);
+  });
+
+  it("links to the View All notifications page", () => {
+    expect(menuSource).toContain('href="/notifications"');
+    expect(menuSource).toContain('t("viewAll")');
   });
 });
 
@@ -74,17 +113,24 @@ describe("notification menu — quick confirm", () => {
   });
 
   it("opens the flexible-amount modal instead of confirming immediately when amountMode is FLEXIBLE", () => {
-    expect(menuSource).toContain('if (notification.templateAmountMode === "FLEXIBLE")');
-    expect(menuSource).toContain("setFlexibleTarget(notification);");
+    expect(actionsSource).toContain("if (notification.templateAmountMode === 'FLEXIBLE')");
+    expect(actionsSource).toContain("setFlexibleTarget(notification);");
   });
 
   it("confirms a FIXED reminder directly and navigates to /transactions on success", () => {
-    expect(menuSource).toContain('confirmReminder.mutate(\n      { id: notification.id },\n      { onSuccess: () => router.push("/transactions") }\n    );');
+    expect(actionsSource).toContain(
+      "confirmReminder.mutate({ id: notification.id }, { onSuccess: () => router.push('/transactions') });"
+    );
   });
 
   it("navigates to /transactions after a flexible confirm submits successfully", () => {
-    expect(menuSource).toContain("await confirmReminder.mutateAsync({ id: flexibleTarget.id, amount });");
-    expect(menuSource).toContain('router.push("/transactions");');
+    expect(actionsSource).toContain("await confirmReminder.mutateAsync({ id: flexibleTarget.id, amount });");
+    expect(actionsSource).toContain("router.push('/transactions');");
+  });
+
+  it("shares the same Quick Confirm state machine between the dropdown and the View All page", () => {
+    expect(menuSource).toContain("useNotificationActions();");
+    expect(pageSource).toContain("useNotificationActions();");
   });
 
   it("stops the confirm click from also triggering the row's navigation link", () => {
@@ -153,6 +199,53 @@ describe("topbar notification bell", () => {
   });
 });
 
+describe("notifications View All page", () => {
+  it("reuses the shared NotificationRow instead of duplicating row markup", () => {
+    expect(pageSource).toContain('import { NotificationRow } from "@/components/layout/notification-menu";');
+  });
+
+  it("refreshes on load and lists all notifications, not just unread ones", () => {
+    expect(pageSource).toContain("refresh.mutate();");
+    expect(pageSource).toContain("pageItems.map((notification) => (");
+  });
+
+  it("distinguishes loading, error, and empty states", () => {
+    expect(pageSource).toContain('t("loading")');
+    expect(pageSource).toContain('t("empty")');
+    expect(pageSource).toContain("isError");
+    expect(pageSource).toContain('t("page.error")');
+  });
+
+  it("offers mark-all-read only when there is unread mail", () => {
+    expect(pageSource).toContain("unreadCount > 0 ?");
+    expect(pageSource).toContain("markAllRead.mutate()");
+  });
+
+  it("filters between All and Unread, resetting to page 1 on change", () => {
+    expect(pageSource).toContain('filter === "unread" ? notifications.filter((n) => !n.readAt) : notifications');
+    expect(pageSource).toContain("setFilter(next);\n    setPage(1);");
+  });
+
+  it("shows a separate empty state for the Unread filter", () => {
+    expect(pageSource).toContain('filter === "unread" ? t("page.emptyUnread") : t("empty")');
+  });
+
+  it("paginates client-side over the full notification array with a fixed page size", () => {
+    expect(pageSource).toContain("const PAGE_SIZE = 10;");
+    expect(pageSource).toContain("filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)");
+    expect(pageSource).toContain("Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))");
+  });
+
+  it("clamps the current page down when filtered results shrink", () => {
+    expect(pageSource).toContain("setPage((current) => Math.min(current, totalPages));");
+  });
+
+  it("links back to the dashboard", () => {
+    expect(pageSource).toContain('href="/dashboard"');
+    expect(pageSource).toContain('t("page.back")');
+  });
+});
+
 describe("notification center translations", () => {
   it("expose the same keys in id and en", () => {
     expect(Object.keys(idMessages.notificationCenter).sort()).toEqual(
@@ -165,6 +258,18 @@ describe("notification center translations", () => {
       expect(messages.notificationCenter.title).toBeTruthy();
       expect(messages.notificationCenter.markAllRead).toBeTruthy();
       expect(messages.notificationCenter.empty).toBeTruthy();
+      expect(messages.notificationCenter.viewAll).toBeTruthy();
+      expect(messages.notificationCenter.page.title).toBeTruthy();
+      expect(messages.notificationCenter.page.description).toBeTruthy();
+      expect(messages.notificationCenter.page.back).toBeTruthy();
+      expect(messages.notificationCenter.page.filters.all).toBeTruthy();
+      expect(messages.notificationCenter.page.filters.unread).toBeTruthy();
+      expect(messages.notificationCenter.page.emptyUnread).toBeTruthy();
+      expect(messages.notificationCenter.page.error).toBeTruthy();
+      expect(messages.notificationCenter.page.retry).toBeTruthy();
+      expect(messages.notificationCenter.page.previous).toBeTruthy();
+      expect(messages.notificationCenter.page.next).toBeTruthy();
+      expect(messages.notificationCenter.page.pageIndicator).toBeTruthy();
       expect(messages.nav.unreadAria).toBeTruthy();
     }
   });
