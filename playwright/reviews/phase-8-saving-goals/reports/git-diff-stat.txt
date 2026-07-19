@@ -1,0 +1,5 @@
+ components/layout/app-sidebar.tsx |  2 +
+ components/layout/bottom-nav.tsx  |  2 +
+ messages/en.json                  | 79 ++++++++++++++++++++++++++++++++++++++-
+ messages/id.json                  | 79 ++++++++++++++++++++++++++++++++++++++-
+ 4 files changed, 158 insertions(+), 4 deletions(-)
