@@ -1,13 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
+  useConfirmReminder,
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
   useNotifications,
 } from "@/src/features/notifications/hooks/useNotifications";
+import { ConfirmReminderModal } from "@/src/features/notifications/components/ConfirmReminderModal";
 import type { Notification } from "@/src/types/notification";
 import { cn } from "@/lib/utils";
 
@@ -15,42 +20,88 @@ function formatOccurrenceDate(value: string, locale: string) {
   return new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(new Date(value));
 }
 
-function NotificationRow({ notification, onMarkRead }: { notification: Notification; onMarkRead: (id: string) => void }) {
+function NotificationRow({
+  notification,
+  onMarkRead,
+  onConfirm,
+  isConfirming,
+}: {
+  notification: Notification;
+  onMarkRead: (id: string) => void;
+  onConfirm: (notification: Notification) => void;
+  isConfirming: boolean;
+}) {
   const t = useTranslations("notificationCenter");
   const locale = useLocale();
   const isUnread = !notification.readAt;
+  const isCompleted = !!notification.completedAt;
 
   return (
-    <Link
-      href="/transactions/rutin"
-      onClick={() => {
-        if (isUnread) onMarkRead(notification.id);
-      }}
-      className="flex items-start gap-3 rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-muted/70 focus-visible:bg-muted/70"
-    >
-      <span
-        aria-hidden
-        className={cn("mt-1.5 size-2 shrink-0 rounded-full", isUnread ? "bg-mint" : "bg-transparent")}
-      />
-      <CalendarClock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-      <span className="flex flex-col gap-0.5">
-        <span className={cn("text-foreground", isUnread && "font-semibold")}>
-          {t("reminderMessage", { name: notification.templateName })}
+    <div className="flex items-start gap-2 rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-muted/70 focus-visible:bg-muted/70">
+      <Link
+        href="/transactions/rutin"
+        onClick={() => {
+          if (isUnread) onMarkRead(notification.id);
+        }}
+        className="flex flex-1 items-start gap-3"
+      >
+        <span
+          aria-hidden
+          className={cn("mt-1.5 size-2 shrink-0 rounded-full", isUnread ? "bg-mint" : "bg-transparent")}
+        />
+        <CalendarClock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+        <span className="flex flex-col gap-0.5">
+          <span className={cn("text-foreground", isUnread && "font-semibold")}>
+            {t("reminderMessage", { name: notification.templateName })}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {formatOccurrenceDate(notification.occurrenceDate, locale)}
+          </span>
         </span>
-        <span className="text-xs text-muted-foreground">
-          {formatOccurrenceDate(notification.occurrenceDate, locale)}
-        </span>
-      </span>
-    </Link>
+      </Link>
+      {isCompleted ? (
+        <span className="mt-1 shrink-0 text-xs font-semibold text-muted-foreground">{t("completed")}</span>
+      ) : (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={isConfirming}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            onConfirm(notification);
+          }}
+          className="mt-0.5 shrink-0 gap-1 bg-card"
+        >
+          {isConfirming ? <Loader2 className="size-3.5 animate-spin" /> : null}
+          {t("confirm")}
+        </Button>
+      )}
+    </div>
   );
 }
 
 export function NotificationMenuItems() {
   const t = useTranslations("notificationCenter");
+  const router = useRouter();
   const { data: notifications = [], isLoading } = useNotifications();
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
+  const confirmReminder = useConfirmReminder();
+  const [flexibleTarget, setFlexibleTarget] = useState<Notification | null>(null);
   const unreadCount = notifications.filter((n) => !n.readAt).length;
+
+  const handleConfirm = (notification: Notification) => {
+    if (notification.templateAmountMode === "FLEXIBLE") {
+      setFlexibleTarget(notification);
+      return;
+    }
+    confirmReminder.mutate(
+      { id: notification.id },
+      { onSuccess: () => router.push("/transactions") }
+    );
+  };
 
   return (
     <div className="flex max-h-[70vh] w-80 flex-col">
@@ -78,10 +129,24 @@ export function NotificationMenuItems() {
               key={notification.id}
               notification={notification}
               onMarkRead={(id) => markRead.mutate(id)}
+              onConfirm={handleConfirm}
+              isConfirming={confirmReminder.isPending && confirmReminder.variables?.id === notification.id}
             />
           ))
         )}
       </div>
+      {flexibleTarget ? (
+        <ConfirmReminderModal
+          notification={flexibleTarget}
+          isSaving={confirmReminder.isPending}
+          onClose={() => setFlexibleTarget(null)}
+          onSubmit={async (amount) => {
+            await confirmReminder.mutateAsync({ id: flexibleTarget.id, amount });
+            setFlexibleTarget(null);
+            router.push("/transactions");
+          }}
+        />
+      ) : null}
     </div>
   );
 }
