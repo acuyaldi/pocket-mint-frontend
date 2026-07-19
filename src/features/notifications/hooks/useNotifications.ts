@@ -45,3 +45,24 @@ export const useMarkAllNotificationsRead = () => {
     },
   });
 };
+
+export interface ConfirmReminderResult {
+  notification: Notification;
+  transaction: { id: string; amount: number };
+}
+
+export const useConfirmReminder = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<ConfirmReminderResult, Error, { id: string; amount?: number }>({
+    mutationFn: ({ id, amount }) =>
+      api
+        .post<{ status: string; data: ConfirmReminderResult }>(`/notifications/${id}/confirm`, amount !== undefined ? { amount } : {})
+        .then((res) => res.data.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['wallets'] });
+    },
+  });
+};

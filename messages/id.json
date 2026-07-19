@@ -41,7 +41,18 @@
     "markAllRead": "Tandai semua dibaca",
     "loading": "Memuat notifikasi…",
     "empty": "Belum ada notifikasi.",
-    "reminderMessage": "{name} akan segera jatuh tempo"
+    "reminderMessage": "{name} akan segera jatuh tempo",
+    "confirm": "Konfirmasi",
+    "completed": "Selesai",
+    "confirmModal": {
+      "title": "Konfirmasi Transaksi",
+      "description": "Masukkan jumlah untuk {name}",
+      "amount": "Jumlah",
+      "submit": "Buat Transaksi",
+      "errors": {
+        "genericFailed": "Gagal membuat transaksi. Coba lagi."
+      }
+    }
   },
   "auth": {
     "backToLanding": "Kembali ke halaman utama",

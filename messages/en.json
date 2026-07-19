@@ -41,7 +41,18 @@
     "markAllRead": "Mark all as read",
     "loading": "Loading notifications…",
     "empty": "No notifications yet.",
-    "reminderMessage": "{name} is due soon"
+    "reminderMessage": "{name} is due soon",
+    "confirm": "Confirm",
+    "completed": "Completed",
+    "confirmModal": {
+      "title": "Confirm Transaction",
+      "description": "Enter the amount for {name}",
+      "amount": "Amount",
+      "submit": "Create Transaction",
+      "errors": {
+        "genericFailed": "Failed to create the transaction. Try again."
+      }
+    }
   },
   "auth": {
     "backToLanding": "Back to landing page",
