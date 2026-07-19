@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import api from "@/lib/api";
+import { invalidateTransactionDependents } from "@/src/features/transactions/hooks/useTransactions";
 
 export interface BillDto {
   id: string;
@@ -90,19 +91,12 @@ export function usePayBill() {
         .post<{ data: unknown }>(`/bills/${billId}/pay`, payload)
         .then((response) => response.data.data),
     onSuccess: () => {
-      for (const queryKey of [
-        ["bills"],
-        ["wallets"],
-        ["transactions"],
-        ["dashboard"],
-        ["analytics"],
-        // Installment reminder completion is derived from the installment's
-        // nextDueDate/status (see notification.controller.ts), so a payment
-        // must refresh the notification list too.
-        ["notifications"],
-      ]) {
-        queryClient.invalidateQueries({ queryKey });
-      }
+      invalidateTransactionDependents(queryClient);
+      // Installment reminder completion is derived from the installment's
+      // nextDueDate/status (see notification.controller.ts), so a payment
+      // must refresh the notification list too.
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["analytics"] });
     },
   });
 }
