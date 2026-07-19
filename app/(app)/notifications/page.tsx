@@ -37,18 +37,16 @@ export default function NotificationsPage() {
     [notifications, filter]
   );
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // Filtered results can shrink under the current page (marking read while on
+  // the Unread filter, mark-all-read, etc.) — clamp to the last valid page
+  // as a derived value instead of syncing it back into state via an effect.
+  const currentPage = Math.min(page, totalPages);
+  const pageItems = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   useEffect(() => {
     refresh.mutate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Filtered results can shrink under the current page (marking read while on
-  // the Unread filter, mark-all-read, etc.) — clamp back to the last valid page.
-  useEffect(() => {
-    setPage((current) => Math.min(current, totalPages));
-  }, [totalPages]);
 
   const handleFilterChange = (next: Filter) => {
     setFilter(next);
@@ -135,18 +133,18 @@ export default function NotificationsPage() {
                 <button
                   type="button"
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page <= 1}
+                  disabled={currentPage <= 1}
                   className="text-sm font-medium text-primary hover:underline disabled:opacity-40 disabled:no-underline"
                 >
                   {t("page.previous")}
                 </button>
                 <span className="text-xs text-muted-foreground">
-                  {t("page.pageIndicator", { page, totalPages })}
+                  {t("page.pageIndicator", { page: currentPage, totalPages })}
                 </span>
                 <button
                   type="button"
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page >= totalPages}
+                  disabled={currentPage >= totalPages}
                   className="text-sm font-medium text-primary hover:underline disabled:opacity-40 disabled:no-underline"
                 >
                   {t("page.next")}
