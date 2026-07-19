@@ -9,10 +9,10 @@ import messages from "@/messages/id.json";
 
 function render(overrides: Partial<React.ComponentProps<typeof DashboardHeroCard>> = {}) {
   return renderToStaticMarkup(
-    React.createElement(
-      NextIntlClientProvider,
-      { locale: "id", messages },
-      React.createElement(DashboardHeroCard, {
+    React.createElement(NextIntlClientProvider, {
+      locale: "id",
+      messages,
+      children: React.createElement(DashboardHeroCard, {
         netWorth: 0,
         totalAssets: 0,
         totalDebts: 0,
@@ -21,7 +21,7 @@ function render(overrides: Partial<React.ComponentProps<typeof DashboardHeroCard
         isError: false,
         ...overrides,
       }),
-    ),
+    }),
   );
 }
 

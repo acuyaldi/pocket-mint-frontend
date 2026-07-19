@@ -26,10 +26,10 @@ const bankWallet: Wallet = {
 
 function renderPicker(overrides: Partial<AccountPickerProps> = {}) {
   return renderToStaticMarkup(
-    React.createElement(
-      NextIntlClientProvider,
-      { locale: "id", messages },
-      React.createElement(AccountPicker, {
+    React.createElement(NextIntlClientProvider, {
+      locale: "id",
+      messages,
+      children: React.createElement(AccountPicker, {
         id: "transfer-source",
         label: "Dompet sumber",
         wallets: [bankWallet],
@@ -38,7 +38,7 @@ function renderPicker(overrides: Partial<AccountPickerProps> = {}) {
         onSelect: () => undefined,
         ...overrides,
       }),
-    ),
+    }),
   );
 }
 
