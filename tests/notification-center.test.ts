@@ -62,8 +62,7 @@ describe("confirm reminder hook", () => {
 
   it("invalidates notifications, transactions, and wallets on success", () => {
     expect(hookSource).toContain("queryClient.invalidateQueries({ queryKey: ['notifications'] });");
-    expect(hookSource).toContain("queryClient.invalidateQueries({ queryKey: ['transactions'] });");
-    expect(hookSource).toContain("queryClient.invalidateQueries({ queryKey: ['wallets'] });");
+    expect(hookSource).toContain("invalidateTransactionDependents(queryClient);");
   });
 });
 
