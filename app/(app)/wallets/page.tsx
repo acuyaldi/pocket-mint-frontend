@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Banknote,
   ChevronDown,
@@ -38,17 +39,11 @@ import {
   type Wallet,
 } from "@/src/types/wallet";
 import { formatCurrency } from "@/lib/utils";
+import { INTL_LOCALE } from "@/i18n/config";
 
 type FilterKey = "all" | "bank" | "ewallet" | "credit" | "paylater" | "loan";
 
-const FILTERS: { key: FilterKey; label: string }[] = [
-  { key: "all", label: "Semua" },
-  { key: "bank", label: "Kas & Bank" },
-  { key: "ewallet", label: "E-Wallet" },
-  { key: "credit", label: "Kartu Kredit" },
-  { key: "paylater", label: "Paylater" },
-  { key: "loan", label: "Pinjaman" },
-];
+const FILTERS: FilterKey[] = ["all", "bank", "ewallet", "credit", "paylater", "loan"];
 
 function walletMatchesFilter(wallet: Wallet, filter: FilterKey) {
   if (filter === "bank") return wallet.type === "BANK" || wallet.type === "CASH";
@@ -75,6 +70,8 @@ function WalletTile({
   onEdit: (wallet: Wallet) => void;
   onDelete: (wallet: Wallet) => void;
 }) {
+  const t = useTranslations("wallets");
+  const locale = useLocale();
   const isDebt = isLiabilityWallet(wallet.type);
   const isCredit = isCreditWallet(wallet.type);
   const balance = isDebt ? wallet.outstanding ?? Math.abs(wallet.balance) : wallet.balance;
@@ -96,7 +93,7 @@ function WalletTile({
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger
-            aria-label={`Menu akun ${wallet.name}`}
+            aria-label={t("accountMenuAria", { name: wallet.name })}
             className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-surface-high hover:text-foreground"
           >
             <MoreVertical className="size-5" />
@@ -104,14 +101,14 @@ function WalletTile({
           <DropdownMenuContent>
             <DropdownMenuItem onClick={() => onEdit(wallet)}>
               <Pencil />
-              Edit Akun
+              {t("editAccount")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onDelete(wallet)}
               className="text-coral data-highlighted:bg-coral/10"
             >
               <Trash2 />
-              Hapus Akun
+              {t("deleteAccount")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -120,27 +117,31 @@ function WalletTile({
       {isCredit ? (
         <>
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Tagihan
+            {t("billing")}
           </p>
           <p
             className={`text-xl font-bold tabular-nums ${
               balance > 0 ? "text-coral" : "text-foreground"
             }`}
           >
-            {formatCurrency(balance)}
+            {formatCurrency(balance, INTL_LOCALE[locale as keyof typeof INTL_LOCALE])}
           </p>
           <div className="mt-4 space-y-2">
             <div className="h-2 overflow-hidden rounded-full bg-surface-high">
               <div className="h-full rounded-full bg-coral" style={{ width: `${utilization}%` }} />
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Sisa limit</span>
+              <span className="text-muted-foreground">{t("remainingLimit")}</span>
               <span className="font-semibold tabular-nums text-foreground">
-                {formatCurrency(remaining)}
+                {formatCurrency(remaining, INTL_LOCALE[locale as keyof typeof INTL_LOCALE])}
               </span>
             </div>
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Utilisasi dari limit {formatCurrency(limit)}</span>
+              <span>
+                {t("utilizationOfLimit", {
+                  limit: formatCurrency(limit, INTL_LOCALE[locale as keyof typeof INTL_LOCALE]),
+                })}
+              </span>
               <span className="font-semibold tabular-nums">{utilization}%</span>
             </div>
           </div>
@@ -148,12 +149,12 @@ function WalletTile({
       ) : (
         <>
           <p className={`text-xl font-bold tabular-nums ${isDebt ? "text-coral" : "text-foreground"}`}>
-            {formatCurrency(balance)}
+            {formatCurrency(balance, INTL_LOCALE[locale as keyof typeof INTL_LOCALE])}
           </p>
           {isDebt ? (
-            <p className="mt-1 text-xs text-coral">Sisa kewajiban</p>
+            <p className="mt-1 text-xs text-coral">{t("remainingObligation")}</p>
           ) : (
-            <p className="mt-1 text-xs text-mint">Aset aktif</p>
+            <p className="mt-1 text-xs text-mint">{t("activeAsset")}</p>
           )}
         </>
       )}
@@ -162,20 +163,19 @@ function WalletTile({
 }
 
 function WalletSection({
-  title,
   kind,
   wallets,
   badge,
   onEdit,
   onDelete,
 }: {
-  title: string;
-  kind: FilterKey;
+  kind: Exclude<FilterKey, "all">;
   wallets: Wallet[];
-  badge: "Aset" | "Liabilitas";
+  badge: "badgeAsset" | "badgeLiability";
   onEdit: (wallet: Wallet) => void;
   onDelete: (wallet: Wallet) => void;
 }) {
+  const t = useTranslations("wallets");
   if (wallets.length === 0) return null;
 
   return (
@@ -185,14 +185,14 @@ function WalletSection({
           <div className="flex items-center gap-3">
             <h2 className="flex items-center gap-2 text-xl font-bold text-foreground">
               <SectionIcon type={kind} />
-              {title} ({wallets.length})
+              {t(`sections.${kind}`)} ({wallets.length})
             </h2>
             <span
               className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
-                badge === "Aset" ? "bg-mint/10 text-mint" : "bg-coral/10 text-coral"
+                badge === "badgeAsset" ? "bg-mint/10 text-mint" : "bg-coral/10 text-coral"
               }`}
             >
-              {badge}
+              {t(badge)}
             </span>
           </div>
           <ChevronDown className="size-5 text-muted-foreground transition-transform group-open:rotate-180" />
@@ -208,6 +208,7 @@ function WalletSection({
 }
 
 export default function WalletsPage() {
+  const t = useTranslations("wallets");
   const [filter, setFilter] = useState<FilterKey>("all");
   const [search, setSearch] = useState("");
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
@@ -246,10 +247,10 @@ export default function WalletsPage() {
         ...(data.adminFee !== undefined && { adminFeeType: "PERCENT" as const }),
         icon: data.icon,
       });
-      toast(`Akun "${data.name}" ditambahkan`);
+      toast(t("toastAccountAdded", { name: data.name }));
     } catch (error) {
       console.error("Failed to create wallet:", error);
-      toast("Akun gagal ditambahkan. Coba lagi.", "error");
+      toast(t("toastAccountAddFailed"), "error");
     }
   };
 
@@ -257,18 +258,18 @@ export default function WalletsPage() {
     if (!deletingWallet) return;
     try {
       await deleteWallet.mutateAsync(deletingWallet.id);
-      toast(`Akun "${deletingWallet.name}" dihapus`);
+      toast(t("toastAccountDeleted", { name: deletingWallet.name }));
       setDeletingWallet(null);
     } catch (caught) {
       const message = (caught as { response?: { data?: { error?: { message?: string } } } })
         ?.response?.data?.error?.message;
-      toast(message ?? "Akun gagal dihapus. Coba lagi.", "error");
+      toast(message ?? t("toastAccountDeleteFailed"), "error");
     }
   };
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Dompet" description="Kelola seluruh akun finansial Anda" />
+      <PageHeader title={t("pageTitle")} description={t("pageDescription")} />
 
       <div className="sticky top-16 z-10 -mx-1 bg-background/95 px-1 py-3 backdrop-blur-md">
         <div className="flex flex-col gap-4">
@@ -279,7 +280,7 @@ export default function WalletsPage() {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 className="h-10 w-full rounded-lg border border-border bg-card pl-10 pr-4 text-sm outline-none transition-all placeholder:text-muted-foreground/55 focus:ring-1 focus:ring-primary/40"
-                placeholder="Cari dompet atau akun..."
+                placeholder={t("searchPlaceholder")}
                 type="text"
               />
             </div>
@@ -289,22 +290,22 @@ export default function WalletsPage() {
               className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:opacity-90 active:scale-95"
             >
               <Plus className="size-4" />
-              Tambah Akun
+              {t("addAccount")}
             </button>
           </div>
           <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            {FILTERS.map((item) => (
+            {FILTERS.map((key) => (
               <button
-                key={item.key}
+                key={key}
                 type="button"
-                onClick={() => setFilter(item.key)}
+                onClick={() => setFilter(key)}
                 className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
-                  filter === item.key
+                  filter === key
                     ? "bg-primary text-primary-foreground"
                     : "bg-surface-high text-muted-foreground hover:bg-border/40"
                 }`}
               >
-                {item.label}
+                {t(`filters.${key}`)}
               </button>
             ))}
           </div>
@@ -312,11 +313,11 @@ export default function WalletsPage() {
       </div>
 
       <div className="space-y-8">
-        <WalletSection title="Kas & Bank" kind="bank" wallets={bankWallets} badge="Aset" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
-        <WalletSection title="E-Wallet" kind="ewallet" wallets={ewallets} badge="Aset" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
-        <WalletSection title="Kartu Kredit" kind="credit" wallets={creditWallets} badge="Liabilitas" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
-        <WalletSection title="Paylater" kind="paylater" wallets={paylaterWallets} badge="Liabilitas" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
-        <WalletSection title="Pinjaman" kind="loan" wallets={loanWallets} badge="Liabilitas" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
+        <WalletSection kind="bank" wallets={bankWallets} badge="badgeAsset" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
+        <WalletSection kind="ewallet" wallets={ewallets} badge="badgeAsset" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
+        <WalletSection kind="credit" wallets={creditWallets} badge="badgeLiability" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
+        <WalletSection kind="paylater" wallets={paylaterWallets} badge="badgeLiability" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
+        <WalletSection kind="loan" wallets={loanWallets} badge="badgeLiability" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
         {visibleWallets.length === 0 ? (
           <button
             type="button"
@@ -324,7 +325,7 @@ export default function WalletsPage() {
             className="flex min-h-40 w-full items-center justify-center rounded-xl border-2 border-dashed border-border bg-card text-sm font-semibold text-primary"
           >
             <Plus className="mr-2 size-4" />
-            Tambah akun pertama
+            {t("addFirstAccount")}
           </button>
         ) : null}
       </div>

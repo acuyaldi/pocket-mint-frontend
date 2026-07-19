@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2, Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,8 @@ export default function EditWalletModal({
 }
 
 function EditWalletForm({ wallet, onClose }: { wallet: Wallet; onClose: () => void }) {
+  const t = useTranslations("walletModals.edit");
+  const tCommon = useTranslations("common");
   const updateWallet = useUpdateWallet();
   const isCredit = isCreditWallet(wallet.type);
   // Hanya kartu kredit yang punya siklus cutoff/jatuh tempo; paylater otomatis 30 hari per transaksi
@@ -64,12 +67,12 @@ function EditWalletForm({ wallet, onClose }: { wallet: Wallet; onClose: () => vo
             hasBillingCycle && paymentDueDay ? Number(paymentDueDay) : null,
         }),
       });
-      toast(`Perubahan akun "${name.trim()}" disimpan`);
+      toast(t("toastSaved", { name: name.trim() }));
       onClose();
     } catch (caught) {
       const message = (caught as { response?: { data?: { error?: { message?: string } } } })
         ?.response?.data?.error?.message;
-      setError(message ?? "Perubahan belum dapat disimpan. Coba lagi.");
+      setError(message ?? t("genericError"));
     }
   };
 
@@ -83,15 +86,15 @@ function EditWalletForm({ wallet, onClose }: { wallet: Wallet; onClose: () => vo
           <header className="flex items-center justify-between border-b border-border/50 bg-surface-low px-6 py-4">
             <div>
               <DialogTitle className="text-xl font-semibold text-foreground">
-                Edit Akun
+                {t("title")}
               </DialogTitle>
               <DialogDescription className="mt-1 text-sm text-muted-foreground">
-                Saldo dan tagihan hanya berubah melalui transaksi.
+                {t("description")}
               </DialogDescription>
             </div>
             <button
               type="button"
-              aria-label="Tutup modal"
+              aria-label={t("closeAria")}
               onClick={handleClose}
               className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface-high hover:text-foreground"
             >
@@ -101,7 +104,7 @@ function EditWalletForm({ wallet, onClose }: { wallet: Wallet; onClose: () => vo
 
           <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6">
             <section className="space-y-2">
-              <FieldLabel>Nama Akun</FieldLabel>
+              <FieldLabel>{t("accountName")}</FieldLabel>
               <Input
                 type="text"
                 value={name}
@@ -114,7 +117,7 @@ function EditWalletForm({ wallet, onClose }: { wallet: Wallet; onClose: () => vo
             {isCredit ? (
               <>
                 <section className="space-y-2">
-                  <FieldLabel>Limit Kredit</FieldLabel>
+                  <FieldLabel>{t("creditLimit")}</FieldLabel>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
                       Rp
@@ -132,34 +135,33 @@ function EditWalletForm({ wallet, onClose }: { wallet: Wallet; onClose: () => vo
                 {hasBillingCycle ? (
                 <section className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <FieldLabel>Tanggal Cutoff</FieldLabel>
+                    <FieldLabel>{t("cutoffDate")}</FieldLabel>
                     <Input
                       type="number"
                       min="1"
                       max="31"
                       value={cutoffDay}
                       onChange={(event) => setCutoffDay(event.target.value)}
-                      placeholder="Opsional"
+                      placeholder={t("optional")}
                       className="h-12 border-border/70 bg-card px-3 text-sm"
                     />
                   </div>
                   <div className="space-y-2">
-                    <FieldLabel>Tanggal Jatuh Tempo</FieldLabel>
+                    <FieldLabel>{t("dueDate")}</FieldLabel>
                     <Input
                       type="number"
                       min="1"
                       max="31"
                       value={paymentDueDay}
                       onChange={(event) => setPaymentDueDay(event.target.value)}
-                      placeholder="Opsional"
+                      placeholder={t("optional")}
                       className="h-12 border-border/70 bg-card px-3 text-sm"
                     />
                   </div>
                 </section>
                 ) : (
                   <p className="text-xs text-muted-foreground">
-                    Jatuh tempo paylater dihitung otomatis 30 hari setelah
-                    tanggal tiap transaksi.
+                    {t("paylaterDueNote")}
                   </p>
                 )}
               </>
@@ -180,7 +182,7 @@ function EditWalletForm({ wallet, onClose }: { wallet: Wallet; onClose: () => vo
               disabled={updateWallet.isPending}
               className="h-11 flex-1 bg-card"
             >
-              Batal
+              {tCommon("actions.cancel")}
             </Button>
             <Button
               type="submit"
@@ -190,12 +192,12 @@ function EditWalletForm({ wallet, onClose }: { wallet: Wallet; onClose: () => vo
               {updateWallet.isPending ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Menyimpan
+                  {tCommon("actions.saving")}
                 </>
               ) : (
                 <>
                   <Pencil className="size-4" />
-                  Simpan Perubahan
+                  {t("submit")}
                 </>
               )}
             </Button>

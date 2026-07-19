@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -13,6 +14,8 @@ interface DeleteTransactionModalProps {
 }
 
 export function DeleteTransactionModal({ isOpen, isDeleting, onClose, onConfirm }: DeleteTransactionModalProps) {
+  const t = useTranslations("transactionModals.delete");
+  const tCommon = useTranslations("common");
   return (
     <AnimatePresence>
       {isOpen && (
@@ -42,10 +45,10 @@ export function DeleteTransactionModal({ isOpen, isDeleting, onClose, onConfirm 
                   </div>
                   <div>
                     <h3 className="text-base font-semibold" style={{ color: "var(--color-foreground)", fontFamily: "var(--font-hanken)" }}>
-                      Delete Transaction?
+                      {t("title")}
                     </h3>
                     <p className="text-sm mt-1" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>
-                      Deleting a transaction will reverse the wallet balance. This action cannot be undone.
+                      {t("description")}
                     </p>
                   </div>
                   <div className="flex items-center gap-3 w-full">
@@ -57,7 +60,7 @@ export function DeleteTransactionModal({ isOpen, isDeleting, onClose, onConfirm 
                       className="flex-1 h-11 transition-all"
                       style={{ backgroundColor: "var(--color-accent)", border: "1px solid var(--color-border)", color: "var(--color-accent-foreground)" }}
                     >
-                      Cancel
+                      {tCommon("actions.cancel")}
                     </Button>
                     <Button
                       onClick={onConfirm}
@@ -65,7 +68,7 @@ export function DeleteTransactionModal({ isOpen, isDeleting, onClose, onConfirm 
                       className="flex-1 h-11 font-medium gap-2"
                       style={{ backgroundColor: "var(--color-destructive)", color: "var(--color-destructive-foreground)" }}
                     >
-                      {isDeleting ? (<><Loader2 className="size-4 animate-spin" />Deleting...</>) : "Delete"}
+                      {isDeleting ? (<><Loader2 className="size-4 animate-spin" />{t("deleting")}</>) : t("submit")}
                     </Button>
                   </div>
                 </div>

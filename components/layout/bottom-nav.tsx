@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -19,20 +20,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useDueBillCount } from "@/src/features/bills/hooks/useBills";
 
-// Labels and order mirror the desktop sidebar (app-sidebar.tsx) — same
-// vocabulary on both surfaces so wayfinding transfers between devices
-const NAV_ITEMS = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Dompet", href: "/wallets", icon: Wallet },
-  { label: "Transaksi", href: "/transactions", icon: ArrowLeftRight },
-  { label: "Cicilan", href: "/tagihan", icon: CalendarClock },
-  { label: "Analitik", href: "/analytics", icon: BarChart3 },
-];
-
 export function BottomNav() {
+  const t = useTranslations("nav");
   const pathname = usePathname();
   const dueBillCount = useDueBillCount();
+
   const items = React.useMemo<DockMorphItemData[]>(() => {
+    // Labels and order mirror the desktop sidebar (app-sidebar.tsx) — same
+    // vocabulary on both surfaces so wayfinding transfers between devices
+    const NAV_ITEMS = [
+      { label: t("dashboard"), href: "/dashboard", icon: LayoutDashboard },
+      { label: t("wallets"), href: "/wallets", icon: Wallet },
+      { label: t("transactions"), href: "/transactions", icon: ArrowLeftRight },
+      { label: t("installments"), href: "/tagihan", icon: CalendarClock },
+      { label: t("analytics"), href: "/analytics", icon: BarChart3 },
+    ];
+
     const navItems: DockMorphItemData[] = NAV_ITEMS.map((item) => {
       const isActive =
         pathname === item.href || pathname.startsWith(item.href + "/");
@@ -48,7 +51,7 @@ export function BottomNav() {
             <Icon className="size-[18px]" />
             {item.href === "/tagihan" && dueBillCount > 0 ? (
               <span
-                aria-label={`${dueBillCount} cicilan perlu diperhatikan`}
+                aria-label={t("dueBillsAria", { count: dueBillCount })}
                 className="absolute -right-3 -top-2 inline-flex min-w-4 items-center justify-center rounded-full bg-coral px-1 text-[9px] font-bold leading-4 text-white"
               >
                 {dueBillCount > 9 ? "9+" : dueBillCount}
@@ -61,7 +64,7 @@ export function BottomNav() {
 
     navItems.push({
       key: "account",
-      label: "Akun",
+      label: t("account"),
       icon: <User className="size-[18px]" />,
       renderTrigger: ({ defaultTrigger }) => (
         <DropdownMenu>
@@ -74,7 +77,7 @@ export function BottomNav() {
     });
 
     return navItems;
-  }, [dueBillCount, pathname]);
+  }, [dueBillCount, pathname, t]);
 
   return (
     <div

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
+import idMessages from "@/messages/id.json";
+
 const frontendRoot = fileURLToPath(new URL("../", import.meta.url));
 const logo = readFileSync(frontendRoot + "components/Logo.tsx", "utf8");
 const approvedPath =
@@ -35,7 +37,8 @@ describe("Pocket Mint logo system", () => {
       "utf8"
     );
     // Tagline requested Jul 2026: sits under the logo lockup in the sidebar.
-    expect(sidebar).toContain("Private Financial Workspace");
+    expect(sidebar).toContain('tCommon("workspaceTagline")');
+    expect(idMessages.common.workspaceTagline).toBe("Private Financial Workspace");
   });
 
   it("installs the approved file-based app icon", () => {

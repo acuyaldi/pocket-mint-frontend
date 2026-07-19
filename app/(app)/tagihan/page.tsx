@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { AlertTriangle, CalendarClock, CircleDollarSign, LoaderCircle } from "lucide-react";
 
 import { formatCurrency } from "@/lib/utils";
+import { INTL_LOCALE } from "@/i18n/config";
 import { PageHeader } from "@/components/layout/page-header";
 import {
   countDueSoon,
@@ -26,6 +28,9 @@ function StatCard({ label, value, helper }: { label: string; value: string; help
 }
 
 export default function TagihanPage() {
+  const t = useTranslations("tagihan");
+  const locale = useLocale();
+  const intlLocale = INTL_LOCALE[locale as keyof typeof INTL_LOCALE];
   const { data: bills = [], isLoading } = useBills();
   const { data: wallets = [] } = useWallets();
   const [selectedBill, setSelectedBill] = useState<BillDto | null>(null);
@@ -47,7 +52,7 @@ export default function TagihanPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <LoaderCircle className="size-10 animate-spin text-primary" aria-label="Memuat cicilan" />
+        <LoaderCircle className="size-10 animate-spin text-primary" aria-label={t("loadingAria")} />
       </div>
     );
   }
@@ -55,27 +60,27 @@ export default function TagihanPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Cicilan"
-        description="Pantau semua pemakaian kartu kredit dan paylater, baik satu kali bayar maupun cicilan."
+        title={t("pageTitle")}
+        description={t("pageDescription")}
       />
 
       {dueSoonCount > 0 ? (
         <div className="flex items-center gap-3 rounded-xl border border-amber/30 bg-amber/10 p-4" role="status">
           <AlertTriangle className="size-5 shrink-0 text-amber" />
           <p className="text-sm font-medium text-foreground">
-            {dueSoonCount} cicilan terlambat atau jatuh tempo dalam 3 hari ke depan.
+            {t("dueSoonWarning", { count: dueSoonCount })}
           </p>
         </div>
       ) : null}
 
       <section className="grid gap-4 md:grid-cols-3">
-        <StatCard label="Cicilan Aktif" value={String(activeBills.length)} helper="Satu kali bayar dan cicilan" />
-        <StatCard label="Pembayaran Berikutnya" value={formatCurrency(amountDue)} helper={`${dueSoonCount} perlu diperhatikan`} />
-        <StatCard label="Total Belum Lunas" value={formatCurrency(outstanding)} helper="Akumulasi seluruh cicilan aktif" />
+        <StatCard label={t("activeInstallments")} value={String(activeBills.length)} helper={t("activeInstallmentsHelper")} />
+        <StatCard label={t("nextPayment")} value={formatCurrency(amountDue, intlLocale)} helper={t("nextPaymentHelper", { count: dueSoonCount })} />
+        <StatCard label={t("totalOutstanding")} value={formatCurrency(outstanding, intlLocale)} helper={t("totalOutstandingHelper")} />
       </section>
 
       <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-        <CalendarClock className="size-5 text-primary" /> Daftar Cicilan
+        <CalendarClock className="size-5 text-primary" /> {t("listTitle")}
       </div>
 
       {activeBills.length > 0 ? (
@@ -87,8 +92,8 @@ export default function TagihanPage() {
       ) : (
         <div className="rounded-xl border border-dashed border-border bg-card py-12 text-center">
           <CircleDollarSign className="mx-auto size-8 text-muted-foreground" />
-          <p className="mt-3 text-sm font-medium text-foreground">Belum ada cicilan aktif.</p>
-          <p className="mt-1 text-xs text-muted-foreground">Pemakaian kartu kredit atau paylater akan muncul di sini.</p>
+          <p className="mt-3 text-sm font-medium text-foreground">{t("emptyTitle")}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t("emptyBody")}</p>
         </div>
       )}
 

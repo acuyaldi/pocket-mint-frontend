@@ -3,6 +3,7 @@
 import { useState, useCallback, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, TrendingUp, TrendingDown } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,8 @@ interface EditTransactionModalProps {
 }
 
 export function EditTransactionModal({ tx, isSaving, onClose, onSubmit }: EditTransactionModalProps) {
+  const t = useTranslations("transactionModals.edit");
+  const tCommon = useTranslations("common");
   const [description, setDescription] = useState(tx?.description ?? "");
   const [amount, setAmount] = useState(tx ? formatRupiah(String(tx.amount)) : "");
   const [type, setType] = useState<"EXPENSE" | "INCOME">(
@@ -77,10 +80,10 @@ export function EditTransactionModal({ tx, isSaving, onClose, onSubmit }: EditTr
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-base font-semibold" style={{ color: "var(--color-foreground)", fontFamily: "var(--font-hanken)" }}>
-                      Edit Transaction
+                      {t("title")}
                     </h3>
                     <p className="text-xs mt-0.5" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>
-                      Update transaction details
+                      {t("subtitle")}
                     </p>
                   </div>
                   <button
@@ -96,10 +99,10 @@ export function EditTransactionModal({ tx, isSaving, onClose, onSubmit }: EditTr
               <CardContent className="pt-4 pb-6">
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs font-medium" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>Description</label>
+                    <label className="text-xs font-medium" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>{t("description")}</label>
                     <Input
                       type="text"
-                      placeholder="Transaction description"
+                      placeholder={t("descriptionPlaceholder")}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       required
@@ -108,7 +111,7 @@ export function EditTransactionModal({ tx, isSaving, onClose, onSubmit }: EditTr
                     />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs font-medium" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>Amount</label>
+                    <label className="text-xs font-medium" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>{t("amount")}</label>
                     <div className="relative">
                       <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm pointer-events-none select-none" style={{ color: "var(--color-muted-foreground)" }}>Rp</span>
                       <Input
@@ -124,21 +127,21 @@ export function EditTransactionModal({ tx, isSaving, onClose, onSubmit }: EditTr
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs font-medium" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>Type</label>
+                    <label className="text-xs font-medium" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>{t("type")}</label>
                     <div className="flex gap-2">
-                      {(["EXPENSE", "INCOME"] as const).map((t) => {
-                        const active = type === t;
-                        const label = t === "EXPENSE" ? "Expense" : "Income";
-                        const Icon = t === "EXPENSE" ? TrendingDown : TrendingUp;
-                        const activeStyle = t === "EXPENSE"
+                      {(["EXPENSE", "INCOME"] as const).map((typeOption) => {
+                        const active = type === typeOption;
+                        const label = typeOption === "EXPENSE" ? t("typeExpense") : t("typeIncome");
+                        const Icon = typeOption === "EXPENSE" ? TrendingDown : TrendingUp;
+                        const activeStyle = typeOption === "EXPENSE"
                           ? { backgroundColor: "rgba(186,26,26,0.08)", border: "1px solid rgba(186,26,26,0.35)", color: "var(--color-destructive)" }
                           : { backgroundColor: "rgba(0,109,54,0.08)", border: "1px solid rgba(0,109,54,0.3)", color: "var(--color-primary)" };
                         const inactiveStyle = { backgroundColor: "var(--color-card)", border: "1px solid var(--color-border)", color: "var(--color-muted-foreground)" };
                         return (
                           <button
-                            key={t}
+                            key={typeOption}
                             type="button"
-                            onClick={() => setType(t)}
+                            onClick={() => setType(typeOption)}
                             className="flex-1 flex items-center justify-center gap-2 h-11 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer"
                             style={active ? activeStyle : inactiveStyle}
                           >
@@ -150,7 +153,7 @@ export function EditTransactionModal({ tx, isSaving, onClose, onSubmit }: EditTr
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs font-medium" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>Date</label>
+                    <label className="text-xs font-medium" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>{t("date")}</label>
                     <Input
                       type="date"
                       value={date}
@@ -168,7 +171,7 @@ export function EditTransactionModal({ tx, isSaving, onClose, onSubmit }: EditTr
                       className="flex-1 h-11 transition-all"
                       style={{ backgroundColor: "var(--color-accent)", border: "1px solid var(--color-border)", color: "var(--color-accent-foreground)" }}
                     >
-                      Cancel
+                      {tCommon("actions.cancel")}
                     </Button>
                     <Button
                       type="submit"
@@ -176,7 +179,7 @@ export function EditTransactionModal({ tx, isSaving, onClose, onSubmit }: EditTr
                       className="flex-1 h-11 font-medium gap-2"
                       style={{ backgroundColor: "var(--color-primary)", color: "var(--color-primary-foreground)" }}
                     >
-                      {isSaving ? (<><Loader2 className="size-4 animate-spin" />Saving...</>) : "Save Changes"}
+                      {isSaving ? (<><Loader2 className="size-4 animate-spin" />{t("saving")}</>) : t("submit")}
                     </Button>
                   </div>
                 </form>

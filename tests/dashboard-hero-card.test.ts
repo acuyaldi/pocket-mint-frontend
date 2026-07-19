@@ -1,21 +1,27 @@
+import { NextIntlClientProvider } from "next-intl";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { DashboardHeroCard } from "@/app/(app)/dashboard/components/DashboardHeroCard";
 import { formatCurrency } from "@/lib/utils";
+import messages from "@/messages/id.json";
 
 function render(overrides: Partial<React.ComponentProps<typeof DashboardHeroCard>> = {}) {
   return renderToStaticMarkup(
-    React.createElement(DashboardHeroCard, {
-      netWorth: 0,
-      totalAssets: 0,
-      totalDebts: 0,
-      netSavings: 0,
-      isLoading: false,
-      isError: false,
-      ...overrides,
-    }),
+    React.createElement(
+      NextIntlClientProvider,
+      { locale: "id", messages },
+      React.createElement(DashboardHeroCard, {
+        netWorth: 0,
+        totalAssets: 0,
+        totalDebts: 0,
+        netSavings: 0,
+        isLoading: false,
+        isError: false,
+        ...overrides,
+      }),
+    ),
   );
 }
 

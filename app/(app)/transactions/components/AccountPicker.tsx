@@ -8,6 +8,7 @@ import {
   Smartphone,
   Wallet as WalletIcon,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import {
   DropdownMenu,
@@ -31,13 +32,13 @@ export interface AccountPickerProps {
   onSelect: (id: string) => void;
 }
 
-function getWalletKind(wallet: Wallet) {
-  if (wallet.type === "BANK") return "Bank";
-  if (wallet.type === "E_WALLET") return "E-Wallet";
-  if (wallet.type === "CASH") return "Kas";
-  if (wallet.type === "CREDIT_CARD") return "Kartu Kredit";
-  if (wallet.type === "PAYLATER") return "Paylater";
-  return "Pinjaman";
+function getWalletKind(wallet: Wallet, tKind: (key: string) => string) {
+  if (wallet.type === "BANK") return tKind("bank");
+  if (wallet.type === "E_WALLET") return tKind("eWallet");
+  if (wallet.type === "CASH") return tKind("cash");
+  if (wallet.type === "CREDIT_CARD") return tKind("creditCard");
+  if (wallet.type === "PAYLATER") return tKind("paylater");
+  return tKind("loan");
 }
 
 function formatWalletAmount(wallet: Wallet) {
@@ -69,10 +70,13 @@ export function AccountPicker({
   wallets,
   selectedId,
   emptyLabel,
-  disabledReason = "Saldo tidak mencukupi",
+  disabledReason,
   isDisabled,
   onSelect,
 }: AccountPickerProps) {
+  const t = useTranslations("transactionModals.accountPicker");
+  const tKind = useTranslations("walletKind");
+  const resolvedDisabledReason = disabledReason ?? t("insufficientBalance");
   const selectedWallet = wallets.find((wallet) => wallet.id === selectedId);
   const labelId = `${id}-label`;
   const valueId = `${id}-value`;
@@ -105,7 +109,7 @@ export function AccountPicker({
                   {selectedWallet.name}
                 </span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">
-                  {getWalletKind(selectedWallet)}
+                  {getWalletKind(selectedWallet, tKind)}
                 </span>
               </span>
               <span className="text-right text-sm font-medium tabular-nums text-foreground">
@@ -134,7 +138,7 @@ export function AccountPicker({
         >
           {wallets.length === 0 ? (
             <div className="flex min-h-11 items-center px-3 py-2 text-sm text-muted-foreground">
-              Tidak ada dompet transfer yang tersedia.
+              {t("noWalletsAvailable")}
             </div>
           ) : (
             wallets.map((wallet) => {
@@ -161,8 +165,8 @@ export function AccountPicker({
                       {wallet.name}
                     </span>
                     <span className="mt-0.5 block text-xs text-muted-foreground">
-                      {getWalletKind(wallet)}
-                      {disabled ? ` · ${disabledReason}` : ""}
+                      {getWalletKind(wallet, tKind)}
+                      {disabled ? ` · ${resolvedDisabledReason}` : ""}
                     </span>
                   </span>
                   <span className="text-right text-sm font-medium tabular-nums text-foreground">

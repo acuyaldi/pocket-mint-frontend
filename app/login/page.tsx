@@ -3,6 +3,7 @@
 import { Suspense, useActionState, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   CalendarClock,
@@ -15,6 +16,7 @@ import {
 } from "lucide-react";
 import { login, signInWithGoogle, signup } from "@/app/actions/auth";
 import { createClient } from "@/lib/supabase/client";
+import { mapAuthErrorKey } from "@/lib/auth/map-auth-error";
 import { PocketMintLogo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,41 +54,31 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-const accessHighlights = [
-  {
-    label: "Encrypted access",
-    value: "Secure email and Google sign-in",
-    icon: ShieldCheck,
-  },
-  {
-    label: "Readable obligations",
-    value: "Assets, debt, and cicilan in one workspace",
-    icon: Wallet,
-  },
-  {
-    label: "Private by default",
-    value: "Your financial data stays under your control",
-    icon: CalendarClock,
-  },
-];
-
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function validateSignup(formData: FormData): string | null {
-  const name = ((formData.get("name") as string) ?? "").trim();
-  const email = ((formData.get("email") as string) ?? "").trim();
-  const password = (formData.get("password") as string) ?? "";
-  const confirm = (formData.get("confirmPassword") as string) ?? "";
-
-  if (!name) return "Please enter your name.";
-  if (!emailPattern.test(email)) return "Please enter a valid email address.";
-  if (password.length < 8) return "Password must be at least 8 characters.";
-  if (password !== confirm) return "Passwords do not match.";
-  return null;
-}
-
 function LoginForm() {
+  const t = useTranslations("auth");
+  const tRoot = useTranslations();
   const searchParams = useSearchParams();
+
+  const accessHighlights = [
+    { label: t("highlights.encrypted.label"), value: t("highlights.encrypted.value"), icon: ShieldCheck },
+    { label: t("highlights.readable.label"), value: t("highlights.readable.value"), icon: Wallet },
+    { label: t("highlights.private.label"), value: t("highlights.private.value"), icon: CalendarClock },
+  ];
+
+  function validateSignup(formData: FormData): string | null {
+    const name = ((formData.get("name") as string) ?? "").trim();
+    const email = ((formData.get("email") as string) ?? "").trim();
+    const password = (formData.get("password") as string) ?? "";
+    const confirm = (formData.get("confirmPassword") as string) ?? "";
+
+    if (!name) return t("errors.nameRequired");
+    if (!emailPattern.test(email)) return t("errors.invalidEmail");
+    if (password.length < 8) return t("errors.passwordMinLength");
+    if (password !== confirm) return t("errors.passwordMismatch");
+    return null;
+  }
   const [authMode, setAuthMode] = useState<AuthMode>(() =>
     searchParams.get("mode") === "register" ? "signup" : "signin"
   );
@@ -122,7 +114,7 @@ function LoginForm() {
   async function handleResetSubmit(formData: FormData) {
     const email = ((formData.get("email") as string) ?? "").trim();
     if (!emailPattern.test(email)) {
-      setError("Please enter a valid email address.");
+      setError(t("errors.invalidEmail"));
       return;
     }
 
@@ -135,7 +127,7 @@ function LoginForm() {
     );
 
     if (resetError) {
-      setError(resetError.message);
+      setError(tRoot(`authErrors.${mapAuthErrorKey(resetError.message)}`));
       return;
     }
     setResetSent(true);
@@ -158,14 +150,14 @@ function LoginForm() {
 
       const result = await signup(formData);
       if (result?.error) {
-        setError(result.error);
+        setError(tRoot(`authErrors.${mapAuthErrorKey(result.error)}`));
       }
       return;
     }
 
     const result = await login(formData);
     if (result?.error) {
-      setError(result.error);
+      setError(tRoot(`authErrors.${mapAuthErrorKey(result.error)}`));
     }
   }
 
@@ -192,14 +184,13 @@ function LoginForm() {
             <PocketMintLogo wrapperClassName="text-primary" markSize={32} />
             <div className="mt-16 max-w-xl lg:mt-28">
               <p className="text-xs font-semibold tracking-[0.08em] text-muted-foreground">
-                PRIVATE FINANCIAL WORKSPACE
+                {t("workspaceLabel")}
               </p>
               <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-tight text-foreground lg:text-5xl">
-                Your numbers stay readable, private, and under your control.
+                {t("heroTitle")}
               </h1>
               <p className="mt-5 max-w-lg text-base leading-7 text-muted-foreground">
-                Return to one workspace for assets, debt, transactions, and
-                cicilan.
+                {t("heroSubtitle")}
               </p>
             </div>
             <div className="mt-12 max-w-xl">
@@ -238,23 +229,23 @@ function LoginForm() {
               className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <ArrowLeft className="size-4" />
-              Back to landing page
+              {t("backToLanding")}
             </Link>
             <Card className="w-full max-w-md border-border bg-card py-0 shadow-none">
               <CardHeader className="border-b border-border/70 px-6 py-6">
                 <CardTitle className="text-2xl font-semibold text-foreground">
                   {isForgot
-                    ? "Reset your password"
+                    ? t("forgotTitle")
                     : isSignUp
-                      ? "Create your account"
-                      : "Welcome back"}
+                      ? t("signUpTitle")
+                      : t("signInTitle")}
                 </CardTitle>
                 <CardDescription className="text-sm leading-6 text-muted-foreground">
                   {isForgot
-                    ? "Enter your account email and we'll send you a password reset link."
+                    ? t("forgotSubtitle")
                     : isSignUp
-                      ? "Set up your Pocket Mint workspace in a few seconds."
-                      : "Enter your credentials to access your workspace."}
+                      ? t("signUpSubtitle")
+                      : t("signInSubtitle")}
                 </CardDescription>
               </CardHeader>
 
@@ -266,7 +257,7 @@ function LoginForm() {
                         htmlFor="name"
                         className="text-sm font-medium text-foreground"
                       >
-                        Name
+                        {t("fields.name")}
                       </label>
                       <Input
                         id="name"
@@ -274,7 +265,7 @@ function LoginForm() {
                         type="text"
                         required
                         autoComplete="name"
-                        placeholder="Your name"
+                        placeholder={t("fields.namePlaceholder")}
                         className="h-11 border-border/80 bg-input px-3 text-foreground placeholder:text-muted-foreground"
                       />
                     </div>
@@ -285,7 +276,7 @@ function LoginForm() {
                       htmlFor="email"
                       className="text-sm font-medium text-foreground"
                     >
-                      Email
+                      {t("fields.email")}
                     </label>
                     <Input
                       id="email"
@@ -293,7 +284,7 @@ function LoginForm() {
                       type="email"
                       required
                       autoComplete="email"
-                      placeholder="you@example.com"
+                      placeholder={t("fields.emailPlaceholder")}
                       className="h-11 border-border/80 bg-input px-3 text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
@@ -305,7 +296,7 @@ function LoginForm() {
                           htmlFor="password"
                           className="text-sm font-medium text-foreground"
                         >
-                          Password
+                          {t("fields.password")}
                         </label>
                         {authMode === "signin" ? (
                           <button
@@ -313,7 +304,7 @@ function LoginForm() {
                             onClick={() => switchMode("forgot")}
                             className="text-sm font-semibold text-primary transition-colors hover:text-primary/80"
                           >
-                            Forgot password?
+                            {t("forgotPassword")}
                           </button>
                         ) : null}
                       </div>
@@ -328,7 +319,9 @@ function LoginForm() {
                             isSignUp ? "new-password" : "current-password"
                           }
                           placeholder={
-                            isSignUp ? "At least 8 characters" : "Enter password"
+                            isSignUp
+                              ? t("fields.passwordPlaceholderSignup")
+                              : t("fields.passwordPlaceholderSignin")
                           }
                           aria-invalid={displayError ? "true" : "false"}
                           className="h-11 border-border/80 bg-input px-3 pr-11 text-foreground placeholder:text-muted-foreground"
@@ -338,7 +331,7 @@ function LoginForm() {
                           onClick={() => setShowPassword((value) => !value)}
                           className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
                           aria-label={
-                            showPassword ? "Hide password" : "Show password"
+                            showPassword ? t("hidePassword") : t("showPassword")
                           }
                         >
                           {showPassword ? (
@@ -357,7 +350,7 @@ function LoginForm() {
                         htmlFor="confirmPassword"
                         className="text-sm font-medium text-foreground"
                       >
-                        Confirm password
+                        {t("fields.confirmPassword")}
                       </label>
                       <Input
                         id="confirmPassword"
@@ -366,7 +359,7 @@ function LoginForm() {
                         required
                         minLength={8}
                         autoComplete="new-password"
-                        placeholder="Re-enter password"
+                        placeholder={t("fields.confirmPasswordPlaceholder")}
                         aria-invalid={displayError ? "true" : "false"}
                         className="h-11 border-border/80 bg-input px-3 text-foreground placeholder:text-muted-foreground"
                       />
@@ -383,7 +376,7 @@ function LoginForm() {
                   {isForgot && resetSent ? (
                     <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-primary">
                       <CheckCircle2 className="size-4 shrink-0" />
-                      Check your email inbox for the password reset link.
+                      {t("resetSentMessage")}
                     </div>
                   ) : null}
 
@@ -403,30 +396,30 @@ function LoginForm() {
                       <>
                         <Loader2 className="size-4 animate-spin" />
                         {isForgot
-                          ? "Sending link..."
+                          ? t("sendingLink")
                           : isSignUp
-                            ? "Creating account..."
-                            : "Signing in..."}
+                            ? t("creatingAccount")
+                            : t("signingIn")}
                       </>
                     ) : isForgot ? (
-                      "Send reset link"
+                      t("sendResetLink")
                     ) : isSignUp ? (
-                      "Create Account"
+                      t("createAccount")
                     ) : (
-                      "Sign In"
+                      t("signIn")
                     )}
                   </Button>
                 </form>
 
                 {isForgot ? (
                   <p className="mt-5 text-center text-sm text-muted-foreground">
-                    Remembered your password?{" "}
+                    {t("rememberedPassword")}{" "}
                     <button
                       type="button"
                       onClick={() => switchMode("signin")}
                       className="font-semibold text-primary transition-colors hover:text-primary/80"
                     >
-                      Back to sign in
+                      {t("backToSignIn")}
                     </button>
                   </p>
                 ) : (
@@ -434,7 +427,7 @@ function LoginForm() {
                     <div className="mt-5 flex items-center gap-3">
                       <span className="h-px flex-1 bg-border" />
                       <span className="text-xs font-medium tracking-wide text-muted-foreground">
-                        or continue with
+                        {t("orContinueWith")}
                       </span>
                       <span className="h-px flex-1 bg-border" />
                     </div>
@@ -452,28 +445,27 @@ function LoginForm() {
                         ) : (
                           <GoogleIcon className="size-4" />
                         )}
-                        Continue with Google
+                        {t("continueWithGoogle")}
                       </Button>
                     </form>
 
                     <p className="mt-5 text-center text-sm text-muted-foreground">
                       {isSignUp
-                        ? "Already have an account? "
-                        : "Don't have an account? "}
+                        ? `${t("alreadyHaveAccount")} `
+                        : `${t("noAccount")} `}
                       <button
                         type="button"
                         onClick={() => switchMode(isSignUp ? "signin" : "signup")}
                         className="font-semibold text-primary transition-colors hover:text-primary/80"
                       >
-                        {isSignUp ? "Sign In" : "Sign Up"}
+                        {isSignUp ? t("signIn") : t("signUp")}
                       </button>
                     </p>
                   </>
                 )}
 
                 <div className="mt-5 rounded-xl border border-border/70 bg-muted/55 px-4 py-3 text-sm text-muted-foreground">
-                  Protected by encrypted sessions. Your financial data stays
-                  private and under your control.
+                  {t("privacyNotice")}
                 </div>
               </CardContent>
             </Card>

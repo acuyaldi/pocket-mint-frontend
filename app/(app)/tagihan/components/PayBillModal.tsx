@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { CheckCircle2, Loader2, X } from "lucide-react";
 
 import { formatCurrency } from "@/lib/utils";
+import { INTL_LOCALE } from "@/i18n/config";
 import {
   getJakartaDateKey,
   usePayBill,
@@ -20,6 +22,9 @@ export function PayBillModal({
   wallets: Wallet[];
   onClose: () => void;
 }) {
+  const t = useTranslations("tagihan.payModal");
+  const locale = useLocale();
+  const intlLocale = INTL_LOCALE[locale as keyof typeof INTL_LOCALE];
   const payBill = usePayBill();
   const [sourceWalletId, setSourceWalletId] = useState("");
   const [paymentDate, setPaymentDate] = useState(() => getJakartaDateKey());
@@ -42,7 +47,7 @@ export function PayBillModal({
     } catch (caught) {
       const message = (caught as { response?: { data?: { error?: { message?: string } } } })
         ?.response?.data?.error?.message;
-      setError(message ?? "Pembayaran belum dapat diproses. Coba lagi.");
+      setError(message ?? t("genericError"));
     }
   }
 
@@ -57,22 +62,22 @@ export function PayBillModal({
       >
         <header className="flex items-start justify-between border-b border-border bg-surface-low p-6">
           <div>
-            <h2 id="pay-bill-title" className="text-xl font-semibold text-primary">Bayar Cicilan</h2>
+            <h2 id="pay-bill-title" className="text-xl font-semibold text-primary">{t("title")}</h2>
             <p className="mt-1 text-sm text-muted-foreground">{bill.description || bill.walletName}</p>
           </div>
-          <button type="button" aria-label="Tutup pembayaran" onClick={onClose} disabled={payBill.isPending}>
+          <button type="button" aria-label={t("closeAria")} onClick={onClose} disabled={payBill.isPending}>
             <X className="size-5" />
           </button>
         </header>
 
         <div className="space-y-6 p-6">
           <div className="rounded-lg bg-surface-low p-4">
-            <p className="text-xs text-muted-foreground">Jumlah pembayaran</p>
-            <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">{formatCurrency(bill.amountPerTerm)}</p>
+            <p className="text-xs text-muted-foreground">{t("paymentAmount")}</p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">{formatCurrency(bill.amountPerTerm, intlLocale)}</p>
           </div>
 
           <section className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sumber pembayaran</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("paymentSource")}</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               {sourceWallets.map((wallet) => {
                 const selected = sourceWalletId === wallet.id;
@@ -89,21 +94,21 @@ export function PayBillModal({
                       {wallet.name}
                       {selected ? <CheckCircle2 className="size-4 text-mint" /> : null}
                     </span>
-                    <span className="mt-1 block text-sm tabular-nums text-muted-foreground">{formatCurrency(wallet.balance)}</span>
-                    {disabled ? <span className="mt-1 block text-xs text-coral">Saldo tidak mencukupi</span> : null}
+                    <span className="mt-1 block text-sm tabular-nums text-muted-foreground">{formatCurrency(wallet.balance, intlLocale)}</span>
+                    {disabled ? <span className="mt-1 block text-xs text-coral">{t("insufficientBalance")}</span> : null}
                   </button>
                 );
               })}
             </div>
             {sourceWallets.length === 0 ? (
               <p className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-                Tambahkan Kas, Bank, atau E-Wallet untuk membayar cicilan.
+                {t("noSourceWallets")}
               </p>
             ) : null}
           </section>
 
           <label className="block space-y-2 text-xs font-medium text-muted-foreground">
-            <span>Tanggal pembayaran</span>
+            <span>{t("paymentDate")}</span>
             <input
               type="date"
               value={paymentDate}
@@ -116,10 +121,10 @@ export function PayBillModal({
         </div>
 
         <footer className="flex gap-3 border-t border-border bg-surface-low p-6">
-          <button type="button" onClick={onClose} disabled={payBill.isPending} className="h-11 flex-1 rounded-lg border border-border bg-card text-sm font-semibold">Batal</button>
+          <button type="button" onClick={onClose} disabled={payBill.isPending} className="h-11 flex-1 rounded-lg border border-border bg-card text-sm font-semibold">{t("cancel")}</button>
           <button type="button" onClick={handlePay} disabled={!sourceWalletId || payBill.isPending} className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-50">
             {payBill.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-            Konfirmasi
+            {t("confirm")}
           </button>
         </footer>
       </section>

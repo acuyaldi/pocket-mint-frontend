@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useCallback, useEffect } from "react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -23,6 +24,7 @@ import { useWallets } from "@/src/features/wallets/hooks/useWallets";
 import { useBills } from "@/src/features/bills/hooks/useBills";
 import { useDashboardSummary } from "@/src/features/dashboard/hooks/useDashboardSummary";
 import { formatCurrency } from "@/lib/utils";
+import { INTL_LOCALE } from "@/i18n/config";
 import { isDebtWallet, type Wallet as WalletType } from "@/src/types/wallet";
 import {
   AddTransactionModal,
@@ -30,14 +32,17 @@ import {
 } from "@/app/(app)/transactions/components/AddTransactionModal";
 import { DashboardHeroCard } from "@/app/(app)/dashboard/components/DashboardHeroCard";
 
-function getWalletKind(walletItem: WalletType) {
-  if (isDebtWallet(walletItem.type)) {
-    return walletItem.type === "CREDIT_CARD" ? "Kartu kredit" : "Pinjaman";
-  }
+function useWalletKind() {
+  const t = useTranslations("walletKind");
+  return (walletItem: WalletType) => {
+    if (isDebtWallet(walletItem.type)) {
+      return walletItem.type === "CREDIT_CARD" ? t("creditCard") : t("loan");
+    }
 
-  if (walletItem.type === "BANK") return "Kas & Bank";
-  if (walletItem.type === "E_WALLET") return "E-Wallet";
-  return "Kas";
+    if (walletItem.type === "BANK") return t("bankAndCash");
+    if (walletItem.type === "E_WALLET") return t("eWallet");
+    return t("cash");
+  };
 }
 
 function renderWalletIcon(walletItem: WalletType, className: string) {
@@ -57,6 +62,10 @@ function renderWalletIcon(walletItem: WalletType, className: string) {
 }
 
 function DashboardWalletCard({ walletItem }: { walletItem: WalletType }) {
+  const tKind = useTranslations("walletKind");
+  const locale = useLocale();
+  const intlLocale = INTL_LOCALE[locale as keyof typeof INTL_LOCALE];
+  const getWalletKind = useWalletKind();
   const isDebt = isDebtWallet(walletItem.type);
   const amount = isDebt ? Math.abs(walletItem.balance) : walletItem.balance;
 
@@ -83,20 +92,26 @@ function DashboardWalletCard({ walletItem }: { walletItem: WalletType }) {
         {getWalletKind(walletItem)}
       </p>
       <p className="text-xl font-bold tabular-nums text-foreground">
-        {formatCurrency(amount)}
+        {formatCurrency(amount, intlLocale)}
       </p>
       <p
         className={`mt-1 text-xs ${
           isDebt ? "text-muted-foreground" : "text-mint"
         }`}
       >
-        {isDebt ? "Saldo terutang" : "Aset aktif"}
+        {isDebt ? tKind("outstandingBalance") : tKind("activeAsset")}
       </p>
     </Link>
   );
 }
 
 export default function DashboardPage() {
+  const t = useTranslations("dashboard");
+  const tNav = useTranslations("nav");
+  const tTx = useTranslations("transactions");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const intlLocale = INTL_LOCALE[locale as keyof typeof INTL_LOCALE];
   const { data, isLoading } = useTransactions();
   const { data: walletsData } = useWallets();
   const createTransaction = useCreateTransaction();
@@ -177,22 +192,22 @@ export default function DashboardPage() {
         <div className="flex items-center gap-2">
           <ReceiptText className="size-[18px] text-muted-foreground" />
           <span className="text-sm text-muted-foreground">
-            {transactions.length} transaksi tercatat
+            {t("transactionsRecorded", { count: transactions.length })}
           </span>
         </div>
         <div className="flex items-center gap-2">
           <CalendarClock className="size-[18px] text-amber" />
           <span className="text-sm text-muted-foreground">
             {activeBills.length > 0
-              ? `${activeBills.length} cicilan aktif`
-              : "Tidak ada cicilan aktif"}
+              ? t("activeInstallments", { count: activeBills.length })
+              : t("noActiveInstallments")}
           </span>
         </div>
       </section>
 
       <section className="space-y-6">
         <h3 className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
-          Aksi cepat
+          {t("quickActions")}
         </h3>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <Link
@@ -200,23 +215,23 @@ export default function DashboardPage() {
             className="group flex h-14 items-center justify-center gap-3 rounded-lg border border-border/60 bg-card px-4 text-sm font-semibold transition-all hover:border-primary/40 hover:bg-surface-low"
           >
             <Wallet className="size-5 text-primary transition-transform group-hover:scale-110" />
-            Dompet
+            {t("wallets")}
           </Link>
-  
+
           <Link
             href="/tagihan"
             className="group flex h-14 items-center justify-center gap-3 rounded-lg border border-border/60 bg-card px-4 text-sm font-semibold transition-all hover:border-primary/40 hover:bg-surface-low"
           >
             <ReceiptText className="size-5 text-primary transition-transform group-hover:scale-110" />
-            Cicilan
+            {tNav("installments")}
           </Link>
-                  <button
+          <button
             type="button"
             onClick={() => openAddModal("TRANSFER")}
             className="group flex h-14 items-center justify-center gap-3 rounded-lg border border-border/60 bg-card px-4 text-sm font-semibold transition-all hover:border-primary/40 hover:bg-surface-low"
           >
             <Repeat2 className="size-5 text-primary transition-transform group-hover:scale-110" />
-            Transfer
+            {tTx("filters.transfer")}
           </button>
           <button
             type="button"
@@ -224,7 +239,7 @@ export default function DashboardPage() {
             className="group flex h-14 items-center justify-center gap-3 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:opacity-90"
           >
             <Plus className="size-5 transition-transform group-hover:scale-110" />
-            Transaksi
+            {tNav("transactions")}
           </button>
         </div>
       </section>
@@ -235,17 +250,17 @@ export default function DashboardPage() {
           className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card py-10 text-sm font-semibold text-primary transition-opacity hover:opacity-75"
         >
           <Plus className="size-4" />
-          Tambah dompet
+          {t("addFirstWallet")}
         </Link>
       ) : (
         <section className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-2xl font-bold text-foreground">Dompet</h3>
+            <h3 className="text-2xl font-bold text-foreground">{t("wallets")}</h3>
             <Link
               href="/wallets"
               className="text-[12px] font-semibold text-primary/70 transition-colors hover:text-primary"
             >
-              Lihat semua
+              {tCommon("actions.seeAll")}
             </Link>
           </div>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -270,20 +285,20 @@ export default function DashboardPage() {
       <section className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold text-foreground">
-            Aktivitas terakhir
+            {t("recentActivity")}
           </h3>
           <Link
             href="/transactions"
             className="text-[12px] font-semibold text-primary/70 transition-colors hover:text-primary"
           >
-            Lihat semua
+            {tCommon("actions.seeAll")}
           </Link>
         </div>
         <div className="overflow-hidden rounded-xl border border-border/60 bg-card">
           <div className="hidden grid-cols-[1fr_180px_180px] border-b border-border/40 bg-surface-low/50 px-6 py-4 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground md:grid">
-            <span>Kategori & deskripsi</span>
-            <span>Dompet</span>
-            <span className="text-right">Jumlah</span>
+            <span>{t("tableHeader.categoryDescription")}</span>
+            <span>{t("tableHeader.wallet")}</span>
+            <span className="text-right">{t("tableHeader.amount")}</span>
           </div>
           <div className="divide-y divide-border/30">
             {transactions.slice(0, 5).map((transaction, index) => (
@@ -311,10 +326,10 @@ export default function DashboardPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-foreground">
-                      {transaction.description || "Transaksi"}
+                      {transaction.description || t("defaultTransactionLabel")}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {new Date(transaction.date).toLocaleDateString("id-ID", {
+                      {new Date(transaction.date).toLocaleDateString(intlLocale, {
                         day: "numeric",
                         month: "short",
                         year: "numeric",
@@ -336,7 +351,7 @@ export default function DashboardPage() {
                   }`}
                 >
                   {transaction.type === "EXPENSE" ? "-" : transaction.type === "INCOME" ? "+" : ""}
-                  {formatCurrency(transaction.amount)}
+                  {formatCurrency(transaction.amount, intlLocale)}
                 </p>
               </div>
             ))}
@@ -344,12 +359,12 @@ export default function DashboardPage() {
 
           {transactions.length === 0 && !isLoading && (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              Belum ada transaksi
+              {t("noTransactions")}
             </p>
           )}
           {isLoading && (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              Memuat...
+              {tCommon("states.loading")}
             </p>
           )}
         </div>

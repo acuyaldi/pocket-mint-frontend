@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import QueryProvider from "@/components/QueryProvider";
 import "./globals.css";
 
@@ -15,15 +17,20 @@ export const metadata: Metadata = {
     "Pantau aset, hutang, cicilan, dan aktivitas keuangan pribadi dalam satu ruang kerja privat.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="id" className="h-full antialiased">
+    <html lang={locale} className="h-full antialiased">
       <body className="min-h-full flex flex-col font-sans antialiased bg-background text-foreground">
-        <QueryProvider>{children}</QueryProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <QueryProvider>{children}</QueryProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
