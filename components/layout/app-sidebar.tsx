@@ -14,8 +14,8 @@ import {
   User,
   Wallet,
 } from "lucide-react";
-import { logout } from "@/app/actions/auth";
 import { PocketMintLogo } from "@/components/Logo";
+import { useLogout } from "@/components/LogoutProvider";
 import { createClient } from "@/lib/supabase/client";
 import { useDueBillCount } from "@/src/features/bills/hooks/useBills";
 
@@ -24,6 +24,7 @@ export function AppSidebar() {
   const tCommon = useTranslations("common");
   const pathname = usePathname();
   const dueBillCount = useDueBillCount();
+  const { handleLogout } = useLogout();
   const [accountLabel, setAccountLabel] = useState(t("account"));
 
   const NAV_ITEMS = [
@@ -49,13 +50,6 @@ export function AppSidebar() {
       active = false;
     };
   }, [t]);
-
-  async function handleLogout() {
-    const result = await logout();
-    if (result?.error) {
-      console.error("Logout failed:", result.error);
-    }
-  }
 
   return (
     <aside className="hidden h-screen w-64 shrink-0 flex-col gap-2 border-r border-border bg-background p-4 md:flex">

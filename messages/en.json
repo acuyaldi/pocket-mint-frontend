@@ -36,6 +36,7 @@
     "unreadAria": "{count} unread notifications",
     "editProfile": "Edit Profile",
     "logoutFailed": "Sign-out failed — check your connection and try again.",
+    "loggingOut": "Signing you out…",
     "savingGoals": "Saving Goals"
   },
   "notificationCenter": {
@@ -79,9 +80,18 @@
     "heroTitle": "Your numbers stay readable, private, and under your control.",
     "heroSubtitle": "Return to one workspace for assets, debt, transactions, and installments.",
     "highlights": {
-      "encrypted": { "label": "Encrypted access", "value": "Secure email and Google sign-in" },
-      "readable": { "label": "Readable obligations", "value": "Assets, debt, and installments in one workspace" },
-      "private": { "label": "Private by default", "value": "Your financial data stays under your control" }
+      "encrypted": {
+        "label": "Encrypted access",
+        "value": "Secure email and Google sign-in"
+      },
+      "readable": {
+        "label": "Readable obligations",
+        "value": "Assets, debt, and installments in one workspace"
+      },
+      "private": {
+        "label": "Private by default",
+        "value": "Your financial data stays under your control"
+      }
     },
     "signInTitle": "Welcome back",
     "signInSubtitle": "Enter your credentials to access your workspace.",
@@ -172,7 +182,12 @@
       "newPasswordPlaceholder": "At least 8 characters",
       "confirmNewPassword": "Confirm New Password",
       "confirmNewPasswordPlaceholder": "Re-enter new password",
-      "strength": { "strong": "Strong", "good": "Good", "weak": "Weak", "pending": "Pending" },
+      "strength": {
+        "strong": "Strong",
+        "good": "Good",
+        "weak": "Weak",
+        "pending": "Pending"
+      },
       "footerNote": "Your password will be verified and changed through Supabase Auth. You'll be asked to sign in again once it's updated.",
       "submit": "Update Password",
       "submitting": "Updating..."
@@ -279,7 +294,6 @@
     "create": {
       "title": "Add Account",
       "description": "Add a cash, bank, e-wallet, credit, or loan account.",
-      "closeAria": "Close add account dialog",
       "chooseType": "Choose Account Type",
       "accountDetails": "Account Details",
       "accountName": "Account Name",
@@ -311,7 +325,6 @@
     "edit": {
       "title": "Edit Account",
       "description": "Balance and billing only change through transactions.",
-      "closeAria": "Close dialog",
       "accountName": "Account Name",
       "creditLimit": "Credit Limit",
       "cutoffDate": "Cutoff Date",
@@ -349,14 +362,14 @@
     "retry": "Retry"
   },
   "recurringTransactions": {
-    "pageTitle": "Recurring Transactions",
-    "pageDescription": "Manage monthly templates that repeat automatically.",
+    "pageTitle": "Recurring Bills",
+    "pageDescription": "Manage recurring bills and due-date reminders.",
     "backToTransactions": "Back to Transactions",
     "openLink": "Recurring",
-    "addTemplate": "Add Template",
-    "empty": "No recurring templates yet.",
-    "loading": "Loading recurring templates...",
-    "error": "Couldn't load recurring templates.",
+    "addTemplate": "Add Bill",
+    "empty": "No recurring bills yet.",
+    "loading": "Loading recurring bills...",
+    "error": "Couldn't load recurring bills.",
     "retry": "Retry",
     "monthly": "Monthly",
     "active": "Active",
@@ -371,21 +384,20 @@
     "reminderLine": "Reminder: {value}",
     "reminderNone": "No reminder",
     "reminderOnDueDate": "On due date",
-    "reminder1Day": "1 day before",
-    "reminder3Days": "3 days before",
-    "reminder7Days": "7 days before",
-    "toastDeleteFailed": "Failed to delete the template. Please try again."
+    "reminder1Day": "H-1 (1 day before)",
+    "reminder3Days": "H-3 (3 days before)",
+    "reminderLegacy": "7 days before (needs review)",
+    "toastDeleteFailed": "Failed to delete the bill. Please try again."
   },
   "recurringTransactionModals": {
     "create": {
-      "title": "New Recurring Template",
-      "description": "Create a monthly template. It will not create a transaction by itself.",
-      "closeAria": "Close dialog",
+      "title": "New Recurring Bill",
+      "description": "Create a recurring bill with due-date reminders.",
       "typeNavAria": "Transaction type",
       "typeExpense": "Expense",
       "typeIncome": "Income",
-      "name": "Template Name",
-      "namePlaceholder": "e.g. Rent, Salary",
+      "name": "Bill Name",
+      "namePlaceholder": "e.g. Water Bill, Electricity, Internet",
       "amountMode": "Amount Type",
       "amountModeFixed": "Fixed",
       "amountModeFlexible": "Flexible",
@@ -394,32 +406,34 @@
       "wallet": "Wallet",
       "chooseWallet": "Choose a wallet",
       "category": "Category",
+      "noCategory": "No category",
       "frequency": "Frequency",
       "frequencyMonthlyOnly": "Monthly",
-      "startDate": "Start Date",
-      "endDate": "End Date (optional)",
+      "frequencyMonthlyDay": "Due on the {day}th of every month",
+      "startDate": "First due date",
+      "startDateHelp": "This date sets the monthly due day. Future occurrences will be due on the same day each month.",
       "reminder": "Reminder",
+      "reminderHelp": "Notifications will appear before the due date.",
+      "reminderSingleHint": "Choose one reminder time. Multiple reminders will be supported in a future update.",
       "reminderNone": "No reminder",
-      "reminderOnDueDate": "On due date",
-      "reminder1Day": "1 day before",
-      "reminder3Days": "3 days before",
-      "reminder7Days": "7 days before",
-      "optionalDescription": "Description (optional)",
+      "reminderOnDueDate": "On due date (Hari H)",
+      "reminder1Day": "H-1 (1 day before)",
+      "reminder3Days": "H-3 (3 days before)",
+      "optionalDescription": "Note (optional)",
       "descriptionPlaceholder": "Add a note",
-      "submit": "Create Template",
+      "submit": "Create Bill",
       "errors": {
-        "genericSaveFailed": "Failed to save the template. Please try again."
+        "genericSaveFailed": "Failed to save the bill. Please try again."
       }
     },
     "edit": {
-      "title": "Edit Recurring Template",
-      "description": "Update this monthly template. It will not create a transaction by itself.",
-      "closeAria": "Close dialog",
+      "title": "Edit Recurring Bill",
+      "description": "Update this recurring bill and reminder settings.",
       "typeNavAria": "Transaction type",
       "typeExpense": "Expense",
       "typeIncome": "Income",
-      "name": "Template Name",
-      "namePlaceholder": "e.g. Rent, Salary",
+      "name": "Bill Name",
+      "namePlaceholder": "e.g. Water Bill, Electricity, Internet",
       "amountMode": "Amount Type",
       "amountModeFixed": "Fixed",
       "amountModeFlexible": "Flexible",
@@ -428,29 +442,32 @@
       "wallet": "Wallet",
       "chooseWallet": "Choose a wallet",
       "category": "Category",
+      "noCategory": "No category",
       "frequency": "Frequency",
       "frequencyMonthlyOnly": "Monthly",
-      "startDate": "Start Date",
-      "endDate": "End Date (optional)",
+      "frequencyMonthlyDay": "Due on the {day}th of every month",
+      "startDate": "First due date",
+      "startDateHelp": "This date sets the monthly due day. Future occurrences will be due on the same day each month.",
       "reminder": "Reminder",
+      "reminderHelp": "Notifications will appear before the due date.",
+      "reminderSingleHint": "Choose one reminder time. Multiple reminders will be supported in a future update.",
       "reminderNone": "No reminder",
-      "reminderOnDueDate": "On due date",
-      "reminder1Day": "1 day before",
-      "reminder3Days": "3 days before",
-      "reminder7Days": "7 days before",
+      "reminderOnDueDate": "On due date (Hari H)",
+      "reminder1Day": "H-1 (1 day before)",
+      "reminder3Days": "H-3 (3 days before)",
       "status": "Status",
       "statusActive": "Active",
       "statusPaused": "Paused",
-      "optionalDescription": "Description (optional)",
+      "optionalDescription": "Note (optional)",
       "descriptionPlaceholder": "Add a note",
       "submit": "Save Changes",
       "errors": {
-        "genericSaveFailed": "Failed to save the template. Please try again."
+        "genericSaveFailed": "Failed to save the bill. Please try again."
       }
     },
     "delete": {
-      "title": "Delete Template?",
-      "description": "This will permanently delete the \"{name}\" template. This action can't be undone.",
+      "title": "Delete Bill?",
+      "description": "This will permanently delete the \"{name}\" bill. This action can't be undone.",
       "confirm": "Delete"
     }
   },
@@ -483,7 +500,6 @@
     "create": {
       "title": "New Saving Goal",
       "description": "Create a saving goal to plan your savings.",
-      "closeAria": "Close",
       "name": "Goal Name",
       "namePlaceholder": "e.g. New Laptop",
       "targetAmount": "Target Amount",
@@ -499,7 +515,6 @@
     "edit": {
       "title": "Edit Saving Goal",
       "description": "Update the details of your saving goal.",
-      "closeAria": "Close",
       "name": "Goal Name",
       "namePlaceholder": "e.g. New Laptop",
       "targetAmount": "Target Amount",
@@ -514,7 +529,6 @@
     "progress": {
       "title": "Update Progress",
       "description": "Record the latest saving progress for this goal.",
-      "closeAria": "Close",
       "currentAmount": "Collected Amount",
       "helper": "This amount only records goal progress and does not change your wallet balance.",
       "submit": "Save Progress",
@@ -540,7 +554,6 @@
       "category": "Category",
       "installmentProgress": "Installment Progress",
       "months": "months",
-      "mapLocation": "MAP LOCATION",
       "edit": "Edit",
       "editUnsupportedTransfer": "Transfer editing isn't supported by this screen yet.",
       "editUnsupportedInstallment": "Installment transactions can't be edited directly.",
@@ -570,7 +583,6 @@
     "add": {
       "title": "Add Transaction",
       "subtitle": "Record money movement without leaving the page.",
-      "closeAria": "Close dialog",
       "typeNavAria": "Transaction type",
       "typeExpense": "Expense",
       "typeIncome": "Income",
@@ -661,7 +673,6 @@
     },
     "payModal": {
       "title": "Pay Installment",
-      "closeAria": "Close payment",
       "paymentAmount": "Payment amount",
       "paymentSource": "Payment source",
       "insufficientBalance": "Insufficient balance",
@@ -675,7 +686,11 @@
   "analytics": {
     "pageTitle": "Analytics",
     "pageDescription": "Track your financial trends and performance",
-    "periods": { "month": "This month", "quarter": "3 months", "sixMonths": "6 months" },
+    "periods": {
+      "month": "This month",
+      "quarter": "3 months",
+      "sixMonths": "6 months"
+    },
     "exportReport": "Export report",
     "exportFailed": "Report export failed. Try again.",
     "realData": "Real data",
@@ -723,14 +738,30 @@
     "backToHome": "Back to home",
     "pageTitle": "Changelog",
     "pageDescription": "Release history and progress of Pocket Mint, newest first.",
-    "status": { "internal": "Internal", "beta": "Beta", "stable": "Stable" },
-    "changeType": { "added": "Added", "improved": "Improved", "fixed": "Fixed", "security": "Security" },
+    "status": {
+      "internal": "Internal",
+      "beta": "Beta",
+      "stable": "Stable"
+    },
+    "changeType": {
+      "added": "Added",
+      "improved": "Improved",
+      "fixed": "Fixed",
+      "security": "Security"
+    },
     "knownIssues": "Known issues",
     "emptyTitle": "No release notes yet.",
     "emptyBody": "Updates will appear here once published."
   },
   "landing": {
-    "nav": { "ariaLabel": "Main navigation", "privacy": "Privacy", "features": "Features", "changelog": "Changelog", "login": "Login", "signUp": "Sign Up" },
+    "nav": {
+      "ariaLabel": "Main navigation",
+      "privacy": "Privacy",
+      "features": "Features",
+      "changelog": "Changelog",
+      "login": "Login",
+      "signUp": "Sign Up"
+    },
     "hero": {
       "badge": "Private & Secured",
       "title": "Clarity Over Complexity",
@@ -742,7 +773,11 @@
       "title": "Your financial data stays yours.",
       "subtitle": "Pocket Mint helps you read your financial standing without ads, marketing trackers, or unnecessary data collection.",
       "ariaLabel": "Pocket Mint privacy commitments",
-      "points": ["No ads.", "No marketing trackers.", "Only the data your workspace needs."]
+      "points": [
+        "No ads.",
+        "No marketing trackers.",
+        "Only the data your workspace needs."
+      ]
     },
     "features": {
       "ariaLabel": "Pocket Mint features",
@@ -751,11 +786,31 @@
       "previous": "Previous feature",
       "next": "Next feature",
       "screens": {
-        "dashboard": { "title": "Dashboard", "description": "See your financial position in one summary.", "alt": "Pocket Mint Dashboard view" },
-        "wallet": { "title": "Wallets", "description": "Every asset and liability in one ledger.", "alt": "Pocket Mint Wallets view" },
-        "transaction": { "title": "Transactions", "description": "History that's quick to search and easy to fix.", "alt": "Pocket Mint Transactions view" },
-        "installment": { "title": "Installments", "description": "Track obligations without missing a due date.", "alt": "Pocket Mint Installments view" },
-        "analytics": { "title": "Analytics", "description": "Read your income and spending patterns more clearly.", "alt": "Pocket Mint Analytics view" }
+        "dashboard": {
+          "title": "Dashboard",
+          "description": "See your financial position in one summary.",
+          "alt": "Pocket Mint Dashboard view"
+        },
+        "wallet": {
+          "title": "Wallets",
+          "description": "Every asset and liability in one ledger.",
+          "alt": "Pocket Mint Wallets view"
+        },
+        "transaction": {
+          "title": "Transactions",
+          "description": "History that's quick to search and easy to fix.",
+          "alt": "Pocket Mint Transactions view"
+        },
+        "installment": {
+          "title": "Installments",
+          "description": "Track obligations without missing a due date.",
+          "alt": "Pocket Mint Installments view"
+        },
+        "analytics": {
+          "title": "Analytics",
+          "description": "Read your income and spending patterns more clearly.",
+          "alt": "Pocket Mint Analytics view"
+        }
       }
     },
     "whatsNew": {
@@ -766,7 +821,12 @@
     },
     "footer": {
       "copyright": "© 2024 Pocket Mint. All rights reserved.",
-      "links": { "privacyPolicy": "Privacy Policy", "terms": "Terms & Conditions", "help": "Help", "contact": "Contact" }
+      "links": {
+        "privacyPolicy": "Privacy Policy",
+        "terms": "Terms & Conditions",
+        "help": "Help",
+        "contact": "Contact"
+      }
     }
   }
 }

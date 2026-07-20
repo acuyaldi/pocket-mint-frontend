@@ -36,6 +36,7 @@
     "unreadAria": "{count} notifikasi belum dibaca",
     "editProfile": "Edit Profil",
     "logoutFailed": "Keluar gagal — periksa koneksi lalu coba lagi.",
+    "loggingOut": "Sedang keluar…",
     "savingGoals": "Target Tabungan"
   },
   "notificationCenter": {
@@ -79,9 +80,18 @@
     "heroTitle": "Angka finansialmu tetap jelas, privat, dan sepenuhnya di bawah kendalimu.",
     "heroSubtitle": "Kembali ke satu ruang kerja untuk aset, hutang, transaksi, dan cicilan.",
     "highlights": {
-      "encrypted": { "label": "Akses terenkripsi", "value": "Masuk aman lewat email atau Google" },
-      "readable": { "label": "Kewajiban yang jelas", "value": "Aset, hutang, dan cicilan dalam satu ruang kerja" },
-      "private": { "label": "Privat secara default", "value": "Data finansialmu tetap di bawah kendalimu" }
+      "encrypted": {
+        "label": "Akses terenkripsi",
+        "value": "Masuk aman lewat email atau Google"
+      },
+      "readable": {
+        "label": "Kewajiban yang jelas",
+        "value": "Aset, hutang, dan cicilan dalam satu ruang kerja"
+      },
+      "private": {
+        "label": "Privat secara default",
+        "value": "Data finansialmu tetap di bawah kendalimu"
+      }
     },
     "signInTitle": "Selamat datang kembali",
     "signInSubtitle": "Masukkan kredensialmu untuk mengakses ruang kerja.",
@@ -172,7 +182,12 @@
       "newPasswordPlaceholder": "Minimal 8 karakter",
       "confirmNewPassword": "Konfirmasi Password Baru",
       "confirmNewPasswordPlaceholder": "Ulangi password baru",
-      "strength": { "strong": "Kuat", "good": "Baik", "weak": "Lemah", "pending": "Menunggu" },
+      "strength": {
+        "strong": "Kuat",
+        "good": "Baik",
+        "weak": "Lemah",
+        "pending": "Menunggu"
+      },
       "footerNote": "Password akan diverifikasi dan diubah melalui Supabase Auth. Kamu akan diminta masuk kembali setelah perubahan berhasil.",
       "submit": "Ubah Password",
       "submitting": "Memproses..."
@@ -279,7 +294,6 @@
     "create": {
       "title": "Tambah Akun",
       "description": "Tambahkan kas, bank, e-wallet, kredit, atau pinjaman.",
-      "closeAria": "Tutup modal tambah akun",
       "chooseType": "Pilih Jenis Akun",
       "accountDetails": "Rincian Akun",
       "accountName": "Nama Akun",
@@ -311,7 +325,6 @@
     "edit": {
       "title": "Edit Akun",
       "description": "Saldo dan tagihan hanya berubah melalui transaksi.",
-      "closeAria": "Tutup modal",
       "accountName": "Nama Akun",
       "creditLimit": "Limit Kredit",
       "cutoffDate": "Tanggal Cutoff",
@@ -349,14 +362,14 @@
     "retry": "Coba lagi"
   },
   "recurringTransactions": {
-    "pageTitle": "Transaksi Rutin",
-    "pageDescription": "Kelola template bulanan yang berulang otomatis.",
+    "pageTitle": "Tagihan Rutin",
+    "pageDescription": "Kelola tagihan bulanan dan pengingat jatuh tempo.",
     "backToTransactions": "Kembali ke Transaksi",
     "openLink": "Rutin",
-    "addTemplate": "Tambah Template",
-    "empty": "Belum ada template rutin.",
-    "loading": "Memuat template rutin...",
-    "error": "Gagal memuat template rutin.",
+    "addTemplate": "Tambah Tagihan",
+    "empty": "Belum ada tagihan rutin.",
+    "loading": "Memuat tagihan rutin...",
+    "error": "Gagal memuat tagihan rutin.",
     "retry": "Coba lagi",
     "monthly": "Bulanan",
     "active": "Aktif",
@@ -371,21 +384,20 @@
     "reminderLine": "Pengingat: {value}",
     "reminderNone": "Tidak ada pengingat",
     "reminderOnDueDate": "Hari H",
-    "reminder1Day": "1 hari sebelumnya",
-    "reminder3Days": "3 hari sebelumnya",
-    "reminder7Days": "7 hari sebelumnya",
+    "reminder1Day": "H-1 (1 hari sebelumnya)",
+    "reminder3Days": "H-3 (3 hari sebelumnya)",
+    "reminderLegacy": "7 hari sebelumnya — perlu diperbarui",
     "toastDeleteFailed": "Gagal menghapus template. Silakan coba lagi."
   },
   "recurringTransactionModals": {
     "create": {
-      "title": "Template Rutin Baru",
-      "description": "Buat template bulanan. Ini tidak akan langsung membuat transaksi.",
-      "closeAria": "Tutup modal",
+      "title": "Tagihan Rutin Baru",
+      "description": "Buat tagihan berulang dengan pengingat jatuh tempo.",
       "typeNavAria": "Jenis transaksi",
       "typeExpense": "Pengeluaran",
       "typeIncome": "Pemasukan",
-      "name": "Nama Template",
-      "namePlaceholder": "cth. Sewa, Gaji",
+      "name": "Nama Tagihan",
+      "namePlaceholder": "cth. Air PDAM, Listrik, Internet",
       "amountMode": "Jenis Jumlah",
       "amountModeFixed": "Tetap",
       "amountModeFlexible": "Fleksibel",
@@ -394,32 +406,34 @@
       "wallet": "Dompet",
       "chooseWallet": "Pilih dompet",
       "category": "Kategori",
+      "noCategory": "Tanpa kategori",
       "frequency": "Frekuensi",
       "frequencyMonthlyOnly": "Bulanan",
-      "startDate": "Tanggal Mulai",
-      "endDate": "Tanggal Berakhir (opsional)",
+      "frequencyMonthlyDay": "Jatuh tempo setiap tanggal {day}",
+      "startDate": "Tanggal jatuh tempo pertama",
+      "startDateHelp": "Tanggal ini menentukan jatuh tempo bulanan. Tagihan berikutnya akan jatuh pada tanggal yang sama setiap bulan.",
       "reminder": "Pengingat",
+      "reminderHelp": "Notifikasi akan muncul sebelum tanggal jatuh tempo.",
+      "reminderSingleHint": "Pilih satu waktu pengingat. Dukungan beberapa pengingat akan ditambahkan pada pembaruan berikutnya.",
       "reminderNone": "Tidak ada",
-      "reminderOnDueDate": "Hari H",
-      "reminder1Day": "1 hari sebelumnya",
-      "reminder3Days": "3 hari sebelumnya",
-      "reminder7Days": "7 hari sebelumnya",
-      "optionalDescription": "Deskripsi (opsional)",
+      "reminderOnDueDate": "Hari H (pada tanggal jatuh tempo)",
+      "reminder1Day": "H-1 (1 hari sebelumnya)",
+      "reminder3Days": "H-3 (3 hari sebelumnya)",
+      "optionalDescription": "Catatan (opsional)",
       "descriptionPlaceholder": "Tambahkan catatan",
-      "submit": "Buat Template",
+      "submit": "Buat Tagihan",
       "errors": {
-        "genericSaveFailed": "Gagal menyimpan template. Silakan coba lagi."
+        "genericSaveFailed": "Gagal menyimpan tagihan. Silakan coba lagi."
       }
     },
     "edit": {
-      "title": "Ubah Template Rutin",
-      "description": "Perbarui template bulanan ini. Ini tidak akan langsung membuat transaksi.",
-      "closeAria": "Tutup modal",
+      "title": "Ubah Tagihan Rutin",
+      "description": "Perbarui tagihan berulang dan pengaturan pengingat.",
       "typeNavAria": "Jenis transaksi",
       "typeExpense": "Pengeluaran",
       "typeIncome": "Pemasukan",
-      "name": "Nama Template",
-      "namePlaceholder": "cth. Sewa, Gaji",
+      "name": "Nama Tagihan",
+      "namePlaceholder": "cth. Air PDAM, Listrik, Internet",
       "amountMode": "Jenis Jumlah",
       "amountModeFixed": "Tetap",
       "amountModeFlexible": "Fleksibel",
@@ -428,29 +442,32 @@
       "wallet": "Dompet",
       "chooseWallet": "Pilih dompet",
       "category": "Kategori",
+      "noCategory": "Tanpa kategori",
       "frequency": "Frekuensi",
       "frequencyMonthlyOnly": "Bulanan",
-      "startDate": "Tanggal Mulai",
-      "endDate": "Tanggal Berakhir (opsional)",
+      "frequencyMonthlyDay": "Jatuh tempo setiap tanggal {day}",
+      "startDate": "Tanggal jatuh tempo pertama",
+      "startDateHelp": "Tanggal ini menentukan jatuh tempo bulanan. Tagihan berikutnya akan jatuh pada tanggal yang sama setiap bulan.",
       "reminder": "Pengingat",
+      "reminderHelp": "Notifikasi akan muncul sebelum tanggal jatuh tempo.",
+      "reminderSingleHint": "Pilih satu waktu pengingat. Dukungan beberapa pengingat akan ditambahkan pada pembaruan berikutnya.",
       "reminderNone": "Tidak ada",
-      "reminderOnDueDate": "Hari H",
-      "reminder1Day": "1 hari sebelumnya",
-      "reminder3Days": "3 hari sebelumnya",
-      "reminder7Days": "7 hari sebelumnya",
+      "reminderOnDueDate": "Hari H (pada tanggal jatuh tempo)",
+      "reminder1Day": "H-1 (1 hari sebelumnya)",
+      "reminder3Days": "H-3 (3 hari sebelumnya)",
       "status": "Status",
       "statusActive": "Aktif",
       "statusPaused": "Dijeda",
-      "optionalDescription": "Deskripsi (opsional)",
+      "optionalDescription": "Catatan (opsional)",
       "descriptionPlaceholder": "Tambahkan catatan",
       "submit": "Simpan Perubahan",
       "errors": {
-        "genericSaveFailed": "Gagal menyimpan template. Silakan coba lagi."
+        "genericSaveFailed": "Gagal menyimpan tagihan. Silakan coba lagi."
       }
     },
     "delete": {
-      "title": "Hapus Template?",
-      "description": "Ini akan menghapus template \"{name}\" secara permanen. Tindakan ini tidak dapat dibatalkan.",
+      "title": "Hapus Tagihan?",
+      "description": "Ini akan menghapus tagihan \"{name}\" secara permanen. Tindakan ini tidak dapat dibatalkan.",
       "confirm": "Hapus"
     }
   },
@@ -483,7 +500,6 @@
     "create": {
       "title": "Target Tabungan Baru",
       "description": "Buat target tabungan untuk merencanakan simpanan Anda.",
-      "closeAria": "Tutup",
       "name": "Nama Target",
       "namePlaceholder": "Contoh: Laptop Baru",
       "targetAmount": "Target Nominal",
@@ -499,7 +515,6 @@
     "edit": {
       "title": "Ubah Target Tabungan",
       "description": "Perbarui detail target tabungan Anda.",
-      "closeAria": "Tutup",
       "name": "Nama Target",
       "namePlaceholder": "Contoh: Laptop Baru",
       "targetAmount": "Target Nominal",
@@ -514,7 +529,6 @@
     "progress": {
       "title": "Perbarui Progres",
       "description": "Catat progres tabungan terbaru untuk target ini.",
-      "closeAria": "Tutup",
       "currentAmount": "Nominal Terkumpul",
       "helper": "Nominal ini hanya mencatat progres target dan tidak mengubah saldo dompet.",
       "submit": "Simpan Progres",
@@ -540,7 +554,6 @@
       "category": "Kategori",
       "installmentProgress": "Progres Cicilan",
       "months": "bulan",
-      "mapLocation": "LOKASI PETA",
       "edit": "Ubah",
       "editUnsupportedTransfer": "Ubah transfer belum didukung di layar ini.",
       "editUnsupportedInstallment": "Transaksi cicilan tidak bisa diubah langsung.",
@@ -570,7 +583,6 @@
     "add": {
       "title": "Tambah Transaksi",
       "subtitle": "Catat arus uang tanpa keluar dari halaman.",
-      "closeAria": "Tutup modal",
       "typeNavAria": "Jenis transaksi",
       "typeExpense": "Pengeluaran",
       "typeIncome": "Pemasukan",
@@ -661,7 +673,6 @@
     },
     "payModal": {
       "title": "Bayar Cicilan",
-      "closeAria": "Tutup pembayaran",
       "paymentAmount": "Jumlah pembayaran",
       "paymentSource": "Sumber pembayaran",
       "insufficientBalance": "Saldo tidak mencukupi",
@@ -675,7 +686,11 @@
   "analytics": {
     "pageTitle": "Analitik",
     "pageDescription": "Pantau tren dan performa finansial Anda",
-    "periods": { "month": "Bulan ini", "quarter": "3 bulan", "sixMonths": "6 bulan" },
+    "periods": {
+      "month": "Bulan ini",
+      "quarter": "3 bulan",
+      "sixMonths": "6 bulan"
+    },
     "exportReport": "Ekspor laporan",
     "exportFailed": "Ekspor laporan gagal. Coba lagi.",
     "realData": "Data nyata",
@@ -723,14 +738,30 @@
     "backToHome": "Kembali ke beranda",
     "pageTitle": "Changelog",
     "pageDescription": "Riwayat rilis dan perkembangan Pocket Mint, disusun dari yang terbaru.",
-    "status": { "internal": "Internal", "beta": "Beta", "stable": "Stabil" },
-    "changeType": { "added": "Fitur baru", "improved": "Peningkatan", "fixed": "Perbaikan", "security": "Keamanan" },
+    "status": {
+      "internal": "Internal",
+      "beta": "Beta",
+      "stable": "Stabil"
+    },
+    "changeType": {
+      "added": "Fitur baru",
+      "improved": "Peningkatan",
+      "fixed": "Perbaikan",
+      "security": "Keamanan"
+    },
     "knownIssues": "Masalah yang diketahui",
     "emptyTitle": "Belum ada catatan rilis.",
     "emptyBody": "Pembaruan akan muncul di sini setelah dipublikasikan."
   },
   "landing": {
-    "nav": { "ariaLabel": "Navigasi utama", "privacy": "Privasi", "features": "Fitur", "changelog": "Changelog", "login": "Masuk", "signUp": "Daftar" },
+    "nav": {
+      "ariaLabel": "Navigasi utama",
+      "privacy": "Privasi",
+      "features": "Fitur",
+      "changelog": "Changelog",
+      "login": "Masuk",
+      "signUp": "Daftar"
+    },
     "hero": {
       "badge": "Privat & Aman",
       "title": "Kejelasan di Atas Kerumitan",
@@ -742,7 +773,11 @@
       "title": "Data finansial Anda tetap milik Anda.",
       "subtitle": "Pocket Mint membantu Anda membaca kondisi finansial tanpa iklan, pelacakan marketing, atau pengumpulan data yang tidak diperlukan.",
       "ariaLabel": "Komitmen privasi Pocket Mint",
-      "points": ["Tanpa iklan.", "Tanpa pelacakan marketing.", "Hanya data yang diperlukan untuk workspace Anda."]
+      "points": [
+        "Tanpa iklan.",
+        "Tanpa pelacakan marketing.",
+        "Hanya data yang diperlukan untuk workspace Anda."
+      ]
     },
     "features": {
       "ariaLabel": "Fitur Pocket Mint",
@@ -751,11 +786,31 @@
       "previous": "Fitur sebelumnya",
       "next": "Fitur berikutnya",
       "screens": {
-        "dashboard": { "title": "Dashboard", "description": "Lihat posisi keuangan Anda dalam satu ringkasan.", "alt": "Tampilan Dashboard Pocket Mint" },
-        "wallet": { "title": "Dompet", "description": "Semua aset dan kewajiban dalam satu ledger.", "alt": "Tampilan Dompet Pocket Mint" },
-        "transaction": { "title": "Transaksi", "description": "Riwayat yang cepat dicari dan mudah diperbaiki.", "alt": "Tampilan Transaksi Pocket Mint" },
-        "installment": { "title": "Cicilan", "description": "Pantau kewajiban tanpa kehilangan tanggal jatuh tempo.", "alt": "Tampilan Cicilan Pocket Mint" },
-        "analytics": { "title": "Analitik", "description": "Baca pola pemasukan dan pengeluaran dengan lebih jelas.", "alt": "Tampilan Analitik Pocket Mint" }
+        "dashboard": {
+          "title": "Dashboard",
+          "description": "Lihat posisi keuangan Anda dalam satu ringkasan.",
+          "alt": "Tampilan Dashboard Pocket Mint"
+        },
+        "wallet": {
+          "title": "Dompet",
+          "description": "Semua aset dan kewajiban dalam satu ledger.",
+          "alt": "Tampilan Dompet Pocket Mint"
+        },
+        "transaction": {
+          "title": "Transaksi",
+          "description": "Riwayat yang cepat dicari dan mudah diperbaiki.",
+          "alt": "Tampilan Transaksi Pocket Mint"
+        },
+        "installment": {
+          "title": "Cicilan",
+          "description": "Pantau kewajiban tanpa kehilangan tanggal jatuh tempo.",
+          "alt": "Tampilan Cicilan Pocket Mint"
+        },
+        "analytics": {
+          "title": "Analitik",
+          "description": "Baca pola pemasukan dan pengeluaran dengan lebih jelas.",
+          "alt": "Tampilan Analitik Pocket Mint"
+        }
       }
     },
     "whatsNew": {
@@ -766,7 +821,12 @@
     },
     "footer": {
       "copyright": "© 2024 Pocket Mint. Seluruh hak cipta dilindungi.",
-      "links": { "privacyPolicy": "Kebijakan Privasi", "terms": "Syarat & Ketentuan", "help": "Bantuan", "contact": "Kontak" }
+      "links": {
+        "privacyPolicy": "Kebijakan Privasi",
+        "terms": "Syarat & Ketentuan",
+        "help": "Bantuan",
+        "contact": "Kontak"
+      }
     }
   }
 }

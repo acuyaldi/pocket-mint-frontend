@@ -20,21 +20,22 @@ const archiveGoalSource = read(
 );
 
 describe("delete transaction modal consistency", () => {
-  it("is an accessible alertdialog with a titled/described region", () => {
+  it("is an accessible alertdialog rendered through the shared AppModal shell", () => {
+    // Title/description association (aria-labelledby/aria-describedby) and
+    // focus trapping are owned by the underlying Dialog primitive now — see
+    // components/ui/dialog.tsx and modal-primitives.test.ts.
     expect(deleteTxSource).toContain('role="alertdialog"');
-    expect(deleteTxSource).toContain('aria-modal="true"');
-    expect(deleteTxSource).toContain('aria-labelledby="delete-tx-title"');
-    expect(deleteTxSource).toContain('aria-describedby="delete-tx-description"');
-    expect(deleteTxSource).toContain('id="delete-tx-title"');
-    expect(deleteTxSource).toContain('id="delete-tx-description"');
+    expect(deleteTxSource).toContain("title={t(\"title\")}");
+    expect(deleteTxSource).toContain("description={t(\"description\")}");
   });
 
   it("supports Escape only while no delete is in flight", () => {
-    expect(deleteTxSource).toContain('if (e.key === "Escape") onClose();');
-    expect(deleteTxSource).toContain("if (!isOpen || isDeleting) return;");
+    // Escape/backdrop/close-button dismissal is handled once inside AppModal
+    // (see modal-primitives.test.ts); this modal only has to wire the guard.
+    expect(deleteTxSource).toContain("isPending={isDeleting}");
   });
 
-  it("uses the shared destructive Button variant instead of one-off inline styling", () => {
+  it("uses the shared destructive ModalSubmitButton variant instead of one-off inline styling", () => {
     expect(deleteTxSource).toContain('variant="destructive"');
     expect(deleteTxSource).not.toContain('style={{ backgroundColor: "var(--color-destructive)", color: "var(--color-destructive-foreground)" }}');
   });
@@ -43,39 +44,34 @@ describe("delete transaction modal consistency", () => {
     expect(deleteTxSource).toContain("const [error, setError] = useState(\"\");");
     expect(deleteTxSource).toContain("catch (err)");
     expect(deleteTxSource).toContain('setError(message ?? t("genericError"))');
+    expect(deleteTxSource).toContain("<FormErrorMessage message={error} />");
     expect(idMessages.transactionModals.delete.genericError).toBe("Transaksi gagal dihapus. Coba lagi.");
     expect(enMessages.transactionModals.delete.genericError).toBeTruthy();
   });
 });
 
 describe("pay bill modal consistency", () => {
-  it("guards the backdrop and close button so a pending payment can't be dismissed mid-flight", () => {
+  it("guards dismissal (Escape/backdrop/close button) so a pending payment can't be dismissed mid-flight", () => {
+    expect(payBillSource).toContain("isPending={payBill.isPending}");
     expect(payBillSource).toContain("if (!payBill.isPending) onClose();");
-    expect(payBillSource).toContain("onClick={handleClose}");
-    expect(payBillSource).not.toContain("onClick={onClose}");
   });
 
-  it("supports Escape only while no payment is in flight", () => {
-    expect(payBillSource).toContain('if (e.key === "Escape") onClose();');
-    expect(payBillSource).toContain("if (payBill.isPending) return;");
-  });
-
-  it("uses the shared Button component in its footer instead of raw buttons", () => {
-    expect(payBillSource).toContain('import { Button } from "@/components/ui/button";');
-    expect(payBillSource).toContain("<Button type=\"button\" variant=\"outline\" onClick={handleClose}");
-    expect(payBillSource).toContain("<Button type=\"button\" onClick={handlePay}");
+  it("uses the shared modal footer buttons instead of raw buttons", () => {
+    expect(payBillSource).toContain('from "@/components/ui/app-modal"');
+    expect(payBillSource).toContain("<ModalCancelButton isPending={payBill.isPending} onClick={handleClose}>");
+    expect(payBillSource).toContain("<ModalSubmitButton");
   });
 });
 
-describe("destructive confirmation Escape support", () => {
-  it("adds guarded Escape handling to delete/archive confirmations that previously lacked it", () => {
+describe("destructive/archive confirmation dismissal guard", () => {
+  it("wires the pending guard into the shared AppModal shell instead of a bespoke Escape listener", () => {
     for (const [source, guardVar] of [
       [deleteWalletSource, "isDeleting"],
       [deleteRecurringSource, "isDeleting"],
       [archiveGoalSource, "isArchiving"],
     ] as const) {
-      expect(source).toContain('if (e.key === "Escape") onClose();');
-      expect(source).toContain(`|| ${guardVar}) return;`);
+      expect(source).toContain(`isPending={${guardVar}}`);
+      expect(source).toContain(`if (!${guardVar}) onClose();`);
     }
   });
 });

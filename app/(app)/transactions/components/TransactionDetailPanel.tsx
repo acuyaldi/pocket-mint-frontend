@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Pencil, Trash2, Receipt, MapPin } from "lucide-react";
+import { X, Pencil, Trash2, Receipt } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { formatCurrency } from "@/lib/utils";
 import { INTL_LOCALE } from "@/i18n/config";
@@ -170,24 +170,6 @@ export function TransactionDetailPanel({ tx, onClose, onEdit, onDelete }: Transa
                   </span>
                 </div>
               )}
-            </div>
-
-            {/* Map placeholder */}
-            <div className="mt-5">
-              <div style={{ fontSize: 11, color: "var(--color-muted-foreground)", textTransform: "uppercase", fontWeight: 600, marginBottom: 8 }}>
-                {t("mapLocation")}
-              </div>
-              <div
-                className="flex items-center justify-center"
-                style={{
-                  backgroundColor: "var(--color-muted)",
-                  border: "1px solid var(--color-border)",
-                  borderRadius: 8,
-                  height: 120,
-                }}
-              >
-                <MapPin className="size-5" style={{ color: "var(--color-muted-foreground)" }} />
-              </div>
             </div>
 
             {/* Spacer */}

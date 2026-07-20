@@ -51,8 +51,11 @@ describe("edit transaction modal re-hydration", () => {
   });
 
   it("disables submit and guards close while a save is pending", () => {
-    expect(modalSource).toContain("disabled={isSaving}");
-    expect(modalSource).toContain("if (!isSaving) onClose()");
+    // The shared AppModal shell owns the pending-close guard (Escape,
+    // backdrop, close button) and ModalSubmitButton owns the disabled
+    // state; the modal wires isSaving through to both.
+    expect(modalSource).toContain("isPending={isSaving}");
+    expect(modalSource).toContain("if (!isSaving) onClose();");
   });
 
   it("submits the currently displayed values without touching category/wallet/installment relations", () => {

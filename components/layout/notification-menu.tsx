@@ -83,7 +83,7 @@ export function NotificationRow({
 
 export function NotificationMenuItems() {
   const t = useTranslations("notificationCenter");
-  const { data, isLoading } = useNotifications();
+  const { data, isLoading, isError, refetch } = useNotifications();
   const notifications = data?.items ?? [];
   const refresh = useRefreshNotifications();
   const {
@@ -122,6 +122,17 @@ export function NotificationMenuItems() {
       <div className="flex flex-col gap-0.5 overflow-y-auto">
         {isLoading ? (
           <p className="px-3 py-6 text-center text-sm text-muted-foreground">{t("loading")}</p>
+        ) : isError ? (
+          <div className="flex flex-col items-center gap-2 px-3 py-6 text-center">
+            <p className="text-sm text-muted-foreground">{t("page.error")}</p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              {t("page.retry")}
+            </button>
+          </div>
         ) : notifications.length === 0 ? (
           <p className="px-3 py-6 text-center text-sm text-muted-foreground">{t("empty")}</p>
         ) : (

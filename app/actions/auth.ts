@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { redirect, RedirectType } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { resolveUserName, syncUserToBackend } from "@/lib/auth/sync-user";
 
@@ -121,5 +121,7 @@ export async function logout() {
   }
 
   revalidatePath("/", "layout");
-  redirect("/");
+  // replace (not the Server Action default of push) so Back can't return to
+  // the authenticated route from browser history after sign-out.
+  redirect("/", RedirectType.replace);
 }

@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CheckCircle2, Loader2, X } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { AppModal, ModalCancelButton, ModalSubmitButton } from "@/components/ui/app-modal";
+import { FormField, FormErrorMessage } from "@/components/ui/form-field";
 import { formatCurrency } from "@/lib/utils";
 import { INTL_LOCALE } from "@/i18n/config";
 import {
@@ -38,15 +40,6 @@ export function PayBillModal({
     if (!payBill.isPending) onClose();
   };
 
-  useEffect(() => {
-    if (payBill.isPending) return;
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [payBill.isPending, onClose]);
-
   async function handlePay() {
     if (!sourceWalletId) return;
     setError("");
@@ -66,84 +59,81 @@ export function PayBillModal({
   }
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center bg-primary/40 p-4 backdrop-blur-sm" onClick={handleClose}>
-      <section
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="pay-bill-title"
-        onClick={(event) => event.stopPropagation()}
-        className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl border border-border bg-card shadow-2xl"
-      >
-        <header className="flex items-start justify-between border-b border-border bg-surface-low p-6">
-          <div>
-            <h2 id="pay-bill-title" className="text-xl font-semibold text-primary">{t("title")}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{bill.description || bill.walletName}</p>
-          </div>
-          <button type="button" aria-label={t("closeAria")} onClick={handleClose} disabled={payBill.isPending}>
-            <X className="size-5" />
-          </button>
-        </header>
-
-        <div className="space-y-6 p-6">
-          <div className="rounded-lg bg-surface-low p-4">
-            <p className="text-xs text-muted-foreground">{t("paymentAmount")}</p>
-            <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">{formatCurrency(bill.amountPerTerm, intlLocale)}</p>
-          </div>
-
-          <section className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("paymentSource")}</h3>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {sourceWallets.map((wallet) => {
-                const selected = sourceWalletId === wallet.id;
-                const disabled = wallet.balance < bill.amountPerTerm;
-                return (
-                  <button
-                    key={wallet.id}
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => setSourceWalletId(wallet.id)}
-                    className={`rounded-lg border p-3 text-left disabled:cursor-not-allowed disabled:opacity-55 ${selected ? "border-mint bg-mint/10" : "border-border bg-card"}`}
-                  >
-                    <span className="flex items-center justify-between gap-2 text-sm font-semibold">
-                      {wallet.name}
-                      {selected ? <CheckCircle2 className="size-4 text-mint" /> : null}
-                    </span>
-                    <span className="mt-1 block text-sm tabular-nums text-muted-foreground">{formatCurrency(wallet.balance, intlLocale)}</span>
-                    {disabled ? <span className="mt-1 block text-xs text-coral">{t("insufficientBalance")}</span> : null}
-                  </button>
-                );
-              })}
-            </div>
-            {sourceWallets.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-                {t("noSourceWallets")}
-              </p>
-            ) : null}
-          </section>
-
-          <label className="block space-y-2 text-xs font-medium text-muted-foreground">
-            <span>{t("paymentDate")}</span>
-            <input
-              type="date"
-              value={paymentDate}
-              onChange={(event) => setPaymentDate(event.target.value)}
-              className="h-11 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground"
-            />
-          </label>
-
-          {error ? <p className="rounded-lg bg-coral/10 p-3 text-sm text-coral">{error}</p> : null}
-        </div>
-
-        <footer className="flex gap-3 border-t border-border bg-surface-low p-6">
-          <Button type="button" variant="outline" onClick={handleClose} disabled={payBill.isPending} className="h-11 flex-1">
+    <AppModal
+      open
+      onOpenChange={(open) => { if (!open) handleClose(); }}
+      isPending={payBill.isPending}
+      size="lg"
+      title={t("title")}
+      description={bill.description || bill.walletName}
+      footer={
+        <>
+          <ModalCancelButton isPending={payBill.isPending} onClick={handleClose}>
             {t("cancel")}
-          </Button>
-          <Button type="button" onClick={handlePay} disabled={!sourceWalletId || payBill.isPending} className="h-11 flex-1 gap-2">
-            {payBill.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+          </ModalCancelButton>
+          <ModalSubmitButton
+            type="button"
+            isPending={payBill.isPending}
+            pendingLabel={t("confirm")}
+            disabled={!sourceWalletId}
+            onClick={handlePay}
+          >
             {t("confirm")}
-          </Button>
-        </footer>
-      </section>
-    </div>
+          </ModalSubmitButton>
+        </>
+      }
+    >
+      <div className="rounded-lg bg-surface-low p-4">
+        <p className="text-xs text-muted-foreground">{t("paymentAmount")}</p>
+        <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
+          {formatCurrency(bill.amountPerTerm, intlLocale)}
+        </p>
+      </div>
+
+      <FormField label={t("paymentSource")}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {sourceWallets.map((wallet) => {
+            const selected = sourceWalletId === wallet.id;
+            const disabled = wallet.balance < bill.amountPerTerm;
+            return (
+              <button
+                key={wallet.id}
+                type="button"
+                disabled={disabled}
+                onClick={() => setSourceWalletId(wallet.id)}
+                className={`rounded-lg border p-3 text-left disabled:cursor-not-allowed disabled:opacity-55 ${selected ? "border-mint bg-mint/10" : "border-border bg-card"}`}
+              >
+                <span className="flex items-center justify-between gap-2 text-sm font-semibold">
+                  {wallet.name}
+                  {selected ? <CheckCircle2 className="size-4 text-mint" /> : null}
+                </span>
+                <span className="mt-1 block text-sm tabular-nums text-muted-foreground">
+                  {formatCurrency(wallet.balance, intlLocale)}
+                </span>
+                {disabled ? (
+                  <span className="mt-1 block text-xs text-coral">{t("insufficientBalance")}</span>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+        {sourceWallets.length === 0 ? (
+          <p className="mt-3 rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+            {t("noSourceWallets")}
+          </p>
+        ) : null}
+      </FormField>
+
+      <FormField label={t("paymentDate")} htmlFor="pay-bill-date">
+        <Input
+          type="date"
+          value={paymentDate}
+          onChange={(event) => setPaymentDate(event.target.value)}
+          className="h-11 border-border bg-card px-3 text-sm"
+        />
+      </FormField>
+
+      <FormErrorMessage message={error} />
+    </AppModal>
   );
 }
