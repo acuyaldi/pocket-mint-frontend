@@ -233,6 +233,9 @@
   "wallets": {
     "pageTitle": "Wallets",
     "pageDescription": "Manage all your financial accounts",
+    "loading": "Loading wallets…",
+    "error": "Couldn't load wallets.",
+    "retry": "Retry",
     "searchPlaceholder": "Search wallets or accounts...",
     "addAccount": "Add Account",
     "filters": {

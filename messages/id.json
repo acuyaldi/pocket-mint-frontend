@@ -233,6 +233,9 @@
   "wallets": {
     "pageTitle": "Dompet",
     "pageDescription": "Kelola seluruh akun finansial Anda",
+    "loading": "Memuat dompet…",
+    "error": "Gagal memuat dompet.",
+    "retry": "Coba lagi",
     "searchPlaceholder": "Cari dompet atau akun...",
     "addAccount": "Tambah Akun",
     "filters": {
