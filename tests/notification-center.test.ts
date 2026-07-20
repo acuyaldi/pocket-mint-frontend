@@ -79,9 +79,19 @@ describe("notification menu", () => {
     expect(menuSource).toContain("markAllRead.mutate()");
   });
 
-  it("distinguishes loading, empty, and populated states", () => {
+  it("distinguishes loading, error, empty, and populated states", () => {
     expect(menuSource).toContain('t("loading")');
+    expect(menuSource).toContain("isError");
+    expect(menuSource).toContain('t("page.error")');
+    expect(menuSource).toContain('t("page.retry")');
     expect(menuSource).toContain('t("empty")');
+  });
+
+  it("does not render the empty state while the query has failed", () => {
+    const errorBranchIndex = menuSource.indexOf("isError ?");
+    const emptyBranchIndex = menuSource.indexOf('t("empty")');
+    expect(errorBranchIndex).toBeGreaterThan(-1);
+    expect(errorBranchIndex).toBeLessThan(emptyBranchIndex);
   });
 
   it("triggers a targeted refresh once when the dropdown mounts (opens), not on a polling interval", () => {

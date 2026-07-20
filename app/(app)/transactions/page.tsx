@@ -252,7 +252,7 @@ export default function TransactionsPage() {
 
           return (
             <section key={dateKey}>
-              <div className="mb-4 flex items-center justify-between border-b border-border pb-2">
+              <div className="mb-4 flex items-center justify-between border-b border-border px-6 pb-2">
                 <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
                   {formatGroupTitle(dateKey, intlLocale, {
                     today: t("today"),
@@ -264,21 +264,28 @@ export default function TransactionsPage() {
                 </span>
               </div>
               <div className="space-y-2">
-                {group.map((transaction) => (
-                  <button
-                    key={transaction.id}
-                    type="button"
-                    onClick={() => setSelectedTx(transaction)}
-                    className="group flex w-full items-center justify-between rounded-xl border border-border/60 bg-card p-6 text-left transition-all duration-300 hover:shadow-md"
-                  >
-                    <div className="flex min-w-0 items-center gap-4">
+                {group.map((transaction) => {
+                  const walletText =
+                    transaction.type === "TRANSFER" && transaction.toWallet
+                      ? `${transaction.wallet?.name ?? "-"} → ${transaction.toWallet.name}`
+                      : (transaction.wallet?.name ??
+                          wallets.find((wallet) => wallet.id === transaction.walletId)?.name ??
+                          "-");
+
+                  return (
+                    <button
+                      key={transaction.id}
+                      type="button"
+                      onClick={() => setSelectedTx(transaction)}
+                      className="group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 rounded-xl border border-border/60 bg-card p-6 text-left transition-all duration-300 hover:shadow-md md:grid-cols-[auto_minmax(0,1fr)_minmax(8rem,14rem)_minmax(6rem,auto)]"
+                    >
                       <div
                         className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${
                           transaction.type === "INCOME"
                             ? "bg-mint/10"
                             : transaction.type === "EXPENSE"
-                            ? "bg-coral/10"
-                            : "bg-surface-high"
+                              ? "bg-coral/10"
+                              : "bg-surface-high"
                         }`}
                       >
                         <TransactionIcon type={transaction.type} />
@@ -293,26 +300,27 @@ export default function TransactionsPage() {
                             : transaction.category?.name ?? t("noCategory")}
                         </p>
                       </div>
-                    </div>
-                    <div className="hidden text-sm text-muted-foreground md:block">
-                      {transaction.wallet?.name ??
-                        wallets.find((wallet) => wallet.id === transaction.walletId)?.name ??
-                        "-"}
-                    </div>
-                    <p
-                      className={`shrink-0 text-sm font-bold tabular-nums ${
-                        transaction.type === "INCOME"
-                          ? "text-mint"
-                          : transaction.type === "TRANSFER"
-                          ? "text-foreground"
-                          : "text-coral"
-                      }`}
-                    >
-                      {transaction.type === "INCOME" ? "+" : transaction.type === "EXPENSE" ? "-" : ""}
-                      {formatCurrency(transaction.amount, intlLocale)}
-                    </p>
-                  </button>
-                ))}
+                      <div className="hidden min-w-0 md:block">
+                        <p className="truncate text-sm text-muted-foreground">{walletText}</p>
+                      </div>
+                      <p
+                        className={`text-right text-sm font-bold tabular-nums whitespace-nowrap ${
+                          transaction.type === "INCOME"
+                            ? "text-mint"
+                            : transaction.type === "TRANSFER"
+                              ? "text-foreground"
+                              : "text-coral"
+                        }`}
+                      >
+                        {transaction.type === "INCOME" ? "+" : transaction.type === "EXPENSE" ? "-" : ""}
+                        {formatCurrency(transaction.amount, intlLocale)}
+                      </p>
+                      <div className="col-span-full block min-w-0 md:hidden">
+                        <p className="truncate text-xs text-muted-foreground">{walletText}</p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </section>
           );

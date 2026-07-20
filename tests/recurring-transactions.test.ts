@@ -23,9 +23,9 @@ const bottomNavSource = readFileSync(root + "components/layout/bottom-nav.tsx", 
 describe("recurring transaction modal (create/edit reuse one component)", () => {
   it("derives create/edit copy from the mode prop via one shared translation namespace", () => {
     expect(modalSource).toContain("useTranslations(`recurringTransactionModals.${mode}`)");
-    expect(idMessages.recurringTransactionModals.create.title).toBe("Template Rutin Baru");
-    expect(idMessages.recurringTransactionModals.edit.title).toBe("Ubah Template Rutin");
-    expect(idMessages.recurringTransactionModals.create.submit).toBe("Buat Template");
+    expect(idMessages.recurringTransactionModals.create.title).toBe("Tagihan Rutin Baru");
+    expect(idMessages.recurringTransactionModals.edit.title).toBe("Ubah Tagihan Rutin");
+    expect(idMessages.recurringTransactionModals.create.submit).toBe("Buat Tagihan");
     expect(idMessages.recurringTransactionModals.edit.submit).toBe("Simpan Perubahan");
   });
 
@@ -153,18 +153,19 @@ describe("recurring transaction modal — reminder settings", () => {
     expect(modalSource).toContain("useState<number | null>(() => template?.reminderOffsetDays ?? null)");
   });
 
-  it("renders a radio group with the 5 allowed reminder options, not a dropdown/slider/free input", () => {
+  it("renders a radio group with 4 reminder options (H-7 removed), not a dropdown/slider/free input", () => {
     expect(modalSource).toContain('role="radiogroup"');
     expect(modalSource).toContain('type="radio"');
     expect(modalSource).toContain('{ key: "none", enabled: false, offset: null, label: t("reminderNone") }');
     expect(modalSource).toContain('{ key: "0", enabled: true, offset: 0, label: t("reminderOnDueDate") }');
     expect(modalSource).toContain('{ key: "1", enabled: true, offset: 1, label: t("reminder1Day") }');
     expect(modalSource).toContain('{ key: "3", enabled: true, offset: 3, label: t("reminder3Days") }');
-    expect(modalSource).toContain('{ key: "7", enabled: true, offset: 7, label: t("reminder7Days") }');
+    // H-7 option removed; legacy records fall through to reminderLegacy label.
+    expect(modalSource).not.toContain('{ key: "7"');
   });
 
   it("submits reminderEnabled and reminderOffsetDays together", () => {
-    expect(modalSource).toContain("reminderEnabled,\n        reminderOffsetDays,");
+    expect(modalSource).toMatch(/reminderEnabled,\s+reminderOffsetDays,/);
   });
 });
 
@@ -232,21 +233,22 @@ describe("recurring transaction i18n catalog parity", () => {
     for (const messages of [idMessages, enMessages]) {
       for (const key of [
         "reminder",
+        "reminderHelp",
         "reminderNone",
         "reminderOnDueDate",
         "reminder1Day",
         "reminder3Days",
-        "reminder7Days",
       ] as const) {
         expect(messages.recurringTransactionModals.create[key]).toBeTruthy();
         expect(messages.recurringTransactionModals.edit[key]).toBeTruthy();
       }
+      // H-7 removed from modal options; legacy label exists for list display.
       expect(messages.recurringTransactions.reminderLine).toContain("{value}");
       expect(messages.recurringTransactions.reminderNone).toBeTruthy();
       expect(messages.recurringTransactions.reminderOnDueDate).toBeTruthy();
       expect(messages.recurringTransactions.reminder1Day).toBeTruthy();
       expect(messages.recurringTransactions.reminder3Days).toBeTruthy();
-      expect(messages.recurringTransactions.reminder7Days).toBeTruthy();
+      expect(messages.recurringTransactions.reminderLegacy).toBeTruthy();
     }
   });
 });

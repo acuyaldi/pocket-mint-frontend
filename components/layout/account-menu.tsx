@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Pencil, LogOut } from "lucide-react";
-import { logout } from "@/app/actions/auth";
+import { useLogout } from "@/components/LogoutProvider";
 import {
   DropdownMenuItem,
   DropdownMenuSeparator,
@@ -14,17 +14,7 @@ import { LanguageMenuItems } from "@/components/layout/language-switcher";
 // menu never drifts between the two surfaces.
 export function AccountMenuItems() {
   const t = useTranslations("nav");
-
-  const handleLogout = async () => {
-    // logout() redirects on success; it only returns when signOut failed
-    const result = await logout();
-    if (result?.error) {
-      console.error("Logout failed:", result.error);
-      // ponytail: swap for the app toast when one exists — alert is the only
-      // feedback channel that survives the menu closing
-      window.alert(t("logoutFailed"));
-    }
-  };
+  const { handleLogout } = useLogout();
 
   return (
     <>

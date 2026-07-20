@@ -20,11 +20,12 @@ import type { RecurringTransaction } from "@/src/types/recurringTransaction";
 import { RecurringTransactionModal, type RecurringTransactionFormValues } from "./components/RecurringTransactionModal";
 import DeleteRecurringModal from "./components/DeleteRecurringModal";
 
-function reminderValueKey(reminderOffsetDays: number): "reminderOnDueDate" | "reminder1Day" | "reminder3Days" | "reminder7Days" {
+function reminderValueKey(reminderOffsetDays: number): "reminderOnDueDate" | "reminder1Day" | "reminder3Days" | "reminderLegacy" {
   if (reminderOffsetDays === 0) return "reminderOnDueDate";
   if (reminderOffsetDays === 1) return "reminder1Day";
   if (reminderOffsetDays === 3) return "reminder3Days";
-  return "reminder7Days";
+  // H-7 is no longer offered in the UI; existing records show a review notice.
+  return "reminderLegacy";
 }
 
 function formatDueDate(value: string, intlLocale: string): string {

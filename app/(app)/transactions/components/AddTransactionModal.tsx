@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, FormEvent, useMemo, useState } from "react";
+import { useCallback, FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowDownLeft,
@@ -10,24 +9,17 @@ import {
   ArrowUpRight,
   Banknote,
   CalendarDays,
-  Check,
-  ChevronDown,
   CreditCard,
-  Loader2,
   Plus,
   RefreshCw,
   Smartphone,
   Wallet as WalletIcon,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { AppModal, ModalCancelButton, ModalSubmitButton } from "@/components/ui/app-modal";
+import { FieldLabel, FormField, FormErrorMessage } from "@/components/ui/form-field";
 import { toast } from "@/components/ui/toaster";
 import { formatCurrency } from "@/lib/utils";
 import { INTL_LOCALE } from "@/i18n/config";
@@ -174,14 +166,6 @@ interface AddTransactionModalProps {
   initialType?: TxType;
   onClose: () => void;
   onSubmit: (data: AddTransactionData) => Promise<void>;
-}
-
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <label className="text-[12px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-      {children}
-    </label>
-  );
 }
 
 function WalletSelectionList({
@@ -381,15 +365,6 @@ export function AddTransactionModal({
     if (!isCreating) onClose();
   }, [isCreating, onClose]);
 
-  useEffect(() => {
-    if (!isOpen || isCreating) return;
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [isOpen, isCreating, onClose]);
-
   const handleAddWallet = useCallback(() => {
     onClose();
     router.push("/wallets");
@@ -555,54 +530,35 @@ export function AddTransactionModal({
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          key="add-transaction-backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.18 }}
-          className="fixed inset-0 z-60 flex items-center justify-center bg-primary/40 p-4 backdrop-blur-sm md:p-10"
-          onClick={handleClose}
-        >
-          <motion.div
-            key="add-transaction-card"
-            initial={{ opacity: 0, scale: 0.97, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.97, y: 12 }}
-            transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
-            onClick={(event) => event.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="add-tx-title"
-            className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-border/60 bg-card shadow-xl"
+    <AppModal
+      open={isOpen}
+      onOpenChange={(open) => { if (!open) handleClose(); }}
+      isPending={isCreating}
+      size="lg"
+      title={t("title")}
+      description={t("subtitle")}
+      footer={
+        <>
+          <ModalCancelButton isPending={isCreating} onClick={handleClose}>
+            {tCommon("actions.cancel")}
+          </ModalCancelButton>
+          <ModalSubmitButton
+            form="add-transaction-form"
+            isPending={isCreating}
+            pendingLabel={t("saving")}
+            disabled={
+              hasNoWallets ||
+              (type === "TRANSFER" && destinationPickerWallets.length === 0)
+            }
           >
-            <header className="flex items-center justify-between border-b border-border/50 bg-surface-low px-6 py-4">
-              <div>
-                <h2 id="add-tx-title" className="text-xl font-semibold text-foreground">
-                  {t("title")}
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {t("subtitle")}
-                </p>
-              </div>
-              <button
-                type="button"
-                aria-label={t("closeAria")}
-                onClick={handleClose}
-                className="flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface-high hover:text-foreground"
-              >
-                <X className="size-5" />
-              </button>
-            </header>
-
-            <form
-              onSubmit={handleSubmit}
-              className="flex min-h-0 flex-1 flex-col"
-            >
-              <div className="flex-1 space-y-6 overflow-y-auto p-6">
-                <nav
+            <ActiveIcon className="size-4" />
+            {t("submit")}
+          </ModalSubmitButton>
+        </>
+      }
+    >
+      <form id="add-transaction-form" onSubmit={handleSubmit} className="space-y-6">
+        <nav
                   aria-label={t("typeNavAria")}
                   className="grid grid-cols-3 rounded-lg bg-surface-high p-1"
                 >
@@ -662,50 +618,17 @@ export function AddTransactionModal({
 
                   {cats.length > 0 && (
                     <div className="space-y-2">
-                      <FieldLabel>{t("category")}</FieldLabel>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          type="button"
-                          aria-label={t("chooseCategoryAria")}
-                          className="flex h-12 w-full items-center justify-between gap-2 rounded-xl border border-border/70 bg-card px-3 text-sm outline-none transition-colors hover:bg-surface-low focus:border-primary focus:ring-2 focus:ring-primary/15"
-                        >
-                          <span
-                            className={
-                              categoryId ? "text-foreground" : "text-muted-foreground"
-                            }
-                          >
-                            {cats.find((cat) => cat.id === categoryId)?.name ??
-                              t("chooseCategory")}
-                          </span>
-                          <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align="start"
-                          side="bottom"
-                          sideOffset={6}
-                          className="max-h-[var(--available-height)] w-[var(--anchor-width)] overflow-y-auto"
-                        >
-                          {cats.map((cat) => {
-                            const selected = cat.id === categoryId;
-                            return (
-                              <DropdownMenuItem
-                                key={cat.id}
-                                role="menuitemradio"
-                                aria-checked={selected}
-                                onClick={() => setCategoryId(cat.id)}
-                                className={`min-h-10 justify-between ${
-                                  selected ? "bg-mint/10 text-foreground" : ""
-                                }`}
-                              >
-                                {cat.name}
-                                {selected ? (
-                                  <Check className="text-mint" aria-hidden="true" />
-                                ) : null}
-                              </DropdownMenuItem>
-                            );
-                          })}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <FieldLabel htmlFor="add-transaction-category">{t("category")}</FieldLabel>
+                      <Select value={categoryId} onValueChange={(value) => setCategoryId(value ?? "")} items={Object.fromEntries(cats.map((c) => [c.id, c.name]))}>
+                        <SelectTrigger id="add-transaction-category" aria-label={t("chooseCategoryAria")}>
+                          <SelectValue placeholder={t("chooseCategory")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {cats.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   )}
                 </section>
@@ -810,8 +733,7 @@ export function AddTransactionModal({
                   </section>
                 )}
 
-                <section className="space-y-2">
-                  <FieldLabel>{t("description")}</FieldLabel>
+                <FormField label={t("description")} htmlFor="add-tx-description">
                   <Input
                     type="text"
                     placeholder={t("descriptionPlaceholder")}
@@ -819,7 +741,7 @@ export function AddTransactionModal({
                     onChange={(event) => setDescription(event.target.value)}
                     className="h-12 border-border/70 bg-card px-3 text-sm"
                   />
-                </section>
+                </FormField>
 
                 {type === "EXPENSE" &&
                   selectedWallet &&
@@ -896,8 +818,7 @@ export function AddTransactionModal({
                           </div>
 
                           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <div className="space-y-2">
-                              <FieldLabel>{t("interestPerMonth")}</FieldLabel>
+                            <FormField label={t("interestPerMonth")} htmlFor="add-tx-interest-rate">
                               <Input
                                 type="text"
                                 inputMode="decimal"
@@ -908,11 +829,10 @@ export function AddTransactionModal({
                                     event.target.value.replace(/[^\d.,]/g, ""),
                                   )
                                 }
-                                className="h-11 border-border/70 bg-card"
+                                className="h-12 border-border/70 bg-card"
                               />
-                            </div>
-                            <div className="space-y-2">
-                              <FieldLabel>{t("adminFeePercent")}</FieldLabel>
+                            </FormField>
+                            <FormField label={t("adminFeePercent")} htmlFor="add-tx-admin-fee">
                               <Input
                                 type="text"
                                 inputMode="decimal"
@@ -923,9 +843,9 @@ export function AddTransactionModal({
                                     event.target.value.replace(/[^\d.,]/g, ""),
                                   )
                                 }
-                                className="h-11 border-border/70 bg-card"
+                                className="h-12 border-border/70 bg-card"
                               />
-                            </div>
+                            </FormField>
                           </div>
 
                           {matchedPreset && (
@@ -968,67 +888,28 @@ export function AddTransactionModal({
                           </p>
                         </div>
                       ) : needsManualDueDate ? (
-                        <div className="mt-4 space-y-2 border-t border-border/60 pt-4">
-                          <FieldLabel>{t("firstDueDate")}</FieldLabel>
-                          <Input
-                            type="date"
-                            value={firstDueDate}
-                            onChange={(event) => setFirstDueDate(event.target.value)}
-                            min={date}
-                            required
-                            className="h-11 border-border/70 bg-card"
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            {t("firstDueDateRequired")}
-                          </p>
+                        <div className="mt-4 border-t border-border/60 pt-4">
+                          <FormField
+                            label={t("firstDueDate")}
+                            htmlFor="add-tx-first-due-date"
+                            description={t("firstDueDateRequired")}
+                          >
+                            <Input
+                              type="date"
+                              value={firstDueDate}
+                              onChange={(event) => setFirstDueDate(event.target.value)}
+                              min={date}
+                              required
+                              className="h-12 border-border/70 bg-card"
+                            />
+                          </FormField>
                         </div>
                       ) : null}
                     </section>
                   )}
 
-                {error && (
-                  <p className="rounded-lg border border-coral/30 bg-coral/10 px-3 py-2 text-sm text-coral">
-                    {error}
-                  </p>
-                )}
-              </div>
-
-              <footer className="flex flex-col-reverse gap-3 border-t border-border/50 bg-surface-low px-6 py-4 sm:flex-row">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClose}
-                  disabled={isCreating}
-                  className="h-11 flex-1 bg-card"
-                >
-                  {tCommon("actions.cancel")}
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={
-                    isCreating ||
-                    hasNoWallets ||
-                    (type === "TRANSFER" && destinationPickerWallets.length === 0)
-                  }
-                  className="h-11 flex-1 gap-2"
-                >
-                  {isCreating ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" />
-                      {t("saving")}
-                    </>
-                  ) : (
-                    <>
-                      <ActiveIcon className="size-4" />
-                      {t("submit")}
-                    </>
-                  )}
-                </Button>
-              </footer>
-            </form>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        <FormErrorMessage message={error} />
+      </form>
+    </AppModal>
   );
 }

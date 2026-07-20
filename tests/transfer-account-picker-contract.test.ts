@@ -79,7 +79,7 @@ describe("add transaction modal transfer flow source contract", () => {
       'id="transfer-source"',
       'aria-label={t("swapWalletsAria")}',
       'id="transfer-destination"',
-      "<FieldLabel>{t(\"description\")}</FieldLabel>",
+      "<FormField label={t(\"description\")}",
     ].map((marker) => modalSource.indexOf(marker));
 
     expect(indices.every((index) => index >= 0)).toBe(true);

@@ -16,15 +16,18 @@ const pageSource = readFileSync(root + "app/(app)/wallets/page.tsx", "utf8");
 describe("create wallet mutation feedback", () => {
   it("owns a pending prop and disables both actions while creating", () => {
     expect(modalSource).toContain("isCreating: boolean");
-    expect(modalSource).toContain('<Button type="submit" disabled={isCreating}');
-    expect(modalSource).toContain("onClick={handleClose}");
-    expect(modalSource).toContain("disabled={isCreating}");
+    // The shared AppModal shell owns the pending-close guard, and
+    // ModalSubmitButton/ModalCancelButton own the disabled state — the
+    // modal just has to wire isCreating through to both.
+    expect(modalSource).toContain("isPending={isCreating}");
+    expect(modalSource).toContain("<ModalCancelButton isPending={isCreating} onClick={handleClose}>");
+    expect(modalSource).toContain('<ModalSubmitButton form="create-wallet-form" isPending={isCreating}');
   });
 
   it("shows a visible loading label instead of a static submit label while pending", () => {
-    expect(modalSource).toContain("isCreating ? (");
-    expect(modalSource).toContain("Loader2");
-    expect(modalSource).toContain('tCommon("actions.saving")');
+    // The spinner + label swap is centralized in ModalSubmitButton (see
+    // modal-primitives.test.ts); this modal only needs to supply the label.
+    expect(modalSource).toContain('pendingLabel={tCommon("actions.saving")}');
   });
 
   it("awaits the submit, displays the error inline, and keeps the modal open on failure", () => {

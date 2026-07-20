@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import QueryProvider from "@/components/QueryProvider";
+import { LogoutProvider } from "@/components/LogoutProvider";
 import "./globals.css";
 
 // viewport-fit=cover is required for env(safe-area-inset-*) to be non-zero on iOS
@@ -29,7 +30,9 @@ export default async function RootLayout({
     <html lang={locale} className="h-full antialiased">
       <body className="min-h-full flex flex-col font-sans antialiased bg-background text-foreground">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <QueryProvider>{children}</QueryProvider>
+          <QueryProvider>
+            <LogoutProvider>{children}</LogoutProvider>
+          </QueryProvider>
         </NextIntlClientProvider>
       </body>
     </html>

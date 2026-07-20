@@ -271,7 +271,6 @@ export default function DashboardPage() {
               />
             ))}
             {dashboardWallets.length === 0 &&
-              !walletsData &&
               [...Array(4)].map((_, index) => (
                 <div
                   key={index}
