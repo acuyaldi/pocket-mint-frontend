@@ -214,7 +214,7 @@ export default function WalletsPage() {
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
   const [editingWallet, setEditingWallet] = useState<Wallet | null>(null);
   const [deletingWallet, setDeletingWallet] = useState<Wallet | null>(null);
-  const { data: wallets } = useWallets();
+  const { data: wallets, isLoading, isError, isFetching, refetch } = useWallets();
   const createWallet = useCreateWallet();
   const deleteWallet = useDeleteWallet();
 
@@ -313,21 +313,41 @@ export default function WalletsPage() {
       </div>
 
       <div className="space-y-8">
-        <WalletSection kind="bank" wallets={bankWallets} badge="badgeAsset" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
-        <WalletSection kind="ewallet" wallets={ewallets} badge="badgeAsset" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
-        <WalletSection kind="credit" wallets={creditWallets} badge="badgeLiability" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
-        <WalletSection kind="paylater" wallets={paylaterWallets} badge="badgeLiability" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
-        <WalletSection kind="loan" wallets={loanWallets} badge="badgeLiability" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
-        {visibleWallets.length === 0 ? (
-          <button
-            type="button"
-            onClick={() => setIsCustomModalOpen(true)}
-            className="flex min-h-40 w-full items-center justify-center rounded-xl border-2 border-dashed border-border bg-card text-sm font-semibold text-primary"
-          >
-            <Plus className="mr-2 size-4" />
-            {t("addFirstAccount")}
-          </button>
-        ) : null}
+        {isLoading ? (
+          <p className="rounded-xl border border-border bg-card py-10 text-center text-sm text-muted-foreground">
+            {t("loading")}
+          </p>
+        ) : isError ? (
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card py-10 text-center">
+            <p className="text-sm text-muted-foreground">{t("error")}</p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="text-sm font-medium text-primary hover:underline disabled:opacity-50"
+            >
+              {t("retry")}
+            </button>
+          </div>
+        ) : (
+          <>
+            <WalletSection kind="bank" wallets={bankWallets} badge="badgeAsset" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
+            <WalletSection kind="ewallet" wallets={ewallets} badge="badgeAsset" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
+            <WalletSection kind="credit" wallets={creditWallets} badge="badgeLiability" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
+            <WalletSection kind="paylater" wallets={paylaterWallets} badge="badgeLiability" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
+            <WalletSection kind="loan" wallets={loanWallets} badge="badgeLiability" onEdit={setEditingWallet} onDelete={setDeletingWallet} />
+            {visibleWallets.length === 0 ? (
+              <button
+                type="button"
+                onClick={() => setIsCustomModalOpen(true)}
+                className="flex min-h-40 w-full items-center justify-center rounded-xl border-2 border-dashed border-border bg-card text-sm font-semibold text-primary"
+              >
+                <Plus className="mr-2 size-4" />
+                {t("addFirstAccount")}
+              </button>
+            ) : null}
+          </>
+        )}
       </div>
 
       <CreateWalletModal
