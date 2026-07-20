@@ -305,6 +305,7 @@
         "none": "No institution",
         "other": "Other"
       },
+      "genericError": "Couldn't add the account. Try again.",
       "submit": "Save Account"
     },
     "edit": {
@@ -541,6 +542,8 @@
       "months": "months",
       "mapLocation": "MAP LOCATION",
       "edit": "Edit",
+      "editUnsupportedTransfer": "Transfer editing isn't supported by this screen yet.",
+      "editUnsupportedInstallment": "Installment transactions can't be edited directly.",
       "delete": "Delete"
     },
     "edit": {
@@ -554,13 +557,15 @@
       "typeIncome": "Income",
       "date": "Date",
       "saving": "Saving...",
-      "submit": "Save Changes"
+      "submit": "Save Changes",
+      "genericSaveFailed": "Couldn't save your changes. Please try again."
     },
     "delete": {
       "title": "Delete Transaction?",
       "description": "Deleting a transaction will reverse the wallet balance. This action can't be undone.",
       "deleting": "Deleting...",
-      "submit": "Delete"
+      "submit": "Delete",
+      "genericError": "Couldn't delete the transaction. Please try again."
     },
     "add": {
       "title": "Add Transaction",

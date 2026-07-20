@@ -136,6 +136,7 @@ export default function TransactionsPage() {
         setEditingTx(null);
       } catch (error) {
         console.error(error);
+        throw error;
       } finally {
         setIsSaving(false);
       }
@@ -152,6 +153,7 @@ export default function TransactionsPage() {
       setSelectedTx(null);
     } catch (error) {
       console.error(error);
+      throw error;
     } finally {
       setIsDeleting(false);
     }

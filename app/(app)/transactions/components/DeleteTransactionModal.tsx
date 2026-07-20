@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -10,12 +11,45 @@ interface DeleteTransactionModalProps {
   isOpen: boolean;
   isDeleting: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => Promise<void>;
 }
 
 export function DeleteTransactionModal({ isOpen, isDeleting, onClose, onConfirm }: DeleteTransactionModalProps) {
   const t = useTranslations("transactionModals.delete");
   const tCommon = useTranslations("common");
+  const [error, setError] = useState("");
+  const [wasOpen, setWasOpen] = useState(false);
+
+  // Clear a stale error from a previous delete attempt when this reopens for
+  // a (possibly different) transaction. Adjusted during render per
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  if (isOpen && !wasOpen) {
+    setWasOpen(true);
+    setError("");
+  } else if (!isOpen && wasOpen) {
+    setWasOpen(false);
+  }
+
+  useEffect(() => {
+    if (!isOpen || isDeleting) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [isOpen, isDeleting, onClose]);
+
+  const handleConfirm = async () => {
+    setError("");
+    try {
+      await onConfirm();
+    } catch (err) {
+      const message = (err as { response?: { data?: { error?: { message?: string } } } })
+        ?.response?.data?.error?.message;
+      setError(message ?? t("genericError"));
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -35,6 +69,10 @@ export function DeleteTransactionModal({ isOpen, isDeleting, onClose, onConfirm 
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
             onClick={(e) => e.stopPropagation()}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-tx-title"
+            aria-describedby="delete-tx-description"
             className="w-full max-w-sm mx-4"
           >
             <Card className="border shadow-2xl" style={{ backgroundColor: "var(--color-popover)", borderColor: "var(--color-border)" }}>
@@ -44,13 +82,18 @@ export function DeleteTransactionModal({ isOpen, isDeleting, onClose, onConfirm 
                     <Trash2 className="size-5" style={{ color: "var(--color-destructive)" }} />
                   </div>
                   <div>
-                    <h3 className="text-base font-semibold" style={{ color: "var(--color-foreground)", fontFamily: "var(--font-hanken)" }}>
+                    <h3 id="delete-tx-title" className="text-base font-semibold" style={{ color: "var(--color-foreground)", fontFamily: "var(--font-hanken)" }}>
                       {t("title")}
                     </h3>
-                    <p className="text-sm mt-1" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>
+                    <p id="delete-tx-description" className="text-sm mt-1" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>
                       {t("description")}
                     </p>
                   </div>
+                  {error ? (
+                    <p className="w-full rounded-lg border border-coral/30 bg-coral/10 px-3 py-2 text-sm text-coral">
+                      {error}
+                    </p>
+                  ) : null}
                   <div className="flex items-center gap-3 w-full">
                     <Button
                       type="button"
@@ -63,10 +106,11 @@ export function DeleteTransactionModal({ isOpen, isDeleting, onClose, onConfirm 
                       {tCommon("actions.cancel")}
                     </Button>
                     <Button
-                      onClick={onConfirm}
+                      type="button"
+                      variant="destructive"
+                      onClick={handleConfirm}
                       disabled={isDeleting}
                       className="flex-1 h-11 font-medium gap-2"
-                      style={{ backgroundColor: "var(--color-destructive)", color: "var(--color-destructive-foreground)" }}
                     >
                       {isDeleting ? (<><Loader2 className="size-4 animate-spin" />{t("deleting")}</>) : t("submit")}
                     </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, FormEvent } from "react";
+import { useState, useCallback, useEffect, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, TrendingUp, TrendingDown } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -27,12 +27,34 @@ interface EditTransactionModalProps {
 export function EditTransactionModal({ tx, isSaving, onClose, onSubmit }: EditTransactionModalProps) {
   const t = useTranslations("transactionModals.edit");
   const tCommon = useTranslations("common");
-  const [description, setDescription] = useState(tx?.description ?? "");
-  const [amount, setAmount] = useState(tx ? formatRupiah(String(tx.amount)) : "");
-  const [type, setType] = useState<"EXPENSE" | "INCOME">(
-    tx?.type === "INCOME" ? "INCOME" : "EXPENSE"
-  );
-  const [date, setDate] = useState(tx?.date ? tx.date.slice(0, 10) : "");
+  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState("");
+  const [type, setType] = useState<"EXPENSE" | "INCOME">("EXPENSE");
+  const [date, setDate] = useState("");
+  const [error, setError] = useState("");
+
+  // Re-hydrate every editable field whenever a (different) transaction is
+  // opened, clearing stale error/pending UI from a previous edit. This is a
+  // genuine synchronization with an external prop change, not a derived
+  // value, so it belongs in an effect rather than during render.
+  useEffect(() => {
+    if (!tx) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing form fields from the `tx` prop is the intended use of this effect, not incidental render-time state.
+    setDescription(tx.description ?? "");
+    setAmount(formatRupiah(String(tx.amount)));
+    setType(tx.type === "INCOME" ? "INCOME" : "EXPENSE");
+    setDate(tx.date ? tx.date.slice(0, 10) : "");
+    setError("");
+  }, [tx]);
+
+  useEffect(() => {
+    if (!tx || isSaving) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [tx, isSaving, onClose]);
 
   const handleAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, "");
@@ -45,14 +67,21 @@ export function EditTransactionModal({ tx, isSaving, onClose, onSubmit }: EditTr
     const rawAmount = amount.replace(/\./g, "");
     const parsedAmount = Number(rawAmount);
     if (!description.trim() || isNaN(parsedAmount) || parsedAmount <= 0) return;
-    await onSubmit({
-      id: tx.id,
-      description: description.trim(),
-      amount: parsedAmount,
-      type,
-      date: date ? new Date(date).toISOString() : undefined,
-    });
-  }, [tx, amount, description, type, date, onSubmit]);
+    setError("");
+    try {
+      await onSubmit({
+        id: tx.id,
+        description: description.trim(),
+        amount: parsedAmount,
+        type,
+        date: date ? new Date(date).toISOString() : undefined,
+      });
+    } catch (err) {
+      const message = (err as { response?: { data?: { error?: { message?: string } } } })
+        ?.response?.data?.error?.message;
+      setError(message ?? t("genericSaveFailed"));
+    }
+  }, [tx, amount, description, type, date, onSubmit, t]);
 
   return (
     <AnimatePresence>
@@ -73,13 +102,16 @@ export function EditTransactionModal({ tx, isSaving, onClose, onSubmit }: EditTr
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-tx-title"
             className="w-full max-w-md mx-4"
           >
             <Card className="border shadow-2xl" style={{ backgroundColor: "var(--color-popover)", borderColor: "var(--color-border)" }}>
               <div className="px-6 pt-6 pb-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-base font-semibold" style={{ color: "var(--color-foreground)", fontFamily: "var(--font-hanken)" }}>
+                    <h3 id="edit-tx-title" className="text-base font-semibold" style={{ color: "var(--color-foreground)", fontFamily: "var(--font-hanken)" }}>
                       {t("title")}
                     </h3>
                     <p className="text-xs mt-0.5" style={{ color: "var(--color-muted-foreground)", fontFamily: "var(--font-inter)" }}>
@@ -162,6 +194,11 @@ export function EditTransactionModal({ tx, isSaving, onClose, onSubmit }: EditTr
                       style={{ backgroundColor: "var(--color-input)", border: "1px solid var(--color-border)", color: "var(--color-foreground)" }}
                     />
                   </div>
+                  {error ? (
+                    <p className="rounded-lg border border-coral/30 bg-coral/10 px-3 py-2 text-sm text-coral">
+                      {error}
+                    </p>
+                  ) : null}
                   <div className="flex items-center gap-3 pt-1">
                     <Button
                       type="button"

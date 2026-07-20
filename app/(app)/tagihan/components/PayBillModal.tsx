@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { CheckCircle2, Loader2, X } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
 import { INTL_LOCALE } from "@/i18n/config";
 import {
@@ -33,6 +34,19 @@ export function PayBillModal({
     ASSET_WALLET_TYPES.includes(wallet.type),
   );
 
+  const handleClose = () => {
+    if (!payBill.isPending) onClose();
+  };
+
+  useEffect(() => {
+    if (payBill.isPending) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [payBill.isPending, onClose]);
+
   async function handlePay() {
     if (!sourceWalletId) return;
     setError("");
@@ -52,7 +66,7 @@ export function PayBillModal({
   }
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center bg-primary/40 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-60 flex items-center justify-center bg-primary/40 p-4 backdrop-blur-sm" onClick={handleClose}>
       <section
         role="dialog"
         aria-modal="true"
@@ -65,7 +79,7 @@ export function PayBillModal({
             <h2 id="pay-bill-title" className="text-xl font-semibold text-primary">{t("title")}</h2>
             <p className="mt-1 text-sm text-muted-foreground">{bill.description || bill.walletName}</p>
           </div>
-          <button type="button" aria-label={t("closeAria")} onClick={onClose} disabled={payBill.isPending}>
+          <button type="button" aria-label={t("closeAria")} onClick={handleClose} disabled={payBill.isPending}>
             <X className="size-5" />
           </button>
         </header>
@@ -121,11 +135,13 @@ export function PayBillModal({
         </div>
 
         <footer className="flex gap-3 border-t border-border bg-surface-low p-6">
-          <button type="button" onClick={onClose} disabled={payBill.isPending} className="h-11 flex-1 rounded-lg border border-border bg-card text-sm font-semibold">{t("cancel")}</button>
-          <button type="button" onClick={handlePay} disabled={!sourceWalletId || payBill.isPending} className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-50">
+          <Button type="button" variant="outline" onClick={handleClose} disabled={payBill.isPending} className="h-11 flex-1">
+            {t("cancel")}
+          </Button>
+          <Button type="button" onClick={handlePay} disabled={!sourceWalletId || payBill.isPending} className="h-11 flex-1 gap-2">
             {payBill.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
             {t("confirm")}
-          </button>
+          </Button>
         </footer>
       </section>
     </div>
