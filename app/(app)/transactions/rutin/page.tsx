@@ -41,7 +41,7 @@ export default function RecurringTransactionsPage() {
   const locale = useLocale();
   const intlLocale = INTL_LOCALE[locale as keyof typeof INTL_LOCALE];
 
-  const { data, isLoading } = useRecurringTransactions();
+  const { data, isLoading, isError, isFetching, refetch } = useRecurringTransactions();
   const { data: walletsData } = useWallets();
   const { data: categoriesData } = useCategories();
   const createRecurring = useCreateRecurringTransaction();
@@ -124,6 +124,20 @@ export default function RecurringTransactionsPage() {
         </div>
       </div>
 
+      {isError ? (
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card py-10 text-center">
+          <p className="text-sm text-muted-foreground">{t("error")}</p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="text-sm font-medium text-primary hover:underline disabled:opacity-50"
+          >
+            {t("retry")}
+          </button>
+        </div>
+      ) : (
+      <>
       <div className="space-y-2">
         {templates.map((template) => (
           <div
@@ -204,6 +218,7 @@ export default function RecurringTransactionsPage() {
           {t("loading")}
         </p>
       ) : null}
+      </>)}
 
       {/* Keyed on open state so each open starts from a clean/prefilled form (no stale fields from the previous open). */}
       <RecurringTransactionModal

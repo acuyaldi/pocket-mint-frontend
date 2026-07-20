@@ -337,7 +337,9 @@
     "defaultLabel": "Transaction",
     "noCategory": "No category",
     "noMatches": "No matching transactions.",
-    "loading": "Loading transactions..."
+    "loading": "Loading transactions...",
+    "error": "Couldn't load transactions.",
+    "retry": "Retry"
   },
   "recurringTransactions": {
     "pageTitle": "Recurring Transactions",
@@ -347,6 +349,8 @@
     "addTemplate": "Add Template",
     "empty": "No recurring templates yet.",
     "loading": "Loading recurring templates...",
+    "error": "Couldn't load recurring templates.",
+    "retry": "Retry",
     "monthly": "Monthly",
     "active": "Active",
     "paused": "Paused",

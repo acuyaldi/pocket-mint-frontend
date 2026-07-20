@@ -74,7 +74,7 @@ export default function TransactionsPage() {
     { key: "EXPENSE", label: t("filters.expense") },
     { key: "TRANSFER", label: t("filters.transfer") },
   ];
-  const { data, isLoading } = useTransactions();
+  const { data, isLoading, isError, isFetching, refetch } = useTransactions();
   const { data: walletsData } = useWallets();
   const updateTransaction = useUpdateTransaction();
   const createTransaction = useCreateTransaction();
@@ -226,6 +226,20 @@ export default function TransactionsPage() {
         </div>
       </div>
 
+      {isError ? (
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card py-10 text-center">
+          <p className="text-sm text-muted-foreground">{t("error")}</p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="text-sm font-medium text-primary hover:underline disabled:opacity-50"
+          >
+            {t("retry")}
+          </button>
+        </div>
+      ) : (
+      <>
       <div className="space-y-10">
         {groupedTransactions.map(([dateKey, group]) => {
           const total = group.reduce((sum, transaction) => {
@@ -313,6 +327,7 @@ export default function TransactionsPage() {
           {t("loading")}
         </p>
       ) : null}
+      </>)}
 
       <TransactionDetailPanel
         tx={selectedTx}
