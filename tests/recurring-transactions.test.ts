@@ -183,6 +183,35 @@ describe("recurring transaction create/update contract — reminder", () => {
   });
 });
 
+describe("recurring transaction delete failure feedback (Phase 13A)", () => {
+  it("imports the shared toast helper", () => {
+    expect(pageSource).toContain('import { toast } from "@/components/ui/toaster";');
+  });
+
+  it("catches a failed delete mutation and shows a localized error toast", () => {
+    expect(pageSource).toContain(
+      'toast(message ?? t("toastDeleteFailed"), "error");',
+    );
+  });
+
+  it("does not clear the delete target (close the modal) when the mutation fails", () => {
+    // setDeleteTarget(null) only runs as the last line of the try block, right
+    // before catch — it never runs from the catch branch.
+    const normalized = pageSource.replace(/\r\n/g, "\n");
+    expect(normalized).toContain("setDeleteTarget(null);\n    } catch (caught) {");
+  });
+
+  it("still resets the pending state after a failed delete, allowing retry", () => {
+    const normalized = pageSource.replace(/\r\n/g, "\n");
+    expect(normalized).toContain("} finally {\n      setIsDeleting(false);\n    }\n  }, [deleteTarget, deleteRecurring, t]);");
+  });
+
+  it("defines the delete failure toast key in both locales", () => {
+    expect(idMessages.recurringTransactions.toastDeleteFailed).toBeTruthy();
+    expect(enMessages.recurringTransactions.toastDeleteFailed).toBeTruthy();
+  });
+});
+
 describe("recurring transaction i18n catalog parity", () => {
   it("defines the new amountMode/edit keys in both catalogs", () => {
     // Full id/en key-set parity across the whole app is covered by tests/i18n.test.ts;

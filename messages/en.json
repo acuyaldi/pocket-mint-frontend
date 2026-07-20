@@ -359,7 +359,8 @@
     "reminderOnDueDate": "On due date",
     "reminder1Day": "1 day before",
     "reminder3Days": "3 days before",
-    "reminder7Days": "7 days before"
+    "reminder7Days": "7 days before",
+    "toastDeleteFailed": "Failed to delete the template. Please try again."
   },
   "recurringTransactionModals": {
     "create": {
@@ -461,7 +462,8 @@
     "updateProgress": "Update Progress",
     "edit": "Edit",
     "archive": "Archive",
-    "progressNote": "This amount only records goal progress and does not change your wallet balance."
+    "progressNote": "This amount only records goal progress and does not change your wallet balance.",
+    "toastArchiveFailed": "Failed to archive the saving goal. Please try again."
   },
   "savingGoalModals": {
     "create": {

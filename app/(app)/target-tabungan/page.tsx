@@ -6,6 +6,7 @@ import { Archive, Pencil, PiggyBank, Plus, TrendingUp } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { INTL_LOCALE } from "@/i18n/config";
 import { PageHeader } from "@/components/layout/page-header";
+import { toast } from "@/components/ui/toaster";
 import {
   useArchiveSavingGoal,
   useCreateSavingGoal,
@@ -193,10 +194,14 @@ export default function SavingGoalsPage() {
     try {
       await archiveGoal.mutateAsync(archiveTarget.id);
       setArchiveTarget(null);
+    } catch (caught) {
+      const message = (caught as { response?: { data?: { error?: { message?: string } } } })
+        ?.response?.data?.error?.message;
+      toast(message ?? t("toastArchiveFailed"), "error");
     } finally {
       setIsArchiving(false);
     }
-  }, [archiveTarget, archiveGoal]);
+  }, [archiveTarget, archiveGoal, t]);
 
   const sections = [
     { key: "active", title: t("sectionActive"), items: activeGoals },

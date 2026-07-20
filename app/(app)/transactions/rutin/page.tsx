@@ -7,6 +7,7 @@ import { ArrowDownLeft, ArrowLeft, ArrowUpRight, Pencil, Plus, Trash2 } from "lu
 import { formatCurrency } from "@/lib/utils";
 import { INTL_LOCALE } from "@/i18n/config";
 import { PageHeader } from "@/components/layout/page-header";
+import { toast } from "@/components/ui/toaster";
 import { useWallets } from "@/src/features/wallets/hooks/useWallets";
 import { useCategories } from "@/src/features/categories/hooks/useCategories";
 import {
@@ -91,10 +92,14 @@ export default function RecurringTransactionsPage() {
     try {
       await deleteRecurring.mutateAsync(deleteTarget.id);
       setDeleteTarget(null);
+    } catch (caught) {
+      const message = (caught as { response?: { data?: { error?: { message?: string } } } })
+        ?.response?.data?.error?.message;
+      toast(message ?? t("toastDeleteFailed"), "error");
     } finally {
       setIsDeleting(false);
     }
-  }, [deleteTarget, deleteRecurring]);
+  }, [deleteTarget, deleteRecurring, t]);
 
   return (
     <div className="space-y-8">
