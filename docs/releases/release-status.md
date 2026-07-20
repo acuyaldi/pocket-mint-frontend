@@ -36,6 +36,25 @@ keberadaan komponen UI. Lihat `known-issues.md` untuk rincian temuan
 (termasuk blocker `PM-STAB-001`–`PM-STAB-010` dan minor `PM-STAB-011`) dan
 `stable-criteria.md` untuk kriteria target berikutnya.
 
+**Update 21 Juli 2026 — release scope untuk promosi ke `main`:** Audit di
+atas berbasis kode pada branch `dev`. Pemeriksaan branch `main` (production
+git branch, frontend) menunjukkan `main` masih berada di commit `d2daa7d3`
+("initial standalone frontend architecture without cache", 10 Juli 2026) —
+155 commit di belakang `dev`, **tanpa** `src/lib/changelog.ts`, tanpa
+`docs/releases/`, dan **tanpa git tag apa pun** di repository ini. `main`
+belum pernah menerima rilis `0.1.0`, `0.3.0`, maupun `0.4.0`; `package.json`
+di `main` masih `0.1.0` sekadar versi awal scaffold, bukan bukti rilis
+ter-tag. Karena itu, promosi berikutnya dari `dev` ke `main` diperlakukan
+sebagai **satu rilis konsolidasi tunggal versi `0.4.0`** (bukan `0.5.0`) —
+sesuai `README.md` §2: selama produk masih `0.x` (belum Public Stable),
+fitur backward-compatible menaikkan minor version, dan karena `0.3.0`/`0.4.0`
+belum pernah benar-benar sampai ke `main`, tidak ada versi produksi yang
+"dilewati" dengan melompat ke `0.5.0`. `src/lib/changelog.ts` di `dev` sudah
+mencerminkan bentuk final entri `0.4.0` yang akan dipromosikan — tidak ada
+perubahan versi/isi entri yang dibutuhkan pada update dokumentasi ini. Tidak
+ada tag yang dibuat oleh update ini; pembuatan tag mengikuti `README.md` §7
+setelah PR rilis eksplisit `dev` → `main` dibuat dan disetujui terpisah.
+
 ## Status saat ini
 
 | | |
