@@ -104,6 +104,12 @@
     "showPassword": "Tampilkan password",
     "hidePassword": "Sembunyikan password",
     "resetSentMessage": "Cek kotak masuk emailmu untuk tautan reset password.",
+    "verifyEmail": {
+      "title": "Periksa email kamu",
+      "body": "Kami telah mengirim tautan verifikasi ke:",
+      "explanation": "Buka email tersebut dan klik tautan verifikasi sebelum masuk ke Pocket Mint.",
+      "backToLogin": "Kembali ke login"
+    },
     "rememberedPassword": "Ingat password kamu?",
     "backToSignIn": "Kembali ke halaman masuk",
     "orContinueWith": "atau lanjutkan dengan",
