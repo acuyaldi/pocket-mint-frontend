@@ -16,12 +16,19 @@ const modalSource = readNormalized(root + "src/features/notifications/components
 const pageSource = readNormalized(root + "app/(app)/notifications/page.tsx");
 
 describe("notification center hooks", () => {
-  it("lists notifications from the reminder-events endpoint", () => {
-    expect(hookSource).toContain("api.get<{ status: string; data: Notification[] }>('/notifications')");
+  it("lists notifications from the reminder-events endpoint, sending page/limit/filter", () => {
+    expect(hookSource).toContain("api.get<{ status: string; data: NotificationsPage }>('/notifications', {");
+    expect(hookSource).toContain("params: { page, limit, filter },");
   });
 
-  it("derives unread count from readAt being unset", () => {
-    expect(hookSource).toContain("notifications.filter((n) => !n.readAt).length");
+  it("keys the list query on page, limit, and filter", () => {
+    expect(hookSource).toContain("queryKey: ['notifications', 'list', page, limit, filter],");
+  });
+
+  it("derives unread count from the server's paginated total, not a client-side filter over a fetched array", () => {
+    expect(hookSource).toContain("queryKey: ['notifications', 'unread-count'],");
+    expect(hookSource).toContain("params: { page: 1, limit: 1, filter: 'unread' },");
+    expect(hookSource).toContain("return data?.pagination.total ?? 0;");
   });
 
   it("marks a single notification read via PATCH /notifications/:id/read", () => {
@@ -32,21 +39,17 @@ describe("notification center hooks", () => {
     expect(hookSource).toContain("api.patch<{ status: string; data: { count: number } }>('/notifications/read-all')");
   });
 
-  it("invalidates the notifications query after read/read-all/confirm mutations", () => {
+  it("invalidates the notifications query family (list + unread-count) after read/read-all/confirm/refresh mutations", () => {
     const invalidations = hookSource.match(/queryClient\.invalidateQueries\(\{ queryKey: \['notifications'\] \}\)/g) ?? [];
-    expect(invalidations.length).toBe(3);
+    expect(invalidations.length).toBe(4);
   });
 
   it("refreshes via an explicit POST /notifications/refresh, not GET", () => {
-    expect(hookSource).toContain("api\n        .post<{ status: string; data: Notification[] }>('/notifications/refresh')");
-  });
-
-  it("seeds the notifications cache directly with the refreshed list instead of refetching", () => {
-    expect(hookSource).toContain("queryClient.setQueryData(['notifications'], data);");
+    expect(hookSource).toContain("api\n        .post('/notifications/refresh')");
   });
 
   it("dedupes concurrent refresh calls behind a shared in-flight promise", () => {
-    expect(hookSource).toContain("let inFlightRefresh: Promise<Notification[]> | null = null;");
+    expect(hookSource).toContain("let inFlightRefresh: Promise<void> | null = null;");
     expect(hookSource).toContain("if (inFlightRefresh) return inFlightRefresh;");
   });
 
@@ -57,7 +60,7 @@ describe("notification center hooks", () => {
 
   it("only advances lastRefreshAt on a successful refresh, so a failed refresh can retry", () => {
     expect(hookSource).toContain("lastRefreshAt = Date.now();");
-    expect(hookSource.indexOf("lastRefreshAt = Date.now();")).toBeGreaterThan(hookSource.indexOf(".post<"));
+    expect(hookSource.indexOf("lastRefreshAt = Date.now();")).toBeGreaterThan(hookSource.indexOf(".post("));
   });
 
   it("never uses polling primitives for refresh coordination", () => {
@@ -204,9 +207,9 @@ describe("notifications View All page", () => {
     expect(pageSource).toContain('import { NotificationRow } from "@/components/layout/notification-menu";');
   });
 
-  it("refreshes on load and lists all notifications, not just unread ones", () => {
+  it("refreshes on load and lists the current server page of notifications", () => {
     expect(pageSource).toContain("refresh.mutate();");
-    expect(pageSource).toContain("pageItems.map((notification) => (");
+    expect(pageSource).toContain("items.map((notification) => (");
   });
 
   it("distinguishes loading, error, and empty states", () => {
@@ -222,7 +225,7 @@ describe("notifications View All page", () => {
   });
 
   it("filters between All and Unread, resetting to page 1 on change", () => {
-    expect(pageSource).toContain('filter === "unread" ? notifications.filter((n) => !n.readAt) : notifications');
+    expect(pageSource).toContain("useNotifications({ page, limit: NOTIFICATIONS_PAGE_SIZE, filter });");
     expect(pageSource).toContain("setFilter(next);\n    setPage(1);");
   });
 
@@ -230,16 +233,20 @@ describe("notifications View All page", () => {
     expect(pageSource).toContain('filter === "unread" ? t("page.emptyUnread") : t("empty")');
   });
 
-  it("paginates client-side over the full notification array with a fixed page size", () => {
-    expect(pageSource).toContain("const PAGE_SIZE = 10;");
+  it("sends page and limit to the server instead of paginating a fully-fetched array", () => {
     expect(pageSource).toContain(
-      "filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)"
+      "import {\n  NOTIFICATIONS_PAGE_SIZE,\n  useNotifications,\n  useRefreshNotifications,\n  useUnreadNotificationCount,\n} from \"@/src/features/notifications/hooks/useNotifications\";"
     );
-    expect(pageSource).toContain("Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))");
+    expect(pageSource).not.toMatch(/\.slice\(/);
   });
 
-  it("clamps the current page down when filtered results shrink", () => {
-    expect(pageSource).toContain("const currentPage = Math.min(page, totalPages);");
+  it("clamps the current page down when the server's total page count shrinks", () => {
+    expect(pageSource).toContain("if (pagination && page > pagination.totalPages) {");
+    expect(pageSource).toContain("setPage(pagination.totalPages);");
+  });
+
+  it("uses server-driven pagination metadata (hasMore) for the next button", () => {
+    expect(pageSource).toContain("disabled={!pagination?.hasMore}");
   });
 
   it("links back to the dashboard", () => {
