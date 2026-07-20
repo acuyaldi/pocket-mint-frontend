@@ -359,7 +359,8 @@
     "reminderOnDueDate": "Hari H",
     "reminder1Day": "1 hari sebelumnya",
     "reminder3Days": "3 hari sebelumnya",
-    "reminder7Days": "7 hari sebelumnya"
+    "reminder7Days": "7 hari sebelumnya",
+    "toastDeleteFailed": "Gagal menghapus template. Silakan coba lagi."
   },
   "recurringTransactionModals": {
     "create": {
@@ -461,7 +462,8 @@
     "updateProgress": "Perbarui Progres",
     "edit": "Ubah",
     "archive": "Arsip",
-    "progressNote": "Nominal ini hanya mencatat progres target dan tidak mengubah saldo dompet."
+    "progressNote": "Nominal ini hanya mencatat progres target dan tidak mengubah saldo dompet.",
+    "toastArchiveFailed": "Gagal mengarsipkan target tabungan. Silakan coba lagi."
   },
   "savingGoalModals": {
     "create": {

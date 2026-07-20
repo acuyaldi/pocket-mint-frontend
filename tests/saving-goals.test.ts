@@ -162,6 +162,35 @@ describe("saving goal create/update contract", () => {
   });
 });
 
+describe("saving goal archive failure feedback (Phase 13A)", () => {
+  it("imports the shared toast helper", () => {
+    expect(pageSource).toContain('import { toast } from "@/components/ui/toaster";');
+  });
+
+  it("catches a failed archive mutation and shows a localized error toast", () => {
+    expect(pageSource).toContain(
+      'toast(message ?? t("toastArchiveFailed"), "error");',
+    );
+  });
+
+  it("does not clear the archive target (close the modal) when the mutation fails", () => {
+    // setArchiveTarget(null) only runs as the last line of the try block, right
+    // before catch — it never runs from the catch branch.
+    const normalized = pageSource.replace(/\r\n/g, "\n");
+    expect(normalized).toContain("setArchiveTarget(null);\n    } catch (caught) {");
+  });
+
+  it("still resets the pending state after a failed archive, allowing retry", () => {
+    const normalized = pageSource.replace(/\r\n/g, "\n");
+    expect(normalized).toContain("} finally {\n      setIsArchiving(false);\n    }\n  }, [archiveTarget, archiveGoal, t]);");
+  });
+
+  it("defines the archive failure toast key in both locales", () => {
+    expect(idMessages.savingGoals.toastArchiveFailed).toBeTruthy();
+    expect(enMessages.savingGoals.toastArchiveFailed).toBeTruthy();
+  });
+});
+
 describe("saving goal i18n catalog parity", () => {
   it("defines matching keys in both catalogs", () => {
     for (const messages of [idMessages, enMessages]) {
