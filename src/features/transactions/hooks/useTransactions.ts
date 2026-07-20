@@ -2,6 +2,7 @@
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { Transaction } from '@/src/types/transaction';
+import { getExportFilename } from '@/app/(app)/analytics/period';
 
 // Stale time: 5 minutes (in milliseconds)
 const STALE_TIME = 5 * 60 * 1000;
@@ -127,6 +128,46 @@ export interface CreateTransactionDto {
   installmentMonths?: number;
   interestRate?: number;
 }
+
+/** Filename from a `Content-Disposition: attachment; filename="…"` header, quoted or not. */
+export function filenameFromContentDisposition(header: string | undefined, fallback: string): string {
+  const match = header && /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(header);
+  return match ? decodeURIComponent(match[1]) : fallback;
+}
+
+/**
+ * Download the Analytics page's currently selected period as a CSV, filtered
+ * on the backend (`GET /transactions/export`) — never fetched all-time and
+ * filtered client-side. `anchor` must be the same Asia/Jakarta `YYYY-MM`
+ * reporting-month key the Analytics page is displaying (see
+ * `getJakartaMonthKey` in `app/(app)/analytics/period.ts`), not a raw
+ * `Date` — a UTC instant can land on a different calendar month near a
+ * Jakarta month boundary.
+ */
+export const exportTransactionsCsv = async (period: 'month' | 'quarter' | 'six-months', anchor: string) => {
+  const response = await api.get<Blob>('/transactions/export', {
+    params: { period, anchor },
+    responseType: 'blob',
+  });
+  const filename = filenameFromContentDisposition(
+    response.headers['content-disposition'],
+    getExportFilename(period, anchor)
+  );
+  const url = URL.createObjectURL(response.data);
+  try {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    try {
+      link.click();
+    } finally {
+      document.body.removeChild(link);
+    }
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+};
 
 export const useDeleteTransaction = () => {
   const queryClient = useQueryClient();
