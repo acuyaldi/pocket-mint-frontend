@@ -305,6 +305,7 @@
         "none": "Tanpa institusi",
         "other": "Lainnya"
       },
+      "genericError": "Akun gagal ditambahkan. Coba lagi.",
       "submit": "Simpan Akun"
     },
     "edit": {
@@ -541,6 +542,8 @@
       "months": "bulan",
       "mapLocation": "LOKASI PETA",
       "edit": "Ubah",
+      "editUnsupportedTransfer": "Ubah transfer belum didukung di layar ini.",
+      "editUnsupportedInstallment": "Transaksi cicilan tidak bisa diubah langsung.",
       "delete": "Hapus"
     },
     "edit": {
@@ -554,13 +557,15 @@
       "typeIncome": "Pemasukan",
       "date": "Tanggal",
       "saving": "Menyimpan...",
-      "submit": "Simpan Perubahan"
+      "submit": "Simpan Perubahan",
+      "genericSaveFailed": "Perubahan gagal disimpan. Coba lagi."
     },
     "delete": {
       "title": "Hapus Transaksi?",
       "description": "Menghapus transaksi akan mengembalikan saldo dompet. Tindakan ini tidak dapat dibatalkan.",
       "deleting": "Menghapus...",
-      "submit": "Hapus"
+      "submit": "Hapus",
+      "genericError": "Transaksi gagal dihapus. Coba lagi."
     },
     "add": {
       "title": "Tambah Transaksi",

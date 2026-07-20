@@ -28,6 +28,13 @@ export function TransactionDetailPanel({ tx, onClose, onEdit, onDelete }: Transa
     return () => window.removeEventListener("keydown", handleEsc);
   }, [onClose]);
 
+  // Installment edits are rejected by the backend (409); TRANSFER is blocked here only
+  // because this modal has no source/destination wallet fields to edit it safely.
+  const canEdit = !!tx && tx.type !== "TRANSFER" && !tx.isInstallment;
+  const editUnsupportedReason = tx?.isInstallment
+    ? t("editUnsupportedInstallment")
+    : t("editUnsupportedTransfer");
+
   return (
     <AnimatePresence>
       {tx && (
@@ -189,8 +196,10 @@ export function TransactionDetailPanel({ tx, onClose, onEdit, onDelete }: Transa
             {/* Bottom actions */}
             <div className="flex gap-2 pt-4 mt-4" style={{ borderTop: "1px solid var(--color-border)" }}>
               <button
-                onClick={() => { onEdit(tx); onClose(); }}
-                className="flex-1 flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                onClick={() => { if (canEdit) { onEdit(tx); onClose(); } }}
+                disabled={!canEdit}
+                title={canEdit ? undefined : editUnsupportedReason}
+                className="flex-1 flex items-center justify-center gap-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                 style={{
                   padding: 10,
                   backgroundColor: "var(--color-accent)",
@@ -199,6 +208,7 @@ export function TransactionDetailPanel({ tx, onClose, onEdit, onDelete }: Transa
                   color: "var(--color-accent-foreground)",
                   fontSize: 13,
                   fontWeight: 500,
+                  cursor: canEdit ? "pointer" : "not-allowed",
                 }}
               >
                 <Pencil className="size-3.5" />

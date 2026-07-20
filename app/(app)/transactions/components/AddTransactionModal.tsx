@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, FormEvent, useMemo, useState } from "react";
+import { useCallback, useEffect, FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
@@ -381,6 +381,15 @@ export function AddTransactionModal({
     if (!isCreating) onClose();
   }, [isCreating, onClose]);
 
+  useEffect(() => {
+    if (!isOpen || isCreating) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [isOpen, isCreating, onClose]);
+
   const handleAddWallet = useCallback(() => {
     onClose();
     router.push("/wallets");
@@ -564,11 +573,14 @@ export function AddTransactionModal({
             exit={{ opacity: 0, scale: 0.97, y: 12 }}
             transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
             onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-tx-title"
             className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-border/60 bg-card shadow-xl"
           >
             <header className="flex items-center justify-between border-b border-border/50 bg-surface-low px-6 py-4">
               <div>
-                <h2 className="text-xl font-semibold text-foreground">
+                <h2 id="add-tx-title" className="text-xl font-semibold text-foreground">
                   {t("title")}
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">

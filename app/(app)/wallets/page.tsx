@@ -232,7 +232,7 @@ export default function WalletsPage() {
   const paylaterWallets = visibleWallets.filter((wallet) => wallet.type === "PAYLATER");
   const loanWallets = visibleWallets.filter((wallet) => wallet.type === "LOAN");
 
-  const handleWalletCreateSuccess = async (data: CreateWalletFormData) => {
+  const handleWalletCreateSubmit = async (data: CreateWalletFormData) => {
     try {
       await createWallet.mutateAsync({
         name: data.name,
@@ -250,7 +250,7 @@ export default function WalletsPage() {
       toast(t("toastAccountAdded", { name: data.name }));
     } catch (error) {
       console.error("Failed to create wallet:", error);
-      toast(t("toastAccountAddFailed"), "error");
+      throw error;
     }
   };
 
@@ -352,8 +352,9 @@ export default function WalletsPage() {
 
       <CreateWalletModal
         isOpen={isCustomModalOpen}
+        isCreating={createWallet.isPending}
         onClose={() => setIsCustomModalOpen(false)}
-        onSuccess={handleWalletCreateSuccess}
+        onSubmit={handleWalletCreateSubmit}
       />
       <EditWalletModal wallet={editingWallet} onClose={() => setEditingWallet(null)} />
       <DeleteWalletModal

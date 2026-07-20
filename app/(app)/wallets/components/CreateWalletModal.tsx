@@ -8,6 +8,7 @@ import {
   CreditCard,
   HandCoins,
   Landmark,
+  Loader2,
   Smartphone,
   X,
 } from "lucide-react";
@@ -22,8 +23,9 @@ import type { WalletType } from "@/src/types/wallet";
 
 interface CreateWalletModalProps {
   isOpen: boolean;
+  isCreating: boolean;
   onClose: () => void;
-  onSuccess: (data: CreateWalletFormData) => void;
+  onSubmit: (data: CreateWalletFormData) => Promise<void>;
 }
 
 export interface CreateWalletFormData {
@@ -95,8 +97,9 @@ function MoneyInput({
 
 export default function CreateWalletModal({
   isOpen,
+  isCreating,
   onClose,
-  onSuccess,
+  onSubmit,
 }: CreateWalletModalProps) {
   const t = useTranslations("walletModals.create");
   const tCommon = useTranslations("common");
@@ -135,6 +138,7 @@ export default function CreateWalletModal({
   const [cutoffDay, setCutoffDay] = useState("");
   const [paymentDueDay, setPaymentDueDay] = useState("");
   const [institution, setInstitution] = useState("none");
+  const [error, setError] = useState("");
 
   const selectedType = ACCOUNT_TYPES.find((item) => item.value === accountType)!;
   const isAsset = ["CASH", "BANK", "E_WALLET"].includes(accountType);
@@ -149,15 +153,18 @@ export default function CreateWalletModal({
     setCutoffDay("");
     setPaymentDueDay("");
     setInstitution("none");
+    setError("");
   }, []);
 
   const handleClose = useCallback(() => {
+    if (isCreating) return;
     resetForm();
     onClose();
-  }, [onClose, resetForm]);
+  }, [isCreating, onClose, resetForm]);
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    setError("");
 
     const fallbackName = !["none", "Lainnya"].includes(institution) ? institution : "";
     const resolvedName = walletName.trim() || fallbackName;
@@ -168,20 +175,28 @@ export default function CreateWalletModal({
     if ((isCredit && limit <= 0) || (isLoan && principal <= 0)) return;
 
     const preset = accountType === "PAYLATER" ? PAYLATER_PRESETS[resolvedName] : undefined;
-    onSuccess({
-      name: resolvedName,
-      type: accountType,
-      icon: selectedType.icon,
-      ...(isAsset && { balance: principal }),
-      ...(isCredit && {
-        creditLimit: limit,
-        ...(cutoffDay && { cutoffDay: Number(cutoffDay) }),
-        ...(paymentDueDay && { paymentDueDay: Number(paymentDueDay) }),
-        ...(preset ?? {}),
-      }),
-      ...(isLoan && { principal }),
-    });
-    handleClose();
+    try {
+      await onSubmit({
+        name: resolvedName,
+        type: accountType,
+        icon: selectedType.icon,
+        ...(isAsset && { balance: principal }),
+        ...(isCredit && {
+          creditLimit: limit,
+          ...(cutoffDay && { cutoffDay: Number(cutoffDay) }),
+          ...(paymentDueDay && { paymentDueDay: Number(paymentDueDay) }),
+          ...(preset ?? {}),
+        }),
+        ...(isLoan && { principal }),
+      });
+    } catch (caught) {
+      const message = (caught as { response?: { data?: { error?: { message?: string } } } })
+        ?.response?.data?.error?.message;
+      setError(message ?? t("genericError"));
+      return;
+    }
+    resetForm();
+    onClose();
   };
 
   return (
@@ -329,14 +344,33 @@ export default function CreateWalletModal({
                 </select>
               </div>
             </section>
+
+            {error ? (
+              <p className="rounded-lg border border-coral/30 bg-coral/10 px-3 py-2 text-sm text-coral">
+                {error}
+              </p>
+            ) : null}
           </div>
 
           <footer className="flex flex-col-reverse gap-3 border-t border-border/50 bg-surface-low px-6 py-4 sm:flex-row">
-            <Button type="button" variant="outline" onClick={handleClose} className="h-11 flex-1 bg-card">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={isCreating}
+              className="h-11 flex-1 bg-card"
+            >
               {tCommon("actions.cancel")}
             </Button>
-            <Button type="submit" className="h-11 flex-1">
-              {t("submit")}
+            <Button type="submit" disabled={isCreating} className="h-11 flex-1 gap-2">
+              {isCreating ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  {tCommon("actions.saving")}
+                </>
+              ) : (
+                t("submit")
+              )}
             </Button>
           </footer>
         </form>

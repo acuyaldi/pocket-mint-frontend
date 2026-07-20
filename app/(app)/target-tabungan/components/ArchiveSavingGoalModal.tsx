@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { Archive, Loader2 } from "lucide-react";
@@ -23,6 +24,15 @@ export default function ArchiveSavingGoalModal({
   const handleClose = () => {
     if (!isArchiving) onClose();
   };
+
+  useEffect(() => {
+    if (!goal || isArchiving) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [goal, isArchiving, onClose]);
 
   return (
     <AnimatePresence>
