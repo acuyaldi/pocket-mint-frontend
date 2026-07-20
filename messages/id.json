@@ -337,7 +337,9 @@
     "defaultLabel": "Transaksi",
     "noCategory": "Tanpa kategori",
     "noMatches": "Tidak ada transaksi yang cocok.",
-    "loading": "Memuat transaksi..."
+    "loading": "Memuat transaksi...",
+    "error": "Gagal memuat transaksi.",
+    "retry": "Coba lagi"
   },
   "recurringTransactions": {
     "pageTitle": "Transaksi Rutin",
@@ -347,6 +349,8 @@
     "addTemplate": "Tambah Template",
     "empty": "Belum ada template rutin.",
     "loading": "Memuat template rutin...",
+    "error": "Gagal memuat template rutin.",
+    "retry": "Coba lagi",
     "monthly": "Bulanan",
     "active": "Aktif",
     "paused": "Dijeda",
