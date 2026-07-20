@@ -21,6 +21,15 @@ sekarang **Resolved** (lihat `known-issues.md`). Dengan `PM-STAB-003` dan
 promosi ini — dipertahankan sebagai catatan historis, lihat tabel "Status
 saat ini" untuk status terkini.
 
+**Update 20 Juli 2026 — rilis `0.4.0`:** Target Tabungan, Transaksi Rutin
+(dengan pengingat), Pusat Notifikasi, dan ekspor CSV halaman Analitik telah
+dirilis dan diuji (lihat `src/lib/changelog.ts`). `KI-EXPORT` sekarang
+**Resolved** (lihat `known-issues.md`) — tabel "Ringkasan fitur" di bawah
+telah diperbarui untuk mencerminkan ini. Perbaikan konsistensi respons
+dompet (`createWallet`/`updateWallet`) dan penanganan error mutasi yang
+lebih jelas (dompet, transaksi rutin, target tabungan) turut dirilis pada
+versi ini.
+
 Metodologi: setiap fitur diverifikasi dengan menelusuri rute frontend →
 hook/API client → route backend → controller/service, bukan hanya dari
 keberadaan komponen UI. Lihat `known-issues.md` untuk rincian temuan
@@ -32,7 +41,7 @@ keberadaan komponen UI. Lihat `known-issues.md` untuk rincian temuan
 | | |
 | --- | --- |
 | **Current status** | **MVP Stable** (per 19 Juli 2026) |
-| **Current release** | `0.3.0` — "MVP Stable", `publishedAt` 2026-07-19 (lihat `src/lib/changelog.ts`). `v0.3.0-rc.2` adalah label evidensi validasi RC yang mendahuluinya (`mvp-stable-rc-validation.md` §17.11), tidak dipublikasikan terpisah ke changelog publik sesuai `README.md` §1a. |
+| **Current release** | `0.4.0` — "Target Tabungan, Transaksi Rutin & Pusat Notifikasi", `publishedAt` 2026-07-20 (lihat `src/lib/changelog.ts`). Rilis sebelumnya `0.3.0` "MVP Stable" (`publishedAt` 2026-07-19). `v0.3.0-rc.2` adalah label evidensi validasi RC yang mendahuluinya (`mvp-stable-rc-validation.md` §17.11), tidak dipublikasikan terpisah ke changelog publik sesuai `README.md` §1a. |
 | **Validation decision** | **Promoted to MVP Stable** (19 Juli 2026) — lihat Addendum "Penutupan PM-STAB-004" di `mvp-stable-rc-validation.md`. Keputusan audit `Ready for another RC` di §17.11 mencerminkan titik waktu 18 Juli 2026, sebelum migrasi production dijalankan. |
 | **Promotion ke MVP Stable diblokir oleh** | Tidak ada lagi. `PM-STAB-004` (migration staging/production, High) **Resolved** 19 Juli 2026 — migrasi production dijalankan dan diverifikasi (lihat `known-issues.md`). `PM-STAB-003` (rotasi kredensial) **Resolved after forensic verification** 19 Juli 2026 — lihat `known-issues.md`. |
 
@@ -144,12 +153,17 @@ dijalankan — dipertahankan sebagai catatan historis.
 | Kategori (daftar tetap, read-only) | `useCategories` | `GET /categories` | `categoryService.test.ts`, `categoryController.test.ts` |
 | Net worth = assets − outstanding debt (PD-001) | `wallets`/`dashboard` (backend service) | `calculateNetWorth` (`utils/financial.ts`) | `dashboardQueryService.test.ts:69-73` |
 | CHANGELOG / release notes (`pocket-mint-fe`, PM-STAB-010B) | `src/lib/changelog.ts` (`RELEASES`), `app/changelog/page.tsx`, ringkasan di `app/page.tsx` | — (data statis, tidak ada backend) | `tests/changelog.test.ts` |
+| Target Tabungan (create/update/progress/archive) | `src/features/savingGoals/hooks/useSavingGoals.ts`, `app/(app)/target-tabungan/page.tsx` | `savingGoal.routes.ts` → `savingGoal.controller.ts` → `savingGoal.service.ts` | `tests/saving-goals.test.ts` (FE), `savingGoalService.test.ts`, `savingGoalController.test.ts` (BE) |
+| Transaksi Rutin (template + jadwal + `nextDueDate`) | `src/features/recurring/hooks/useRecurringTransactions.ts`, `app/(app)/transactions/rutin/page.tsx` | `recurringTransaction.routes.ts` → `recurringTransaction.controller.ts` → `recurringTransaction.service.ts` | `tests/recurring-transactions.test.ts` (FE), backend recurring-transaction service tests |
+| Pengingat & Pusat Notifikasi | `src/features/notifications/hooks/useNotifications.ts`, `app/(app)/notifications/page.tsx` | `notification.routes.ts` → `notification.controller.ts`, `recurringReminderEngine.service.ts` | `tests/notification-center.test.ts` (FE), `notificationService.test.ts`, `notificationController.test.ts`, `recurringReminderEngineService.test.ts` (BE) |
+| Ekspor CSV halaman Analitik — **Resolved, `KI-EXPORT`** | `app/(app)/analytics/page.tsx` (tombol `Download`) → `exportTransactionsCsv` di `src/features/transactions/hooks/useTransactions.ts` | dihitung dari `/transactions/all` (tidak ada endpoint export terpisah — CSV dibangun client-side) | `tests/analytics-export.test.ts` |
+| Dompet: status loading/error + konsistensi respons create/update — **Resolved, `PM-STAB-011`** | `app/(app)/wallets/page.tsx`, `EditWalletModal.tsx` | `account.controller.ts` (`createWallet`/`updateWallet` kini pakai `serializeWallet`, sama seperti `getAllWallets`) | `tests/wallets-stability.test.ts`, `tests/wallet-page.test.ts` (FE), `walletControllerBoundary.test.ts`, `walletUpdate.test.ts` (BE) |
+| Pesan error saat aksi mutasi gagal (hapus transaksi rutin, arsip target tabungan) | `toast()` di `components/ui/toaster.tsx`, dipakai di `wallets/page.tsx`, `transactions/rutin/page.tsx`, `target-tabungan/page.tsx` | — (penanganan di frontend, error asli dari backend diteruskan) | `tests/recurring-transactions.test.ts`, `tests/saving-goals.test.ts` |
 
 ### Partially Implemented
 
 | Fitur | Catatan |
 | --- | --- |
-| Halaman Analitik | Data dan grafik nyata (real data, periode lintas bulan sudah benar sejak `PM-STAB-002` resolved), tetapi tombol "Ekspor laporan" tidak punya handler (`known-issues.md` `KI-EXPORT`). |
 | Navigasi (5 vs 6 item) | Berfungsi penuh, tetapi bottom nav mobile menampilkan 6 ikon (termasuk trigger dropdown akun terpisah), bukan 5 item "Akun" sesuai kontrak desain — deviasi dokumentasi vs implementasi, bukan bug fungsional (`PM-STAB-009`, Low). |
 
 ### UI Only
@@ -162,7 +176,6 @@ password) sebelumnya berada di kategori ini — sudah dipindahkan ke
 
 | Fitur | Catatan |
 | --- | --- |
-| Ekspor laporan Analitik | Tombol ada di UI (`app/(app)/analytics/page.tsx` baris ~276–282), tanpa `onClick` atau logic ekspor. |
 | Manajemen kategori (create/update/delete) | Tidak ada route/controller/UI untuk ini. Kategori adalah daftar tetap sesuai `skills/financial-logic.skill.md` ("Category is optional metadata") — kemungkinan besar ini memang bukan gap, melainkan scope yang disengaja. |
 | CHANGELOG / release notes (`pocket-mint-be`) | Belum ada struktur changelog di backend. Lihat baris terpisah di "Implemented" untuk status `pocket-mint-fe` (PM-STAB-010B). |
 

@@ -694,18 +694,20 @@ ditambahkan pada audit `v0.3.0-rc.2` sebagai temuan Medium **non-blocking**
 
 ## KI-EXPORT — [Medium] Tombol "Ekspor laporan" di halaman Analitik tidak berfungsi
 
-- **Status:** Open.
+- **Status:** Resolved (20 Juli 2026).
 - **Lokasi:** `pocket-mint-fe/app/(app)/analytics/page.tsx` (tombol dengan
-  ikon `Download`, sekitar baris 276–282).
-- **Bukti:** elemen `<button>` tidak memiliki prop `onClick` atau logic
-  ekspor apa pun di file tersebut.
-- **Dampak:** dead control — pengguna mengklik tombol dan tidak terjadi apa
-  pun, tanpa disabled state atau indikasi bahwa fitur belum tersedia.
-- **Catatan:** Item ini sudah ada sebelum audit stabilitas MVP 18 Juli 2026
-  dan tidak termasuk dalam 10 blocker PM-STAB yang diminta audit tersebut
-  (`mvp-stability-audit.md` menyebutnya sebagai item kosmetik yang levelnya
-  lebih rendah dibanding temuan Analytics period — lihat PM-STAB-002).
-  Dipertahankan di sini dengan ID lama agar tidak hilang dari catatan.
+  ikon `Download`, sekitar baris 261–281).
+- **Perbaikan:** tombol kini memanggil `exportTransactionsCsv(period,
+  getJakartaMonthKey(new Date()))` dari
+  `src/features/transactions/hooks/useTransactions.ts`, dengan `isExporting`
+  disabled-state dan `toast(..., "error")` saat gagal. Diuji di
+  `tests/analytics-export.test.ts`.
+- **Catatan historis:** Item ini sudah ada sebelum audit stabilitas MVP 18
+  Juli 2026 dan tidak termasuk dalam 10 blocker PM-STAB yang diminta audit
+  tersebut (`mvp-stability-audit.md` menyebutnya sebagai item kosmetik yang
+  levelnya lebih rendah dibanding temuan Analytics period — lihat
+  PM-STAB-002). Dipertahankan di sini dengan ID lama agar tidak hilang dari
+  catatan.
 
 ---
 

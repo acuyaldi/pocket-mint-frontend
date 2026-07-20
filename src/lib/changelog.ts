@@ -7,6 +7,30 @@ import type { Release, ReleaseChanges, ReleaseStatus } from "@/src/types/changel
  */
 export const RELEASES: Release[] = [
   {
+    version: "0.4.0",
+    title: "Target Tabungan, Transaksi Rutin & Pusat Notifikasi",
+    publishedAt: "2026-07-20",
+    summary:
+      "Pocket Mint kini mendukung target tabungan, transaksi rutin dengan pengingat, dan pusat notifikasi terpusat. Halaman Dompet dan alur transaksi rutin/target tabungan kini menampilkan status loading dan error yang lebih jelas.",
+    status: "stable",
+    changes: {
+      added: [
+        "Target Tabungan: buat dan pantau target tabungan dengan progres otomatis, tandai selesai atau arsipkan",
+        "Transaksi Rutin: jadwalkan transaksi berulang (harian, mingguan, bulanan, tahunan) dengan pengingat opsional",
+        "Pusat Notifikasi: pengingat tagihan dan transaksi rutin yang akan datang, dapat ditandai dibaca atau dikonfirmasi",
+        "Ekspor laporan Analitik ke CSV",
+      ],
+      improved: [
+        "Halaman Dompet menampilkan status loading, error, dan kosong yang lebih jelas",
+        "Pesan kesalahan yang lebih jelas saat aksi gagal (menghapus transaksi rutin, mengarsipkan target tabungan)",
+      ],
+      fixed: [
+        "Data dompet yang baru dibuat atau diperbarui kini konsisten dengan data yang ditampilkan di daftar dompet",
+      ],
+    },
+    knownIssues: ["Label navigasi menyimpang dari kontrak desain 5-item"],
+  },
+  {
     version: "0.3.0",
     title: "MVP Stable",
     publishedAt: "2026-07-19",
