@@ -1,22 +1,34 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { PageHeader } from "@/components/layout/page-header";
 import { NotificationRow } from "@/components/layout/notification-menu";
-import { useNotifications, useRefreshNotifications } from "@/src/features/notifications/hooks/useNotifications";
+import {
+  NOTIFICATIONS_PAGE_SIZE,
+  useNotifications,
+  useRefreshNotifications,
+  useUnreadNotificationCount,
+} from "@/src/features/notifications/hooks/useNotifications";
 import { useNotificationActions } from "@/src/features/notifications/hooks/useNotificationActions";
 import { ConfirmReminderModal } from "@/src/features/notifications/components/ConfirmReminderModal";
 import { cn } from "@/lib/utils";
 
-const PAGE_SIZE = 10;
 type Filter = "all" | "unread";
 
 export default function NotificationsPage() {
   const t = useTranslations("notificationCenter");
-  const { data: notifications = [], isLoading, isError, refetch } = useNotifications();
+  const [filter, setFilter] = useState<Filter>("all");
+  const [page, setPage] = useState(1);
+
+  const { data, isLoading, isError, refetch } = useNotifications({ page, limit: NOTIFICATIONS_PAGE_SIZE, filter });
+  const items = data?.items ?? [];
+  const pagination = data?.pagination;
+  const totalPages = pagination?.totalPages ?? 1;
+
+  const unreadCount = useUnreadNotificationCount();
   const refresh = useRefreshNotifications();
   const {
     markRead,
@@ -28,25 +40,21 @@ export default function NotificationsPage() {
     handleFlexibleSubmit,
   } = useNotificationActions();
 
-  const [filter, setFilter] = useState<Filter>("all");
-  const [page, setPage] = useState(1);
-
-  const unreadCount = notifications.filter((n) => !n.readAt).length;
-  const filtered = useMemo(
-    () => (filter === "unread" ? notifications.filter((n) => !n.readAt) : notifications),
-    [notifications, filter]
-  );
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  // Filtered results can shrink under the current page (marking read while on
-  // the Unread filter, mark-all-read, etc.) — clamp to the last valid page
-  // as a derived value instead of syncing it back into state via an effect.
-  const currentPage = Math.min(page, totalPages);
-  const pageItems = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
   useEffect(() => {
     refresh.mutate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // The server total can shrink under the current page (marking read while on
+  // the Unread filter, mark-all-read, etc.) — clamp back to the last valid
+  // page. This must re-trigger a fetch (not just re-derive a render value),
+  // so it stays an Effect rather than a derived value.
+  useEffect(() => {
+    if (pagination && page > pagination.totalPages) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPage(pagination.totalPages);
+    }
+  }, [pagination, page]);
 
   const handleFilterChange = (next: Filter) => {
     setFilter(next);
@@ -111,14 +119,14 @@ export default function NotificationsPage() {
               {t("page.retry")}
             </button>
           </div>
-        ) : filtered.length === 0 ? (
+        ) : items.length === 0 ? (
           <p className="px-3 py-10 text-center text-sm text-muted-foreground">
             {filter === "unread" ? t("page.emptyUnread") : t("empty")}
           </p>
         ) : (
           <>
             <div className="flex flex-col gap-0.5">
-              {pageItems.map((notification) => (
+              {items.map((notification) => (
                 <NotificationRow
                   key={notification.id}
                   notification={notification}
@@ -133,18 +141,18 @@ export default function NotificationsPage() {
                 <button
                   type="button"
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage <= 1}
+                  disabled={page <= 1}
                   className="text-sm font-medium text-primary hover:underline disabled:opacity-40 disabled:no-underline"
                 >
                   {t("page.previous")}
                 </button>
                 <span className="text-xs text-muted-foreground">
-                  {t("page.pageIndicator", { page: currentPage, totalPages })}
+                  {t("page.pageIndicator", { page, totalPages })}
                 </span>
                 <button
                   type="button"
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage >= totalPages}
+                  disabled={!pagination?.hasMore}
                   className="text-sm font-medium text-primary hover:underline disabled:opacity-40 disabled:no-underline"
                 >
                   {t("page.next")}

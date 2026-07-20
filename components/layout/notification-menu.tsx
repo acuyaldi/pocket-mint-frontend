@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { CalendarClock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNotifications, useRefreshNotifications } from "@/src/features/notifications/hooks/useNotifications";
+import { useNotifications, useRefreshNotifications, useUnreadNotificationCount } from "@/src/features/notifications/hooks/useNotifications";
 import { useNotificationActions } from "@/src/features/notifications/hooks/useNotificationActions";
 import { ConfirmReminderModal } from "@/src/features/notifications/components/ConfirmReminderModal";
 import type { Notification } from "@/src/types/notification";
@@ -83,7 +83,8 @@ export function NotificationRow({
 
 export function NotificationMenuItems() {
   const t = useTranslations("notificationCenter");
-  const { data: notifications = [], isLoading } = useNotifications();
+  const { data, isLoading } = useNotifications();
+  const notifications = data?.items ?? [];
   const refresh = useRefreshNotifications();
   const {
     markRead,
@@ -94,7 +95,7 @@ export function NotificationMenuItems() {
     handleConfirm,
     handleFlexibleSubmit,
   } = useNotificationActions();
-  const unreadCount = notifications.filter((n) => !n.readAt).length;
+  const unreadCount = useUnreadNotificationCount();
 
   // Dropdown content only mounts while open (base-ui Menu), so this fires
   // once per open — an explicit, targeted refresh, not polling.
