@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useActionState, useState } from "react";
+import { Suspense, useActionState, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -28,6 +28,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type AuthMode = "signin" | "signup" | "forgot";
 
@@ -86,6 +92,14 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   // Confirmation shown after a reset-password email is dispatched.
   const [resetSent, setResetSent] = useState(false);
+  // Controlled so it can be prefilled when returning from the verification
+  // modal; password fields stay uncontrolled and are cleared via ref.
+  const [emailValue, setEmailValue] = useState("");
+  const passwordRef = useRef<HTMLInputElement>(null);
+  // Email a just-completed signup sent a verification link to; non-null opens
+  // the modal. Set only from the signup action's own success result, never
+  // from user-typed input, so it can't be used to probe arbitrary addresses.
+  const [verifyingEmail, setVerifyingEmail] = useState<string | null>(null);
 
   const isSignUp = authMode === "signup";
   const isForgot = authMode === "forgot";
@@ -106,6 +120,17 @@ function LoginForm() {
     setError(null);
     setShowPassword(false);
     setResetSent(false);
+  }
+
+  // Primary and close actions on the verification modal both return to a
+  // clean login form: preserve the email so the user doesn't retype it once
+  // verified, but drop the passwords so a stale signup attempt can't replay.
+  function handleBackToLogin() {
+    const email = verifyingEmail;
+    setVerifyingEmail(null);
+    switchMode("signin");
+    if (email) setEmailValue(email);
+    if (passwordRef.current) passwordRef.current.value = "";
   }
 
   // Forgot-password: mail a reset link via Supabase. Kept client-side per
@@ -149,8 +174,12 @@ function LoginForm() {
       }
 
       const result = await signup(formData);
-      if (result?.error) {
+      if (result && "error" in result) {
         setError(tRoot(`authErrors.${mapAuthErrorKey(result.error)}`));
+        return;
+      }
+      if (result?.requiresVerification) {
+        setVerifyingEmail(result.email);
       }
       return;
     }
@@ -285,6 +314,8 @@ function LoginForm() {
                       required
                       autoComplete="email"
                       placeholder={t("fields.emailPlaceholder")}
+                      value={emailValue}
+                      onChange={(event) => setEmailValue(event.target.value)}
                       className="h-11 border-border/80 bg-input px-3 text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
@@ -310,6 +341,7 @@ function LoginForm() {
                       </div>
                       <div className="relative">
                         <Input
+                          ref={passwordRef}
                           id="password"
                           name="password"
                           type={showPassword ? "text" : "password"}
@@ -472,6 +504,35 @@ function LoginForm() {
           </div>
         </section>
       </div>
+
+      <Dialog
+        open={verifyingEmail !== null}
+        onOpenChange={(open) => {
+          if (!open) handleBackToLogin();
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogTitle className="text-lg font-semibold text-foreground">
+            {t("verifyEmail.title")}
+          </DialogTitle>
+          <DialogDescription
+            render={<div />}
+            className="space-y-1 text-sm text-muted-foreground"
+          >
+            <p>{t("verifyEmail.body")}</p>
+            <p className="font-medium text-foreground">{verifyingEmail}</p>
+            <p>{t("verifyEmail.explanation")}</p>
+          </DialogDescription>
+          <Button
+            type="button"
+            size="lg"
+            onClick={handleBackToLogin}
+            className="h-11 w-full justify-center bg-primary text-primary-foreground hover:bg-primary/92"
+          >
+            {t("verifyEmail.backToLogin")}
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

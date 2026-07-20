@@ -104,6 +104,12 @@
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "resetSentMessage": "Check your email inbox for the password reset link.",
+    "verifyEmail": {
+      "title": "Check your email",
+      "body": "We sent a verification link to:",
+      "explanation": "Open that email and click the verification link before signing in to Pocket Mint.",
+      "backToLogin": "Back to login"
+    },
     "rememberedPassword": "Remembered your password?",
     "backToSignIn": "Back to sign in",
     "orContinueWith": "or continue with",
