@@ -51,6 +51,10 @@ const preview: Preview = {
     },
     a11y: {
       // 'todo' surfaces violations in the Storybook a11y panel without failing CI.
+      // 'error' was evaluated and rejected: it currently fails 9/31 stories on
+      // real, pre-existing contrast/labeling issues in Button, FormField, and
+      // Select (out of scope for this Storybook-only PR — no production
+      // component behavior changes). Revisit once those are fixed separately.
       test: "todo",
     },
     backgrounds: {
