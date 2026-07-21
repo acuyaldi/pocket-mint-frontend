@@ -775,50 +775,82 @@
   "analytics": {
     "pageTitle": "Analytics",
     "pageDescription": "Track your financial trends and performance",
-    "periods": {
-      "month": "This month",
-      "quarter": "3 months",
-      "sixMonths": "6 months"
-    },
     "exportReport": "Export report",
     "exportFailed": "Report export failed. Try again.",
-    "realData": "Real data",
-    "savingsRate": "Savings rate",
-    "savingsRateHelper": "{amount} cash flow left this period",
-    "cashFlow": "Cash flow",
-    "cashFlowHelper": "{income} in · {expenses} out",
-    "debtRatio": "Debt ratio",
-    "debtRatioHelper": "{debt} of {limit} limit",
-    "cashFlowChart": {
-      "title": "Cash flow",
-      "subtitle": "Income and expenses over the last 6 months",
+    "periodSelector": {
+      "label": "Select reporting period",
+      "options": {
+        "currentMonth": "This month",
+        "previousMonth": "Last month",
+        "last3Months": "3 months",
+        "last6Months": "6 months",
+        "currentYear": "This year",
+        "custom": "Custom"
+      },
+      "startDate": "Start",
+      "endDate": "End",
+      "apply": "Apply",
+      "errorStartAfterEnd": "Start date must be before end date.",
+      "errorInvalidRange": "Enter valid start and end dates."
+    },
+    "overview": {
       "income": "Income",
-      "expenses": "Expenses",
-      "empty": "No transactions yet to build a cash flow chart.",
-      "incomeTooltip": "Income {month}: {amount}",
-      "expenseTooltip": "Expenses {month}: {amount}"
+      "expense": "Expense",
+      "netCashFlow": "Net cash flow",
+      "transactionCount": "Transactions",
+      "changeVsPrevious": "{percent} ({amount} vs previous period)",
+      "noComparison": "No previous data to compare"
     },
-    "allocation": {
-      "title": "Spending allocation",
-      "subtitle": "Largest categories for the selected period",
-      "empty": "No expenses yet for this period.",
+    "trends": {
+      "title": "Cash flow",
+      "subtitle": "Income and expense trends over the selected period",
+      "income": "Income",
+      "expense": "Expense",
+      "net": "Net",
+      "empty": "No transactions for this period.",
+      "summaryUp": "Cash flow trended up {percent} over this period.",
+      "summaryDown": "Cash flow trended down {percent} over this period.",
+      "summaryFlat": "Cash flow was relatively stable this period."
+    },
+    "categories": {
+      "title": "Spending by category",
+      "subtitle": "Largest expense categories for the selected period",
+      "typeLabel": "Type",
+      "options": {
+        "EXPENSE": "Expenses",
+        "INCOME": "Incomes"
+      },
+      "uncategorized": "Uncategorized",
+      "empty": "No {type} transactions for this period.",
+      "percentageOfTotal": "{percent} of total"
+    },
+    "wallets": {
+      "title": "Wallet activity",
+      "subtitle": "Income, expense, and net per wallet",
+      "columns": {
+        "wallet": "Wallet",
+        "income": "Income",
+        "expense": "Expense",
+        "net": "Net"
+      },
+      "empty": "No wallet activity for this period."
+    },
+    "budgetPerformance": {
+      "title": "Budget performance",
+      "subtitle": "Spending against active budgets this month",
+      "empty": "No active budgets.",
+      "limitLabel": "{limit} limit",
+      "spentLabel": "{spent} spent",
+      "remainingLabel": "{remaining} left"
+    },
+    "drillDown": {
+      "title": "Transactions",
+      "subtitle": "{count} transactions matching the current filters",
+      "empty": "No transactions match the current filters.",
+      "close": "Close",
+      "page": "Page {page} of {total}",
+      "viewAll": "View all transactions",
       "noCategory": "No category"
-    },
-    "composition": {
-      "title": "Wallet composition",
-      "subtitle": "Assets and liabilities from current balances",
-      "assets": "Assets",
-      "liabilities": "Liabilities"
-    },
-    "insights": {
-      "title": "Insights",
-      "subtitle": "Automatic summary from the data available",
-      "noTransactions": "No transactions yet for this period.",
-      "positiveCashFlow": "Cash flow is positive this period, at {amount}.",
-      "negativeCashFlow": "Expenses exceeded income by {amount}.",
-      "expenseRatio": "Spending is at {percent} of income.",
-      "topCategory": "Biggest category: {label}, at {amount}.",
-      "activeInstallments": "{count} active installments need monitoring."
     }
   },
   "changelog": {

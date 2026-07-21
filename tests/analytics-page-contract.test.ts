@@ -15,7 +15,17 @@ const hooksSource = readFileSync(
   "utf8",
 );
 
-describe("Transaction data sourcing (PM-STAB-002)", () => {
+describe("Analytics v2 data sourcing", () => {
+  it("Analytics page uses the new v2 aggregation hooks, not a full uncapped transaction fetch", () => {
+    expect(analyticsSource).toContain("useAnalyticsOverview(");
+    expect(analyticsSource).toContain("useAnalyticsTrends(");
+    expect(analyticsSource).toContain("useAnalyticsCategories(");
+    expect(analyticsSource).toContain("useAnalyticsWallets(");
+    expect(analyticsSource).toContain("useAnalyticsBudgetPerformance()");
+    // Must NOT compute analytics from a full transaction dump in the browser
+    expect(analyticsSource).not.toContain("useAllTransactions()");
+  });
+
   it("useAllTransactions hits GET /transactions/all, unscoped by month", () => {
     expect(hooksSource).toContain("useAllTransactions");
     expect(hooksSource).toContain("'/transactions/all'");
@@ -26,17 +36,12 @@ describe("Transaction data sourcing (PM-STAB-002)", () => {
     expect(hooksSource).toContain("'/transactions'");
   });
 
-  it("Analytics reads the full transaction history for its period filters and charts", () => {
-    expect(analyticsSource).toContain("useAllTransactions()");
-    expect(analyticsSource).not.toContain("useTransactions()");
-  });
-
   it("Dashboard keeps the current-month endpoint for Current Period Summary and Recent Activity", () => {
     expect(dashboardSource).toContain("useTransactions()");
     expect(dashboardSource).not.toContain("useAllTransactions()");
   });
 
-  it("the Transactions journal keeps the current-month endpoint (unchanged by this fix)", () => {
+  it("the Transactions journal keeps the current-month endpoint", () => {
     expect(transactionsPageSource).toContain("useTransactions()");
     expect(transactionsPageSource).not.toContain("useAllTransactions()");
   });
