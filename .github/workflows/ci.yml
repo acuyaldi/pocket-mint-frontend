@@ -11,6 +11,8 @@ on:
       - dev
       - main
 
+  workflow_dispatch:
+
 permissions:
   contents: read
 
@@ -18,30 +20,134 @@ concurrency:
   group: frontend-ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  CI: true
+  NEXT_TELEMETRY_DISABLED: 1
+
 jobs:
   verify:
     name: Frontend Verify
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     env:
-      # Public, non-secret placeholders used only to prove the app can build.
+      # Public, non-secret placeholders used only to verify that the app
+      # can compile without accessing real production services.
       NEXT_PUBLIC_SUPABASE_URL: https://supabase.example.invalid
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
       NEXT_PUBLIC_API_URL: https://api.example.invalid/api/v1
+      NEXT_PUBLIC_HCAPTCHA_SITE_KEY: 10000000-ffff-ffff-ffff-000000000001
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+          persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Show verification context
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Event: ${GITHUB_EVENT_NAME}"
+          echo "Ref: ${GITHUB_REF}"
+          echo "Commit: ${GITHUB_SHA}"
+          node --version
+          npm --version
+          git log -1 --oneline
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Check formatting errors in diff
+        run: git diff --check
+
+      - name: Reject tracked environment and secret files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          matches="$(
+            git ls-files |
+            grep -E \
+              '(^|/)\.env($|\.)|(^|/).*\.pem$|(^|/).*\.key$|(^|/)service-account.*\.json$' \
+              || true
+          )"
+
+          allowed="$(
+            printf '%s\n' "${matches}" |
+            grep -E '(^|/)\.env\.example$' \
+            || true
+          )"
+
+          forbidden="$(
+            comm \
+              -23 \
+              <(printf '%s\n' "${matches}" | sed '/^$/d' | sort) \
+              <(printf '%s\n' "${allowed}" | sed '/^$/d' | sort)
+          )"
+
+          if [ -n "${forbidden}" ]; then
+            echo "::error::Tracked environment or secret-like files were found:"
+            echo "${forbidden}"
+            exit 1
+          fi
+
+          echo "No forbidden environment or secret-like files are tracked."
+
+      - name: Reject legacy backend authentication
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          scan_paths=()
+
+          for path in app components lib src proxy.ts middleware.ts; do
+            if [ -e "${path}" ]; then
+              scan_paths+=("${path}")
+            fi
+          done
+
+          if [ "${#scan_paths[@]}" -eq 0 ]; then
+            echo "::error::No runtime source paths were found to scan."
+            exit 1
+          fi
+
+          set +e
+          matches="$(
+            git grep \
+              -n \
+              -I \
+              -i \
+              -E \
+              'x-api-key|x-user-id|x-user-email|API_KEY|AUTH_REQUIRE_JWT' \
+              -- "${scan_paths[@]}" \
+              2>&1
+          )"
+          status=$?
+          set -e
+
+          if [ "${status}" -eq 0 ]; then
+            echo "::error::Legacy authentication artifacts found in runtime source:"
+            echo "${matches}"
+            exit 1
+          fi
+
+          if [ "${status}" -ne 1 ]; then
+            echo "::error::Runtime source scan failed:"
+            echo "${matches}"
+            exit "${status}"
+          fi
+
+          echo "Runtime source is free of legacy authentication artifacts."
 
       - name: Lint
         run: npm run lint
@@ -49,61 +155,106 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
-      - name: Run tests
-        run: npx vitest run
+      - name: Validate public changelog
+        run: npx vitest run tests/changelog.test.ts
+
+      - name: Run full test suite
+        run: npx vitest run --reporter=default
 
       - name: Production build
         run: npm run build
 
-      - name: Reject legacy backend authentication
+      - name: Verify Next.js build output
         shell: bash
         run: |
-          set +e
-          matches=$(git grep -n -I -i -E \
-            'x-api-key|x-user-id|x-user-email|API_KEY|AUTH_REQUIRE_JWT' \
-            -- app components lib src proxy.ts 2>&1)
-          status=$?
-          set -e
+          set -euo pipefail
 
-          if [ "$status" -eq 0 ]; then
-            echo "Legacy authentication artifacts found in runtime source:"
-            echo "$matches"
+          if [ ! -d ".next/server" ]; then
+            echo "::error::Expected .next/server build output is missing."
             exit 1
           fi
 
-          if [ "$status" -ne 1 ]; then
-            echo "Runtime source scan failed:"
-            echo "$matches"
-            exit "$status"
+          if [ ! -d ".next/static" ]; then
+            echo "::error::Expected .next/static build output is missing."
+            exit 1
           fi
 
-          echo "Runtime source is free of legacy authentication headers."
+          echo "Expected Next.js production output exists."
 
       - name: Scan production bundle
         shell: bash
         run: |
-          if [ ! -d .next/server ] || [ ! -d .next/static ]; then
-            echo "Expected Next.js build output is missing."
-            exit 1
-          fi
+          set -euo pipefail
 
           set +e
-          matches=$(grep -RInaE --exclude='*.map' \
-            'x-api-key|x-user-id|x-user-email|API_KEY|AUTH_REQUIRE_JWT|localhost:5001|127\.0\.0\.1:5001' \
-            .next/server .next/static 2>&1)
+          matches="$(
+            grep \
+              -RInaE \
+              --exclude='*.map' \
+              --exclude='*.txt' \
+              'x-api-key|x-user-id|x-user-email|API_KEY|AUTH_REQUIRE_JWT|localhost:5001|127\.0\.0\.1:5001' \
+              .next/server \
+              .next/static \
+              2>&1
+          )"
           status=$?
           set -e
 
-          if [ "$status" -eq 0 ]; then
-            echo "Forbidden runtime values found in production bundle:"
-            echo "$matches"
+          if [ "${status}" -eq 0 ]; then
+            echo "::error::Forbidden runtime values found in production bundle:"
+            echo "${matches}"
             exit 1
           fi
 
-          if [ "$status" -ne 1 ]; then
-            echo "Production bundle scan failed:"
-            echo "$matches"
-            exit "$status"
+          if [ "${status}" -ne 1 ]; then
+            echo "::error::Production bundle scan failed:"
+            echo "${matches}"
+            exit "${status}"
           fi
 
           echo "Production bundle security scan passed."
+
+      - name: Verify tracked files remain unchanged
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git diff --check
+
+          if ! git diff --quiet; then
+            echo "::error::Verification or build commands modified tracked files."
+            git status --short
+            git diff --stat
+            exit 1
+          fi
+
+          tracked_changes="$(
+            git status \
+              --porcelain \
+              --untracked-files=no
+          )"
+
+          if [ -n "${tracked_changes}" ]; then
+            echo "::error::Tracked working-tree changes remain after verification."
+            echo "${tracked_changes}"
+            exit 1
+          fi
+
+          echo "Tracked working tree remains clean."
+
+      - name: Write verification summary
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          {
+            echo "# Frontend CI"
+            echo
+            echo "- Commit: \`${GITHUB_SHA}\`"
+            echo "- Event: \`${GITHUB_EVENT_NAME}\`"
+            echo "- Ref: \`${GITHUB_REF}\`"
+            echo "- Node.js: \`$(node --version 2>/dev/null || echo unavailable)\`"
+            echo
+            echo "The workflow validates linting, TypeScript, changelog metadata,"
+            echo "the full test suite, the production build, source authentication"
+            echo "rules, and the generated production bundle."
+          } >> "${GITHUB_STEP_SUMMARY}"

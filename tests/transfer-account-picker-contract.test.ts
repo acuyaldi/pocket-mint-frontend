@@ -3,6 +3,8 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+import idMessages from "@/messages/id.json";
+
 const root = fileURLToPath(new URL("../", import.meta.url));
 const source = readFileSync(
   root + "app/(app)/transactions/components/AccountPicker.tsx",
@@ -66,21 +68,25 @@ describe("add transaction modal transfer flow source contract", () => {
   it("uses a sequential picker flow instead of transfer wallet cards", () => {
     expect(modalSource).not.toContain("WalletGrid");
     expect(modalSource).toContain("<AccountPicker");
-    expect(modalSource).toContain(
-      'aria-label="Tukar dompet sumber dan tujuan"',
+    expect(modalSource).toContain('aria-label={t("swapWalletsAria")}');
+    expect(idMessages.transactionModals.add.swapWalletsAria).toBe(
+      "Tukar dompet sumber dan tujuan",
     );
 
     const indices = [
-      "<FieldLabel>Jumlah</FieldLabel>",
-      "<FieldLabel>Tanggal</FieldLabel>",
+      "<FieldLabel>{t(\"amount\")}</FieldLabel>",
+      "<FieldLabel>{t(\"date\")}</FieldLabel>",
       'id="transfer-source"',
-      'aria-label="Tukar dompet sumber dan tujuan"',
+      'aria-label={t("swapWalletsAria")}',
       'id="transfer-destination"',
-      "<FieldLabel>Deskripsi</FieldLabel>",
+      "<FormField label={t(\"description\")}",
     ].map((marker) => modalSource.indexOf(marker));
 
     expect(indices.every((index) => index >= 0)).toBe(true);
     expect(indices).toEqual([...indices].sort((a, b) => a - b));
+    expect(idMessages.transactionModals.add.amount).toBe("Jumlah");
+    expect(idMessages.transactionModals.add.date).toBe("Tanggal");
+    expect(idMessages.transactionModals.add.description).toBe("Deskripsi");
   });
 
   it("wires transfer selection, swapping, validation, and source balance", () => {
@@ -93,26 +99,42 @@ describe("add transaction modal transfer flow source contract", () => {
       "getTransferDestinations(",
       "sourcePickerWallets",
       "destinationPickerWallets",
-      "Saldo tidak cukup",
-      "Saldo tidak mencukupi",
+      't("errors.insufficientBalance", { name: srcWallet.name })',
+      'disabledReason={t("insufficientBalance")}',
     ]) {
       expect(modalSource).toContain(marker);
     }
+    expect(idMessages.transactionModals.add.errors.insufficientBalance).toBe(
+      "Saldo {name} tidak cukup.",
+    );
+    expect(idMessages.transactionModals.add.insufficientBalance).toBe(
+      "Saldo tidak mencukupi",
+    );
   });
 
   it("handles transfer-specific empty and single-wallet states truthfully", () => {
     const normalizedModalSource = modalSource.replace(/\s+/g, " ");
 
     for (const marker of [
-      "Tidak ada dompet untuk transfer",
-      "Tambahkan dompet Kas, Bank, atau E-Wallet sebagai sumber transfer.",
-      "Tidak ada dompet sumber lain yang tersedia.",
-      "Tidak ada dompet tujuan lain yang tersedia.",
+      't("noWalletsForTransferTitle")',
+      't("noWalletsForTransferBody")',
+      't("noOtherSourceWallet")',
+      't("noOtherDestinationWallet")',
       'wallets={sourcePickerWallets}',
       'wallets={destinationPickerWallets}',
       'type === "TRANSFER" && destinationPickerWallets.length === 0',
     ]) {
       expect(normalizedModalSource).toContain(marker);
     }
+
+    const add = idMessages.transactionModals.add;
+    expect(add.noWalletsForTransferTitle).toBe("Tidak ada dompet untuk transfer");
+    expect(add.noWalletsForTransferBody).toBe(
+      "Tambahkan dompet Kas, Bank, atau E-Wallet sebagai sumber transfer.",
+    );
+    expect(add.noOtherSourceWallet).toBe("Tidak ada dompet sumber lain yang tersedia.");
+    expect(add.noOtherDestinationWallet).toBe(
+      "Tidak ada dompet tujuan lain yang tersedia.",
+    );
   });
 });

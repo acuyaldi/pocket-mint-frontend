@@ -1,14 +1,18 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowDownLeft,
   ArrowUpRight,
+  CalendarSync,
   Plus,
   Search,
   Shuffle,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { INTL_LOCALE } from "@/i18n/config";
 import { PageHeader } from "@/components/layout/page-header";
 import {
   useCreateTransaction,
@@ -25,27 +29,24 @@ import { TransactionDetailPanel } from "./components/TransactionDetailPanel";
 
 type TypeFilter = "all" | "INCOME" | "EXPENSE" | "TRANSFER";
 
-const TYPE_FILTERS: { key: TypeFilter; label: string }[] = [
-  { key: "all", label: "Semua" },
-  { key: "INCOME", label: "Pemasukan" },
-  { key: "EXPENSE", label: "Pengeluaran" },
-  { key: "TRANSFER", label: "Transfer" },
-];
-
 function txDateKey(transaction: Transaction) {
   return new Date(transaction.date).toISOString().slice(0, 10);
 }
 
-function formatGroupTitle(dateKey: string) {
+function formatGroupTitle(
+  dateKey: string,
+  intlLocale: string,
+  labels: { today: string; yesterday: string },
+) {
   const date = new Date(`${dateKey}T00:00:00`);
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
 
-  if (date.toDateString() === today.toDateString()) return "Hari Ini";
-  if (date.toDateString() === yesterday.toDateString()) return "Kemarin";
+  if (date.toDateString() === today.toDateString()) return labels.today;
+  if (date.toDateString() === yesterday.toDateString()) return labels.yesterday;
 
-  return new Intl.DateTimeFormat("id-ID", {
+  return new Intl.DateTimeFormat(intlLocale, {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -63,7 +64,17 @@ function TransactionIcon({ type }: { type: Transaction["type"] }) {
 }
 
 export default function TransactionsPage() {
-  const { data, isLoading } = useTransactions();
+  const t = useTranslations("transactions");
+  const tRecurring = useTranslations("recurringTransactions");
+  const locale = useLocale();
+  const intlLocale = INTL_LOCALE[locale as keyof typeof INTL_LOCALE];
+  const TYPE_FILTERS: { key: TypeFilter; label: string }[] = [
+    { key: "all", label: t("filters.all") },
+    { key: "INCOME", label: t("filters.income") },
+    { key: "EXPENSE", label: t("filters.expense") },
+    { key: "TRANSFER", label: t("filters.transfer") },
+  ];
+  const { data, isLoading, isError, isFetching, refetch } = useTransactions();
   const { data: walletsData } = useWallets();
   const updateTransaction = useUpdateTransaction();
   const createTransaction = useCreateTransaction();
@@ -125,6 +136,7 @@ export default function TransactionsPage() {
         setEditingTx(null);
       } catch (error) {
         console.error(error);
+        throw error;
       } finally {
         setIsSaving(false);
       }
@@ -141,6 +153,7 @@ export default function TransactionsPage() {
       setSelectedTx(null);
     } catch (error) {
       console.error(error);
+      throw error;
     } finally {
       setIsDeleting(false);
     }
@@ -164,7 +177,7 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Transaksi" description="Jurnal keuangan Anda" />
+      <PageHeader title={t("pageTitle")} description={t("pageDescription")} />
 
       <div className="space-y-3">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -174,18 +187,27 @@ export default function TransactionsPage() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               className="h-10 w-full rounded-lg border border-border bg-card py-2 pl-10 pr-4 text-sm outline-none transition-all focus:ring-1 focus:ring-primary"
-              placeholder="Cari transaksi..."
+              placeholder={t("searchPlaceholder")}
               type="text"
             />
           </div>
-          <button
-            type="button"
-            onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
-          >
-            <Plus className="size-4" />
-            Tambah Transaksi
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/transactions/rutin"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-semibold text-foreground transition-colors hover:bg-surface-high"
+            >
+              <CalendarSync className="size-4" />
+              {tRecurring("openLink")}
+            </Link>
+            <button
+              type="button"
+              onClick={() => setIsAddModalOpen(true)}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
+            >
+              <Plus className="size-4" />
+              {t("addTransaction")}
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-2">
@@ -206,6 +228,20 @@ export default function TransactionsPage() {
         </div>
       </div>
 
+      {isError ? (
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card py-10 text-center">
+          <p className="text-sm text-muted-foreground">{t("error")}</p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="text-sm font-medium text-primary hover:underline disabled:opacity-50"
+          >
+            {t("retry")}
+          </button>
+        </div>
+      ) : (
+      <>
       <div className="space-y-10">
         {groupedTransactions.map(([dateKey, group]) => {
           const total = group.reduce((sum, transaction) => {
@@ -216,64 +252,75 @@ export default function TransactionsPage() {
 
           return (
             <section key={dateKey}>
-              <div className="mb-4 flex items-center justify-between border-b border-border pb-2">
+              <div className="mb-4 flex items-center justify-between border-b border-border px-6 pb-2">
                 <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                  {formatGroupTitle(dateKey)}
+                  {formatGroupTitle(dateKey, intlLocale, {
+                    today: t("today"),
+                    yesterday: t("yesterday"),
+                  })}
                 </h2>
                 <span className="text-xs tabular-nums text-muted-foreground">
-                  Total: {formatCurrency(total)}
+                  {t("total", { amount: formatCurrency(total, intlLocale) })}
                 </span>
               </div>
               <div className="space-y-2">
-                {group.map((transaction) => (
-                  <button
-                    key={transaction.id}
-                    type="button"
-                    onClick={() => setSelectedTx(transaction)}
-                    className="group flex w-full items-center justify-between rounded-xl border border-border/60 bg-card p-6 text-left transition-all duration-300 hover:shadow-md"
-                  >
-                    <div className="flex min-w-0 items-center gap-4">
+                {group.map((transaction) => {
+                  const walletText =
+                    transaction.type === "TRANSFER" && transaction.toWallet
+                      ? `${transaction.wallet?.name ?? "-"} → ${transaction.toWallet.name}`
+                      : (transaction.wallet?.name ??
+                          wallets.find((wallet) => wallet.id === transaction.walletId)?.name ??
+                          "-");
+
+                  return (
+                    <button
+                      key={transaction.id}
+                      type="button"
+                      onClick={() => setSelectedTx(transaction)}
+                      className="group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 rounded-xl border border-border/60 bg-card p-6 text-left transition-all duration-300 hover:shadow-md md:grid-cols-[auto_minmax(0,1fr)_minmax(8rem,14rem)_minmax(6rem,auto)]"
+                    >
                       <div
                         className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${
                           transaction.type === "INCOME"
                             ? "bg-mint/10"
                             : transaction.type === "EXPENSE"
-                            ? "bg-coral/10"
-                            : "bg-surface-high"
+                              ? "bg-coral/10"
+                              : "bg-surface-high"
                         }`}
                       >
                         <TransactionIcon type={transaction.type} />
                       </div>
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-foreground">
-                          {transaction.description || "Transaksi"}
+                          {transaction.description || t("defaultLabel")}
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {transaction.type === "TRANSFER"
-                            ? "Transfer"
-                            : transaction.category?.name ?? "Tanpa kategori"}
+                            ? t("filters.transfer")
+                            : transaction.category?.name ?? t("noCategory")}
                         </p>
                       </div>
-                    </div>
-                    <div className="hidden text-sm text-muted-foreground md:block">
-                      {transaction.wallet?.name ??
-                        wallets.find((wallet) => wallet.id === transaction.walletId)?.name ??
-                        "-"}
-                    </div>
-                    <p
-                      className={`shrink-0 text-sm font-bold tabular-nums ${
-                        transaction.type === "INCOME"
-                          ? "text-mint"
-                          : transaction.type === "TRANSFER"
-                          ? "text-foreground"
-                          : "text-coral"
-                      }`}
-                    >
-                      {transaction.type === "INCOME" ? "+" : transaction.type === "EXPENSE" ? "-" : ""}
-                      {formatCurrency(transaction.amount)}
-                    </p>
-                  </button>
-                ))}
+                      <div className="hidden min-w-0 md:block">
+                        <p className="truncate text-sm text-muted-foreground">{walletText}</p>
+                      </div>
+                      <p
+                        className={`text-right text-sm font-bold tabular-nums whitespace-nowrap ${
+                          transaction.type === "INCOME"
+                            ? "text-mint"
+                            : transaction.type === "TRANSFER"
+                              ? "text-foreground"
+                              : "text-coral"
+                        }`}
+                      >
+                        {transaction.type === "INCOME" ? "+" : transaction.type === "EXPENSE" ? "-" : ""}
+                        {formatCurrency(transaction.amount, intlLocale)}
+                      </p>
+                      <div className="col-span-full block min-w-0 md:hidden">
+                        <p className="truncate text-xs text-muted-foreground">{walletText}</p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </section>
           );
@@ -282,14 +329,15 @@ export default function TransactionsPage() {
 
       {filteredTransactions.length === 0 && !isLoading ? (
         <p className="rounded-xl border border-dashed border-border bg-card py-10 text-center text-sm text-muted-foreground">
-          Tidak ada transaksi yang cocok.
+          {t("noMatches")}
         </p>
       ) : null}
       {isLoading ? (
         <p className="rounded-xl border border-border bg-card py-10 text-center text-sm text-muted-foreground">
-          Memuat transaksi...
+          {t("loading")}
         </p>
       ) : null}
+      </>)}
 
       <TransactionDetailPanel
         tx={selectedTx}

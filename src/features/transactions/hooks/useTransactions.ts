@@ -1,10 +1,23 @@
 'use client';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { Transaction } from '@/src/types/transaction';
+import { getExportFilename } from '@/app/(app)/analytics/period';
 
 // Stale time: 5 minutes (in milliseconds)
 const STALE_TIME = 5 * 60 * 1000;
+
+/**
+ * Query key prefixes that read transaction-derived data. Invalidate all of
+ * these after any successful transaction mutation (create/update/delete/
+ * confirm) so dependent views (dashboard net worth, wallet balances,
+ * installment bills) never require a manual reload.
+ */
+export const invalidateTransactionDependents = (queryClient: QueryClient) => {
+  for (const queryKey of [['transactions'], ['wallets'], ['dashboard'], ['bills']]) {
+    queryClient.invalidateQueries({ queryKey });
+  }
+};
 
 /**
  * Fetch all transactions.
@@ -84,10 +97,7 @@ export const useUpdateTransaction = () => {
   >({
     mutationFn: ({ id, ...updates }) =>
       api.put<{ status: string; data: Transaction }>(`/transactions/${id}`, updates).then((res) => res.data.data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['wallets'] });
-    },
+    onSuccess: () => invalidateTransactionDependents(queryClient),
   });
 };
 
@@ -100,13 +110,8 @@ export const useCreateTransaction = () => {
     CreateTransactionDto
   >({
     mutationFn: (newTx) => api.post<{ status: string; data: Transaction }>('/transactions', newTx).then((res) => res.data.data),
-    onSuccess: () => {
-        // Refetch the transaction list and wallets after creating a new one
-        queryClient.invalidateQueries({ queryKey: ['transactions'] });
-        queryClient.invalidateQueries({ queryKey: ['wallets'] });
-      },
-    }
-  );
+    onSuccess: () => invalidateTransactionDependents(queryClient),
+  });
 };
 
 export interface CreateTransactionDto {
@@ -124,6 +129,46 @@ export interface CreateTransactionDto {
   interestRate?: number;
 }
 
+/** Filename from a `Content-Disposition: attachment; filename="…"` header, quoted or not. */
+export function filenameFromContentDisposition(header: string | undefined, fallback: string): string {
+  const match = header && /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(header);
+  return match ? decodeURIComponent(match[1]) : fallback;
+}
+
+/**
+ * Download the Analytics page's currently selected period as a CSV, filtered
+ * on the backend (`GET /transactions/export`) — never fetched all-time and
+ * filtered client-side. `anchor` must be the same Asia/Jakarta `YYYY-MM`
+ * reporting-month key the Analytics page is displaying (see
+ * `getJakartaMonthKey` in `app/(app)/analytics/period.ts`), not a raw
+ * `Date` — a UTC instant can land on a different calendar month near a
+ * Jakarta month boundary.
+ */
+export const exportTransactionsCsv = async (period: 'month' | 'quarter' | 'six-months', anchor: string) => {
+  const response = await api.get<Blob>('/transactions/export', {
+    params: { period, anchor },
+    responseType: 'blob',
+  });
+  const filename = filenameFromContentDisposition(
+    response.headers['content-disposition'],
+    getExportFilename(period, anchor)
+  );
+  const url = URL.createObjectURL(response.data);
+  try {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    try {
+      link.click();
+    } finally {
+      document.body.removeChild(link);
+    }
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+};
+
 export const useDeleteTransaction = () => {
   const queryClient = useQueryClient();
 
@@ -134,9 +179,6 @@ export const useDeleteTransaction = () => {
   >({
     mutationFn: (id) =>
       api.delete<{ status: string; data: { id: string } }>(`/transactions/${id}`).then((res) => res.data.data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['wallets'] });
-    },
+    onSuccess: () => invalidateTransactionDependents(queryClient),
   });
 };

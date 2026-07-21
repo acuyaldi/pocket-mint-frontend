@@ -3,8 +3,10 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { ArrowLeft, Eye, EyeOff, KeyRound, Loader2, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { mapAuthErrorKey } from "@/lib/auth/map-auth-error";
 import { PocketMintLogo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +26,9 @@ import {
  * user back to /login so they re-authenticate with the new password.
  */
 export default function ResetPasswordPage() {
+  const t = useTranslations("auth.resetPassword");
+  const tAuth = useTranslations("auth");
+  const tRoot = useTranslations();
   const router = useRouter();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -69,11 +74,11 @@ export default function ResetPasswordPage() {
     // Same lightweight validation convention used across the auth pages:
     // valid input is a password of at least 8 characters that matches confirm.
     if (newPassword.length < 8) {
-      setError("Password must be at least 8 characters.");
+      setError(tAuth("errors.passwordMinLength"));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(tAuth("errors.passwordMismatch"));
       return;
     }
 
@@ -84,7 +89,7 @@ export default function ResetPasswordPage() {
     });
 
     if (updateError) {
-      setError(updateError.message);
+      setError(tRoot(`authErrors.${mapAuthErrorKey(updateError.message)}`));
       setLoading(false);
       return;
     }
@@ -92,9 +97,7 @@ export default function ResetPasswordPage() {
     // Force a clean re-login with the new credentials.
     await supabase.auth.signOut();
     router.replace(
-      `/login?message=${encodeURIComponent(
-        "Password updated. Please sign in with your new password."
-      )}`
+      `/login?message=${encodeURIComponent(t("successRedirect"))}`
     );
   }
 
@@ -106,7 +109,7 @@ export default function ResetPasswordPage() {
           className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
-          Back to login
+          {tAuth("backToLogin")}
         </Link>
 
         <Card className="surface-card w-full border-white/90 py-0 shadow-none">
@@ -115,15 +118,14 @@ export default function ResetPasswordPage() {
               <PocketMintLogo wrapperClassName="text-primary" markSize={32} />
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/12 bg-white/82 px-3 py-1.5 text-[11px] font-semibold tracking-[0.08em] text-primary">
                 <ShieldCheck className="size-3.5" />
-                SECURE RESET
+                {t("badge")}
               </div>
             </div>
             <CardTitle className="text-2xl font-semibold text-foreground">
-              Set a new password
+              {t("title")}
             </CardTitle>
             <CardDescription className="text-sm leading-6 text-muted-foreground">
-              Choose a new password for your Pocket Mint account. Use at least 8
-              characters.
+              {t("subtitle")}
             </CardDescription>
           </CardHeader>
 
@@ -131,14 +133,13 @@ export default function ResetPasswordPage() {
             {verifying ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="size-4 animate-spin" />
-                Verifying your reset link...
+                {t("verifying")}
               </div>
             ) : (
               <form className="space-y-5" onSubmit={handleSubmit}>
                 {!sessionReady ? (
                   <div className="rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning">
-                    This reset link is invalid or has expired. Request a new link
-                    from the login page.
+                    {t("invalidLink")}
                   </div>
                 ) : null}
 
@@ -147,7 +148,7 @@ export default function ResetPasswordPage() {
                     htmlFor="newPassword"
                     className="text-sm font-medium text-foreground"
                   >
-                    New Password
+                    {t("newPassword")}
                   </label>
                   <div className="relative">
                     <Input
@@ -159,7 +160,7 @@ export default function ResetPasswordPage() {
                       autoComplete="new-password"
                       value={newPassword}
                       onChange={(event) => setNewPassword(event.target.value)}
-                      placeholder="At least 8 characters"
+                      placeholder={t("newPasswordPlaceholder")}
                       aria-invalid={error ? "true" : "false"}
                       className="h-11 border-border/80 bg-input px-3 pr-11 text-foreground placeholder:text-muted-foreground"
                     />
@@ -168,7 +169,7 @@ export default function ResetPasswordPage() {
                       onClick={() => setShowPassword((value) => !value)}
                       className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
                       aria-label={
-                        showPassword ? "Hide password" : "Show password"
+                        showPassword ? tAuth("hidePassword") : tAuth("showPassword")
                       }
                     >
                       {showPassword ? (
@@ -185,7 +186,7 @@ export default function ResetPasswordPage() {
                     htmlFor="confirmPassword"
                     className="text-sm font-medium text-foreground"
                   >
-                    Confirm New Password
+                    {t("confirmNewPassword")}
                   </label>
                   <Input
                     id="confirmPassword"
@@ -196,7 +197,7 @@ export default function ResetPasswordPage() {
                     autoComplete="new-password"
                     value={confirmPassword}
                     onChange={(event) => setConfirmPassword(event.target.value)}
-                    placeholder="Re-enter new password"
+                    placeholder={t("confirmNewPasswordPlaceholder")}
                     aria-invalid={error ? "true" : "false"}
                     className="h-11 border-border/80 bg-input px-3 text-foreground placeholder:text-muted-foreground"
                   />
@@ -217,12 +218,12 @@ export default function ResetPasswordPage() {
                   {loading ? (
                     <>
                       <Loader2 className="size-4 animate-spin" />
-                      Updating password...
+                      {t("updating")}
                     </>
                   ) : (
                     <>
                       <KeyRound className="size-4" />
-                      Update Password
+                      {t("submit")}
                     </>
                   )}
                 </Button>

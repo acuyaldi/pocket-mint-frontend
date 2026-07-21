@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
+import enMessages from "@/messages/en.json";
+import idMessages from "@/messages/id.json";
+
 const root = fileURLToPath(new URL("../", import.meta.url));
 const page = readFileSync(root + "app/page.tsx", "utf8");
 const heroPath = root + "components/ui/pocket-mint-hero.tsx";
@@ -76,7 +79,8 @@ describe("Pocket Mint public experience contract", () => {
 
   it("keeps the centered hero and one conversion intent", () => {
     expect(page).toContain("<PocketMintHero />");
-    expect(hero).toContain("Clarity Over Complexity");
+    expect(hero).toContain('t("hero.title")');
+    expect(enMessages.landing.hero.title).toBe("Clarity Over Complexity");
     expect(hero).toContain("max-w-7xl");
     expect(hero).toContain('href="/login"');
     expect(hero).toContain("useReducedMotion");
@@ -152,18 +156,28 @@ describe("Pocket Mint public experience contract", () => {
   });
 
   it("keeps privacy before product and one final call to action", () => {
-    expect(page).toContain("Data finansial Anda tetap milik Anda.");
-    expect(page).toContain("Kebijakan Privasi");
-    expect(page).toContain("Syarat & Ketentuan");
+    expect(page).toContain('t("privacy.title")');
+    expect(page).toContain('t("footer.links.privacyPolicy")');
+    expect(page).toContain('t("footer.links.terms")');
+    expect(idMessages.landing.privacy.title).toBe(
+      "Data finansial Anda tetap milik Anda."
+    );
+    expect(idMessages.landing.footer.links.privacyPolicy).toBe("Kebijakan Privasi");
+    expect(idMessages.landing.footer.links.terms).toBe("Syarat & Ketentuan");
   });
 
   it("presents each privacy promise as a numbered card", () => {
     expect(privacyCommitments).toContain(
       'import { Card, CardContent } from "@/components/ui/card"'
     );
-    expect(privacyCommitments).toContain("const privacyPoints = [");
+    expect(privacyCommitments).toContain('t.raw("points") as string[]');
     expect(privacyCommitments).toContain('<ul className="grid gap-3"');
     expect(privacyCommitments).toContain("privacyPoints.map((point, index)");
+    expect(idMessages.landing.privacy.points).toEqual([
+      "Tanpa iklan.",
+      "Tanpa pelacakan marketing.",
+      "Hanya data yang diperlukan untuk workspace Anda.",
+    ]);
     expect(privacyCommitments).toContain("<motion.li");
     expect(privacyCommitments).toContain("<Card");
     expect(privacyCommitments).toContain('size="sm"');

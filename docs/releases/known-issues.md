@@ -641,7 +641,23 @@ ditambahkan pada audit `v0.3.0-rc.2` sebagai temuan Medium **non-blocking**
 
 ## PM-STAB-011 — [Medium] `createWallet` response serializes Decimal fields as string, inconsistent with GET/PUT
 
-- **Status:** Open. *(Baru, ditemukan audit final `v0.3.0-rc.2`, non-blocking.)*
+- **Status:** Resolved (20 Juli 2026, Phase 13B). `createWallet` dan
+  `updateWallet` di `account.controller.ts` sudah memanggil `serializeWallet`
+  yang sama dengan `getAllWallets` — satu jalur serialisasi kanonik untuk
+  ketiganya (commit `335515e`, "fix: serialize wallet response consistently
+  on create/update (PM-STAB-011)"). Dikonfirmasi lewat pembacaan kode
+  langsung pada `pocket-mint-be/src/controllers/account.controller.ts` di
+  base branch Phase 13B (`feature/phase-13b-wallet-stability`, dari
+  `origin/dev` commit `c0e0b0e`) — field `Decimal` (`balance`, `creditLimit`,
+  `initialBalance`, `interestRate`, `adminFee`) semuanya `parseFloat` ke
+  `number` di ketiga operasi.
+- **Evidence:** `pocket-mint-be/test/walletControllerBoundary.test.ts`
+  (`describe("wallet mutation controllers — Decimal→number serialization
+  contract (matches GET/list)")`, 4 test) dan
+  `pocket-mint-be/test/walletUpdate.test.ts` sudah menegaskan
+  `typeof res.body.data.balance === "number"` untuk create dan update,
+  termasuk nilai fraksional dan nilai besar tanpa hilang presisi.
+- **Status sebelumnya (arsip, sudah tidak berlaku):**
 - **Affected area:** Backend — `pocket-mint-be/src/controllers/account.controller.ts`
   (`createWallet`, sekitar baris 197–200).
 - **Expected behavior:** Field `Decimal` (`balance`, `creditLimit`, dst.)
@@ -678,18 +694,20 @@ ditambahkan pada audit `v0.3.0-rc.2` sebagai temuan Medium **non-blocking**
 
 ## KI-EXPORT — [Medium] Tombol "Ekspor laporan" di halaman Analitik tidak berfungsi
 
-- **Status:** Open.
+- **Status:** Resolved (20 Juli 2026).
 - **Lokasi:** `pocket-mint-fe/app/(app)/analytics/page.tsx` (tombol dengan
-  ikon `Download`, sekitar baris 276–282).
-- **Bukti:** elemen `<button>` tidak memiliki prop `onClick` atau logic
-  ekspor apa pun di file tersebut.
-- **Dampak:** dead control — pengguna mengklik tombol dan tidak terjadi apa
-  pun, tanpa disabled state atau indikasi bahwa fitur belum tersedia.
-- **Catatan:** Item ini sudah ada sebelum audit stabilitas MVP 18 Juli 2026
-  dan tidak termasuk dalam 10 blocker PM-STAB yang diminta audit tersebut
-  (`mvp-stability-audit.md` menyebutnya sebagai item kosmetik yang levelnya
-  lebih rendah dibanding temuan Analytics period — lihat PM-STAB-002).
-  Dipertahankan di sini dengan ID lama agar tidak hilang dari catatan.
+  ikon `Download`, sekitar baris 261–281).
+- **Perbaikan:** tombol kini memanggil `exportTransactionsCsv(period,
+  getJakartaMonthKey(new Date()))` dari
+  `src/features/transactions/hooks/useTransactions.ts`, dengan `isExporting`
+  disabled-state dan `toast(..., "error")` saat gagal. Diuji di
+  `tests/analytics-export.test.ts`.
+- **Catatan historis:** Item ini sudah ada sebelum audit stabilitas MVP 18
+  Juli 2026 dan tidak termasuk dalam 10 blocker PM-STAB yang diminta audit
+  tersebut (`mvp-stability-audit.md` menyebutnya sebagai item kosmetik yang
+  levelnya lebih rendah dibanding temuan Analytics period — lihat
+  PM-STAB-002). Dipertahankan di sini dengan ID lama agar tidak hilang dari
+  catatan.
 
 ---
 

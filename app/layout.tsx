@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import QueryProvider from "@/components/QueryProvider";
+import { LogoutProvider } from "@/components/LogoutProvider";
 import "./globals.css";
 
 // viewport-fit=cover is required for env(safe-area-inset-*) to be non-zero on iOS
@@ -15,15 +18,22 @@ export const metadata: Metadata = {
     "Pantau aset, hutang, cicilan, dan aktivitas keuangan pribadi dalam satu ruang kerja privat.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="id" className="h-full antialiased">
+    <html lang={locale} className="h-full antialiased">
       <body className="min-h-full flex flex-col font-sans antialiased bg-background text-foreground">
-        <QueryProvider>{children}</QueryProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <QueryProvider>
+            <LogoutProvider>{children}</LogoutProvider>
+          </QueryProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

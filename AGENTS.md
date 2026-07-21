@@ -25,3 +25,21 @@ Heed deprecation notices.
 <!-- BEGIN:financial-logic -->
 @skills/financial-logic.skill.md
 <!-- END:financial-logic -->
+
+## Repository Reading Rules
+
+- Read only files directly related to the current task.
+- Do not perform repository-wide audits unless explicitly requested.
+- Do not inspect dependencies, build output, generated artifacts, coverage,
+  reports, or lockfiles unless they are directly required by the task.
+- Exception: for Next.js implementation work, read only the relevant guide
+  under `node_modules/next/dist/docs/`; do not browse other dependency source
+  files unless necessary for debugging.
+- Prefer scoped `git diff`, `git grep`, and targeted path searches.
+- Fully inspect the complete scoped diff when a review, integration, release,
+  migration, or security task explicitly requires it.
+- Do not reread unchanged files already inspected in the current session.
+- Run focused tests first; run the full suite when required by the task,
+  repository workflow, CI gate, or final verification.
+- Summarize command output and failures instead of reproducing complete logs or
+  unrelated repository-wide diffs.

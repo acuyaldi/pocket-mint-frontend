@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pocket Mint — Frontend
 
-## Getting Started
+Next.js (App Router) frontend for Pocket Mint, a personal finance tracker. Talks to the [backend API](../pocket-mint-be) via JWT auth (Supabase), deploys to Vercel.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Framework**: Next.js 16 (App Router), React 19, TypeScript
+- **Data**: TanStack Query
+- **UI**: Tailwind CSS, Base UI
+- **i18n**: next-intl (Bahasa Indonesia is the primary/only shipped locale for user-facing copy)
+- **Auth**: Supabase (`@supabase/ssr`) — sends `Authorization: Bearer <access token>` to the backend
+- **Hosting**: Vercel
+
+## Project structure
+
+```text
+app/
+├── (app)/          Authenticated routes: dashboard, wallets, transactions,
+│                    analytics, tagihan (bills), target-tabungan (saving goals),
+│                    notifications, cicilan (installments), profile
+├── auth/            Login/auth callback routes
+├── changelog/        Public changelog page (reads src/lib/changelog.ts)
+└── login/
+
+src/
+├── features/         One folder per domain (bills, wallets, transactions,
+│                       recurring, savingGoals, notifications, categories,
+│                       dashboard, installments) — each with its hooks/components
+├── lib/               Shared utilities, changelog data
+└── types/             Shared TypeScript types
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Local setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+cp .env.example .env.local   # fill in real values, see below
+npm run dev                   # binds http://localhost:4000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment variables
 
-## Learn More
+See [`.env.example`](.env.example) for the full list. All frontend env vars are `NEXT_PUBLIC_*` (browser-exposed) — there is no backend API key, auth is JWT-only via Supabase:
 
-To learn more about Next.js, take a look at the following resources:
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase client config
+- `NEXT_PUBLIC_API_URL` — backend base URL
+- `NEXT_PUBLIC_HCAPTCHA_SITE_KEY` — captcha on auth forms
+- `E2E_EMAIL` / `E2E_PASSWORD` — test account for local Playwright screenshot script
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Testing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm test         # vitest run
+npm run lint       # eslint .
+npx tsc --noEmit    # typecheck (no dedicated script)
+```
 
-## Deploy on Vercel
+## Build
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run build     # next build
+npm start          # build + start on port 4000
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment
+
+Deploys to Vercel. Release process (versioning, changelog, checklist) lives under [`docs/releases/`](docs/releases/) — start with [`docs/releases/release-checklist.md`](docs/releases/release-checklist.md).
+
+## Related docs
+
+- [`docs/releases/release-status.md`](docs/releases/release-status.md) — current feature/release status
+- [`docs/releases/known-issues.md`](docs/releases/known-issues.md) — tracked issues
+- [`docs/qa/`](docs/qa/) — manual QA evidence
+- [`src/lib/changelog.ts`](src/lib/changelog.ts) — public changelog data (user-facing, Bahasa Indonesia)

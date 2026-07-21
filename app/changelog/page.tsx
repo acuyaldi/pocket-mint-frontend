@@ -1,61 +1,55 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { FileClock } from "lucide-react";
 
 import { PocketMintLogo } from "@/components/Logo";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { INTL_LOCALE } from "@/i18n/config";
 import { getReleases } from "@/src/lib/changelog";
 import type { Release, ReleaseChanges, ReleaseStatus } from "@/src/types/changelog";
 
-export const metadata: Metadata = {
-  title: "Changelog - Pocket Mint",
-  description:
-    "Riwayat rilis dan perkembangan Pocket Mint, ruang kerja finansial privat, dari fitur baru hingga perbaikan.",
-};
-
-const STATUS_LABEL: Record<ReleaseStatus, string> = {
-  internal: "Internal",
-  beta: "Beta",
-  stable: "Stabil",
-};
-
-const STATUS_TONE: Record<ReleaseStatus, string> = {
-  internal: "bg-surface-high text-muted-foreground",
-  beta: "bg-amber/10 text-amber",
-  stable: "bg-mint/10 text-mint",
-};
-
-const CHANGE_LABEL: Record<keyof ReleaseChanges, string> = {
-  added: "Fitur baru",
-  improved: "Peningkatan",
-  fixed: "Perbaikan",
-  security: "Keamanan",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("changelog");
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+  };
+}
 
 const CHANGE_ORDER: (keyof ReleaseChanges)[] = ["added", "improved", "fixed", "security"];
 
-function formatPublishedDate(isoDate: string): string {
-  return new Intl.DateTimeFormat("id-ID", { dateStyle: "long" }).format(
+function formatPublishedDate(isoDate: string, intlLocale: string): string {
+  return new Intl.DateTimeFormat(intlLocale, { dateStyle: "long" }).format(
     new Date(`${isoDate}T00:00:00`)
   );
 }
 
 function StatusBadge({ status }: { status: ReleaseStatus }) {
+  const t = useTranslations("changelog.status");
+  const STATUS_TONE: Record<ReleaseStatus, string> = {
+    internal: "bg-surface-high text-muted-foreground",
+    beta: "bg-amber/10 text-amber",
+    stable: "bg-mint/10 text-mint",
+  };
+
   return (
     <span
       className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${STATUS_TONE[status]}`}
     >
-      {STATUS_LABEL[status]}
+      {t(status)}
     </span>
   );
 }
 
 function ChangeGroup({ category, items }: { category: keyof ReleaseChanges; items: string[] }) {
+  const t = useTranslations("changelog.changeType");
   return (
     <div>
       <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-        {CHANGE_LABEL[category]}
+        {t(category)}
       </p>
       <ul className="mt-2 space-y-1.5">
         {items.map((item) => (
@@ -70,6 +64,9 @@ function ChangeGroup({ category, items }: { category: keyof ReleaseChanges; item
 }
 
 function ReleaseCard({ release }: { release: Release }) {
+  const t = useTranslations("changelog");
+  const locale = useLocale();
+  const intlLocale = INTL_LOCALE[locale as keyof typeof INTL_LOCALE];
   const categories = CHANGE_ORDER.filter((key) => (release.changes[key]?.length ?? 0) > 0);
 
   return (
@@ -81,7 +78,7 @@ function ReleaseCard({ release }: { release: Release }) {
             <StatusBadge status={release.status} />
           </div>
           <time dateTime={release.publishedAt} className="text-xs text-muted-foreground">
-            {formatPublishedDate(release.publishedAt)}
+            {formatPublishedDate(release.publishedAt, intlLocale)}
           </time>
         </div>
         <CardTitle className="text-lg">{release.title}</CardTitle>
@@ -96,7 +93,7 @@ function ReleaseCard({ release }: { release: Release }) {
         {release.knownIssues && release.knownIssues.length > 0 ? (
           <div className="rounded-lg border border-amber/30 bg-amber/10 p-4">
             <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-amber">
-              Masalah yang diketahui
+              {t("knownIssues")}
             </p>
             <ul className="mt-2 space-y-1.5">
               {release.knownIssues.map((issue) => (
@@ -113,18 +110,20 @@ function ReleaseCard({ release }: { release: Release }) {
 }
 
 function EmptyChangelog() {
+  const t = useTranslations("changelog");
   return (
     <div className="rounded-xl border border-dashed border-border bg-card py-12 text-center">
       <FileClock className="mx-auto size-8 text-muted-foreground" aria-hidden="true" />
-      <p className="mt-3 text-sm font-medium text-foreground">Belum ada catatan rilis.</p>
+      <p className="mt-3 text-sm font-medium text-foreground">{t("emptyTitle")}</p>
       <p className="mt-1 text-xs text-muted-foreground">
-        Pembaruan akan muncul di sini setelah dipublikasikan.
+        {t("emptyBody")}
       </p>
     </div>
   );
 }
 
-export default function ChangelogPage() {
+export default async function ChangelogPage() {
+  const t = await getTranslations("changelog");
   const releases = getReleases();
 
   return (
@@ -138,15 +137,15 @@ export default function ChangelogPage() {
             href="/"
             className="text-xs text-muted-foreground transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
           >
-            Kembali ke beranda
+            {t("backToHome")}
           </Link>
         </div>
       </header>
 
       <main className="mx-auto w-full max-w-3xl px-5 py-10 md:px-8 md:py-14">
         <PageHeader
-          title="Changelog"
-          description="Riwayat rilis dan perkembangan Pocket Mint, disusun dari yang terbaru."
+          title={t("pageTitle")}
+          description={t("pageDescription")}
         />
 
         <div className="mt-8">

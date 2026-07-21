@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { redirect, RedirectType } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { resolveUserName, syncUserToBackend } from "@/lib/auth/sync-user";
 
@@ -47,7 +47,9 @@ export async function login(formData: FormData) {
 }
 
 // ─── Sign Up ─────────────────────────────────────────────────────
-export async function signup(formData: FormData) {
+export async function signup(
+  formData: FormData
+): Promise<{ error: string } | { success: true; requiresVerification: true; email: string }> {
   const supabase = await createClient();
 
   const email = formData.get("email") as string;
@@ -66,15 +68,20 @@ export async function signup(formData: FormData) {
     return { error: error.message };
   }
 
-  // Sync to backend only once a session (access token) exists. When email
-  // confirmation is required, signUp returns no session — defer sync to the
-  // first authenticated login (handled by login()'s self-heal above).
-  if (authData.session && authData.user) {
-    await syncUserToBackend({
-      accessToken: authData.session.access_token,
-      name: resolveUserName(authData.user),
-    });
+  // When email confirmation is required, signUp returns no session — there is
+  // no access token to sync with yet, and nothing to redirect into. Report
+  // back so the UI can tell the user to check their inbox, instead of
+  // redirecting to /dashboard where the auth middleware would just bounce
+  // them back to /login with no explanation. Sync defers to the first
+  // authenticated login (handled by login()'s self-heal above).
+  if (!authData.session || !authData.user) {
+    return { success: true, requiresVerification: true, email };
   }
+
+  await syncUserToBackend({
+    accessToken: authData.session.access_token,
+    name: resolveUserName(authData.user),
+  });
 
   revalidatePath("/", "layout");
   redirect("/dashboard");
@@ -114,5 +121,7 @@ export async function logout() {
   }
 
   revalidatePath("/", "layout");
-  redirect("/");
+  // replace (not the Server Action default of push) so Back can't return to
+  // the authenticated route from browser history after sign-out.
+  redirect("/", RedirectType.replace);
 }

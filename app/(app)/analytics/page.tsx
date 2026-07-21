@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -11,27 +12,24 @@ import {
   Wallet,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { INTL_LOCALE } from "@/i18n/config";
 import { PageHeader } from "@/components/layout/page-header";
+import { toast } from "@/components/ui/toaster";
 import { useBills } from "@/src/features/bills/hooks/useBills";
-import { useAllTransactions } from "@/src/features/transactions/hooks/useTransactions";
+import { exportTransactionsCsv, useAllTransactions } from "@/src/features/transactions/hooks/useTransactions";
 import { isDebtWallet } from "@/src/types/wallet";
 import { useWallets } from "@/src/features/wallets/hooks/useWallets";
 import {
   buildMonthlyFlow,
   filterTransactionsByPeriod,
+  getJakartaMonthKey,
   getPeriodMonthKeys,
   type PeriodFilter,
 } from "./period";
 
-const PERIODS: Array<{ key: PeriodFilter; label: string }> = [
-  { key: "month", label: "Bulan ini" },
-  { key: "quarter", label: "3 bulan" },
-  { key: "six-months", label: "6 bulan" },
-];
-
-function getMonthLabel(monthKey: string) {
+function getMonthLabel(monthKey: string, intlLocale: string) {
   const [year, month] = monthKey.split("-").map(Number);
-  return new Intl.DateTimeFormat("id-ID", { month: "short" }).format(
+  return new Intl.DateTimeFormat(intlLocale, { month: "short" }).format(
     new Date(year, month - 1, 1),
   );
 }
@@ -52,6 +50,7 @@ function SummaryCard({
   helper: string;
   tone?: "neutral" | "positive" | "warning";
 }) {
+  const t = useTranslations("analytics");
   const toneClass =
     tone === "positive"
       ? "text-mint"
@@ -66,7 +65,7 @@ function SummaryCard({
           {label}
         </p>
         <span className="rounded bg-surface-high px-2 py-1 text-[10px] font-semibold text-muted-foreground">
-          Real data
+          {t("realData")}
         </span>
       </div>
       <p className={`text-[28px] font-semibold leading-tight tabular-nums ${toneClass}`}>
@@ -86,7 +85,16 @@ function EmptyPanel({ children }: { children: React.ReactNode }) {
 }
 
 export default function AnalyticsPage() {
+  const t = useTranslations("analytics");
+  const locale = useLocale();
+  const intlLocale = INTL_LOCALE[locale as keyof typeof INTL_LOCALE];
+  const PERIODS: Array<{ key: PeriodFilter; label: string }> = [
+    { key: "month", label: t("periods.month") },
+    { key: "quarter", label: t("periods.quarter") },
+    { key: "six-months", label: t("periods.sixMonths") },
+  ];
   const [period, setPeriod] = useState<PeriodFilter>("six-months");
+  const [isExporting, setIsExporting] = useState(false);
   const { data: transactionData, isLoading: isTransactionsLoading } =
     useAllTransactions();
   const { data: walletData } = useWallets();
@@ -152,7 +160,7 @@ export default function AnalyticsPage() {
     filteredTransactions
       .filter((transaction) => transaction.type === "EXPENSE")
       .forEach((transaction) => {
-        const label = transaction.category?.name || "Tanpa kategori";
+        const label = transaction.category?.name || t("allocation.noCategory");
         categories.set(label, (categories.get(label) ?? 0) + transaction.amount);
       });
 
@@ -160,7 +168,7 @@ export default function AnalyticsPage() {
       .map(([label, amount]) => ({ label, amount }))
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 5);
-  }, [filteredTransactions]);
+  }, [filteredTransactions, t]);
 
   const maxCategoryAmount = Math.max(
     1,
@@ -170,25 +178,28 @@ export default function AnalyticsPage() {
   const insights = useMemo(() => {
     const items: string[] = [];
     if (totals.income === 0 && totals.expenses === 0) {
-      items.push("Belum ada transaksi pada periode ini.");
+      items.push(t("insights.noTransactions"));
     } else {
       if (cashFlow >= 0) {
-        items.push(`Arus kas periode ini positif sebesar ${formatCurrency(cashFlow)}.`);
+        items.push(t("insights.positiveCashFlow", { amount: formatCurrency(cashFlow, intlLocale) }));
       } else {
-        items.push(`Pengeluaran melewati pemasukan sebesar ${formatCurrency(Math.abs(cashFlow))}.`);
+        items.push(t("insights.negativeCashFlow", { amount: formatCurrency(Math.abs(cashFlow), intlLocale) }));
       }
       if (totals.income > 0) {
-        items.push(`Rasio pengeluaran berada di ${formatPercent(expenseRatio)} dari pemasukan.`);
+        items.push(t("insights.expenseRatio", { percent: formatPercent(expenseRatio) }));
       }
       if (expenseCategories[0]) {
         items.push(
-          `Kategori terbesar: ${expenseCategories[0].label}, senilai ${formatCurrency(expenseCategories[0].amount)}.`,
+          t("insights.topCategory", {
+            label: expenseCategories[0].label,
+            amount: formatCurrency(expenseCategories[0].amount, intlLocale),
+          }),
         );
       }
     }
 
     if (activeBillCount > 0) {
-      items.push(`${activeBillCount} cicilan aktif perlu dipantau.`);
+      items.push(t("insights.activeInstallments", { count: activeBillCount }));
     }
 
     return items.slice(0, 4);
@@ -197,6 +208,8 @@ export default function AnalyticsPage() {
     cashFlow,
     expenseCategories,
     expenseRatio,
+    intlLocale,
+    t,
     totals.expenses,
     totals.income,
   ]);
@@ -210,15 +223,15 @@ export default function AnalyticsPage() {
       }}
     >
       <PageHeader
-        title="Analitik"
-        description="Pantau tren dan performa finansial Anda"
+        title={t("pageTitle")}
+        description={t("pageDescription")}
       />
 
       <section className="sticky top-16 z-10 flex flex-wrap items-center justify-between gap-4 border-y border-border/50 bg-background py-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex h-11 items-center gap-2 rounded-lg border border-border bg-card px-4 text-sm text-foreground">
             <CalendarDays className="size-4 text-muted-foreground" />
-            {new Intl.DateTimeFormat("id-ID", {
+            {new Intl.DateTimeFormat(intlLocale, {
               month: "long",
               year: "numeric",
             }).format(new Date())}
@@ -247,30 +260,50 @@ export default function AnalyticsPage() {
         </div>
         <button
           type="button"
-          className="flex h-11 items-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-low"
+          disabled={isExporting}
+          onClick={async () => {
+            if (isExporting) return;
+            setIsExporting(true);
+            try {
+              await exportTransactionsCsv(period, getJakartaMonthKey(new Date()));
+            } catch (caught) {
+              const message = (caught as { response?: { data?: { error?: { message?: string } } } })
+                ?.response?.data?.error?.message;
+              toast(message ?? t("exportFailed"), "error");
+            } finally {
+              setIsExporting(false);
+            }
+          }}
+          className="flex h-11 items-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-low disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Download className="size-4" />
-          Ekspor laporan
+          {t("exportReport")}
         </button>
       </section>
 
       <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <SummaryCard
-          label="Savings rate"
+          label={t("savingsRate")}
           value={formatPercent(savingsRate)}
-          helper={`${formatCurrency(cashFlow)} sisa arus kas periode ini`}
+          helper={t("savingsRateHelper", { amount: formatCurrency(cashFlow, intlLocale) })}
           tone={cashFlow >= 0 ? "positive" : "warning"}
         />
         <SummaryCard
-          label="Cash flow"
-          value={`${cashFlow >= 0 ? "+" : "-"}${formatCurrency(Math.abs(cashFlow))}`}
-          helper={`${formatCurrency(totals.income)} masuk · ${formatCurrency(totals.expenses)} keluar`}
+          label={t("cashFlow")}
+          value={`${cashFlow >= 0 ? "+" : "-"}${formatCurrency(Math.abs(cashFlow), intlLocale)}`}
+          helper={t("cashFlowHelper", {
+            income: formatCurrency(totals.income, intlLocale),
+            expenses: formatCurrency(totals.expenses, intlLocale),
+          })}
           tone={cashFlow >= 0 ? "positive" : "warning"}
         />
         <SummaryCard
-          label="Debt ratio"
+          label={t("debtRatio")}
           value={formatPercent(debtRatio)}
-          helper={`${formatCurrency(debtSummary.debt)} dari limit ${formatCurrency(debtSummary.limit)}`}
+          helper={t("debtRatioHelper", {
+            debt: formatCurrency(debtSummary.debt, intlLocale),
+            limit: formatCurrency(debtSummary.limit, intlLocale),
+          })}
           tone={debtRatio >= 60 ? "warning" : "neutral"}
         />
       </section>
@@ -279,25 +312,25 @@ export default function AnalyticsPage() {
         <article className="rounded-xl border border-border/70 bg-card p-6 shadow-sm lg:col-span-2">
           <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <h3 className="text-xl font-semibold text-primary">Arus kas</h3>
+              <h3 className="text-xl font-semibold text-primary">{t("cashFlowChart.title")}</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Pendapatan dan pengeluaran 6 bulan terakhir
+                {t("cashFlowChart.subtitle")}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-2">
                 <span className="size-3 rounded-sm bg-primary" />
-                Pemasukan
+                {t("cashFlowChart.income")}
               </span>
               <span className="flex items-center gap-2">
                 <span className="size-3 rounded-sm bg-coral" />
-                Pengeluaran
+                {t("cashFlowChart.expenses")}
               </span>
             </div>
           </div>
 
           {transactions.length === 0 ? (
-            <EmptyPanel>Belum ada transaksi untuk membentuk grafik arus kas.</EmptyPanel>
+            <EmptyPanel>{t("cashFlowChart.empty")}</EmptyPanel>
           ) : (
             <div className="grid min-h-[300px] grid-cols-6 items-end gap-4 border-b border-border/70 pb-3">
               {monthlyFlow.map((item) => {
@@ -315,16 +348,22 @@ export default function AnalyticsPage() {
                       <div
                         className="w-5 rounded-t bg-primary transition-all"
                         style={{ height: `${incomeHeight}px` }}
-                        title={`Pemasukan ${getMonthLabel(item.month)}: ${formatCurrency(item.income)}`}
+                        title={t("cashFlowChart.incomeTooltip", {
+                          month: getMonthLabel(item.month, intlLocale),
+                          amount: formatCurrency(item.income, intlLocale),
+                        })}
                       />
                       <div
                         className="w-5 rounded-t bg-coral transition-all"
                         style={{ height: `${expenseHeight}px` }}
-                        title={`Pengeluaran ${getMonthLabel(item.month)}: ${formatCurrency(item.expenses)}`}
+                        title={t("cashFlowChart.expenseTooltip", {
+                          month: getMonthLabel(item.month, intlLocale),
+                          amount: formatCurrency(item.expenses, intlLocale),
+                        })}
                       />
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {getMonthLabel(item.month)}
+                      {getMonthLabel(item.month, intlLocale)}
                     </span>
                   </div>
                 );
@@ -337,17 +376,17 @@ export default function AnalyticsPage() {
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
               <h3 className="text-xl font-semibold text-primary">
-                Alokasi pengeluaran
+                {t("allocation.title")}
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Kategori terbesar pada periode terpilih
+                {t("allocation.subtitle")}
               </p>
             </div>
             <PieChart className="size-5 text-muted-foreground" />
           </div>
 
           {expenseCategories.length === 0 ? (
-            <EmptyPanel>Belum ada pengeluaran pada periode ini.</EmptyPanel>
+            <EmptyPanel>{t("allocation.empty")}</EmptyPanel>
           ) : (
             <div className="space-y-5">
               {expenseCategories.map((category) => (
@@ -378,10 +417,10 @@ export default function AnalyticsPage() {
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
               <h3 className="text-xl font-semibold text-primary">
-                Komposisi dompet
+                {t("composition.title")}
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Aset dan liabilitas dari saldo saat ini
+                {t("composition.subtitle")}
               </p>
             </div>
             <Wallet className="size-5 text-muted-foreground" />
@@ -392,10 +431,10 @@ export default function AnalyticsPage() {
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-2 font-semibold text-foreground">
                   <ArrowUpRight className="size-4 text-mint" />
-                  Aset
+                  {t("composition.assets")}
                 </span>
                 <span className="tabular-nums text-primary">
-                  {formatCurrency(debtSummary.assets)}
+                  {formatCurrency(debtSummary.assets, intlLocale)}
                 </span>
               </div>
               <div className="mt-2 h-2 rounded-full bg-surface-high">
@@ -416,10 +455,10 @@ export default function AnalyticsPage() {
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-2 font-semibold text-foreground">
                   <ArrowDownLeft className="size-4 text-coral" />
-                  Liabilitas
+                  {t("composition.liabilities")}
                 </span>
                 <span className="tabular-nums text-primary">
-                  {formatCurrency(debtSummary.debt)}
+                  {formatCurrency(debtSummary.debt, intlLocale)}
                 </span>
               </div>
               <div className="mt-2 h-2 rounded-full bg-surface-high">
@@ -442,9 +481,9 @@ export default function AnalyticsPage() {
         <article className="rounded-xl border border-border/70 bg-card p-6 shadow-sm lg:col-span-2">
           <div className="mb-6 flex items-center justify-between gap-4">
             <div>
-              <h3 className="text-xl font-semibold text-primary">Insight</h3>
+              <h3 className="text-xl font-semibold text-primary">{t("insights.title")}</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Ringkasan otomatis dari data yang tersedia
+                {t("insights.subtitle")}
               </p>
             </div>
             <BarChart3 className="size-5 text-muted-foreground" />

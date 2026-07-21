@@ -1,20 +1,17 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@/components/ui/card";
 
-const privacyPoints = [
-  "Tanpa iklan.",
-  "Tanpa pelacakan marketing.",
-  "Hanya data yang diperlukan untuk workspace Anda.",
-] as const;
-
 export function PrivacyCommitments() {
+  const t = useTranslations("landing.privacy");
   const reducedMotion = useReducedMotion() ?? false;
+  const privacyPoints = t.raw("points") as string[];
 
   return (
-    <ul className="grid gap-3" aria-label="Komitmen privasi Pocket Mint">
+    <ul className="grid gap-3" aria-label={t("ariaLabel")}>
       {privacyPoints.map((point, index) => (
         <motion.li
           key={point}

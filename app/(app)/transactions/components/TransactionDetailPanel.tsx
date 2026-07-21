@@ -2,8 +2,10 @@
 
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Pencil, Trash2, Receipt, MapPin } from "lucide-react";
+import { X, Pencil, Trash2, Receipt } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { formatCurrency } from "@/lib/utils";
+import { INTL_LOCALE } from "@/i18n/config";
 import { Transaction } from "@/src/types/transaction";
 import { formatDate } from "./constants";
 
@@ -15,6 +17,9 @@ interface TransactionDetailPanelProps {
 }
 
 export function TransactionDetailPanel({ tx, onClose, onEdit, onDelete }: TransactionDetailPanelProps) {
+  const t = useTranslations("transactionModals.detail");
+  const locale = useLocale();
+  const intlLocale = INTL_LOCALE[locale as keyof typeof INTL_LOCALE];
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -22,6 +27,13 @@ export function TransactionDetailPanel({ tx, onClose, onEdit, onDelete }: Transa
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
   }, [onClose]);
+
+  // Installment edits are rejected by the backend (409); TRANSFER is blocked here only
+  // because this modal has no source/destination wallet fields to edit it safely.
+  const canEdit = !!tx && tx.type !== "TRANSFER" && !tx.isInstallment;
+  const editUnsupportedReason = tx?.isInstallment
+    ? t("editUnsupportedInstallment")
+    : t("editUnsupportedTransfer");
 
   return (
     <AnimatePresence>
@@ -55,7 +67,7 @@ export function TransactionDetailPanel({ tx, onClose, onEdit, onDelete }: Transa
           >
             {/* Panel header */}
             <div className="flex items-center justify-between">
-              <span style={{ fontSize: 15, fontWeight: 600, color: "var(--color-foreground)" }}>Transaction Details</span>
+              <span style={{ fontSize: 15, fontWeight: 600, color: "var(--color-foreground)" }}>{t("title")}</span>
               <button
                 onClick={onClose}
                 className="flex items-center justify-center cursor-pointer transition-colors"
@@ -85,7 +97,7 @@ export function TransactionDetailPanel({ tx, onClose, onEdit, onDelete }: Transa
 
             {/* Merchant name */}
             <div className="text-center mt-4" style={{ fontSize: 16, fontWeight: 500, color: "var(--color-foreground)" }}>
-              {tx.description ?? "Untitled"}
+              {tx.description ?? t("untitled")}
             </div>
 
             {/* Amount */}
@@ -99,7 +111,7 @@ export function TransactionDetailPanel({ tx, onClose, onEdit, onDelete }: Transa
               }}
             >
               {tx.type === "INCOME" ? "+" : tx.type === "EXPENSE" ? "-" : ""}
-              {formatCurrency(tx.amount)}
+              {formatCurrency(tx.amount, intlLocale)}
             </div>
 
             {/* Installment badge */}
@@ -115,7 +127,7 @@ export function TransactionDetailPanel({ tx, onClose, onEdit, onDelete }: Transa
                     fontWeight: 600,
                   }}
                 >
-                  Installment Plan Active
+                  {t("installmentActive")}
                 </span>
               </div>
             )}
@@ -124,58 +136,40 @@ export function TransactionDetailPanel({ tx, onClose, onEdit, onDelete }: Transa
             <div style={{ paddingTop: 20, borderTop: "1px solid var(--color-border)", marginTop: 20 }}>
               {/* Status */}
               <div className="flex justify-between" style={{ padding: "10px 0", borderBottom: "1px solid rgba(188,202,187,0.4)" }}>
-                <span style={{ fontSize: 12, color: "var(--color-muted-foreground)", textTransform: "uppercase" }}>Status</span>
+                <span style={{ fontSize: 12, color: "var(--color-muted-foreground)", textTransform: "uppercase" }}>{t("status")}</span>
                 <span className="flex items-center gap-1.5" style={{ fontSize: 13, color: "var(--color-primary)" }}>
                   <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "var(--color-primary)", display: "inline-block" }} />
-                  Cleared
+                  {t("cleared")}
                 </span>
               </div>
 
               {/* Date */}
               <div className="flex justify-between" style={{ padding: "10px 0", borderBottom: "1px solid rgba(188,202,187,0.4)" }}>
-                <span style={{ fontSize: 12, color: "var(--color-muted-foreground)", textTransform: "uppercase" }}>Date</span>
-                <span style={{ fontSize: 13, color: "var(--color-foreground)" }}>{formatDate(tx.date)}</span>
+                <span style={{ fontSize: 12, color: "var(--color-muted-foreground)", textTransform: "uppercase" }}>{t("date")}</span>
+                <span style={{ fontSize: 13, color: "var(--color-foreground)" }}>{formatDate(tx.date, intlLocale)}</span>
               </div>
 
               {/* Wallet */}
               <div className="flex justify-between" style={{ padding: "10px 0", borderBottom: "1px solid rgba(188,202,187,0.4)" }}>
-                <span style={{ fontSize: 12, color: "var(--color-muted-foreground)", textTransform: "uppercase" }}>Wallet</span>
+                <span style={{ fontSize: 12, color: "var(--color-muted-foreground)", textTransform: "uppercase" }}>{t("wallet")}</span>
                 <span style={{ fontSize: 13, color: "var(--color-foreground)" }}>{tx.wallet?.name ?? "—"}</span>
               </div>
 
               {/* Category */}
               <div className="flex justify-between" style={{ padding: "10px 0", borderBottom: "1px solid rgba(188,202,187,0.4)" }}>
-                <span style={{ fontSize: 12, color: "var(--color-muted-foreground)", textTransform: "uppercase" }}>Category</span>
+                <span style={{ fontSize: 12, color: "var(--color-muted-foreground)", textTransform: "uppercase" }}>{t("category")}</span>
                 <span style={{ fontSize: 13, color: "var(--color-foreground)" }}>{tx.category?.name ?? "—"}</span>
               </div>
 
               {/* Installment progress */}
               {tx.isInstallment && (
                 <div className="flex justify-between" style={{ padding: "10px 0", borderBottom: "1px solid rgba(188,202,187,0.4)" }}>
-                  <span style={{ fontSize: 12, color: "var(--color-muted-foreground)", textTransform: "uppercase" }}>Installment Progress</span>
+                  <span style={{ fontSize: 12, color: "var(--color-muted-foreground)", textTransform: "uppercase" }}>{t("installmentProgress")}</span>
                   <span style={{ fontSize: 13, color: "var(--color-foreground)" }}>
-                    {tx.currentTerm ?? 0}/{tx.installmentMonths ?? "?"} months
+                    {tx.currentTerm ?? 0}/{tx.installmentMonths ?? "?"} {t("months")}
                   </span>
                 </div>
               )}
-            </div>
-
-            {/* Map placeholder */}
-            <div className="mt-5">
-              <div style={{ fontSize: 11, color: "var(--color-muted-foreground)", textTransform: "uppercase", fontWeight: 600, marginBottom: 8 }}>
-                MAP LOCATION
-              </div>
-              <div
-                className="flex items-center justify-center"
-                style={{
-                  backgroundColor: "var(--color-muted)",
-                  border: "1px solid var(--color-border)",
-                  borderRadius: 8,
-                  height: 120,
-                }}
-              >
-                <MapPin className="size-5" style={{ color: "var(--color-muted-foreground)" }} />
-              </div>
             </div>
 
             {/* Spacer */}
@@ -184,8 +178,10 @@ export function TransactionDetailPanel({ tx, onClose, onEdit, onDelete }: Transa
             {/* Bottom actions */}
             <div className="flex gap-2 pt-4 mt-4" style={{ borderTop: "1px solid var(--color-border)" }}>
               <button
-                onClick={() => { onEdit(tx); onClose(); }}
-                className="flex-1 flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                onClick={() => { if (canEdit) { onEdit(tx); onClose(); } }}
+                disabled={!canEdit}
+                title={canEdit ? undefined : editUnsupportedReason}
+                className="flex-1 flex items-center justify-center gap-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                 style={{
                   padding: 10,
                   backgroundColor: "var(--color-accent)",
@@ -194,10 +190,11 @@ export function TransactionDetailPanel({ tx, onClose, onEdit, onDelete }: Transa
                   color: "var(--color-accent-foreground)",
                   fontSize: 13,
                   fontWeight: 500,
+                  cursor: canEdit ? "pointer" : "not-allowed",
                 }}
               >
                 <Pencil className="size-3.5" />
-                Edit
+                {t("edit")}
               </button>
               <button
                 onClick={() => onDelete(tx.id)}
@@ -213,7 +210,7 @@ export function TransactionDetailPanel({ tx, onClose, onEdit, onDelete }: Transa
                 }}
               >
                 <Trash2 className="size-3.5" />
-                Delete
+                {t("delete")}
               </button>
             </div>
           </motion.div>

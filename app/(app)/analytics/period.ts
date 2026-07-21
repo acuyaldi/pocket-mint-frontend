@@ -43,6 +43,23 @@ export function getPeriodMonthKeys(period: PeriodFilter, now = new Date()): stri
   return Array.from({ length: count }, (_, index) => shiftMonthKey(currentKey, -(count - 1 - index)));
 }
 
+/**
+ * Deterministic export filename for the given period + Jakarta month-key
+ * anchor — mirrors the backend's `financial-report-<start>_to_<end>.csv`
+ * naming (derived purely from the calendar range, no user-controlled text).
+ * Used as the download fallback when `Content-Disposition` is unavailable;
+ * the backend-supplied filename is always preferred when present.
+ */
+export function getExportFilename(period: PeriodFilter, anchor: string): string {
+  const monthKeys = getPeriodMonthKeys(period, new Date(`${anchor}-01T00:00:00Z`));
+  const start = `${monthKeys[0]}-01`;
+  const lastKey = monthKeys[monthKeys.length - 1];
+  const [endYear, endMonth] = lastKey.split("-").map(Number);
+  const lastDay = new Date(Date.UTC(endYear, endMonth, 0)).getUTCDate();
+  const end = `${lastKey}-${String(lastDay).padStart(2, "0")}`;
+  return `financial-report-${start}_to_${end}.csv`;
+}
+
 /** Transactions whose reporting-month falls within the selected period. */
 export function filterTransactionsByPeriod(
   transactions: Transaction[],

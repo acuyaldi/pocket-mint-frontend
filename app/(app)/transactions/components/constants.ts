@@ -1,7 +1,7 @@
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-export function formatDate(dateStr: string) {
-  return new Intl.DateTimeFormat("en-US", {
+export function formatDate(dateStr: string, intlLocale = "en-US") {
+  return new Intl.DateTimeFormat(intlLocale, {
     month: "short",
     day: "2-digit",
     year: "numeric",
