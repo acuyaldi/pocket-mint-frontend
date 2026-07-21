@@ -11,7 +11,7 @@ export const RELEASES: Release[] = [
     title: "Target Tabungan, Transaksi Rutin & Pusat Notifikasi",
     publishedAt: "2026-07-20",
     summary:
-      "Pocket Mint kini mendukung target tabungan, transaksi rutin dengan pengingat, dan pusat notifikasi terpusat. Halaman Dompet dan alur transaksi rutin/target tabungan kini menampilkan status loading dan error yang lebih jelas.",
+      "Pocket Mint kini mendukung target tabungan, transaksi rutin dengan pengingat, dan pusat notifikasi terpusat. Aplikasi kini juga tersedia dalam Bahasa Indonesia dan Inggris. Halaman Dompet dan alur transaksi rutin/target tabungan kini menampilkan status loading dan error yang lebih jelas.",
     status: "stable",
     changes: {
       added: [
@@ -19,10 +19,14 @@ export const RELEASES: Release[] = [
         "Transaksi Rutin: jadwalkan transaksi berulang (harian, mingguan, bulanan, tahunan) dengan pengingat opsional",
         "Pusat Notifikasi: pengingat tagihan dan transaksi rutin yang akan datang, dapat ditandai dibaca atau dikonfirmasi",
         "Ekspor laporan Analitik ke CSV",
+        "Dukungan Bahasa Indonesia dan Inggris di seluruh aplikasi, dengan opsi ganti bahasa kapan saja",
       ],
       improved: [
         "Halaman Dompet menampilkan status loading, error, dan kosong yang lebih jelas",
         "Pesan kesalahan yang lebih jelas saat aksi gagal (menghapus transaksi rutin, mengarsipkan target tabungan)",
+        "Pusat Notifikasi menampilkan status kosong dan error yang lebih jelas",
+        "Tampilan dan alur edit transaksi lebih konsisten dan jelas umpan baliknya",
+        "Indikator loading saat logout",
       ],
       fixed: [
         "Data dompet yang baru dibuat atau diperbarui kini konsisten dengan data yang ditampilkan di daftar dompet",
