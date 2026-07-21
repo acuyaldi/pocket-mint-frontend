@@ -7,6 +7,26 @@ import type { Release, ReleaseChanges, ReleaseStatus } from "@/src/types/changel
  */
 export const RELEASES: Release[] = [
   {
+    version: "0.5.0",
+    title: "Anggaran Bulanan per Kategori",
+    publishedAt: "2026-07-22",
+    summary:
+      "Pocket Mint kini mendukung Anggaran: batas pengeluaran bulanan per kategori dengan status pemakaian yang dihitung otomatis dari transaksi. Seluruh rute aplikasi kini terlindungi secara default, dan target sentuh navigasi mobile serta asosiasi label formulir kini lebih konsisten.",
+    status: "stable",
+    changes: {
+      added: [
+        "Anggaran: atur batas pengeluaran bulanan per kategori, pantau status pemakaian (terpakai, sisa, persentase) yang dihitung otomatis dari transaksi, dan arsipkan atau pulihkan anggaran yang tidak lagi digunakan",
+      ],
+      fixed: [
+        "Target sentuh navigasi bawah pada perangkat mobile dipulihkan ke ukuran yang mudah diakses",
+        "Asosiasi label pada formulir dengan kolom terbungkus (mis. kolom nominal berprefiks) tidak lagi bertabrakan dengan id ganda",
+      ],
+      security: [
+        "Seluruh rute aplikasi kini terlindungi secara default; hanya rute publik yang diizinkan tanpa autentikasi",
+      ],
+    },
+  },
+  {
     version: "0.4.0",
     title: "Target Tabungan, Transaksi Rutin & Pusat Notifikasi",
     publishedAt: "2026-07-20",
