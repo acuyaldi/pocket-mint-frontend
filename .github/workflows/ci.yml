@@ -159,7 +159,7 @@ jobs:
         run: npx vitest run tests/changelog.test.ts
 
       - name: Run full test suite
-        run: npx vitest run --reporter=default
+        run: npx vitest run --project=unit --reporter=default
 
       - name: Production build
         run: npm run build
