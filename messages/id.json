@@ -11,7 +11,8 @@
       "deleting": "Menghapus",
       "seeAll": "Lihat semua",
       "add": "Tambah",
-      "archiving": "Mengarsipkan"
+      "archiving": "Mengarsipkan",
+      "restoring": "Memulihkan"
     },
     "states": {
       "loading": "Memuat...",
@@ -37,7 +38,8 @@
     "editProfile": "Edit Profil",
     "logoutFailed": "Keluar gagal — periksa koneksi lalu coba lagi.",
     "loggingOut": "Sedang keluar…",
-    "savingGoals": "Target Tabungan"
+    "savingGoals": "Target Tabungan",
+    "budgets": "Anggaran"
   },
   "notificationCenter": {
     "title": "Notifikasi",
@@ -541,6 +543,93 @@
       "description": "\"{name}\" akan dipindahkan ke arsip dan tidak dapat diubah atau diperbarui lagi.",
       "confirm": "Arsipkan"
     }
+  },
+  "budgets": {
+    "pageTitle": "Anggaran",
+    "pageDescription": "Batas pengeluaran per kategori untuk {month}.",
+    "addBudget": "Buat Anggaran",
+    "empty": "Belum ada anggaran.",
+    "emptyDescription": "Buat anggaran pertama Anda untuk menetapkan batas pengeluaran bulanan per kategori.",
+    "emptyArchived": "Belum ada anggaran yang diarsipkan.",
+    "loading": "Memuat anggaran...",
+    "loadError": "Gagal memuat anggaran. Coba lagi.",
+    "filterAria": "Filter anggaran berdasarkan status",
+    "filterActive": "Aktif",
+    "filterArchived": "Arsip",
+    "limit": "Batas Anggaran",
+    "spent": "Terpakai",
+    "remaining": "Tersisa",
+    "fullyUsed": "Anggaran terpakai penuh",
+    "exceededBy": "Melebihi sebesar",
+    "edit": "Ubah",
+    "archive": "Arsipkan",
+    "restore": "Pulihkan",
+    "editAria": "Ubah anggaran untuk {name}",
+    "archiveAria": "Arsipkan anggaran untuk {name}",
+    "restoreAria": "Pulihkan anggaran untuk {name}",
+    "progressAria": "{percent}% anggaran terpakai",
+    "toastCreated": "Anggaran berhasil dibuat.",
+    "toastUpdated": "Anggaran berhasil diperbarui.",
+    "toastArchived": "Anggaran berhasil diarsipkan.",
+    "toastArchiveFailed": "Gagal mengarsipkan anggaran. Silakan coba lagi.",
+    "toastRestored": "Anggaran berhasil dipulihkan.",
+    "toastRestoreFailed": "Gagal memulihkan anggaran. Silakan coba lagi.",
+    "status": {
+      "HEALTHY": "Aman",
+      "APPROACHING": "Mendekati batas",
+      "REACHED": "Anggaran tercapai",
+      "EXCEEDED": "Melebihi anggaran",
+      "ARCHIVED": "Diarsipkan"
+    },
+    "errors": {
+      "BAD_REQUEST": "Permintaan tidak lengkap atau tidak valid. Periksa kembali formulir dan coba lagi.",
+      "INVALID_AMOUNT": "Masukkan nominal lebih dari nol dengan maksimal 2 angka desimal.",
+      "CATEGORY_NOT_FOUND": "Kategori ini sudah tidak tersedia.",
+      "CATEGORY_NOT_EXPENSE": "Kategori ini tidak dapat digunakan untuk Anggaran.",
+      "CATEGORY_NOT_EDITABLE": "Kategori anggaran tidak dapat diubah setelah dibuat.",
+      "BUDGET_ALREADY_EXISTS": "Anggaran untuk kategori ini sudah ada. Pulihkan anggaran yang diarsipkan, atau ubah anggaran yang sudah ada, daripada membuat yang baru.",
+      "NOT_FOUND": "Anggaran ini sudah tidak ada atau tidak dapat diakses.",
+      "ALREADY_ARCHIVED": "Anggaran ini sudah diarsipkan.",
+      "ALREADY_ACTIVE": "Anggaran ini sudah aktif.",
+      "GENERIC": "Terjadi kesalahan. Silakan coba lagi."
+    }
+  },
+  "budgetModals": {
+    "create": {
+      "title": "Buat Anggaran",
+      "description": "Tetapkan batas pengeluaran bulanan untuk satu kategori pengeluaran.",
+      "category": "Kategori",
+      "categoryPlaceholder": "Pilih kategori",
+      "noEligibleCategories": "Semua kategori pengeluaran sudah memiliki anggaran. Arsipkan salah satu untuk membebaskannya, atau ubah anggaran yang sudah ada.",
+      "amount": "Batas Anggaran",
+      "submit": "Buat Anggaran"
+    },
+    "edit": {
+      "title": "Ubah Anggaran",
+      "description": "Perbarui batas pengeluaran bulanan. Kategori tidak dapat diubah.",
+      "category": "Kategori",
+      "categoryLocked": "Kategori tidak dapat diubah setelah anggaran dibuat.",
+      "amount": "Batas Anggaran",
+      "submit": "Simpan Perubahan"
+    },
+    "archive": {
+      "title": "Arsipkan Anggaran?",
+      "description": "Anggaran untuk \"{name}\" akan disembunyikan dari daftar aktif. Transaksinya tidak dihapus, dan anggaran ini dapat dipulihkan kapan saja.",
+      "confirm": "Arsipkan"
+    },
+    "restore": {
+      "title": "Pulihkan Anggaran?",
+      "description": "Anggaran untuk \"{name}\" akan kembali ke daftar aktif. Statusnya akan langsung mencerminkan pengeluaran bulan ini, yang mungkin sudah Mendekati Batas atau Melebihi Anggaran.",
+      "confirm": "Pulihkan"
+    }
+  },
+  "budgetDetail": {
+    "backToList": "Kembali ke Anggaran",
+    "loadError": "Gagal memuat anggaran ini. Coba lagi.",
+    "archivedNotice": "Anggaran ini sudah diarsipkan. Anggaran ini tidak lagi muncul di daftar aktif, tetapi nominalnya masih dapat diubah atau dipulihkan.",
+    "percentUsed": "{percent}% dari batas anggaran terpakai periode ini.",
+    "contributingTitle": "Transaksi periode ini",
+    "contributingEmpty": "Belum ada pengeluaran tercatat untuk kategori ini pada periode ini."
   },
   "transactionModals": {
     "detail": {

@@ -91,7 +91,10 @@ const DockMorphItemContent = ({
   return (
     <span
       className={cn(
-        "relative z-10 inline-flex items-center justify-center rounded-full px-1 py-1 text-[13px] font-medium text-foreground transition-colors sm:px-1.5 sm:py-1.5",
+        // px-1.5/py-1.5 (not sm:-only) keeps the tap target >= 44px at the
+        // mobile size-8.5 icon (34px + 6px*2 padding = 46px) without growing
+        // the visible circle itself.
+        "relative z-10 inline-flex items-center justify-center rounded-full px-1.5 py-1.5 text-[13px] font-medium text-foreground transition-colors",
         active ? "font-semibold" : "font-medium"
       )}
     >

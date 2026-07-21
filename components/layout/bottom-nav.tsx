@@ -9,6 +9,7 @@ import {
   Wallet,
   CalendarClock,
   BarChart3,
+  Gauge,
   PiggyBank,
   User,
 } from "lucide-react";
@@ -36,6 +37,7 @@ export function BottomNav() {
       { label: t("installments"), href: "/tagihan", icon: CalendarClock },
       { label: t("analytics"), href: "/analytics", icon: BarChart3 },
       { label: t("savingGoals"), href: "/target-tabungan", icon: PiggyBank },
+      { label: t("budgets"), href: "/anggaran", icon: Gauge },
     ];
 
     const navItems: DockMorphItemData[] = NAV_ITEMS.map((item) => {

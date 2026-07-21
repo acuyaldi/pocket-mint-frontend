@@ -14,7 +14,7 @@ const STALE_TIME = 5 * 60 * 1000;
  * installment bills) never require a manual reload.
  */
 export const invalidateTransactionDependents = (queryClient: QueryClient) => {
-  for (const queryKey of [['transactions'], ['wallets'], ['dashboard'], ['bills']]) {
+  for (const queryKey of [['transactions'], ['wallets'], ['dashboard'], ['bills'], ['budgets']]) {
     queryClient.invalidateQueries({ queryKey });
   }
 };
