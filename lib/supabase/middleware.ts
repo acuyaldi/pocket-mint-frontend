@@ -31,21 +31,18 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // ── Route protection ──
+  // Protect every route by default and only allow-list the routes that must
+  // stay public. A hardcoded protected-route list silently misses new
+  // sections of the app (e.g. it never grew to cover Budgeting's /anggaran),
+  // letting anonymous visitors reach the authenticated shell.
+  const pathname = request.nextUrl.pathname;
+  const publicPaths = ["/", "/login", "/changelog"];
+  const isPublicRoute =
+    publicPaths.includes(pathname) || pathname.startsWith("/auth/");
+  const isProtectedRoute = !isPublicRoute;
+
   const authRoutes = ["/login"];
-  const isAuthRoute = authRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route)
-  );
-  const protectedRoutes = [
-    "/dashboard",
-    "/wallets",
-    "/transactions",
-    "/tagihan",
-    "/analytics",
-    "/profile",
-  ];
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route)
-  );
+  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
   // Not logged in + accessing dashboard → redirect to login
   if (!user && isProtectedRoute) {
