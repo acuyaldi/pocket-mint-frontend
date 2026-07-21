@@ -8,6 +8,7 @@ import {
   ArrowLeftRight,
   BarChart3,
   CalendarClock,
+  Gauge,
   LayoutDashboard,
   LogOut,
   PiggyBank,
@@ -34,6 +35,7 @@ export function AppSidebar() {
     { label: t("installments"), href: "/tagihan", icon: CalendarClock },
     { label: t("analytics"), href: "/analytics", icon: BarChart3 },
     { label: t("savingGoals"), href: "/target-tabungan", icon: PiggyBank },
+    { label: t("budgets"), href: "/anggaran", icon: Gauge },
   ];
 
   useEffect(() => {
