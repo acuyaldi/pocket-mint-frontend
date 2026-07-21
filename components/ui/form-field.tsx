@@ -52,8 +52,18 @@ export function FormField({
   const errorId = htmlFor && error ? `${htmlFor}-error` : undefined;
   const describedBy = [descriptionId, errorId].filter(Boolean).join(" ") || undefined;
 
+  // Only clone onto an actual control, never a plain layout wrapper (e.g. the
+  // relative-positioned `<div>` some amount fields use for a currency prefix)
+  // — that would stamp `id`/aria props onto the div while the real input
+  // keeps its own hardcoded id, producing two DOM elements with the same id
+  // and silently breaking the label's `for` association.
+  // ponytail: control detection is just "not a bare div"; a control nested
+  // two levels deep inside a wrapper still won't get id/aria wired through —
+  // upgrade by having such fields pass their id/aria props through explicitly
+  // if that pattern shows up again.
+  const isLayoutWrapper = React.isValidElement(children) && children.type === "div";
   const child =
-    React.isValidElement(children) && htmlFor
+    React.isValidElement(children) && htmlFor && !isLayoutWrapper
       ? React.cloneElement(children as React.ReactElement<Record<string, unknown>>, {
           id: htmlFor,
           "aria-invalid": error ? true : undefined,

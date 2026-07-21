@@ -11,7 +11,8 @@
       "deleting": "Deleting",
       "seeAll": "See all",
       "add": "Add",
-      "archiving": "Archiving"
+      "archiving": "Archiving",
+      "restoring": "Restoring"
     },
     "states": {
       "loading": "Loading...",
@@ -37,7 +38,8 @@
     "editProfile": "Edit Profile",
     "logoutFailed": "Sign-out failed — check your connection and try again.",
     "loggingOut": "Signing you out…",
-    "savingGoals": "Saving Goals"
+    "savingGoals": "Saving Goals",
+    "budgets": "Budgets"
   },
   "notificationCenter": {
     "title": "Notifications",
@@ -541,6 +543,93 @@
       "description": "\"{name}\" will be moved to the archive and can no longer be edited or updated.",
       "confirm": "Archive"
     }
+  },
+  "budgets": {
+    "pageTitle": "Budgets",
+    "pageDescription": "Category spending limits for {month}.",
+    "addBudget": "Create Budget",
+    "empty": "No budgets set yet.",
+    "emptyDescription": "Create your first Budget to set a monthly spending limit for a category.",
+    "emptyArchived": "No archived budgets.",
+    "loading": "Loading budgets...",
+    "loadError": "Failed to load budgets. Please try again.",
+    "filterAria": "Filter budgets by status",
+    "filterActive": "Active",
+    "filterArchived": "Archived",
+    "limit": "Budget Limit",
+    "spent": "Spent",
+    "remaining": "Remaining",
+    "fullyUsed": "Budget fully used",
+    "exceededBy": "Exceeded by",
+    "edit": "Edit",
+    "archive": "Archive",
+    "restore": "Restore",
+    "editAria": "Edit budget for {name}",
+    "archiveAria": "Archive budget for {name}",
+    "restoreAria": "Restore budget for {name}",
+    "progressAria": "{percent}% of budget used",
+    "toastCreated": "Budget created.",
+    "toastUpdated": "Budget updated.",
+    "toastArchived": "Budget archived.",
+    "toastArchiveFailed": "Failed to archive the budget. Please try again.",
+    "toastRestored": "Budget restored.",
+    "toastRestoreFailed": "Failed to restore the budget. Please try again.",
+    "status": {
+      "HEALTHY": "Healthy",
+      "APPROACHING": "Approaching limit",
+      "REACHED": "Budget reached",
+      "EXCEEDED": "Budget exceeded",
+      "ARCHIVED": "Archived"
+    },
+    "errors": {
+      "BAD_REQUEST": "The request was incomplete or invalid. Please check the form and try again.",
+      "INVALID_AMOUNT": "Enter an amount greater than zero with at most 2 decimal places.",
+      "CATEGORY_NOT_FOUND": "This category is no longer available.",
+      "CATEGORY_NOT_EXPENSE": "This category cannot be used for a Budget.",
+      "CATEGORY_NOT_EDITABLE": "A budget's category cannot be changed after creation.",
+      "BUDGET_ALREADY_EXISTS": "A budget already exists for this category. Restore the archived one instead of creating a new one, or edit the existing budget.",
+      "NOT_FOUND": "This budget no longer exists or cannot be accessed.",
+      "ALREADY_ARCHIVED": "This budget is already archived.",
+      "ALREADY_ACTIVE": "This budget is already active.",
+      "GENERIC": "Something went wrong. Please try again."
+    }
+  },
+  "budgetModals": {
+    "create": {
+      "title": "Create Budget",
+      "description": "Set a monthly spending limit for an expense category.",
+      "category": "Category",
+      "categoryPlaceholder": "Select a category",
+      "noEligibleCategories": "Every expense category already has a budget. Archive one first to free it up, or edit an existing budget.",
+      "amount": "Budget Limit",
+      "submit": "Create Budget"
+    },
+    "edit": {
+      "title": "Edit Budget",
+      "description": "Update the monthly spending limit. The category cannot be changed.",
+      "category": "Category",
+      "categoryLocked": "The category cannot be changed after creation.",
+      "amount": "Budget Limit",
+      "submit": "Save Changes"
+    },
+    "archive": {
+      "title": "Archive Budget?",
+      "description": "The budget for \"{name}\" will be hidden from the active list. Its transactions are not deleted, and it can be restored at any time.",
+      "confirm": "Archive"
+    },
+    "restore": {
+      "title": "Restore Budget?",
+      "description": "The budget for \"{name}\" will return to the active list. Its status will reflect this month's spending immediately, which may already be Approaching or Exceeded.",
+      "confirm": "Restore"
+    }
+  },
+  "budgetDetail": {
+    "backToList": "Back to Budgets",
+    "loadError": "Failed to load this budget. Please try again.",
+    "archivedNotice": "This budget is archived. It no longer appears in the active list, but its amount can still be edited or it can be restored.",
+    "percentUsed": "{percent}% of the budget limit used this period.",
+    "contributingTitle": "Transactions this period",
+    "contributingEmpty": "No expense recorded against this category yet this period."
   },
   "transactionModals": {
     "detail": {
