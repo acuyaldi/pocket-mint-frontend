@@ -20,7 +20,7 @@
   --color-muted-foreground: #414848;
   --color-accent: #d3e4fe;
   --color-accent-foreground: #1a1c1c;
-  --color-destructive: #f87171;
+  --color-destructive: #c1272d;
   --color-destructive-foreground: #ffffff;
   --color-warning: #f59e0b;
   --color-warning-foreground: #1a1c1c;
@@ -32,6 +32,10 @@
   --color-surface-high: #eeeeed;
   --color-mint: #2dd4bf;
   --color-coral: #f87171;
+  /* AA-safe coral for text on light surfaces (form errors, error banners).
+     --color-coral itself stays the brighter brand value used for decorative
+     fills/borders/badges, which aren't subject to the 4.5:1 text ratio. */
+  --color-coral-strong: #c1272d;
   --color-amber: #f59e0b;
   --color-slate: #0f172a;
 
