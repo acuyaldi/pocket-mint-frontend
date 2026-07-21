@@ -83,9 +83,15 @@ function SelectContent({
   sideOffset = 6,
   align = "start",
   side = "bottom",
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledby,
   ...props
 }: SelectPrimitive.Popup.Props &
-  Pick<SelectPrimitive.Positioner.Props, "sideOffset" | "align" | "side">) {
+  Pick<SelectPrimitive.Positioner.Props, "sideOffset" | "align" | "side"> & {
+    /** Base UI doesn't propagate the trigger's label to the popup's `role="listbox"` element, so axe's `aria-input-field-name` flags it as unnamed — pass the same label reference given to the field's `SelectTrigger`. */
+    "aria-label"?: string;
+    "aria-labelledby"?: string;
+  }) {
   return (
     <SelectPrimitive.Portal>
       {/* z above the modal overlay (z-60), matching components/ui/dropdown-menu.tsx */}
@@ -103,7 +109,9 @@ function SelectContent({
           )}
           {...props}
         >
-          <SelectPrimitive.List>{children}</SelectPrimitive.List>
+          <SelectPrimitive.List aria-label={ariaLabel} aria-labelledby={ariaLabelledby}>
+            {children}
+          </SelectPrimitive.List>
         </SelectPrimitive.Popup>
       </SelectPrimitive.Positioner>
     </SelectPrimitive.Portal>

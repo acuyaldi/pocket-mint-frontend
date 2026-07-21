@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./select";
+import { FormField } from "./form-field";
 
 const WALLET_TYPES: Record<string, string> = {
   CASH: "Tunai",
@@ -20,18 +21,22 @@ const WALLET_TYPES: Record<string, string> = {
 function ControlledSelect({
   defaultValue,
   disabled,
+  id,
+  "aria-label": ariaLabel,
 }: {
   defaultValue?: string;
   disabled?: boolean;
+  id?: string;
+  "aria-label"?: string;
 }) {
   const [value, setValue] = React.useState<string | null>(defaultValue ?? null);
 
   return (
     <Select value={value} onValueChange={setValue} items={WALLET_TYPES} disabled={disabled}>
-      <SelectTrigger className="w-64">
+      <SelectTrigger className="w-64" id={id} aria-label={ariaLabel}>
         <SelectValue placeholder="Pilih jenis dompet" />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent aria-label={ariaLabel}>
         {Object.entries(WALLET_TYPES).map(([value, label]) => (
           <SelectItem key={value} value={value}>
             {label}
@@ -39,6 +44,15 @@ function ControlledSelect({
         ))}
       </SelectContent>
     </Select>
+  );
+}
+
+/** Real production pattern: FormField clones its `htmlFor` onto the nested SelectTrigger. */
+function LabeledSelect(props: { defaultValue?: string; disabled?: boolean; error?: string }) {
+  return (
+    <FormField label="Jenis Dompet" htmlFor="wallet-type" error={props.error}>
+      <ControlledSelect defaultValue={props.defaultValue} disabled={props.disabled} />
+    </FormField>
   );
 }
 
@@ -58,23 +72,51 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  name: "With visible label",
+  render: () => <LabeledSelect />,
+};
 
 export const WithSelectedValue: Story = {
+  render: () => <LabeledSelect defaultValue="BANK" />,
+};
+
+export const WithoutVisibleLabel: Story = {
+  name: "Without visible label (aria-label)",
   args: {
-    defaultValue: "BANK",
+    "aria-label": "Jenis Dompet",
   },
 };
 
 export const Disabled: Story = {
-  args: {
-    defaultValue: "CASH",
-    disabled: true,
-  },
+  render: () => <LabeledSelect defaultValue="CASH" disabled />,
+};
+
+export const ValidationError: Story = {
+  name: "Validation error",
+  render: () => <LabeledSelect error="Jenis dompet wajib dipilih." />,
 };
 
 export const SelectItemInteraction: Story = {
   name: "Select an item (interaction)",
+  args: {
+    "aria-label": "Jenis Dompet",
+  },
+  parameters: {
+    a11y: {
+      options: {
+        rules: {
+          // Base UI's FloatingFocusManager renders visually-hidden,
+          // tabIndex=0 "focus guard" spans (aria-hidden + focusable by
+          // design) to redirect Tab navigation around the open popup — the
+          // same technique used by Radix/Floating UI. It only exists while
+          // the popup is open, so it only shows up here. Not our markup;
+          // there's no public Base UI prop to opt out of it.
+          "aria-hidden-focus": { enabled: false },
+        },
+      },
+    },
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("combobox"));
