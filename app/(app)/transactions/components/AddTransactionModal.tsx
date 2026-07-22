@@ -24,6 +24,8 @@ import { toast } from "@/components/ui/toaster";
 import { formatCurrency } from "@/lib/utils";
 import { INTL_LOCALE } from "@/i18n/config";
 import { useCategories } from "@/src/features/categories/hooks/useCategories";
+import { useCategorySuggestions } from "@/src/features/categories/hooks/useCategorySuggestions";
+import { CategorySuggestionList } from "@/src/features/categories/components/CategorySuggestionList";
 import { usePaylaterRates } from "@/src/features/installments/hooks/useInstallments";
 import {
   ASSET_WALLET_TYPES,
@@ -298,6 +300,22 @@ export function AddTransactionModal({
   const { data: categories = [] } = useCategories();
   const { data: paylaterRates } = usePaylaterRates();
 
+  const isTransfer = type === "TRANSFER";
+
+  // Category suggestions — fetched when description changes
+  const [dismissedDesc, setDismissedDesc] = useState("");
+  const suggestionDesc = dismissedDesc === description.trim() ? "" : description;
+  const { data: suggestions = [], isLoading: suggestionsLoading } =
+    useCategorySuggestions(suggestionDesc, isTransfer ? "EXPENSE" : type);
+
+  const handleSelectSuggestion = useCallback(
+    (suggestion: { categoryId: string }) => {
+      setCategoryId(suggestion.categoryId);
+      setDismissedDesc(description.trim());
+    },
+    [description],
+  );
+
   const transferWallets = useMemo(() => getTransferWallets(wallets), [wallets]);
   const hasNoWallets =
     type === "TRANSFER" ? transferWallets.length === 0 : wallets.length === 0;
@@ -324,6 +342,7 @@ export function AddTransactionModal({
     setWalletId("");
     setToWalletId("");
     setCategoryId("");
+    setDismissedDesc("");
     setIsInstallment(false);
     setInstallmentMonths(3);
     setInterestRateOverride(null);
@@ -741,6 +760,14 @@ export function AddTransactionModal({
                     onChange={(event) => setDescription(event.target.value)}
                     className="h-12 border-border/70 bg-card px-3 text-sm"
                   />
+                  {!isTransfer && (
+                    <CategorySuggestionList
+                      suggestions={suggestions}
+                      isLoading={suggestionsLoading}
+                      hasDescription={description.trim().length >= 3}
+                      onSelect={handleSelectSuggestion}
+                    />
+                  )}
                 </FormField>
 
                 {type === "EXPENSE" &&
