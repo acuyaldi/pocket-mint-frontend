@@ -209,7 +209,11 @@
       "wrongCurrentPassword": "Password saat ini salah."
     },
     "successChanged": "Password berhasil diubah. Mengarahkan ke halaman masuk...",
-    "successChangedRedirectMessage": "Password berhasil diubah. Silakan masuk dengan password baru."
+    "successChangedRedirectMessage": "Password berhasil diubah. Silakan masuk dengan password baru.",
+    "merchantMapping": {
+      "title": "Merchant Mapping",
+      "subtitle": "Kelola merchant yang selalu dipetakan ke kategori tertentu."
+    }
   },
   "authErrors": {
     "invalidCredentials": "Email atau password salah.",
@@ -723,11 +727,14 @@
         "transferFromCreditNotAllowed": "Transfer tidak bisa dilakukan dari kartu kredit atau paylater.",
         "incomeToDebtNotAllowed": "Pemasukan tidak bisa dicatat ke kartu kredit atau paylater.",
         "insufficientBalance": "Saldo {name} tidak cukup.",
-        "genericSaveFailed": "Transaksi gagal disimpan. Coba lagi."
+        "genericSaveFailed": "Transaksi gagal disimpan. Coba lagi.",
+        "rememberMerchantFailed": "Gagal menyimpan merchant mapping. Transaksi tetap tersimpan."
       },
       "toastTransferSuccess": "Transfer berhasil dicatat",
       "toastIncomeSuccess": "Pemasukan berhasil dicatat",
-      "toastExpenseSuccess": "Pengeluaran berhasil dicatat"
+      "toastExpenseSuccess": "Pengeluaran berhasil dicatat",
+      "rememberMerchant": "Ingat merchant ini",
+      "rememberMerchantDescription": "Transaksi berikutnya dengan deskripsi ini akan langsung disarankan ke kategori yang dipilih."
     },
     "accountPicker": {
       "noWalletsAvailable": "Tidak ada dompet transfer yang tersedia.",
@@ -948,6 +955,59 @@
         "help": "Bantuan",
         "contact": "Kontak"
       }
+    }
+  },
+  "merchantMappings": {
+    "pageTitle": "Merchant Mapping",
+    "pageDescription": "Petakan nama merchant ke kategori favorit Anda — saran kategori akan langsung mengikuti pemetaan ini.",
+    "addMapping": "Tambah Mapping",
+    "searchPlaceholder": "Cari merchant...",
+    "searchAria": "Cari merchant mapping",
+    "loading": "Memuat merchant mapping...",
+    "loadError": "Gagal memuat merchant mapping. Coba lagi.",
+    "empty": "Belum ada merchant mapping.",
+    "emptyDescription": "Tambahkan merchant pertama Anda agar transaksi berikutnya otomatis disarankan ke kategori yang tepat.",
+    "noSearchResults": "Tidak ada merchant yang cocok dengan \"{search}\".",
+    "edit": "Ubah",
+    "delete": "Hapus",
+    "editAria": "Ubah mapping untuk {name}",
+    "deleteAria": "Hapus mapping untuk {name}",
+    "toastCreated": "Merchant mapping berhasil dibuat.",
+    "toastUpdated": "Merchant mapping berhasil diperbarui.",
+    "toastDeleted": "Merchant mapping berhasil dihapus.",
+    "toastDeleteFailed": "Gagal menghapus merchant mapping. Silakan coba lagi.",
+    "errors": {
+      "BAD_REQUEST": "Permintaan tidak lengkap atau tidak valid. Periksa kembali formulir dan coba lagi.",
+      "INVALID_MERCHANT_NAME": "Nama merchant harus mengandung minimal satu huruf atau angka.",
+      "CATEGORY_NOT_FOUND": "Kategori ini sudah tidak tersedia.",
+      "DUPLICATE_MERCHANT": "Merchant ini sudah dipetakan ke kategori lain.",
+      "NOT_FOUND": "Merchant mapping ini sudah tidak ada atau tidak dapat diakses.",
+      "GENERIC": "Terjadi kesalahan. Silakan coba lagi."
+    }
+  },
+  "merchantMappingModals": {
+    "create": {
+      "title": "Tambah Merchant Mapping",
+      "description": "Petakan nama merchant ke kategori. Transaksi berikutnya dengan nama ini akan langsung disarankan ke kategori tersebut.",
+      "merchantName": "Nama Merchant",
+      "merchantNamePlaceholder": "Contoh: Warung Bu Siti",
+      "category": "Kategori",
+      "categoryPlaceholder": "Pilih kategori",
+      "submit": "Simpan Mapping"
+    },
+    "edit": {
+      "title": "Ubah Merchant Mapping",
+      "description": "Perbarui nama merchant atau kategori tujuan.",
+      "merchantName": "Nama Merchant",
+      "merchantNamePlaceholder": "Contoh: Warung Bu Siti",
+      "category": "Kategori",
+      "categoryPlaceholder": "Pilih kategori",
+      "submit": "Simpan Perubahan"
+    },
+    "delete": {
+      "title": "Hapus Merchant Mapping?",
+      "description": "Mapping untuk \"{name}\" akan dihapus. Transaksi yang sudah ada tidak berubah, dan saran kategori untuk merchant ini kembali mengikuti pencocokan kata kunci.",
+      "confirm": "Hapus"
     }
   }
 }

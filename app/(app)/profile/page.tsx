@@ -1,14 +1,17 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   CheckCircle2,
+  ChevronRight,
   Info,
   KeyRound,
   Loader2,
   ShieldCheck,
+  Store,
   UserRound,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
@@ -230,6 +233,23 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Merchant mapping — per-user category memory, linked from Akun */}
+      <Link
+        href="/profile/merchant-mapping"
+        className="surface-card mb-6 flex max-w-2xl items-center justify-between gap-3 rounded-xl border border-white/80 px-6 py-6 shadow-none transition-colors hover:bg-surface-high"
+      >
+        <div className="flex items-center gap-3">
+          <div className="rounded-lg border border-primary/20 bg-primary/10 p-2 text-primary">
+            <Store className="size-4" />
+          </div>
+          <div>
+            <p className="text-xl font-semibold text-foreground">{t("merchantMapping.title")}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t("merchantMapping.subtitle")}</p>
+          </div>
+        </div>
+        <ChevronRight className="size-5 shrink-0 text-muted-foreground" />
+      </Link>
 
       {/* Conditional password surface — form for email users, notice for Google */}
       {authLoading ? (

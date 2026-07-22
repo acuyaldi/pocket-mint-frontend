@@ -209,7 +209,11 @@
       "wrongCurrentPassword": "Current password is incorrect."
     },
     "successChanged": "Password changed successfully. Redirecting to sign in...",
-    "successChangedRedirectMessage": "Password changed successfully. Please sign in with your new password."
+    "successChangedRedirectMessage": "Password changed successfully. Please sign in with your new password.",
+    "merchantMapping": {
+      "title": "Merchant Mapping",
+      "subtitle": "Manage merchants that always map to a specific category."
+    }
   },
   "authErrors": {
     "invalidCredentials": "Incorrect email or password.",
@@ -723,11 +727,14 @@
         "transferFromCreditNotAllowed": "Transfers can't be made from a credit card or paylater account.",
         "incomeToDebtNotAllowed": "Income can't be recorded to a credit card or paylater account.",
         "insufficientBalance": "{name}'s balance isn't enough.",
-        "genericSaveFailed": "Couldn't save the transaction. Try again."
+        "genericSaveFailed": "Couldn't save the transaction. Try again.",
+        "rememberMerchantFailed": "Failed to save merchant mapping. The transaction was still saved."
       },
       "toastTransferSuccess": "Transfer recorded",
       "toastIncomeSuccess": "Income recorded",
-      "toastExpenseSuccess": "Expense recorded"
+      "toastExpenseSuccess": "Expense recorded",
+      "rememberMerchant": "Remember this merchant",
+      "rememberMerchantDescription": "Future transactions with this description will be suggested this category first."
     },
     "accountPicker": {
       "noWalletsAvailable": "No transfer wallets available.",
@@ -948,6 +955,59 @@
         "help": "Help",
         "contact": "Contact"
       }
+    }
+  },
+  "merchantMappings": {
+    "pageTitle": "Merchant Mapping",
+    "pageDescription": "Map merchant names to your favorite categories — category suggestions will follow this mapping first.",
+    "addMapping": "Add Mapping",
+    "searchPlaceholder": "Search merchants...",
+    "searchAria": "Search merchant mappings",
+    "loading": "Loading merchant mappings...",
+    "loadError": "Failed to load merchant mappings. Try again.",
+    "empty": "No merchant mappings yet.",
+    "emptyDescription": "Add your first merchant so future transactions are automatically suggested the right category.",
+    "noSearchResults": "No merchants match \"{search}\".",
+    "edit": "Edit",
+    "delete": "Delete",
+    "editAria": "Edit mapping for {name}",
+    "deleteAria": "Delete mapping for {name}",
+    "toastCreated": "Merchant mapping created.",
+    "toastUpdated": "Merchant mapping updated.",
+    "toastDeleted": "Merchant mapping deleted.",
+    "toastDeleteFailed": "Failed to delete merchant mapping. Please try again.",
+    "errors": {
+      "BAD_REQUEST": "The request is incomplete or invalid. Check the form and try again.",
+      "INVALID_MERCHANT_NAME": "Merchant name must contain at least one letter or digit.",
+      "CATEGORY_NOT_FOUND": "This category is no longer available.",
+      "DUPLICATE_MERCHANT": "This merchant is already mapped to another category.",
+      "NOT_FOUND": "This merchant mapping no longer exists or is not accessible.",
+      "GENERIC": "Something went wrong. Please try again."
+    }
+  },
+  "merchantMappingModals": {
+    "create": {
+      "title": "Add Merchant Mapping",
+      "description": "Map a merchant name to a category. Future transactions with this name will be suggested that category first.",
+      "merchantName": "Merchant Name",
+      "merchantNamePlaceholder": "e.g. Bu Siti's Warung",
+      "category": "Category",
+      "categoryPlaceholder": "Choose a category",
+      "submit": "Save Mapping"
+    },
+    "edit": {
+      "title": "Edit Merchant Mapping",
+      "description": "Update the merchant name or target category.",
+      "merchantName": "Merchant Name",
+      "merchantNamePlaceholder": "e.g. Bu Siti's Warung",
+      "category": "Category",
+      "categoryPlaceholder": "Choose a category",
+      "submit": "Save Changes"
+    },
+    "delete": {
+      "title": "Delete Merchant Mapping?",
+      "description": "The mapping for \"{name}\" will be deleted. Existing transactions are unaffected, and suggestions for this merchant will fall back to keyword matching.",
+      "confirm": "Delete"
     }
   }
 }
