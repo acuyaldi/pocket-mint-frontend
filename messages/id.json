@@ -775,50 +775,82 @@
   "analytics": {
     "pageTitle": "Analitik",
     "pageDescription": "Pantau tren dan performa finansial Anda",
-    "periods": {
-      "month": "Bulan ini",
-      "quarter": "3 bulan",
-      "sixMonths": "6 bulan"
-    },
     "exportReport": "Ekspor laporan",
     "exportFailed": "Ekspor laporan gagal. Coba lagi.",
-    "realData": "Data nyata",
-    "savingsRate": "Savings rate",
-    "savingsRateHelper": "{amount} sisa arus kas periode ini",
-    "cashFlow": "Cash flow",
-    "cashFlowHelper": "{income} masuk · {expenses} keluar",
-    "debtRatio": "Debt ratio",
-    "debtRatioHelper": "{debt} dari limit {limit}",
-    "cashFlowChart": {
-      "title": "Arus kas",
-      "subtitle": "Pendapatan dan pengeluaran 6 bulan terakhir",
+    "periodSelector": {
+      "label": "Pilih periode laporan",
+      "options": {
+        "currentMonth": "Bulan ini",
+        "previousMonth": "Bulan lalu",
+        "last3Months": "3 bulan",
+        "last6Months": "6 bulan",
+        "currentYear": "Tahun ini",
+        "custom": "Kustom"
+      },
+      "startDate": "Mulai",
+      "endDate": "Akhir",
+      "apply": "Terapkan",
+      "errorStartAfterEnd": "Tanggal mulai harus sebelum tanggal akhir.",
+      "errorInvalidRange": "Masukkan tanggal mulai dan akhir yang valid."
+    },
+    "overview": {
       "income": "Pemasukan",
-      "expenses": "Pengeluaran",
-      "empty": "Belum ada transaksi untuk membentuk grafik arus kas.",
-      "incomeTooltip": "Pemasukan {month}: {amount}",
-      "expenseTooltip": "Pengeluaran {month}: {amount}"
+      "expense": "Pengeluaran",
+      "netCashFlow": "Arus kas bersih",
+      "transactionCount": "Transaksi",
+      "changeVsPrevious": "{percent} ({amount} vs periode sebelumnya)",
+      "noComparison": "Tidak ada data sebelumnya untuk dibandingkan"
     },
-    "allocation": {
-      "title": "Alokasi pengeluaran",
-      "subtitle": "Kategori terbesar pada periode terpilih",
-      "empty": "Belum ada pengeluaran pada periode ini.",
+    "trends": {
+      "title": "Arus kas",
+      "subtitle": "Tren pemasukan dan pengeluaran pada periode terpilih",
+      "income": "Pemasukan",
+      "expense": "Pengeluaran",
+      "net": "Bersih",
+      "empty": "Belum ada transaksi untuk periode ini.",
+      "summaryUp": "Arus kas naik {percent} selama periode ini.",
+      "summaryDown": "Arus kas turun {percent} selama periode ini.",
+      "summaryFlat": "Arus kas relatif stabil pada periode ini."
+    },
+    "categories": {
+      "title": "Pengeluaran per kategori",
+      "subtitle": "Kategori pengeluaran terbesar pada periode terpilih",
+      "typeLabel": "Tipe",
+      "options": {
+        "EXPENSE": "Pengeluaran",
+        "INCOME": "Pemasukan"
+      },
+      "uncategorized": "Tanpa kategori",
+      "empty": "Belum ada transaksi {type} untuk periode ini.",
+      "percentageOfTotal": "{percent} dari total"
+    },
+    "wallets": {
+      "title": "Aktivitas dompet",
+      "subtitle": "Pemasukan, pengeluaran, dan selisih per dompet",
+      "columns": {
+        "wallet": "Dompet",
+        "income": "Pemasukan",
+        "expense": "Pengeluaran",
+        "net": "Selisih"
+      },
+      "empty": "Belum ada aktivitas dompet untuk periode ini."
+    },
+    "budgetPerformance": {
+      "title": "Performa anggaran",
+      "subtitle": "Pengeluaran terhadap anggaran aktif bulan ini",
+      "empty": "Belum ada anggaran aktif.",
+      "limitLabel": "Batas {limit}",
+      "spentLabel": "{spent} terpakai",
+      "remainingLabel": "{remaining} tersisa"
+    },
+    "drillDown": {
+      "title": "Transaksi",
+      "subtitle": "{count} transaksi sesuai filter saat ini",
+      "empty": "Tidak ada transaksi yang sesuai filter saat ini.",
+      "close": "Tutup",
+      "page": "Halaman {page} dari {total}",
+      "viewAll": "Lihat semua transaksi",
       "noCategory": "Tanpa kategori"
-    },
-    "composition": {
-      "title": "Komposisi dompet",
-      "subtitle": "Aset dan liabilitas dari saldo saat ini",
-      "assets": "Aset",
-      "liabilities": "Liabilitas"
-    },
-    "insights": {
-      "title": "Insight",
-      "subtitle": "Ringkasan otomatis dari data yang tersedia",
-      "noTransactions": "Belum ada transaksi pada periode ini.",
-      "positiveCashFlow": "Arus kas periode ini positif sebesar {amount}.",
-      "negativeCashFlow": "Pengeluaran melewati pemasukan sebesar {amount}.",
-      "expenseRatio": "Rasio pengeluaran berada di {percent} dari pemasukan.",
-      "topCategory": "Kategori terbesar: {label}, senilai {amount}.",
-      "activeInstallments": "{count} cicilan aktif perlu dipantau."
     }
   },
   "changelog": {
