@@ -213,6 +213,10 @@
     "merchantMapping": {
       "title": "Merchant Mapping",
       "subtitle": "Manage merchants that always map to a specific category."
+    },
+    "rules": {
+      "title": "Categorization Rules",
+      "subtitle": "Define deterministic rules that preselect a category before any other suggestion runs."
     }
   },
   "authErrors": {
@@ -976,6 +980,100 @@
       "title": "Delete Merchant Mapping?",
       "description": "The mapping for \"{name}\" will be deleted. Existing transactions are unaffected, and suggestions for this merchant will fall back to keyword matching.",
       "confirm": "Delete"
+    }
+  },
+  "rules": {
+    "pageTitle": "Categorization Rules",
+    "pageDescription": "Rules run first, before merchant mapping and keyword matching. The first enabled rule that matches wins.",
+    "addRule": "Add Rule",
+    "loading": "Loading rules...",
+    "loadError": "Failed to load rules. Try again.",
+    "empty": "No rules yet.",
+    "emptyDescription": "Add a rule so matching transactions are suggested the right category first, before anything else runs.",
+    "edit": "Edit",
+    "delete": "Delete",
+    "editAria": "Edit rule {name}",
+    "deleteAria": "Delete rule {name}",
+    "enableAria": "Enable or disable rule {name}",
+    "moveUpAria": "Move rule {name} up in priority",
+    "moveDownAria": "Move rule {name} down in priority",
+    "disabledBadge": "Disabled",
+    "toastCreated": "Rule created.",
+    "toastUpdated": "Rule updated.",
+    "toastDeleted": "Rule deleted.",
+    "toastDeleteFailed": "Failed to delete rule. Please try again.",
+    "toastToggleFailed": "Failed to update rule. Please try again.",
+    "errors": {
+      "BAD_REQUEST": "The request is incomplete or invalid. Check the form and try again.",
+      "INVALID_RULE_VALUE": "This value isn't valid for the selected condition.",
+      "CATEGORY_NOT_FOUND": "This category is no longer available.",
+      "NOT_FOUND": "This rule no longer exists or is not accessible.",
+      "INVALID_PRIORITY_ORDER": "Couldn't reorder rules. Please refresh and try again.",
+      "GENERIC": "Something went wrong. Please try again."
+    }
+  },
+  "ruleModals": {
+    "fields": {
+      "name": "Rule Name",
+      "namePlaceholder": "e.g. Gopay → Transport",
+      "matchType": "Match Field",
+      "matchTypeOptions": {
+        "DESCRIPTION": "Description",
+        "MERCHANT": "Merchant",
+        "TRANSACTION_TYPE": "Transaction Type"
+      },
+      "operator": "Condition",
+      "operatorOptions": {
+        "CONTAINS": "Contains",
+        "EQUALS": "Equals",
+        "STARTS_WITH": "Starts with",
+        "ENDS_WITH": "Ends with"
+      },
+      "value": "Value",
+      "valuePlaceholder": "e.g. GOPAY",
+      "valuePlaceholderTransactionType": "Choose a transaction type",
+      "valueDescription": "Matching is case-insensitive.",
+      "transactionTypeOptions": {
+        "INCOME": "Income",
+        "EXPENSE": "Expense",
+        "TRANSFER": "Transfer"
+      },
+      "category": "Category",
+      "categoryPlaceholder": "Choose a category"
+    },
+    "create": {
+      "title": "Add Rule",
+      "description": "Rules are evaluated in priority order — the first match wins and short-circuits every other suggestion source.",
+      "submit": "Save Rule"
+    },
+    "edit": {
+      "title": "Edit Rule",
+      "description": "Update the condition or target category.",
+      "submit": "Save Changes"
+    },
+    "delete": {
+      "title": "Delete Rule?",
+      "description": "The rule \"{name}\" will be deleted. Existing transactions are unaffected.",
+      "confirm": "Delete"
+    }
+  },
+  "ruleConditionSummary": {
+    "template": "{field} {operator} \"{value}\"",
+    "transactionType": "Transaction type is {value}",
+    "field": {
+      "DESCRIPTION": "Description",
+      "MERCHANT": "Merchant"
+    },
+    "operator": {
+      "CONTAINS": "contains",
+      "EQUALS": "equals",
+      "STARTS_WITH": "starts with",
+      "ENDS_WITH": "ends with"
+    },
+    "transactionTypeValue": {
+      "INCOME": "Income",
+      "EXPENSE": "Expense",
+      "TRANSFER": "Transfer"
     }
   }
 }

@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Store,
   UserRound,
+  Zap,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
@@ -246,6 +247,23 @@ export default function ProfilePage() {
           <div>
             <p className="text-xl font-semibold text-foreground">{t("merchantMapping.title")}</p>
             <p className="mt-1 text-sm text-muted-foreground">{t("merchantMapping.subtitle")}</p>
+          </div>
+        </div>
+        <ChevronRight className="size-5 shrink-0 text-muted-foreground" />
+      </Link>
+
+      {/* Rule engine — deterministic categorization rules, linked from Akun (Phase 20) */}
+      <Link
+        href="/profile/rules"
+        className="surface-card mb-6 flex max-w-2xl items-center justify-between gap-3 rounded-xl border border-white/80 px-6 py-6 shadow-none transition-colors hover:bg-surface-high"
+      >
+        <div className="flex items-center gap-3">
+          <div className="rounded-lg border border-primary/20 bg-primary/10 p-2 text-primary">
+            <Zap className="size-4" />
+          </div>
+          <div>
+            <p className="text-xl font-semibold text-foreground">{t("rules.title")}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t("rules.subtitle")}</p>
           </div>
         </div>
         <ChevronRight className="size-5 shrink-0 text-muted-foreground" />

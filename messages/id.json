@@ -213,6 +213,10 @@
     "merchantMapping": {
       "title": "Merchant Mapping",
       "subtitle": "Kelola merchant yang selalu dipetakan ke kategori tertentu."
+    },
+    "rules": {
+      "title": "Rule Kategorisasi",
+      "subtitle": "Atur rule deterministik yang menentukan kategori lebih dulu sebelum saran lainnya berjalan."
     }
   },
   "authErrors": {
@@ -976,6 +980,100 @@
       "title": "Hapus Merchant Mapping?",
       "description": "Mapping untuk \"{name}\" akan dihapus. Transaksi yang sudah ada tidak berubah, dan saran kategori untuk merchant ini kembali mengikuti pencocokan kata kunci.",
       "confirm": "Hapus"
+    }
+  },
+  "rules": {
+    "pageTitle": "Rule Kategorisasi",
+    "pageDescription": "Rule dijalankan lebih dulu, sebelum merchant mapping dan pencocokan kata kunci. Rule aktif pertama yang cocok akan menang.",
+    "addRule": "Tambah Rule",
+    "loading": "Memuat rule...",
+    "loadError": "Gagal memuat rule. Coba lagi.",
+    "empty": "Belum ada rule.",
+    "emptyDescription": "Tambahkan rule agar transaksi yang cocok langsung disarankan kategori yang tepat, sebelum proses lain berjalan.",
+    "edit": "Ubah",
+    "delete": "Hapus",
+    "editAria": "Ubah rule {name}",
+    "deleteAria": "Hapus rule {name}",
+    "enableAria": "Aktifkan atau nonaktifkan rule {name}",
+    "moveUpAria": "Naikkan prioritas rule {name}",
+    "moveDownAria": "Turunkan prioritas rule {name}",
+    "disabledBadge": "Nonaktif",
+    "toastCreated": "Rule berhasil dibuat.",
+    "toastUpdated": "Rule berhasil diperbarui.",
+    "toastDeleted": "Rule berhasil dihapus.",
+    "toastDeleteFailed": "Gagal menghapus rule. Silakan coba lagi.",
+    "toastToggleFailed": "Gagal memperbarui rule. Silakan coba lagi.",
+    "errors": {
+      "BAD_REQUEST": "Permintaan tidak lengkap atau tidak valid. Periksa form dan coba lagi.",
+      "INVALID_RULE_VALUE": "Nilai ini tidak valid untuk kondisi yang dipilih.",
+      "CATEGORY_NOT_FOUND": "Kategori ini sudah tidak tersedia.",
+      "NOT_FOUND": "Rule ini sudah tidak ada atau tidak dapat diakses.",
+      "INVALID_PRIORITY_ORDER": "Gagal mengurutkan ulang rule. Silakan muat ulang dan coba lagi.",
+      "GENERIC": "Terjadi kesalahan. Silakan coba lagi."
+    }
+  },
+  "ruleModals": {
+    "fields": {
+      "name": "Nama Rule",
+      "namePlaceholder": "contoh: Gopay → Transportasi",
+      "matchType": "Bidang yang Dicocokkan",
+      "matchTypeOptions": {
+        "DESCRIPTION": "Deskripsi",
+        "MERCHANT": "Merchant",
+        "TRANSACTION_TYPE": "Jenis Transaksi"
+      },
+      "operator": "Kondisi",
+      "operatorOptions": {
+        "CONTAINS": "Mengandung",
+        "EQUALS": "Sama dengan",
+        "STARTS_WITH": "Diawali dengan",
+        "ENDS_WITH": "Diakhiri dengan"
+      },
+      "value": "Nilai",
+      "valuePlaceholder": "contoh: GOPAY",
+      "valuePlaceholderTransactionType": "Pilih jenis transaksi",
+      "valueDescription": "Pencocokan tidak membedakan huruf besar/kecil.",
+      "transactionTypeOptions": {
+        "INCOME": "Pemasukan",
+        "EXPENSE": "Pengeluaran",
+        "TRANSFER": "Transfer"
+      },
+      "category": "Kategori",
+      "categoryPlaceholder": "Pilih kategori"
+    },
+    "create": {
+      "title": "Tambah Rule",
+      "description": "Rule dievaluasi berdasarkan urutan prioritas — kecocokan pertama menang dan menghentikan sumber saran lainnya.",
+      "submit": "Simpan Rule"
+    },
+    "edit": {
+      "title": "Ubah Rule",
+      "description": "Perbarui kondisi atau kategori tujuan.",
+      "submit": "Simpan Perubahan"
+    },
+    "delete": {
+      "title": "Hapus Rule?",
+      "description": "Rule \"{name}\" akan dihapus. Transaksi yang sudah ada tidak berubah.",
+      "confirm": "Hapus"
+    }
+  },
+  "ruleConditionSummary": {
+    "template": "{field} {operator} \"{value}\"",
+    "transactionType": "Jenis transaksi adalah {value}",
+    "field": {
+      "DESCRIPTION": "Deskripsi",
+      "MERCHANT": "Merchant"
+    },
+    "operator": {
+      "CONTAINS": "mengandung",
+      "EQUALS": "sama dengan",
+      "STARTS_WITH": "diawali dengan",
+      "ENDS_WITH": "diakhiri dengan"
+    },
+    "transactionTypeValue": {
+      "INCOME": "Pemasukan",
+      "EXPENSE": "Pengeluaran",
+      "TRANSFER": "Transfer"
     }
   }
 }
