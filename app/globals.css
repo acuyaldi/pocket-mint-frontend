@@ -37,6 +37,11 @@
      fills/borders/badges, which aren't subject to the 4.5:1 text ratio. */
   --color-coral-strong: #c1272d;
   --color-amber: #f59e0b;
+  /* AA-safe mint/amber for text on tinted surfaces (status badges, large
+     financial figures on white) — --color-mint/--color-amber stay the
+     brighter brand values used for decorative fills, icons, and borders. */
+  --color-mint-strong: #115e59;
+  --color-amber-strong: #92400e;
   --color-slate: #0f172a;
 
   --radius-sm: 0.25rem;

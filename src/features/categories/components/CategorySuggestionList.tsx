@@ -137,10 +137,11 @@ export function CategorySuggestionList({
       <ul
         ref={listRef}
         role="listbox"
+        tabIndex={0}
         aria-label={labels.listAria}
         aria-activedescendant={activeId}
         onKeyDown={handleKeyDown}
-        className="space-y-0.5"
+        className="space-y-0.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
       >
         {items.map((suggestion, index) => (
           <li
@@ -180,9 +181,9 @@ export function CategorySuggestionList({
             <span
               className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.05em] ${
                 suggestion.confidence === "HIGH"
-                  ? "bg-mint/20 text-teal-700"
+                  ? "bg-mint/20 text-mint-strong"
                   : suggestion.confidence === "MEDIUM"
-                    ? "bg-amber/20 text-amber-700"
+                    ? "bg-amber/20 text-amber-strong"
                     : "bg-surface-high text-muted-foreground"
               }`}
             >

@@ -112,6 +112,8 @@ export const KeyboardNavigation: Story = {
     const listbox = canvas.getByRole("listbox");
     const options = within(listbox).getAllByRole("option");
 
+    listbox.focus();
+
     // Arrow down should select first item
     await userEvent.keyboard("{ArrowDown}");
     expect(options[0].getAttribute("aria-selected")).toBe("true");
