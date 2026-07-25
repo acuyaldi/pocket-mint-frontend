@@ -1014,6 +1014,34 @@
   "assistant": {
     "pageTitle": "Asisten",
     "pageDescription": "Asisten percakapan untuk keuangan Anda.",
-    "underDevelopment": "Asisten sedang dalam pengembangan."
+    "underDevelopment": "Asisten sedang dalam pengembangan.",
+    "draftReview": {
+      "empty": {
+        "title": "Tidak ada draf tertunda",
+        "body": "Tidak ada draf keuangan yang menunggu tinjauan Anda saat ini."
+      },
+      "income": "Pemasukan",
+      "expense": "Pengeluaran",
+      "wallet": "Dompet",
+      "category": "Kategori",
+      "merchant": "Merchant",
+      "date": "Tanggal",
+      "notes": "Catatan",
+      "expiresAt": "Kedaluwarsa",
+      "status": {
+        "PENDING_CONFIRMATION": "Menunggu konfirmasi",
+        "COMMITTED": "Dikonfirmasi",
+        "CANCELLED": "Dibatalkan",
+        "EXPIRED": "Kedaluwarsa",
+        "FAILED": "Gagal"
+      },
+      "confirm": "Konfirmasi",
+      "confirming": "Mengonfirmasi",
+      "cancel": "Batalkan",
+      "cancelling": "Membatalkan",
+      "confirmSuccess": "Draf dikonfirmasi.",
+      "cancelSuccess": "Draf dibatalkan.",
+      "genericError": "Terjadi kesalahan. Silakan coba lagi."
+    }
   }
 }

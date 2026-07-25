@@ -12,6 +12,8 @@ import { describe, expect, it } from "vitest";
 
 import idMessages from "@/messages/id.json";
 import enMessages from "@/messages/en.json";
+import { parseAssistantDraftParam } from "@/src/features/assistant/utils/draftParam";
+import type { AssistantDraft } from "@/src/types/assistant";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const apiSource = readFileSync(root + "src/features/assistant/api/assistantApi.ts", "utf8");
@@ -23,6 +25,25 @@ const pageSource = readFileSync(root + "app/(app)/assistant/page.tsx", "utf8");
 const sidebarSource = readFileSync(root + "components/layout/app-sidebar.tsx", "utf8");
 const bottomNavSource = readFileSync(root + "components/layout/bottom-nav.tsx", "utf8");
 const libApiSource = readFileSync(root + "lib/api.ts", "utf8");
+const draftSummaryCardSource = readFileSync(root + "src/features/assistant/components/DraftSummaryCard.tsx", "utf8");
+const draftActionBarSource = readFileSync(root + "src/features/assistant/components/DraftActionBar.tsx", "utf8");
+
+const VALID_DRAFT: AssistantDraft = {
+  draftId: "draft-1",
+  status: "PENDING_CONFIRMATION",
+  expiresAt: "2026-07-25T15:30:00.000Z",
+  confirmationRequired: true,
+  renderedText: "Rp50.000 expense at Indomaret from BCA.",
+  preview: {
+    type: "EXPENSE",
+    amount: 50000,
+    wallet: "BCA",
+    walletId: "wallet-1",
+    category: "Makanan",
+    merchant: "Indomaret",
+    date: "2026-07-25",
+  },
+};
 
 describe("assistant navigation", () => {
   it("adds a first-class nav entry on both desktop and mobile, matching each other", () => {
@@ -106,24 +127,101 @@ describe("assistant domain types", () => {
   });
 });
 
-describe("assistant placeholder route", () => {
-  it("renders only a placeholder, reusing the shared PageHeader", () => {
+describe("assistant draft review route (Phase 23.2)", () => {
+  it("reuses the shared PageHeader", () => {
     expect(pageSource).toContain('import { PageHeader } from "@/components/layout/page-header";');
-    expect(pageSource).toContain('t("underDevelopment")');
+    expect(pageSource).toContain('t("pageTitle")');
   });
 
-  it("does not implement chat, streaming, or markdown rendering", () => {
-    for (const forbidden of ["useAssistantSession(", "useSendAssistantMessage(", "ReactMarkdown", "EventSource", "WebSocket"]) {
+  it("does not implement chat, streaming, markdown, or clarification UI", () => {
+    for (const forbidden of [
+      "useAssistantSession(",
+      "useSendAssistantMessage(",
+      "useSelectAssistantClarification(",
+      "ReactMarkdown",
+      "EventSource",
+      "WebSocket",
+    ]) {
       expect(pageSource).not.toContain(forbidden);
     }
   });
 
-  it("i18n catalogs define matching assistant keys in both locales", () => {
+  it("never fetches a draft — reads it out of the URL instead, since no GET endpoint exists", () => {
+    expect(pageSource).toContain("parseAssistantDraftParam(searchParams)");
+    expect(pageSource).not.toMatch(/api\.get.*\/assistant\/drafts/);
+  });
+
+  it("wires Confirm/Cancel to the existing draft mutation hooks only", () => {
+    expect(pageSource).toContain("useConfirmAssistantDraft");
+    expect(pageSource).toContain("useCancelAssistantDraft");
+    expect(pageSource).toContain("confirmDraft.mutate(draft.draftId");
+    expect(pageSource).toContain("cancelDraft.mutate(draft.draftId");
+  });
+
+  it("reuses the repository's dashed-border empty-state pattern instead of inventing a new one", () => {
+    expect(pageSource).toContain("border-dashed border-border");
+    expect(pageSource).toContain('tDraft("empty.title")');
+  });
+
+  it("shows loading via the mutation pending state, not a duplicate submit path", () => {
+    expect(pageSource).toContain("confirmDraft.isPending");
+    expect(pageSource).toContain("cancelDraft.isPending");
+  });
+
+  it("i18n catalogs define matching draft-review keys in both locales", () => {
     for (const messages of [idMessages, enMessages]) {
       expect(messages.assistant.pageTitle).toBeTruthy();
-      expect(messages.assistant.pageDescription).toBeTruthy();
-      expect(messages.assistant.underDevelopment).toBeTruthy();
+      expect(messages.assistant.draftReview.confirm).toBeTruthy();
+      expect(messages.assistant.draftReview.cancel).toBeTruthy();
+      expect(messages.assistant.draftReview.empty.title).toBeTruthy();
+      const statusLabels = messages.assistant.draftReview.status as Record<string, string>;
+      for (const status of ["PENDING_CONFIRMATION", "COMMITTED", "CANCELLED", "EXPIRED", "FAILED"]) {
+        expect(statusLabels[status]).toBeTruthy();
+      }
     }
+  });
+});
+
+describe("assistant draft param parsing", () => {
+  it("returns null when the draft param is absent", () => {
+    expect(parseAssistantDraftParam(new URLSearchParams())).toBeNull();
+  });
+
+  it("returns null for malformed JSON instead of throwing", () => {
+    expect(parseAssistantDraftParam(new URLSearchParams({ draft: "{not-json" }))).toBeNull();
+  });
+
+  it("returns null when required fields are missing", () => {
+    const incomplete = JSON.stringify({ draftId: "draft-1" });
+    expect(parseAssistantDraftParam(new URLSearchParams({ draft: incomplete }))).toBeNull();
+  });
+
+  it("returns the parsed draft for a valid payload", () => {
+    const params = new URLSearchParams({ draft: JSON.stringify(VALID_DRAFT) });
+    expect(parseAssistantDraftParam(params)).toEqual(VALID_DRAFT);
+  });
+});
+
+describe("assistant draft review components", () => {
+  it("DraftSummaryCard only renders fields AssistantDraft actually carries", () => {
+    expect(draftSummaryCardSource).toContain("preview.wallet");
+    expect(draftSummaryCardSource).toContain("preview.category");
+    expect(draftSummaryCardSource).toContain("preview.merchant");
+    expect(draftSummaryCardSource).toContain("preview.date");
+    expect(draftSummaryCardSource).toContain("preview.description");
+    // Not a backend field on AssistantDraft — must never be fabricated.
+    expect(draftSummaryCardSource).not.toContain("confidence");
+  });
+
+  it("DraftSummaryCard reuses the shared currency formatter", () => {
+    expect(draftSummaryCardSource).toContain('import { formatCurrency } from "@/lib/utils";');
+  });
+
+  it("DraftActionBar exposes Confirm and Cancel with independent loading states", () => {
+    expect(draftActionBarSource).toContain("isConfirming");
+    expect(draftActionBarSource).toContain("isCancelling");
+    expect(draftActionBarSource).toContain("onConfirm");
+    expect(draftActionBarSource).toContain("onCancel");
   });
 });
 
