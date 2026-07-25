@@ -48,6 +48,10 @@ export const WithError: Story = {
   args: { ...Filled.args, error: "That instruction couldn't be understood. Try rephrasing it." },
 };
 
+export const DisabledForClarification: Story = {
+  args: { ...Empty.args, disabledReason: "Answer the clarification above before sending a new instruction." },
+};
+
 export const Mobile: Story = {
   parameters: { viewport: { defaultViewport: "mobile1" } },
   args: Filled.args,
