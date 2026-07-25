@@ -96,3 +96,20 @@ Thresholds:
 - Backend validation always takes priority over frontend.
 - Never display fabricated financial values — distinguish loading, empty,
   error, and zero states.
+
+## Future Assistant UI (architectural boundary only)
+
+Pocket Mint does not have an Assistant UI today — nothing below describes a
+feature to build. It records the constraint any future Assistant frontend
+must satisfy so it doesn't reintroduce a second source of financial truth:
+
+- Reuse the existing API layer (`lib/api.ts`) — never a parallel client.
+- Never recompute financial truth locally; net worth, balances, and
+  installment progress are always read from the backend, per the rules
+  above.
+- Never bypass backend confirmation for a financial mutation.
+- Treat the backend as the sole financial authority, exactly as the rest of
+  the frontend already does.
+
+Do not design or imply clarification UI, a "Pending Financial Draft" UI, or
+any other Assistant-specific surface here — none of that exists yet.
