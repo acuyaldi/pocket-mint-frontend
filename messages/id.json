@@ -1015,11 +1015,30 @@
     "pageTitle": "Asisten",
     "pageDescription": "Asisten percakapan untuk keuangan Anda.",
     "underDevelopment": "Asisten sedang dalam pengembangan.",
+    "command": {
+      "label": "Apa yang ingin Anda catat?",
+      "placeholder": "mis. bayar internet 350 ribu dari BCA",
+      "helper": "Jelaskan satu pemasukan atau pengeluaran dengan kata-kata Anda sendiri.",
+      "submit": "Kirim",
+      "submitting": "Mengirim"
+    },
+    "clarification": {
+      "cancelling": "Membatalkan",
+      "cancelSuccess": "Klarifikasi dibatalkan."
+    },
+    "completion": {
+      "newInstruction": "Instruksi baru"
+    },
+    "errors": {
+      "invalidInput": "Instruksi tersebut tidak dapat dipahami. Coba ubah kalimatnya.",
+      "clarificationExpired": "Klarifikasi ini sudah kedaluwarsa. Mulai lagi.",
+      "clarificationConsumed": "Klarifikasi ini sudah digunakan. Mulai lagi.",
+      "invalidOption": "Opsi tersebut sudah tidak berlaku. Mulai lagi.",
+      "draftConflict": "Draf ini tidak bisa lagi dikonfirmasi atau dibatalkan.",
+      "idempotencyConflict": "Tindakan ini sudah pernah dikirim.",
+      "generic": "Terjadi kesalahan. Silakan coba lagi."
+    },
     "draftReview": {
-      "empty": {
-        "title": "Tidak ada draf tertunda",
-        "body": "Tidak ada draf keuangan yang menunggu tinjauan Anda saat ini."
-      },
       "income": "Pemasukan",
       "expense": "Pengeluaran",
       "wallet": "Dompet",

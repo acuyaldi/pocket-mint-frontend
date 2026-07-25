@@ -1015,11 +1015,30 @@
     "pageTitle": "Assistant",
     "pageDescription": "A conversational assistant for your finances.",
     "underDevelopment": "Assistant is under development.",
+    "command": {
+      "label": "What would you like to record?",
+      "placeholder": "e.g. bayar internet 350 ribu dari BCA",
+      "helper": "Describe one income or expense in your own words.",
+      "submit": "Send",
+      "submitting": "Sending"
+    },
+    "clarification": {
+      "cancelling": "Cancelling",
+      "cancelSuccess": "Clarification cancelled."
+    },
+    "completion": {
+      "newInstruction": "New instruction"
+    },
+    "errors": {
+      "invalidInput": "That instruction couldn't be understood. Try rephrasing it.",
+      "clarificationExpired": "This clarification has expired. Start over.",
+      "clarificationConsumed": "This clarification was already used. Start over.",
+      "invalidOption": "That option is no longer valid. Start over.",
+      "draftConflict": "This draft can no longer be confirmed or cancelled.",
+      "idempotencyConflict": "This action was already submitted.",
+      "generic": "Something went wrong. Please try again."
+    },
     "draftReview": {
-      "empty": {
-        "title": "No pending draft",
-        "body": "There is no financial draft waiting for your review right now."
-      },
       "income": "Income",
       "expense": "Expense",
       "wallet": "Wallet",
