@@ -1,68 +1,201 @@
-# Agent Rules — Pocket Mint
+# Agent Rules — Pocket Mint Frontend
 > Load this first. These rules override default behavior.
 
-## Skill Load Order
+This repository is a standalone Next.js frontend (`pocket-mint-fe`). It has
+no backend code, no Prisma schema, and no `apps/` monorepo layout — the
+backend is a separate repository the frontend talks to over HTTP through
+`lib/api.ts`. Nothing here should assume backend source is present or
+editable from this repo.
+
+---
+
+# Skill Load Order
+
 Before any task, read in this order:
+
 1. `agent-rules.skill.md` ← this file
-2. `git-workflow.skill.md` ← branching, PR, and release process — read before any task that will create commits or a PR
-3. `ui-system.skill.md` ← for any frontend/component work
-4. `financial-logic.skill.md` ← for any wallet/transaction/installment work
+2. `git-workflow.skill.md` ← branching, PR, and release process
+3. `frontend-architecture.skill.md` ← Next.js, auth, API, state, Storybook, testing
+4. `ui-system.skill.md` (any component/page/style work)
+5. `financial-logic.skill.md` (any wallet/transaction/installment work)
+6. `design.md` (product design intent, when a UI decision needs product rationale)
 
-## Behavior Rules
+Only load additional skills when the current task actually requires them.
 
-### Focus
-- Work on ONE task at a time. Finish it, confirm it works, then move on.
-- If a task requires backend AND frontend, do backend first. Never touch frontend before the endpoint exists.
-- Do not refactor unrelated code while fixing a bug.
+---
 
-### Before Writing Code
-- Check if the file/function already exists. Never duplicate.
-- If a Prisma model change is needed, write migration first, run it, then write the route.
-- If an endpoint already exists, fix it — don't create a new one.
+# General Behavior
 
-### File Safety
-- NEVER touch `globals.css`, `layout.tsx`, or any root layout file unless the task explicitly requires it.
-- NEVER change Prisma schema without running `npx prisma migrate dev` immediately after.
-- NEVER hardcode data that should come from the API.
+## Focus
 
-### API Conventions
-- All endpoints return `{ data, error }` shape
-- Auth is always required — check middleware before adding new routes
-- Net worth is always computed, never stored
+- Work on ONE task at a time.
+- Finish the current task completely before starting another.
+- Never perform unrelated refactors.
+- Never "improve" code outside the requested scope.
 
-### Frontend Conventions
-- Use design tokens from `ui-system.skill.md` — never Tailwind defaults
-- Financial figures always use `font-mono` (JetBrains Mono)
-- Positive = `text-[#4ade80]`, Negative = `text-[#ffb4ab]`
-- Loading state required for every data-fetching component
+---
 
-### Git & Pull Request Conventions (Staging vs Production)
-Full process lives in `git-workflow.skill.md` — this is the summary:
-- **Branch Roles:** Branch `main` adalah Production (Live App), branch `dev` adalah Staging/pre-production (Development/Testing), dan branch `master` sudah **retired** (jangan dipakai untuk task baru).
-- **Feature Branching:** Setiap kali mulai mengerjakan task baru, Agent **WAJIB** membuat branch baru dari base `dev` (misal: `feature/nama-fitur` atau `fix/nama-bug`). JANGAN PERNAH commit atau push langsung ke branch `dev` atau `main`.
-- **Target Pull Request:** Saat membuat Pull Request (PR) tanpa base/head eksplisit, source branch-nya adalah branch task saat ini, dan **TARGET BRANCH-nya HARUS `dev` (Staging)**. Jangan merge PR kecuali diminta eksplisit.
-- **Pengecualian:** JANGAN PERNAH menargetkan PR ke branch `main` kecuali ada perintah tertulis eksplisit dari pengguna untuk rilis produksi (`dev` → `main`).
+# Planning Behavior
 
-### Documentation Maintenance
-- **Automated Audit Update:** Setiap kali Agent melakukan modifikasi, penambahan, atau penghapusan file halaman baru di dalam direktori `apps/frontend/app/` atau mengubah struktur komponen utama, Agent **WAJIB** langsung memperbarui berkas peta fitur di `docs/audit.md`.
-- File `docs/audit.md` harus mencakup: pemetaan halaman (route), daftar komponen utama yang digunakan, dan hubungan antar layout parent-child. Jangan biarkan file ini out-of-date.
+The implementation prompt provided by the user is considered the approved
+specification unless explicitly stated otherwise.
 
-### Completion Criteria
+Therefore:
+
+- Do NOT create temporary planning Markdown files.
+- Do NOT create design documents.
+- Do NOT create implementation-plan documents.
+- Do NOT stop to request design approval.
+- Do NOT pause after repository inspection.
+
+Perform repository inspection internally, then proceed directly to
+implementation.
+
+Only stop when:
+
+- destructive repository operations require confirmation
+- requirements are genuinely ambiguous
+- required credentials or secrets are unavailable
+
+Architecture decisions that become permanent belong only in official project
+documentation (this skill system, `AGENTS.md`, or docs the user names).
+
+---
+
+# Repository Inspection
+
+Before modifying code:
+
+- Inspect the existing implementation first.
+- Reuse existing components, hooks, and utilities before writing new ones.
+- Search first, implement second — a few files over is the most common
+  place to find something already solving the problem.
+
+If a feature area already has a page, hook, or component:
+
+- extend or fix it
+- never build a competing/parallel version next to it
+
+---
+
+# Never Introduce Duplicate Layers
+
+- Never introduce a second API client alongside `lib/api.ts`. See
+  `frontend-architecture.skill.md` → API layer.
+- Never introduce a second async-state system alongside TanStack Query
+  (no Redux, no Zustand, no ad-hoc global stores). See
+  `frontend-architecture.skill.md` → State management.
+- Never write a new currency formatter, auth session reader, or API error
+  type when `lib/utils.ts`, `lib/auth/`, and `lib/api-errors.ts` already
+  provide one.
+
+---
+
+# File Safety
+
+Never modify:
+
+- `app/globals.css`
+- root `layout.tsx`
+- `proxy.ts`
+
+unless the task explicitly requires it.
+
+Never delete unrelated files.
+
+Never touch local configuration files such as:
+
+```
+.claude/settings.local.json
+```
+
+Preserve tracked generated artifacts (e.g. `next-env.d.ts`) as committed —
+do not hand-edit or revert them outside of the tooling that generates them.
+
+---
+
+# Frontend Conventions
+
+- Use semantic design tokens only — see `ui-system.skill.md`. Never
+  hardcode colors or reintroduce Tailwind's default palette utilities.
+- Financial numbers use `formatCurrency` from `lib/utils.ts` and tabular
+  figures — see `financial-logic.skill.md`.
+- Every data-fetching component defines loading and error states.
+- Never use mock or hardcoded data when a real API/hook already exists.
+
+---
+
+# Git Workflow
+
+Full process lives in `git-workflow.skill.md` — this file only points to it.
+
+- Always create a task branch from `dev`.
+- Never commit directly to `dev` or `main`.
+- Never open a PR targeting `main` unless explicitly requested as a release.
+
+---
+
+# Testing and Completion
+
+A task is DONE only when it satisfies the actual CI gate (`.github/workflows/ci.yml`),
+not an assumed one:
+
+- `npx tsc --noEmit`
+- `npm run lint`
+- `npx vitest run --project=unit`
+- `npm run build`
+- `npm run build-storybook` and `npx vitest run --project=storybook` when the
+  change touches any component with stories, or shared UI primitives
+
+Run the full CI-equivalent set before declaring a task complete when the
+change touches shared components, providers, routing, or auth. Narrower
+changes may run only the directly relevant tests, but must not skip
+typecheck/lint.
+
+---
+
+# Completion Criteria
+
 A task is DONE only when:
-- [ ] No TypeScript errors
-- [ ] `npm run build` passes
-- [ ] API returns correct shape (test with curl or check response in code)
-- [ ] UI renders without console errors
-- [ ] Berhasil memperbarui dokumen status fitur di `docs/audit.md` jika ada perubahan halaman/komponen
-- [ ] No regressions to existing features
 
-## Common Mistakes to Avoid
-- **SALAH ALUR GIT:** Membuat Pull Request langsung menuju branch `main` (Alur yang benar: Bikin branch dari `dev`, push, lalu buat PR dengan target merge ke `dev`; PR ke `main` hanya untuk rilis eksplisit).
-- Melakukan commit atau push langsung (*direct push*) ke branch `dev` atau `main`.
-- Menganggap `master` masih menjadi branch produksi — branch itu sudah retired.
-- Lupa mengupdate berkas `docs/audit.md` setelah selesai melakukan tweak/refactor komponen halaman frontend.
-- Starting frontend before backend is ready
-- Forgetting to recalculate net worth after wallet mutation
-- Using hardcoded mock data instead of live API
-- Skipping loading/error states in UI components
-- Touching global styles for a component-level fix
+- No TypeScript errors
+- Lint passes
+- Relevant tests pass (Storybook + unit, when applicable)
+- Build passes
+- Existing behavior has no regressions
+- Repository is clean (no stray files, no unrelated diffs)
+
+---
+
+# Final Report
+
+Do not stop after implementation. Complete the workflow:
+
+Inspect → Implement → Test → Validate → Final Report
+
+The final report must include:
+
+- implementation summary
+- files created / modified
+- tests added or run
+- validation results
+- remaining limitations
+- git status
+
+Do not stop for intermediate approval.
+
+---
+
+# Common Mistakes
+
+Do NOT:
+
+- create temporary design or plan documents
+- stop after planning
+- duplicate existing components, hooks, or the API/state layers
+- bypass authentication or route protection
+- commit generated junk
+- push without instruction
+- open a PR without instruction
+- modify unrelated files
+- refactor outside scope

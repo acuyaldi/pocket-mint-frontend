@@ -4,7 +4,7 @@ process.stdin.on("end", () => {
   try {
     const input = JSON.parse(d);
     const file = (input.tool_input && input.tool_input.file_path) || "";
-    if (!file || !/\.tsx$/.test(file) || !/apps[\\/]frontend/.test(file)) return;
+    if (!file || !/\.tsx$/.test(file)) return;
 
     const fs = require("fs");
     let content;
@@ -25,7 +25,7 @@ process.stdin.on("end", () => {
             file +
             ": " +
             unique.join(", ") +
-            ". Use the Pro-Fintech Dark hex tokens instead (apps/frontend/skills/design.md), not default Tailwind colors.",
+            ". Use the semantic tokens instead (.claude/skills/ui-system.skill.md), not default Tailwind colors.",
         })
       );
     }
