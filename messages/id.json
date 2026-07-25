@@ -39,7 +39,8 @@
     "logoutFailed": "Keluar gagal — periksa koneksi lalu coba lagi.",
     "loggingOut": "Sedang keluar…",
     "savingGoals": "Target Tabungan",
-    "budgets": "Anggaran"
+    "budgets": "Anggaran",
+    "assistant": "Asisten"
   },
   "notificationCenter": {
     "title": "Notifikasi",
@@ -1009,5 +1010,10 @@
       "description": "Mapping untuk \"{name}\" akan dihapus. Transaksi yang sudah ada tidak berubah, dan saran kategori untuk merchant ini kembali mengikuti pencocokan kata kunci.",
       "confirm": "Hapus"
     }
+  },
+  "assistant": {
+    "pageTitle": "Asisten",
+    "pageDescription": "Asisten percakapan untuk keuangan Anda.",
+    "underDevelopment": "Asisten sedang dalam pengembangan."
   }
 }

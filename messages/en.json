@@ -39,7 +39,8 @@
     "logoutFailed": "Sign-out failed — check your connection and try again.",
     "loggingOut": "Signing you out…",
     "savingGoals": "Saving Goals",
-    "budgets": "Budgets"
+    "budgets": "Budgets",
+    "assistant": "Assistant"
   },
   "notificationCenter": {
     "title": "Notifications",
@@ -1009,5 +1010,10 @@
       "description": "The mapping for \"{name}\" will be deleted. Existing transactions are unaffected, and suggestions for this merchant will fall back to keyword matching.",
       "confirm": "Delete"
     }
+  },
+  "assistant": {
+    "pageTitle": "Assistant",
+    "pageDescription": "A conversational assistant for your finances.",
+    "underDevelopment": "Assistant is under development."
   }
 }

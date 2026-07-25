@@ -41,6 +41,7 @@ describe("updateSession route protection (behavioral)", () => {
     "/cicilan",
     "/target-tabungan",
     "/notifications",
+    "/assistant",
   ];
 
   it.each(protectedPaths)(
