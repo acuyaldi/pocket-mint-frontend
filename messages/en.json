@@ -1014,6 +1014,34 @@
   "assistant": {
     "pageTitle": "Assistant",
     "pageDescription": "A conversational assistant for your finances.",
-    "underDevelopment": "Assistant is under development."
+    "underDevelopment": "Assistant is under development.",
+    "draftReview": {
+      "empty": {
+        "title": "No pending draft",
+        "body": "There is no financial draft waiting for your review right now."
+      },
+      "income": "Income",
+      "expense": "Expense",
+      "wallet": "Wallet",
+      "category": "Category",
+      "merchant": "Merchant",
+      "date": "Date",
+      "notes": "Notes",
+      "expiresAt": "Expires",
+      "status": {
+        "PENDING_CONFIRMATION": "Awaiting confirmation",
+        "COMMITTED": "Confirmed",
+        "CANCELLED": "Cancelled",
+        "EXPIRED": "Expired",
+        "FAILED": "Failed"
+      },
+      "confirm": "Confirm",
+      "confirming": "Confirming",
+      "cancel": "Cancel",
+      "cancelling": "Cancelling",
+      "confirmSuccess": "Draft confirmed.",
+      "cancelSuccess": "Draft cancelled.",
+      "genericError": "Something went wrong. Please try again."
+    }
   }
 }
