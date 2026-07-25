@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   LogOut,
   PiggyBank,
+  Sparkles,
   User,
   Wallet,
 } from "lucide-react";
@@ -36,6 +37,7 @@ export function AppSidebar() {
     { label: t("analytics"), href: "/analytics", icon: BarChart3 },
     { label: t("savingGoals"), href: "/target-tabungan", icon: PiggyBank },
     { label: t("budgets"), href: "/anggaran", icon: Gauge },
+    { label: t("assistant"), href: "/assistant", icon: Sparkles },
   ];
 
   useEffect(() => {

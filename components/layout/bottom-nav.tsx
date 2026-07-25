@@ -11,6 +11,7 @@ import {
   BarChart3,
   Gauge,
   PiggyBank,
+  Sparkles,
   User,
 } from "lucide-react";
 import { AccountMenuItems } from "./account-menu";
@@ -38,6 +39,7 @@ export function BottomNav() {
       { label: t("analytics"), href: "/analytics", icon: BarChart3 },
       { label: t("savingGoals"), href: "/target-tabungan", icon: PiggyBank },
       { label: t("budgets"), href: "/anggaran", icon: Gauge },
+      { label: t("assistant"), href: "/assistant", icon: Sparkles },
     ];
 
     const navItems: DockMorphItemData[] = NAV_ITEMS.map((item) => {
