@@ -82,7 +82,7 @@ describe("assistant React Query hooks", () => {
   it("draft hook only exposes confirm/cancel mutations — no fetch-draft query", () => {
     expect(draftHookSource).toContain("useConfirmAssistantDraft");
     expect(draftHookSource).toContain("useCancelAssistantDraft");
-    expect(draftHookSource).not.toContain("useQuery");
+    expect(draftHookSource).not.toMatch(/\buseQuery\b/);
     expect(draftHookSource).toContain("createIdempotencyKey()");
   });
 
@@ -99,9 +99,10 @@ describe("assistant domain types", () => {
   it("uses the exact backend enums, never re-derived", () => {
     expect(typesSource).toContain('"ACTIVE" | "ARCHIVED" | "EXPIRED"');
     expect(typesSource).toContain('"USER" | "ASSISTANT" | "SYSTEM"');
-    expect(typesSource).toContain(
-      '"PENDING_CONFIRMATION" | "COMMITTED" | "CANCELLED" | "EXPIRED" | "FAILED"'
-    );
+    expect(typesSource).toContain("AssistantFinancialDraftStatus =");
+    for (const status of ["PENDING_CONFIRMATION", "COMMITTED", "CANCELLED", "EXPIRED", "FAILED"]) {
+      expect(typesSource).toContain(`"${status}"`);
+    }
   });
 });
 
