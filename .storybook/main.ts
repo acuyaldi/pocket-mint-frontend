@@ -4,7 +4,8 @@ const config: StorybookConfig = {
   "stories": [
     "../components/**/*.mdx",
     "../components/**/*.stories.@(ts|tsx)",
-    "../app/**/*.stories.@(ts|tsx)"
+    "../app/**/*.stories.@(ts|tsx)",
+    "../src/features/**/*.stories.@(ts|tsx)"
   ],
   "addons": [
     "@storybook/addon-vitest",

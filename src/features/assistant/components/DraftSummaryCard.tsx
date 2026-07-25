@@ -22,8 +22,8 @@ interface DraftSummaryCardProps {
 }
 
 const STATUS_TONE: Record<AssistantFinancialDraftStatus, string> = {
-  PENDING_CONFIRMATION: "bg-amber/10 text-amber",
-  COMMITTED: "bg-mint/10 text-mint",
+  PENDING_CONFIRMATION: "bg-amber/10 text-amber-strong",
+  COMMITTED: "bg-mint/10 text-mint-strong",
   CANCELLED: "bg-surface-high text-muted-foreground",
   EXPIRED: "bg-coral/10 text-destructive",
   FAILED: "bg-coral/10 text-destructive",
@@ -70,7 +70,7 @@ export function DraftSummaryCard({ draft, labels, intlLocale = "id-ID" }: DraftS
         </span>
       </div>
 
-      <p className={`mt-4 text-3xl font-semibold tabular-nums ${isIncome ? "text-mint" : "text-foreground"}`}>
+      <p className={`mt-4 text-3xl font-semibold tabular-nums ${isIncome ? "text-mint-strong" : "text-foreground"}`}>
         {isIncome ? "+" : "-"}
         {formatCurrency(amount, intlLocale)}
       </p>
