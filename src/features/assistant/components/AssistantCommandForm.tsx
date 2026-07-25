@@ -20,11 +20,22 @@ interface AssistantCommandFormProps {
   isSubmitting: boolean;
   error?: string | null;
   labels: AssistantCommandFormLabels;
+  /** Present while a clarification/draft is unresolved — disables the composer and explains why instead of just going inert. */
+  disabledReason?: string | null;
 }
 
-/** Single-instruction command input — not a chat composer. Submits one natural-language financial instruction at a time. */
-export function AssistantCommandForm({ value, onChange, onSubmit, isSubmitting, error, labels }: AssistantCommandFormProps) {
-  const canSubmit = value.trim().length > 0 && !isSubmitting;
+/** The conversation composer — submits one natural-language financial instruction at a time onto the active (or a new) conversation. */
+export function AssistantCommandForm({
+  value,
+  onChange,
+  onSubmit,
+  isSubmitting,
+  error,
+  labels,
+  disabledReason,
+}: AssistantCommandFormProps) {
+  const isDisabled = isSubmitting || Boolean(disabledReason);
+  const canSubmit = value.trim().length > 0 && !isDisabled;
 
   return (
     <form
@@ -34,13 +45,18 @@ export function AssistantCommandForm({ value, onChange, onSubmit, isSubmitting, 
         if (canSubmit) onSubmit();
       }}
     >
-      <FormField label={labels.label} htmlFor="assistant-instruction" description={labels.helper} error={error ?? undefined}>
+      <FormField
+        label={labels.label}
+        htmlFor="assistant-instruction"
+        description={disabledReason ?? labels.helper}
+        error={error ?? undefined}
+      >
         <Input
           id="assistant-instruction"
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder={labels.placeholder}
-          disabled={isSubmitting}
+          disabled={isDisabled}
           autoComplete="off"
         />
       </FormField>

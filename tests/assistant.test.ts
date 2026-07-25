@@ -36,6 +36,19 @@ const clarificationOptionsSource = readFileSync(
   "utf8"
 );
 const resultStateSource = readFileSync(root + "src/features/assistant/components/AssistantResultState.tsx", "utf8");
+const flowHookSource = readFileSync(
+  root + "src/features/assistant/hooks/useAssistantConversationFlow.ts",
+  "utf8"
+);
+const conversationSource = readFileSync(
+  root + "src/features/assistant/components/AssistantConversation.tsx",
+  "utf8"
+);
+const messageSource = readFileSync(root + "src/features/assistant/components/AssistantMessage.tsx", "utf8");
+const messageListSource = readFileSync(
+  root + "src/features/assistant/components/AssistantMessageList.tsx",
+  "utf8"
+);
 
 const VALID_CLARIFICATION: ClarificationRequest = {
   clarificationId: "clar-1",
@@ -161,21 +174,21 @@ describe("assistant draft review route (Phase 23.2)", () => {
   });
 
   it("still supports reading a draft out of the URL — no GET endpoint exists to fetch one instead", () => {
-    expect(pageSource).toContain("parseAssistantDraftParam(searchParams)");
-    expect(pageSource).not.toMatch(/api\.get.*\/assistant\/drafts/);
+    expect(flowHookSource).toContain("parseAssistantDraftParam(searchParams)");
+    expect(apiSource).not.toMatch(/api\.get.*\/assistant\/drafts/);
   });
 
   it("wires Confirm/Cancel to the existing draft mutation hooks only", () => {
-    expect(pageSource).toContain("useConfirmAssistantDraft");
-    expect(pageSource).toContain("useCancelAssistantDraft");
-    expect(pageSource).toContain("confirmDraft.mutate(effectivePhase.draft.draftId");
-    expect(pageSource).toContain("cancelDraft.mutate(effectivePhase.draft.draftId");
+    expect(flowHookSource).toContain("useConfirmAssistantDraft");
+    expect(flowHookSource).toContain("useCancelAssistantDraft");
+    expect(flowHookSource).toContain("confirmDraft.mutate(activeWorkflow.draft.draftId");
+    expect(flowHookSource).toContain("cancelDraft.mutate(activeWorkflow.draft.draftId");
   });
 
   it("shows loading via the mutation pending state, not a duplicate submit path", () => {
-    expect(pageSource).toContain("confirmDraft.isPending");
-    expect(pageSource).toContain("cancelDraft.isPending");
-    expect(pageSource).toContain("sendMessage.isPending");
+    expect(flowHookSource).toContain("isConfirmingDraft: confirmDraft.isPending");
+    expect(flowHookSource).toContain("isCancellingDraft: cancelDraft.isPending");
+    expect(flowHookSource).toContain("isSendingMessage: sendMessage.isPending");
   });
 
   it("i18n catalogs define matching draft-review keys in both locales", () => {
@@ -191,79 +204,81 @@ describe("assistant draft review route (Phase 23.2)", () => {
   });
 });
 
-describe("assistant clarification flow (Phase 23.3)", () => {
-  it("page wires the instruction form to the real message endpoint", () => {
-    expect(pageSource).toContain("useSendAssistantMessage");
-    expect(pageSource).toContain("sendMessage.mutate(");
-    expect(pageSource).toContain("AssistantCommandForm");
+describe("assistant clarification flow (Phase 23.3, orchestration now in useAssistantConversationFlow)", () => {
+  it("wires the instruction composer to the real message endpoint", () => {
+    expect(flowHookSource).toContain("useSendAssistantMessage");
+    expect(flowHookSource).toContain("sendMessage.mutate(");
+    expect(conversationSource).toContain("AssistantCommandForm");
   });
 
   it("rejects blank or whitespace-only instructions before submitting", () => {
     expect(commandFormSource).toContain("value.trim().length > 0");
-    expect(pageSource).toContain("instructionText.trim()");
+    expect(flowHookSource).toContain("instructionText.trim()");
   });
 
   it("preserves the entered instruction after a recoverable submit failure", () => {
-    expect(pageSource).toContain("setFormError(readAssistantErrorMessage(error, tErrors))");
+    expect(flowHookSource).toContain("setFormError(readAssistantErrorMessage(error, tErrors))");
     // Only a successful submission clears the instruction text.
-    expect(pageSource).toMatch(/onSuccess:\s*\(result\)\s*=>\s*\{\s*setInstructionText\(""\);/);
+    expect(flowHookSource).toMatch(/onSuccess:\s*\(result\)\s*=>\s*\{\s*setInstructionText\(""\);/);
   });
 
   it("an immediate draft response enters draft review directly", () => {
-    expect(pageSource).toContain("isAssistantDraft(result.data)");
-    expect(pageSource).toContain('setPhase({ kind: "draft", draft: result.data })');
+    expect(flowHookSource).toContain("isAssistantDraft(result.data)");
+    expect(flowHookSource).toContain('setActiveWorkflow({ kind: "draft", draft: result.data })');
   });
 
   it("a clarification_required response renders only backend-provided options", () => {
-    expect(pageSource).toContain("isClarificationRequest(result.data.clarification)");
-    expect(pageSource).toContain("ClarificationCard");
+    expect(flowHookSource).toContain("isClarificationRequest(result.data.clarification)");
+    expect(conversationSource).toContain("ClarificationCard");
     expect(clarificationOptionsSource).toContain("options.map((option)");
     expect(clarificationOptionsSource).not.toContain(".sort(");
   });
 
   it("only forwards the exact backend-issued option token, never a client value", () => {
     expect(clarificationOptionsSource).toContain("onSelect(option.token)");
-    expect(pageSource).toContain("optionToken: token");
+    expect(flowHookSource).toContain("optionToken: token");
   });
 
   it("clarification token/id are forwarded unchanged, never decoded or altered", () => {
-    expect(pageSource).toContain("clarificationId: effectivePhase.clarification.clarificationId");
-    expect(pageSource).not.toMatch(/atob\(|JSON\.parse\(token/);
+    expect(flowHookSource).toContain("clarificationId: activeWorkflow.clarification.clarificationId");
+    expect(flowHookSource).not.toMatch(/atob\(|JSON\.parse\(token/);
   });
 
   it("blocks duplicate option submission while a selection is pending", () => {
-    expect(pageSource).toContain("selectClarification.isPending || cancelClarification.isPending) return;");
+    expect(flowHookSource).toContain("selectClarification.isPending || cancelClarification.isPending) return;");
   });
 
   it("handles chained clarification by replacing the current clarification, not assuming a draft", () => {
-    expect(pageSource).toContain("function applySelectResult");
-    expect(pageSource).toMatch(/applySelectResult[\s\S]*?status === "clarification_required"/);
+    expect(flowHookSource).toContain("function applySelectResult");
+    expect(flowHookSource).toMatch(/applySelectResult[\s\S]*?status === "clarification_required"/);
   });
 
   it("a resolved clarification reuses the Phase 23.2 draft review components", () => {
-    expect(pageSource).toContain('import { DraftSummaryCard } from "@/src/features/assistant/components/DraftSummaryCard";');
-    expect(pageSource).toContain('import { DraftActionBar } from "@/src/features/assistant/components/DraftActionBar";');
+    expect(conversationSource).toContain('from "./DraftSummaryCard"');
+    expect(conversationSource).toContain('from "./DraftActionBar"');
   });
 
-  it("clears transient draft/clarification state after a successful confirm or cancel", () => {
-    expect(pageSource).toContain("function resetFlow()");
-    expect(pageSource).toContain('setPhase({ kind: "idle" })');
-    expect(pageSource).toContain("sendMessage.reset()");
-    expect(pageSource).toContain("selectClarification.reset()");
-    expect(pageSource).toContain("cancelClarification.reset()");
-    expect(pageSource).toContain("confirmDraft.reset()");
-    expect(pageSource).toContain("cancelDraft.reset()");
-    expect(pageSource).toContain("resetFlow();");
+  it("clears transient workflow state after a successful clarification cancel or draft confirm/cancel", () => {
+    expect(flowHookSource).toContain("setActiveWorkflow(null);");
+    expect(flowHookSource).toContain("function startNewConversation()");
+    expect(flowHookSource).toContain("sendMessage.reset()");
+    expect(flowHookSource).toContain("selectClarification.reset()");
+    expect(flowHookSource).toContain("cancelClarification.reset()");
+    expect(flowHookSource).toContain("confirmDraft.reset()");
+    expect(flowHookSource).toContain("cancelDraft.reset()");
   });
 
   it("never calls a transaction-creation endpoint directly — the backend is the sole authority", () => {
     for (const forbidden of ["/transactions", "createTransaction", "/wallets"]) {
+      expect(flowHookSource).not.toContain(forbidden);
       expect(pageSource).not.toContain(forbidden);
     }
   });
 
-  it("the draft handoff stays in bounded component state, not a new URL write or global store", () => {
-    expect(pageSource).not.toMatch(/router\.(push|replace)\(`?\/assistant\?draft=/);
+  it("the draft handoff stays in bounded component/hook state, not a global store or the URL", () => {
+    expect(flowHookSource).not.toMatch(/router\.(push|replace)\(`?\/assistant\?draft=/);
+    expect(flowHookSource).not.toContain("sessionStorage");
+    expect(flowHookSource).not.toContain("localStorage");
     expect(pageSource).not.toContain("sessionStorage");
     expect(pageSource).not.toContain("localStorage");
   });
@@ -271,6 +286,129 @@ describe("assistant clarification flow (Phase 23.3)", () => {
   it("no chat timeline, avatars, or typing-indicator UI is introduced", () => {
     for (const forbidden of ["ChatBubble", "TypingIndicator", "MessageAvatar", "ConversationTimeline"]) {
       expect(pageSource).not.toContain(forbidden);
+      expect(conversationSource).not.toContain(forbidden);
+    }
+  });
+});
+
+describe("assistant conversation experience (Phase 23.4)", () => {
+  it("reuses useAssistantSession for history retrieval instead of a new fetch path", () => {
+    expect(flowHookSource).toContain(
+      'import { useAssistantSession } from "@/src/features/assistant/hooks/useAssistantSession";'
+    );
+    expect(flowHookSource).toContain("useAssistantSession(conversationId)");
+  });
+
+  it("retains the conversation id as an opaque query param, never a draft payload or clarification token", () => {
+    expect(flowHookSource).toContain('const CONVERSATION_ID_PARAM = "conversationId"');
+    expect(flowHookSource).toContain("router.replace(`/assistant?${CONVERSATION_ID_PARAM}=${encodeURIComponent(id)}`)");
+    expect(flowHookSource).not.toContain("draftId=");
+    expect(flowHookSource).not.toContain("clarificationId=");
+    expect(flowHookSource).not.toContain("optionToken=");
+  });
+
+  it("session retrieval is only enabled once a conversation id exists — no fetch with a malformed/absent id", () => {
+    expect(sessionHookSource).toContain("enabled: !!conversationId");
+  });
+
+  it("blocks starting a new conversation while a clarification/draft is unresolved", () => {
+    expect(flowHookSource).toContain("const canStartNewConversation = activeWorkflow === null;");
+    expect(flowHookSource).toContain("if (!canStartNewConversation) return;");
+  });
+
+  it("only one unresolved workflow blocks the composer at a time — no parallel instruction submission", () => {
+    expect(flowHookSource).toContain("|| activeWorkflow) return;");
+    expect(conversationSource).toContain("composerDisabledReason");
+    expect(commandFormSource).toContain("disabledReason");
+  });
+
+  it("persisted messages render in backend order — no client-side sort/reverse", () => {
+    expect(messageListSource).toContain("messages.map((message)");
+    expect(messageListSource).not.toContain(".sort(");
+    expect(messageListSource).not.toContain(".reverse(");
+  });
+
+  it("distinguishes persisted history from a pending local submission — no fabricated message id/role/status", () => {
+    expect(conversationSource).toContain("AssistantMessageList");
+    expect(conversationSource).toContain("AssistantPendingResponse");
+    expect(conversationSource).toContain("isSendingMessage");
+  });
+
+  it("renders plain text only — no markdown/HTML rendering of Assistant content", () => {
+    for (const forbidden of ["dangerouslySetInnerHTML", "ReactMarkdown", "<textarea"]) {
+      expect(messageSource).not.toContain(forbidden);
+      expect(conversationSource).not.toContain(forbidden);
+    }
+  });
+
+  it("documents the exact refresh limitation: a stuck clarification-required turn can't be reconstructed after reload", () => {
+    expect(pageSource).toContain('latestTurnStatus === "CLARIFICATION_REQUIRED"');
+    expect(pageSource).toContain("showTransientUnavailable");
+    expect(conversationSource).toContain("transientUnavailable");
+  });
+
+  it("never reconstructs a draft or clarification by parsing rendered message text", () => {
+    for (const source of [flowHookSource, conversationSource, messageSource]) {
+      expect(source).not.toMatch(/parse.*renderedText|content\.match\(/i);
+    }
+  });
+
+  it("no draft/token/message payload is written to durable browser storage", () => {
+    for (const source of [flowHookSource, conversationSource, pageSource]) {
+      expect(source).not.toContain("localStorage");
+      expect(source).not.toContain("sessionStorage");
+      expect(source).not.toContain("indexedDB");
+    }
+  });
+
+  it("no streaming/WebSocket/SSE/voice/attachment integration exists", () => {
+    for (const source of [flowHookSource, conversationSource, pageSource]) {
+      for (const forbidden of ["EventSource", "WebSocket", "MediaRecorder", "<audio", "<video", "FileReader"]) {
+        expect(source).not.toContain(forbidden);
+      }
+    }
+  });
+
+  it("no second Assistant API client or duplicate mutation implementation was added", () => {
+    expect(flowHookSource).not.toContain("axios.create");
+    expect(flowHookSource).not.toContain("fetch(");
+    // Every mutation call site reuses the exact Phase 23.2/23.3 hook names.
+    for (const hookName of [
+      "useSendAssistantMessage",
+      "useSelectAssistantClarification",
+      "useCancelAssistantClarification",
+      "useConfirmAssistantDraft",
+      "useCancelAssistantDraft",
+    ]) {
+      expect(flowHookSource).toContain(hookName);
+    }
+  });
+
+  it("English and Indonesian catalogs define matching conversation keys", () => {
+    for (const messages of [idMessages, enMessages]) {
+      const conversation = messages.assistant.conversation as Record<string, unknown>;
+      for (const key of [
+        "regionLabel",
+        "listLabel",
+        "historyLoading",
+        "retry",
+        "authorUser",
+        "authorAssistant",
+        "authorSystem",
+        "emptyTitle",
+        "emptyDescription",
+        "examplesLabel",
+        "example1",
+        "example2",
+        "pendingResponse",
+        "transientUnavailable",
+        "newConversation",
+        "resetBlocked",
+        "composerDisabledClarification",
+        "composerDisabledDraft",
+      ]) {
+        expect(conversation[key]).toBeTruthy();
+      }
     }
   });
 });
