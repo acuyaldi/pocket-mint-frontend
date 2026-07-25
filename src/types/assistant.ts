@@ -118,10 +118,17 @@ export interface AssistantSuccessResult {
   turnId: string;
 }
 
+/** `data` shape of an `AssistantClarificationRequiredResult` — the actual union member the backend sends for entity-ambiguity clarification. */
+export interface AssistantClarificationData {
+  kind: "ambiguous";
+  entityType: AssistantClarificationEntityType;
+  clarification: ClarificationRequest;
+}
+
 export interface AssistantClarificationRequiredResult {
   status: "clarification_required";
   message: string;
-  data?: unknown;
+  data?: AssistantClarificationData;
   correlationId: string;
   conversationId: string;
   turnId: string;
@@ -177,6 +184,8 @@ export interface AssistantDraftCancelled {
 }
 
 export interface ClarificationOption {
+  /** One-time token presented back to `.../clarifications/:id/select` to choose this option. Opaque — never decode or recreate it. */
+  token: string;
   label: string;
   discriminator?: string;
 }
@@ -193,19 +202,19 @@ export interface ClarificationRequest {
 export type AssistantClarificationSelectResult =
   | {
       status: "clarification_required";
-      data: {
-        kind: "ambiguous";
-        entityType: AssistantClarificationEntityType;
-        clarification: ClarificationRequest;
-      };
+      message: string;
+      correlationId: string;
+      conversationId: string;
+      turnId: string;
+      data: AssistantClarificationData;
     }
   | {
       status: "success";
-      data: {
-        draftId: string;
-        status: AssistantFinancialDraftStatus;
-        preview: AssistantDraftPreview;
-      };
+      renderedText: string;
+      correlationId: string;
+      conversationId: string;
+      turnId: string;
+      data: AssistantDraft;
     };
 
 export interface AssistantClarificationCancelled {
@@ -216,6 +225,10 @@ export interface AssistantClarificationCancelled {
 /** `POST .../clarifications/:id/cancel` response — status-wrapped like the select endpoint. */
 export interface AssistantClarificationCancelResult {
   status: "success";
+  renderedText: string;
+  correlationId: string;
+  conversationId: string;
+  turnId: string;
   data: AssistantClarificationCancelled;
 }
 
