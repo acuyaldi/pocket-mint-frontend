@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { mapAuthErrorKey } from "@/lib/auth/map-auth-error";
+import { TelegramConnectionCard } from "./components/TelegramConnectionCard";
 
 type FormState = {
   currentPassword: string;
@@ -250,6 +251,9 @@ export default function ProfilePage() {
         </div>
         <ChevronRight className="size-5 shrink-0 text-muted-foreground" />
       </Link>
+
+      {/* Telegram channel linking — Phase 25 foundation */}
+      <TelegramConnectionCard />
 
       {/* Conditional password surface — form for email users, notice for Google */}
       {authLoading ? (
