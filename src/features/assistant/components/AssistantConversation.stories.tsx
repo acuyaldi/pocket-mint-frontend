@@ -2,7 +2,8 @@ import type { ComponentProps } from "react";
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { AssistantConversation, type AssistantConversationLabels } from "./AssistantConversation";
-import type { AssistantMessage, AssistantDraft, ClarificationRequest } from "@/src/types/assistant";
+import type { AssistantMessage, AssistantDraft, AssistantRecoveryClarification, ClarificationRequest } from "@/src/types/assistant";
+import type { AssistantRecoveryState } from "@/src/features/assistant/types/recovery";
 
 const LABELS: AssistantConversationLabels = {
   regionLabel: "Assistant conversation",
@@ -15,7 +16,6 @@ const LABELS: AssistantConversationLabels = {
   examplesLabel: "Examples",
   examples: ["bayar internet 350 ribu dari BCA", "gaji bulan ini masuk ke BCA 8 juta"],
   pendingResponse: "Waiting for the assistant's response...",
-  transientUnavailable: "The pending clarification for this conversation couldn't be restored after reloading.",
   newConversation: "New conversation",
   resetBlocked: "Resolve the current clarification or draft before starting a new conversation.",
   continueLabel: "New instruction",
@@ -28,6 +28,7 @@ const LABELS: AssistantConversationLabels = {
   },
   composerDisabledClarification: "Answer the clarification above before sending a new instruction.",
   composerDisabledDraft: "Confirm or cancel the draft above before sending a new instruction.",
+  composerDisabledOutcomeUnknown: "Check what happened with your previous action above before sending a new instruction.",
   clarification: { cancel: "Cancel", cancelling: "Cancelling" },
   draft: {
     income: "Income",
@@ -47,6 +48,20 @@ const LABELS: AssistantConversationLabels = {
     },
   },
   draftActions: { confirm: "Confirm", confirming: "Confirming", cancel: "Cancel", cancelling: "Cancelling" },
+  recoveryBanner: {
+    transientLostTitle: "The pending clarification for this conversation couldn't be restored after reloading.",
+    clarificationRecoveredTitle: "You still have a pending question in this conversation",
+    cancel: "Cancel",
+    cancelling: "Cancelling",
+  },
+  outcomeUnknown: {
+    heading: "We couldn't confirm what happened",
+    description: "Your previous action may or may not have gone through. Check the conversation to see the real outcome, or try again if it's safe to do so.",
+    check: "Check conversation",
+    checking: "Checking",
+    retry: "Try again",
+    retrying: "Trying again",
+  },
 };
 
 const MESSAGES: AssistantMessage[] = [
@@ -77,6 +92,30 @@ const CLARIFICATION: ClarificationRequest = {
     { token: "tok-2", label: "BCA Kartu Kredit", discriminator: "CREDIT_CARD" },
   ],
   expiresAt: "2026-07-25T15:30:00.000Z",
+};
+
+const RECOVERED_CLARIFICATION: AssistantRecoveryClarification = {
+  clarificationId: "clar-1",
+  entityType: "wallet",
+  prompt: 'Which wallet did you mean by "BCA"?',
+  options: [{ label: "BCA Tabungan", discriminator: "BANK" }, { label: "BCA Kartu Kredit", discriminator: "CREDIT_CARD" }],
+  expiresAt: "2026-07-25T15:30:00.000Z",
+};
+
+const RECOVERED_DRAFT: AssistantDraft = {
+  draftId: "draft-2",
+  status: "PENDING_CONFIRMATION",
+  expiresAt: "2026-07-25T15:30:00.000Z",
+  confirmationRequired: true,
+  renderedText: "",
+  preview: {
+    type: "EXPENSE",
+    amount: 50000,
+    wallet: "wallet-1",
+    walletId: "wallet-1",
+    category: "category-1",
+    date: "2026-07-25",
+  },
 };
 
 const DRAFT: AssistantDraft = {
@@ -118,7 +157,7 @@ const BASE = {
   isLoadingHistory: false,
   historyErrorMessage: null as string | null,
   onRetryHistory: fn(),
-  showTransientUnavailable: false,
+  recoveryState: { kind: "ready" } as AssistantRecoveryState,
   activeWorkflow: null,
   lastResult: null,
   instructionText: "",
@@ -135,6 +174,9 @@ const BASE = {
   isCancellingDraft: false,
   onConfirmDraft: fn(),
   onCancelDraft: fn(),
+  isCheckingOutcome: false,
+  onCheckOutcome: fn(),
+  onRetryOutcome: fn(),
   canStartNewConversation: true,
   onStartNewConversation: fn(),
   intlLocale: "id-ID",
@@ -201,7 +243,47 @@ export const TransientUnavailableAfterRefresh: Story = {
     ...BASE,
     conversationId: "conv-1",
     messages: MESSAGES,
-    showTransientUnavailable: true,
+    recoveryState: { kind: "transientClarificationLost" },
+  },
+};
+
+export const ClarificationRecoveredAfterRefresh: Story = {
+  args: {
+    ...BASE,
+    conversationId: "conv-1",
+    messages: MESSAGES,
+    recoveryState: { kind: "clarificationRecovered", clarification: RECOVERED_CLARIFICATION },
+    canStartNewConversation: false,
+  },
+};
+
+export const DraftRecoveredAfterRefresh: Story = {
+  args: {
+    ...BASE,
+    conversationId: "conv-1",
+    messages: MESSAGES,
+    recoveryState: { kind: "draftRecovered", draft: RECOVERED_DRAFT },
+    canStartNewConversation: false,
+  },
+};
+
+export const ActionOutcomeUnknownWithRetry: Story = {
+  args: {
+    ...BASE,
+    conversationId: "conv-1",
+    messages: MESSAGES,
+    recoveryState: { kind: "actionOutcomeUnknown", action: "confirmDraft" },
+    canStartNewConversation: false,
+  },
+};
+
+export const ActionOutcomeUnknownWithoutRetry: Story = {
+  args: {
+    ...BASE,
+    conversationId: "conv-1",
+    messages: MESSAGES,
+    recoveryState: { kind: "actionOutcomeUnknown", action: "sendMessage" },
+    canStartNewConversation: false,
   },
 };
 

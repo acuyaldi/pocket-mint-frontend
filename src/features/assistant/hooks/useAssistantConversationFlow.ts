@@ -9,10 +9,17 @@ import {
   useCancelAssistantClarification,
   useSendAssistantMessage,
 } from "@/src/features/assistant/hooks/useAssistantMessages";
-import { useAssistantSession } from "@/src/features/assistant/hooks/useAssistantSession";
+import { useAssistantSession, useAssistantRecoveryState } from "@/src/features/assistant/hooks/useAssistantSession";
+import { useAssistantReconciliation } from "@/src/features/assistant/hooks/useAssistantReconciliation";
 import { parseAssistantDraftParam, isAssistantDraft } from "@/src/features/assistant/utils/draftParam";
 import { isClarificationRequest } from "@/src/features/assistant/utils/clarification";
-import { readAssistantErrorMessage } from "@/src/features/assistant/utils/errors";
+import { readAssistantErrorMessage, classifyAssistantMutationError } from "@/src/features/assistant/utils/errors";
+import {
+  resolveRecoveryState,
+  isAssistantActionRetrySafe,
+  type AssistantPendingActionKind,
+  type AssistantRecoveryState,
+} from "@/src/features/assistant/types/recovery";
 import type {
   AssistantClarificationSelectResult,
   AssistantDraft,
@@ -51,8 +58,8 @@ const CONVERSATION_ID_PARAM = "conversationId";
  * and the underlying submit → clarification → draft → confirm/cancel flow
  * stay one canonical path. Every mutation/query here is the exact Phase
  * 23.2/23.3 hook — this only adds conversation-level bookkeeping
- * (conversation id retention, active-workflow tracking, last-result echo)
- * on top.
+ * (conversation id retention, active-workflow tracking, last-result echo,
+ * and Phase 23.5 resilience/recovery state) on top.
  */
 export function useAssistantConversationFlow() {
   const router = useRouter();
@@ -78,6 +85,24 @@ export function useAssistantConversationFlow() {
   const [formError, setFormError] = useState<string | null>(null);
   const [pendingOptionToken, setPendingOptionToken] = useState<string | null>(null);
 
+  // True only while this hook instance still reflects a conversation loaded
+  // from the URL at mount (a refresh/direct-nav) — a conversation created
+  // fresh during this session already has its workflow state in memory, so
+  // there's nothing to "recover". Reset on `startNewConversation`.
+  const [cameFromUrl, setCameFromUrl] = useState(!!urlConversationId);
+
+  // §4 reconciliation bookkeeping — set only when a mutation fails
+  // ambiguously (no HTTP response reached the client).
+  const [outcomeUnknownAction, setOutcomeUnknownAction] = useState<AssistantPendingActionKind | null>(null);
+  const [outcomeSnapshot, setOutcomeSnapshot] = useState<{
+    conversationId: string;
+    turnCount: number;
+    action: AssistantPendingActionKind;
+    draftId?: string;
+    clarificationId?: string;
+  } | null>(null);
+  const [isCheckingOutcome, setIsCheckingOutcome] = useState(false);
+
   const session = useAssistantSession(conversationId);
 
   const sendMessage = useSendAssistantMessage();
@@ -85,6 +110,31 @@ export function useAssistantConversationFlow() {
   const cancelClarification = useCancelAssistantClarification();
   const confirmDraft = useConfirmAssistantDraft();
   const cancelDraft = useCancelAssistantDraft();
+  const { reconcile } = useAssistantReconciliation();
+
+  const latestTurnStatus = session.data?.turns.at(-1)?.status;
+  const turnCount = session.data?.turns.length ?? 0;
+
+  // Only fetch recovery-state when there's an actual signal something might
+  // be unresolved: no in-memory workflow, a real conversation loaded from
+  // the URL (not freshly created this session), and it has history.
+  const recoveryTriggerEnabled = activeWorkflow === null && !!conversationId && cameFromUrl && turnCount > 0;
+  const recoveryStateQuery = useAssistantRecoveryState(conversationId, recoveryTriggerEnabled);
+
+  const derivedRecovery: AssistantRecoveryState = useMemo(() => {
+    if (activeWorkflow !== null) return { kind: "ready" };
+    if (session.isError) return { kind: "historyUnavailable" };
+    if (!recoveryTriggerEnabled) return { kind: "ready" };
+    if (recoveryStateQuery.isError) {
+      return latestTurnStatus === "CLARIFICATION_REQUIRED" ? { kind: "transientClarificationLost" } : { kind: "ready" };
+    }
+    if (recoveryStateQuery.data) return resolveRecoveryState(recoveryStateQuery.data);
+    return { kind: "ready" };
+  }, [activeWorkflow, session.isError, recoveryTriggerEnabled, recoveryStateQuery.isError, recoveryStateQuery.data, latestTurnStatus]);
+
+  const recoveryState: AssistantRecoveryState = outcomeUnknownAction
+    ? { kind: "actionOutcomeUnknown", action: outcomeUnknownAction }
+    : derivedRecovery;
 
   function persistConversationId(id: string) {
     if (id === conversationId) return;
@@ -131,6 +181,27 @@ export function useAssistantConversationFlow() {
     return "generic-error" as const;
   }
 
+  /**
+   * Shared ambiguous/definite branch for every mutation below. Ambiguous
+   * failures never surface as a plain error — they move into
+   * `actionOutcomeUnknown` so the user gets reconcile/retry instead of a
+   * false "failed" message.
+   */
+  function handleMutationError(
+    error: unknown,
+    action: AssistantPendingActionKind,
+    extra: { draftId?: string; clarificationId?: string },
+    tErrors: (key: string) => string,
+    onError: (message: string) => void
+  ) {
+    if (classifyAssistantMutationError(error) === "ambiguous" && conversationId) {
+      setOutcomeSnapshot({ conversationId, turnCount, action, ...extra });
+      setOutcomeUnknownAction(action);
+      return;
+    }
+    onError(readAssistantErrorMessage(error, tErrors));
+  }
+
   const submit = (
     tErrors: (key: string) => string,
     onGenericError: () => void
@@ -138,6 +209,7 @@ export function useAssistantConversationFlow() {
     const message = instructionText.trim();
     if (!message || sendMessage.isPending || activeWorkflow) return;
     setFormError(null);
+    setOutcomeUnknownAction(null);
     sendMessage.mutate(
       { message, conversationId: conversationId ?? undefined },
       {
@@ -145,7 +217,14 @@ export function useAssistantConversationFlow() {
           setInstructionText("");
           if (applyTurnResult(result) === "generic-error") onGenericError();
         },
-        onError: (error) => setFormError(readAssistantErrorMessage(error, tErrors)),
+        onError: (error) => {
+          if (classifyAssistantMutationError(error) === "ambiguous" && conversationId) {
+            setOutcomeSnapshot({ conversationId, turnCount, action: "sendMessage" });
+            setOutcomeUnknownAction("sendMessage");
+            return;
+          }
+          setFormError(readAssistantErrorMessage(error, tErrors));
+        },
       }
     );
   };
@@ -153,13 +232,21 @@ export function useAssistantConversationFlow() {
   const selectOption = (token: string, tErrors: (key: string) => string, onError: (message: string) => void) => {
     if (activeWorkflow?.kind !== "clarification" || selectClarification.isPending || cancelClarification.isPending) return;
     setPendingOptionToken(token);
+    setOutcomeUnknownAction(null);
     selectClarification.mutate(
       { conversationId: conversationId as string, clarificationId: activeWorkflow.clarification.clarificationId, optionToken: token },
       {
         onSuccess: (result) => {
           if (applySelectResult(result) === "generic-error") onError(tErrors("generic"));
         },
-        onError: (error) => onError(readAssistantErrorMessage(error, tErrors)),
+        onError: (error) =>
+          handleMutationError(
+            error,
+            "selectClarification",
+            { clarificationId: activeWorkflow.clarification.clarificationId },
+            tErrors,
+            onError
+          ),
         onSettled: () => setPendingOptionToken(null),
       }
     );
@@ -170,45 +257,88 @@ export function useAssistantConversationFlow() {
     onSuccess: () => void,
     onError: (message: string) => void
   ) => {
-    if (activeWorkflow?.kind !== "clarification" || selectClarification.isPending || cancelClarification.isPending) return;
+    const clarification =
+      activeWorkflow?.kind === "clarification"
+        ? activeWorkflow.clarification
+        : recoveryState.kind === "clarificationRecovered"
+          ? recoveryState.clarification
+          : null;
+    if (!clarification || selectClarification.isPending || cancelClarification.isPending) return;
+    setOutcomeUnknownAction(null);
     cancelClarification.mutate(
-      { conversationId: conversationId as string, clarificationId: activeWorkflow.clarification.clarificationId },
+      { conversationId: conversationId as string, clarificationId: clarification.clarificationId },
       {
         onSuccess: () => {
           setActiveWorkflow(null);
           onSuccess();
         },
-        onError: (error) => onError(readAssistantErrorMessage(error, tErrors)),
+        onError: (error) =>
+          handleMutationError(error, "cancelClarification", { clarificationId: clarification.clarificationId }, tErrors, onError),
       }
     );
   };
 
   const confirm = (tErrors: (key: string) => string, onSuccess: () => void, onError: (message: string) => void) => {
-    if (activeWorkflow?.kind !== "draft") return;
-    confirmDraft.mutate(activeWorkflow.draft.draftId, {
+    const draft =
+      activeWorkflow?.kind === "draft" ? activeWorkflow.draft : recoveryState.kind === "draftRecovered" ? recoveryState.draft : null;
+    if (!draft) return;
+    setOutcomeUnknownAction(null);
+    confirmDraft.mutate(draft.draftId, {
       onSuccess: (result) => {
         setActiveWorkflow(null);
         setLastResult({ renderedText: result.renderedText });
         onSuccess();
       },
-      onError: (error) => onError(readAssistantErrorMessage(error, tErrors)),
+      onError: (error) => handleMutationError(error, "confirmDraft", { draftId: draft.draftId }, tErrors, onError),
     });
   };
 
   const cancelActiveDraft = (tErrors: (key: string) => string, onSuccess: () => void, onError: (message: string) => void) => {
-    if (activeWorkflow?.kind !== "draft") return;
-    cancelDraft.mutate(activeWorkflow.draft.draftId, {
+    const draft =
+      activeWorkflow?.kind === "draft" ? activeWorkflow.draft : recoveryState.kind === "draftRecovered" ? recoveryState.draft : null;
+    if (!draft) return;
+    setOutcomeUnknownAction(null);
+    cancelDraft.mutate(draft.draftId, {
       onSuccess: (result) => {
+        confirmDraft.clearIdempotencyKey(draft.draftId);
         setActiveWorkflow(null);
         setLastResult({ renderedText: result.renderedText });
         onSuccess();
       },
-      onError: (error) => onError(readAssistantErrorMessage(error, tErrors)),
+      onError: (error) => handleMutationError(error, "cancelDraft", { draftId: draft.draftId }, tErrors, onError),
     });
   };
 
-  /** Blocked while a clarification/draft is unresolved — the user must cancel it via the real endpoint first. */
-  const canStartNewConversation = activeWorkflow === null;
+  /** Reconciles the last ambiguous failure — refetches session + recovery-state, never re-sends anything. */
+  const checkOutcome = async () => {
+    if (!outcomeSnapshot) return;
+    setIsCheckingOutcome(true);
+    try {
+      const outcome = await reconcile(outcomeSnapshot);
+      if (outcome.resolved) {
+        setOutcomeUnknownAction(null);
+        setOutcomeSnapshot(null);
+        setActiveWorkflow(null);
+      }
+    } finally {
+      setIsCheckingOutcome(false);
+    }
+  };
+
+  /** Only offered when `isAssistantActionRetrySafe(outcomeUnknownAction)` is true (draft confirm/cancel, clarification cancel). */
+  const retryOutcomeAction = (tErrors: (key: string) => string, onSuccess: () => void, onError: (message: string) => void) => {
+    if (!outcomeUnknownAction || !isAssistantActionRetrySafe(outcomeUnknownAction)) return;
+    if (outcomeUnknownAction === "confirmDraft") confirm(tErrors, onSuccess, onError);
+    else if (outcomeUnknownAction === "cancelDraft") cancelActiveDraft(tErrors, onSuccess, onError);
+    else if (outcomeUnknownAction === "cancelClarification") cancelActiveClarification(tErrors, onSuccess, onError);
+  };
+
+  /** Blocked while a clarification/draft is unresolved — the user must cancel it via the real endpoint first (including a rediscovered/ambiguous one). */
+  const canStartNewConversation =
+    activeWorkflow === null &&
+    recoveryState.kind !== "clarificationRecovered" &&
+    recoveryState.kind !== "draftRecovered" &&
+    recoveryState.kind !== "actionOutcomeUnknown";
 
   function startNewConversation() {
     if (!canStartNewConversation) return;
@@ -218,6 +348,9 @@ export function useAssistantConversationFlow() {
     setInstructionText("");
     setFormError(null);
     setPendingOptionToken(null);
+    setOutcomeUnknownAction(null);
+    setOutcomeSnapshot(null);
+    setCameFromUrl(false);
     sendMessage.reset();
     selectClarification.reset();
     cancelClarification.reset();
@@ -241,6 +374,10 @@ export function useAssistantConversationFlow() {
     isConfirmingDraft: confirmDraft.isPending,
     isCancellingDraft: cancelDraft.isPending,
     canStartNewConversation,
+    recoveryState,
+    isCheckingOutcome,
+    checkOutcome,
+    retryOutcomeAction,
     submit,
     selectOption,
     cancelActiveClarification,

@@ -1081,6 +1081,19 @@
       "confirmSuccess": "Draf dikonfirmasi.",
       "cancelSuccess": "Draf dibatalkan.",
       "genericError": "Terjadi kesalahan. Silakan coba lagi."
+    },
+    "recovery": {
+      "clarificationRecoveredTitle": "Masih ada pertanyaan yang belum dijawab pada percakapan ini",
+      "composerDisabled": "Periksa apa yang terjadi pada tindakan sebelumnya di atas sebelum mengirim instruksi baru."
+    },
+    "outcomeUnknown": {
+      "heading": "Kami belum bisa memastikan apa yang terjadi",
+      "description": "Tindakan sebelumnya mungkin berhasil atau mungkin belum. Ini bukan kegagalan, dan belum tentu berhasil juga. Periksa percakapan untuk melihat hasil sebenarnya, atau coba lagi jika aman untuk dilakukan.",
+      "check": "Periksa percakapan",
+      "checking": "Memeriksa",
+      "retry": "Coba lagi",
+      "retrying": "Mencoba lagi",
+      "retrySuccess": "Selesai."
     }
   }
 }

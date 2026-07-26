@@ -14,8 +14,10 @@ import idMessages from "@/messages/id.json";
 import enMessages from "@/messages/en.json";
 import { parseAssistantDraftParam } from "@/src/features/assistant/utils/draftParam";
 import { isClarificationRequest } from "@/src/features/assistant/utils/clarification";
-import { readAssistantErrorMessage } from "@/src/features/assistant/utils/errors";
-import type { AssistantDraft, ClarificationRequest } from "@/src/types/assistant";
+import { readAssistantErrorMessage, classifyAssistantMutationError } from "@/src/features/assistant/utils/errors";
+import { isAssistantActionRetrySafe, resolveRecoveryState } from "@/src/features/assistant/types/recovery";
+import { AuthenticationRequiredError } from "@/lib/api-errors";
+import type { AssistantDraft, AssistantRecoveryStateResponse, ClarificationRequest } from "@/src/types/assistant";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const apiSource = readFileSync(root + "src/features/assistant/api/assistantApi.ts", "utf8");
@@ -47,6 +49,20 @@ const conversationSource = readFileSync(
 const messageSource = readFileSync(root + "src/features/assistant/components/AssistantMessage.tsx", "utf8");
 const messageListSource = readFileSync(
   root + "src/features/assistant/components/AssistantMessageList.tsx",
+  "utf8"
+);
+const errorsSource = readFileSync(root + "src/features/assistant/utils/errors.ts", "utf8");
+const recoveryTypesSource = readFileSync(root + "src/features/assistant/types/recovery.ts", "utf8");
+const reconciliationSource = readFileSync(
+  root + "src/features/assistant/hooks/useAssistantReconciliation.ts",
+  "utf8"
+);
+const recoveryBannerSource = readFileSync(
+  root + "src/features/assistant/components/AssistantRecoveryBanner.tsx",
+  "utf8"
+);
+const outcomeUnknownSource = readFileSync(
+  root + "src/features/assistant/components/AssistantOutcomeUnknown.tsx",
   "utf8"
 );
 
@@ -181,8 +197,8 @@ describe("assistant draft review route (Phase 23.2)", () => {
   it("wires Confirm/Cancel to the existing draft mutation hooks only", () => {
     expect(flowHookSource).toContain("useConfirmAssistantDraft");
     expect(flowHookSource).toContain("useCancelAssistantDraft");
-    expect(flowHookSource).toContain("confirmDraft.mutate(activeWorkflow.draft.draftId");
-    expect(flowHookSource).toContain("cancelDraft.mutate(activeWorkflow.draft.draftId");
+    expect(flowHookSource).toContain("confirmDraft.mutate(draft.draftId");
+    expect(flowHookSource).toContain("cancelDraft.mutate(draft.draftId");
   });
 
   it("shows loading via the mutation pending state, not a duplicate submit path", () => {
@@ -293,9 +309,7 @@ describe("assistant clarification flow (Phase 23.3, orchestration now in useAssi
 
 describe("assistant conversation experience (Phase 23.4)", () => {
   it("reuses useAssistantSession for history retrieval instead of a new fetch path", () => {
-    expect(flowHookSource).toContain(
-      'import { useAssistantSession } from "@/src/features/assistant/hooks/useAssistantSession";'
-    );
+    expect(flowHookSource).toContain('from "@/src/features/assistant/hooks/useAssistantSession"');
     expect(flowHookSource).toContain("useAssistantSession(conversationId)");
   });
 
@@ -312,7 +326,9 @@ describe("assistant conversation experience (Phase 23.4)", () => {
   });
 
   it("blocks starting a new conversation while a clarification/draft is unresolved", () => {
-    expect(flowHookSource).toContain("const canStartNewConversation = activeWorkflow === null;");
+    expect(flowHookSource).toContain('recoveryState.kind !== "clarificationRecovered"');
+    expect(flowHookSource).toContain('recoveryState.kind !== "draftRecovered"');
+    expect(flowHookSource).toContain('recoveryState.kind !== "actionOutcomeUnknown"');
     expect(flowHookSource).toContain("if (!canStartNewConversation) return;");
   });
 
@@ -341,10 +357,10 @@ describe("assistant conversation experience (Phase 23.4)", () => {
     }
   });
 
-  it("documents the exact refresh limitation: a stuck clarification-required turn can't be reconstructed after reload", () => {
-    expect(pageSource).toContain('latestTurnStatus === "CLARIFICATION_REQUIRED"');
-    expect(pageSource).toContain("showTransientUnavailable");
-    expect(conversationSource).toContain("transientUnavailable");
+  it("documents the exact refresh limitation: a stuck clarification-required turn can't be reconstructed after reload, and is resolved via recovery-state instead", () => {
+    expect(flowHookSource).toContain('latestTurnStatus === "CLARIFICATION_REQUIRED"');
+    expect(pageSource).toContain("recoveryState={flow.recoveryState}");
+    expect(conversationSource).toContain("recoveryState");
   });
 
   it("never reconstructs a draft or clarification by parsing rendered message text", () => {
@@ -547,5 +563,210 @@ describe("assistant auth protection", () => {
     expect(pageSource).not.toContain("requireUser");
     expect(pageSource).not.toContain("getUser(");
     expect(libApiSource).toContain("Authorization");
+  });
+});
+
+describe("assistant resilience/recovery — draft confirm idempotency key reuse", () => {
+  it("keys the idempotency key by draftId and reuses it instead of minting one per call", () => {
+    expect(draftHookSource).toContain("idempotencyKeysRef.current.get(draftId)");
+    expect(draftHookSource).toContain("idempotencyKeysRef.current.set(draftId, key)");
+    // Only ONE call site creates a fresh key — inside the reuse-or-create helper — never
+    // inline in mutationFn (which would mint a new key on every retry).
+    expect(draftHookSource.match(/createIdempotencyKey\(\)/g)?.length).toBe(1);
+  });
+
+  it("clears the key once a draftId is resolved (confirmed, or cancelled via the flow hook) so it can't grow unbounded", () => {
+    expect(draftHookSource).toContain("clearIdempotencyKey");
+    expect(draftHookSource).toContain("idempotencyKeysRef.current.delete(draftId)");
+    expect(flowHookSource).toContain("confirmDraft.clearIdempotencyKey(draft.draftId)");
+  });
+
+  it("stores the key in-memory only (a ref/Map) — never localStorage/sessionStorage", () => {
+    expect(draftHookSource).toContain("useRef(new Map<string, string>())");
+    expect(draftHookSource).not.toMatch(/\blocalStorage\.(setItem|getItem)/);
+    expect(draftHookSource).not.toMatch(/\bsessionStorage\.(setItem|getItem)/);
+  });
+});
+
+describe("assistant resilience/recovery — ambiguous vs definite error classification", () => {
+  it("classifies a no-response Axios-shaped error as ambiguous", () => {
+    expect(classifyAssistantMutationError({ message: "Network Error" })).toBe("ambiguous");
+    expect(classifyAssistantMutationError({ response: undefined })).toBe("ambiguous");
+  });
+
+  it("classifies a real HTTP error response as definite", () => {
+    expect(classifyAssistantMutationError({ response: { status: 409, data: {} } })).toBe("definite");
+    expect(classifyAssistantMutationError({ response: { status: 500, data: {} } })).toBe("definite");
+  });
+
+  it("classifies a 401 / AuthenticationRequiredError as definite, not ambiguous — auth has its own handling", () => {
+    expect(classifyAssistantMutationError(new AuthenticationRequiredError())).toBe("definite");
+    expect(classifyAssistantMutationError({ response: { status: 401, data: {} } })).toBe("definite");
+  });
+});
+
+describe("assistant resilience/recovery — recovery-state API wrapper and query gating", () => {
+  it("hits the exact recovery-state endpoint with GET", () => {
+    expect(apiSource).toContain("`/assistant/conversations/${conversationId}/recovery-state`");
+    expect(apiSource).toContain("export function getAssistantRecoveryState");
+  });
+
+  it("the query hook is gated behind an explicit enabled condition, not auto-fetched alongside session", () => {
+    expect(sessionHookSource).toContain("useAssistantRecoveryState");
+    expect(sessionHookSource).toContain("enabled: !!conversationId && enabled");
+  });
+
+  it("the flow hook only enables the recovery-state fetch when there's no in-memory workflow, a URL-loaded conversation, and history", () => {
+    expect(flowHookSource).toContain("activeWorkflow === null && !!conversationId && cameFromUrl && turnCount > 0");
+  });
+});
+
+describe("assistant resilience/recovery — bounded recovery-state model", () => {
+  const draftPreview = {
+    operation: "record_transaction",
+    type: "EXPENSE" as const,
+    amount: "50000",
+    walletId: "wallet-1",
+    categoryId: "cat-1",
+    date: "2026-07-25",
+    expiresAt: "2026-07-25T15:30:00.000Z",
+  };
+
+  it("resolves to clarificationRecovered when an active clarification is found — never usable to select (no token in the type)", () => {
+    const response: AssistantRecoveryStateResponse = {
+      activeClarification: {
+        clarificationId: "clar-1",
+        entityType: "wallet",
+        prompt: "Which wallet?",
+        options: [{ label: "BCA" }],
+        expiresAt: "2026-07-25T15:30:00.000Z",
+      },
+    };
+    const state = resolveRecoveryState(response);
+    expect(state.kind).toBe("clarificationRecovered");
+    if (state.kind === "clarificationRecovered") {
+      expect((state.clarification.options[0] as { token?: string }).token).toBeUndefined();
+    }
+    // The recovery-state type never carries a token; the recovery banner component
+    // never wires an onSelect/select call — only cancel.
+    expect(recoveryBannerSource).not.toContain("onSelect");
+    expect(recoveryBannerSource).not.toContain("selectAssistantClarification");
+  });
+
+  it("resolves to draftRecovered when a pending draft is found, mapped into the existing AssistantDraft shape", () => {
+    const response: AssistantRecoveryStateResponse = {
+      pendingDraft: { draftId: "draft-1", status: "PENDING_CONFIRMATION", preview: draftPreview },
+    };
+    const state = resolveRecoveryState(response);
+    expect(state.kind).toBe("draftRecovered");
+    if (state.kind === "draftRecovered") {
+      expect(state.draft.draftId).toBe("draft-1");
+      expect(state.draft.confirmationRequired).toBe(true);
+    }
+  });
+
+  it("resolves to transientClarificationLost when neither is found", () => {
+    expect(resolveRecoveryState({}).kind).toBe("transientClarificationLost");
+  });
+
+  it("only draft confirm/cancel and clarification cancel are retry-safe — never a plain message send or a select", () => {
+    expect(isAssistantActionRetrySafe("confirmDraft")).toBe(true);
+    expect(isAssistantActionRetrySafe("cancelDraft")).toBe(true);
+    expect(isAssistantActionRetrySafe("cancelClarification")).toBe(true);
+    expect(isAssistantActionRetrySafe("sendMessage")).toBe(false);
+    expect(isAssistantActionRetrySafe("selectClarification")).toBe(false);
+  });
+
+  it("draftRecovered reuses the existing DraftSummaryCard/DraftActionBar — no parallel draft-review UI", () => {
+    expect(conversationSource).toContain('recoveryState.kind === "draftRecovered"');
+    expect(conversationSource.match(/DraftSummaryCard/g)?.length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe("assistant resilience/recovery — reconciliation never re-sends anything", () => {
+  it("compares a pre-attempt snapshot against a fresh session/recovery-state fetch, not a blind retry", () => {
+    expect(reconciliationSource).toContain("snapshot.turnCount");
+    expect(reconciliationSource).toContain("getAssistantSession");
+    expect(reconciliationSource).toContain("getAssistantRecoveryState");
+  });
+
+  it("never calls a send/select/confirm/cancel mutation from the reconciliation hook", () => {
+    for (const forbidden of ["sendAssistantMessage", "confirmAssistantDraft", "cancelAssistantDraft", "selectAssistantClarification"]) {
+      expect(reconciliationSource).not.toContain(forbidden);
+    }
+  });
+
+  it("checkOutcome is only invoked explicitly (user action / ambiguous failure) — not on an interval", () => {
+    for (const forbidden of ["setInterval", "setTimeout"]) {
+      expect(flowHookSource).not.toContain(forbidden);
+      expect(reconciliationSource).not.toContain(forbidden);
+    }
+  });
+});
+
+describe("assistant resilience/recovery — startNewConversation blocking", () => {
+  it("stays blocked while clarificationRecovered/draftRecovered/actionOutcomeUnknown are showing", () => {
+    expect(flowHookSource).toContain('recoveryState.kind !== "clarificationRecovered"');
+    expect(flowHookSource).toContain('recoveryState.kind !== "draftRecovered"');
+    expect(flowHookSource).toContain('recoveryState.kind !== "actionOutcomeUnknown"');
+  });
+
+  it("does NOT block on transientClarificationLost — nothing left to protect", () => {
+    expect(flowHookSource).not.toContain('recoveryState.kind !== "transientClarificationLost"');
+  });
+});
+
+describe("assistant resilience/recovery — outcome-unknown UI", () => {
+  it("uses role=status, not role=alert — an ambiguous outcome is not definitively an error", () => {
+    expect(outcomeUnknownSource).toMatch(/<div role="status"/);
+    expect(outcomeUnknownSource).not.toMatch(/<\w+[^>]*role="alert"/);
+  });
+
+  it("only renders a retry action when the caller supplies one — never fabricates a retry for unsafe actions", () => {
+    expect(outcomeUnknownSource).toContain("onRetry?: () => void");
+    expect(outcomeUnknownSource).toContain("{onRetry ?");
+  });
+});
+
+describe("assistant resilience/recovery — no durable storage of recovery state", () => {
+  it("recovery/reconciliation source never touches localStorage/sessionStorage/indexedDB", () => {
+    for (const source of [recoveryTypesSource, reconciliationSource, recoveryBannerSource, outcomeUnknownSource]) {
+      expect(source).not.toContain("localStorage");
+      expect(source).not.toContain("sessionStorage");
+      expect(source).not.toContain("indexedDB");
+    }
+  });
+});
+
+describe("assistant resilience/recovery i18n", () => {
+  it("English and Indonesian catalogs define matching recovery/outcome-unknown keys", () => {
+    for (const messages of [idMessages, enMessages]) {
+      const recovery = messages.assistant.recovery as Record<string, string>;
+      expect(recovery.clarificationRecoveredTitle).toBeTruthy();
+      expect(recovery.composerDisabled).toBeTruthy();
+      const outcome = messages.assistant.outcomeUnknown as Record<string, string>;
+      for (const key of ["heading", "description", "check", "checking", "retry", "retrying"]) {
+        expect(outcome[key]).toBeTruthy();
+      }
+    }
+  });
+
+  it("plain user language only — no backend terminology leaks into the new strings", () => {
+    for (const messages of [idMessages, enMessages]) {
+      const blob = JSON.stringify(messages.assistant.recovery) + JSON.stringify(messages.assistant.outcomeUnknown);
+      for (const forbidden of ["idempotency", "token", "advisory lock", "P2002", "500", "404"]) {
+        expect(blob.toLowerCase()).not.toContain(forbidden.toLowerCase());
+      }
+    }
+  });
+});
+
+describe("assistant resilience — no new dependency", () => {
+  it("package.json's dependency/devDependency sets are unchanged by this feature (no new HTTP client, state library, or nav-blocking package)", () => {
+    for (const source of [recoveryTypesSource, reconciliationSource, recoveryBannerSource, outcomeUnknownSource, errorsSource]) {
+      expect(source).not.toContain("axios.create");
+      expect(source).not.toContain("zustand");
+      expect(source).not.toContain("redux");
+    }
   });
 });

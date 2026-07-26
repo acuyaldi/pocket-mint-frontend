@@ -2,4 +2,6 @@
 export const assistantKeys = {
   conversations: (page?: number, limit?: number) => ["assistant", "conversations", page, limit] as const,
   session: (conversationId: string) => ["assistant", "conversations", "detail", conversationId] as const,
+  recoveryState: (conversationId: string) =>
+    ["assistant", "conversations", "detail", conversationId, "recovery-state"] as const,
 };

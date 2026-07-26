@@ -1,3 +1,22 @@
+import { AuthenticationRequiredError, AuthSessionError } from "@/lib/api-errors";
+
+export type AssistantErrorAmbiguity = "ambiguous" | "definite";
+
+/**
+ * Classifies a caught Assistant mutation error:
+ * - `"ambiguous"` — no HTTP response ever reached the client (network error,
+ *   timeout, `AggregateError`) — the mutation's real outcome is unknown and
+ *   the financial action might have gone through anyway.
+ * - `"definite"` — a real HTTP response came back (including a 401, which is
+ *   handled separately by `lib/api.ts`'s own interceptor) — the backend
+ *   explicitly handled the request, nothing is ambiguous.
+ */
+export function classifyAssistantMutationError(error: unknown): AssistantErrorAmbiguity {
+  if (error instanceof AuthenticationRequiredError || error instanceof AuthSessionError) return "definite";
+  const response = (error as { response?: unknown } | null | undefined)?.response;
+  return response === undefined ? "ambiguous" : "definite";
+}
+
 /** Maps known real `AssistantError` codes (`pocket-mint-be/src/assistant/errors.ts`) to an `assistant.errors.*` message key. */
 const ASSISTANT_ERROR_MESSAGE_KEYS: Record<string, string> = {
   ASSISTANT_INVALID_REQUEST: "invalidInput",
