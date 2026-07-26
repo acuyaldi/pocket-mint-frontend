@@ -214,6 +214,26 @@
     "merchantMapping": {
       "title": "Merchant Mapping",
       "subtitle": "Kelola merchant yang selalu dipetakan ke kategori tertentu."
+    },
+    "telegram": {
+      "title": "Telegram",
+      "subtitle": "Hubungkan akun Telegram kamu untuk mengirim pesan langsung ke Assistant.",
+      "loading": "Memeriksa status koneksi...",
+      "statusLinked": "Terhubung ke Telegram",
+      "statusNotLinked": "Belum terhubung.",
+      "generate": "Buat kode penghubung",
+      "generating": "Membuat kode...",
+      "instructions": "Buka Telegram, kirim pesan ke bot Pocket Mint, lalu kirim perintah di bawah ini.",
+      "copy": "Salin perintah",
+      "expiresAt": "Berlaku sampai {time}",
+      "disconnect": "Putuskan Koneksi",
+      "disconnectConfirm": {
+        "title": "Putuskan koneksi Telegram?",
+        "description": "Assistant tidak akan lagi merespons pesan dari akun Telegram ini sampai kamu menghubungkannya kembali."
+      },
+      "errors": {
+        "generateFailed": "Gagal membuat kode penghubung. Silakan coba lagi."
+      }
     }
   },
   "authErrors": {

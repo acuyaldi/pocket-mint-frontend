@@ -214,6 +214,26 @@
     "merchantMapping": {
       "title": "Merchant Mapping",
       "subtitle": "Manage merchants that always map to a specific category."
+    },
+    "telegram": {
+      "title": "Telegram",
+      "subtitle": "Link your Telegram account to message the Assistant directly.",
+      "loading": "Checking connection status...",
+      "statusLinked": "Connected to Telegram",
+      "statusNotLinked": "Not connected yet.",
+      "generate": "Generate linking code",
+      "generating": "Generating...",
+      "instructions": "Open Telegram, message the Pocket Mint bot, and send the command below.",
+      "copy": "Copy command",
+      "expiresAt": "Expires at {time}",
+      "disconnect": "Disconnect",
+      "disconnectConfirm": {
+        "title": "Disconnect Telegram?",
+        "description": "The Assistant will no longer respond to messages from this Telegram account until you link it again."
+      },
+      "errors": {
+        "generateFailed": "Could not generate a linking code. Please try again."
+      }
     }
   },
   "authErrors": {
