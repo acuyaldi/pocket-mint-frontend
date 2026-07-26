@@ -32,5 +32,7 @@ yarn-error.log*
 # Ignore Playwright test artifacts
 playwright/.auth/
 playwright/screenshots/
+playwright-report/
+test-results/
 *storybook.log
 storybook-static
