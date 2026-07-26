@@ -65,6 +65,18 @@ const outcomeUnknownSource = readFileSync(
   root + "src/features/assistant/components/AssistantOutcomeUnknown.tsx",
   "utf8"
 );
+const historySource = readFileSync(
+  root + "src/features/assistant/components/AssistantConversationHistory.tsx",
+  "utf8"
+);
+const historyListSource = readFileSync(
+  root + "src/features/assistant/components/AssistantConversationHistoryList.tsx",
+  "utf8"
+);
+const historyTriggerSource = readFileSync(
+  root + "src/features/assistant/components/AssistantConversationHistoryTrigger.tsx",
+  "utf8"
+);
 
 const VALID_CLARIFICATION: ClarificationRequest = {
   clarificationId: "clar-1",
@@ -767,6 +779,114 @@ describe("assistant resilience — no new dependency", () => {
       expect(source).not.toContain("axios.create");
       expect(source).not.toContain("zustand");
       expect(source).not.toContain("redux");
+    }
+  });
+});
+
+describe("assistant conversation history (Phase 23.6)", () => {
+  it("reuses the existing list endpoint/hook — no new fetch path or second API client", () => {
+    expect(sessionHookSource).toContain("useInfiniteQuery");
+    expect(sessionHookSource).toContain("listAssistantConversations");
+    expect(sessionHookSource).toContain("assistantKeys.conversations(undefined, limit)");
+    expect(historySource).not.toContain("axios.create");
+    expect(historySource).not.toMatch(/\bfetch\(["'`]/);
+  });
+
+  it("preserves backend order — pages are appended, never client-sorted", () => {
+    expect(historySource).toContain("query.data?.pages.flatMap((page) => page.items)");
+    expect(sessionHookSource).not.toContain(".sort(");
+    expect(historyListSource).toContain("items.map((item)");
+    expect(historyListSource).not.toContain(".sort(");
+    expect(historyListSource).not.toContain(".reverse(");
+  });
+
+  it("pagination follows backend hasMore — no infinite-scroll or virtualization dependency", () => {
+    expect(sessionHookSource).toContain("getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.page + 1 : undefined)");
+    expect(historySource).not.toContain("react-window");
+    expect(historySource).not.toContain("react-virtual");
+    expect(historyListSource).not.toContain("IntersectionObserver");
+  });
+
+  it("switching is gated by the same canStartNewConversation rule as starting a new conversation, and is forceable only from an explicit confirmation", () => {
+    expect(flowHookSource).toContain("function switchConversation(id: string, options: { force?: boolean } = {})");
+    expect(flowHookSource).toContain("if (!canStartNewConversation && !options.force) return false;");
+    expect(historySource).toContain("onSwitchConversation(blockedTargetId, { force: true })");
+  });
+
+  it("switching never fabricates backend cancellation — only local transient state is cleared", () => {
+    expect(flowHookSource).toMatch(/function switchConversation[\s\S]*?setActiveWorkflow\(null\)/);
+    expect(historySource).not.toMatch(/cancelAssistantDraft|cancelAssistantClarification/);
+  });
+
+  it("switching keeps the conversation id as the only URL state — no extra params, no draft/token payload", () => {
+    expect(flowHookSource).toMatch(
+      /switchConversation[\s\S]*?router\.replace\(`\/assistant\?\$\{CONVERSATION_ID_PARAM\}=\$\{encodeURIComponent\(id\)\}`\)/
+    );
+  });
+
+  it("no delete, archive, rename, search, or pin functionality exists in the history feature", () => {
+    for (const source of [historySource, historyListSource, historyTriggerSource]) {
+      for (const forbidden of [/\barchive/i, /\bdelete/i, /\brename/i, /\bsearch/i, /\bpin\b/i, /\bDELETE\b/, /\bPATCH\b/]) {
+        expect(source).not.toMatch(forbidden);
+      }
+    }
+  });
+
+  it("no durable storage, polling, or streaming is introduced by the history feature", () => {
+    for (const source of [historySource, historyListSource, historyTriggerSource, sessionHookSource]) {
+      for (const forbidden of [
+        "localStorage",
+        "sessionStorage",
+        "indexedDB",
+        "setInterval",
+        "EventSource",
+        "WebSocket",
+      ]) {
+        expect(source).not.toContain(forbidden);
+      }
+    }
+  });
+
+  it("the trigger and list are presentational — no data fetching inside the leaf components", () => {
+    expect(historyTriggerSource).not.toContain("useQuery");
+    expect(historyListSource).not.toContain("useQuery");
+    expect(historyListSource).not.toContain("useInfiniteQuery");
+  });
+
+  it("the trigger has a stable accessible name and the selected item is programmatically identifiable", () => {
+    expect(historyTriggerSource).toContain("aria-label={label}");
+    expect(historyListSource).toContain('aria-current={isSelected ? "true" : undefined}');
+  });
+
+  it("the conversation label is a deterministic preview or date fallback — never AI-generated or parsed", () => {
+    expect(historyListSource).toContain("resolveConversationLabel");
+    expect(historyListSource).toContain("summary.lastMessage?.trim()");
+    expect(historyListSource).not.toMatch(/generateTitle|summarize/i);
+  });
+
+  it("English and Indonesian catalogs define matching history keys", () => {
+    for (const messages of [idMessages, enMessages]) {
+      const history = messages.assistant.history as Record<string, unknown>;
+      for (const key of [
+        "title",
+        "openLabel",
+        "listLabel",
+        "newConversation",
+        "activeConversationLabel",
+        "conversationFromDate",
+        "loading",
+        "loadingMore",
+        "empty",
+        "error",
+        "retry",
+        "loadMore",
+        "switchBlockedTitle",
+        "switchBlockedDescription",
+        "switchConfirm",
+        "switchCancel",
+      ]) {
+        expect(history[key]).toBeTruthy();
+      }
     }
   });
 });

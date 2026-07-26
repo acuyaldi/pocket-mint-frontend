@@ -1094,6 +1094,24 @@
       "retry": "Try again",
       "retrying": "Trying again",
       "retrySuccess": "Done."
+    },
+    "history": {
+      "title": "Conversation history",
+      "openLabel": "Open conversation history",
+      "listLabel": "Previous conversations",
+      "newConversation": "New conversation",
+      "activeConversationLabel": "active",
+      "conversationFromDate": "Conversation from {date}",
+      "loading": "Loading conversations...",
+      "loadingMore": "Loading more",
+      "empty": "No previous conversations yet.",
+      "error": "Couldn't load conversation history.",
+      "retry": "Retry",
+      "loadMore": "Load more",
+      "switchBlockedTitle": "Switch conversations?",
+      "switchBlockedDescription": "You have an unresolved clarification or draft in this conversation. Switching will clear it here in your browser, but it stays unchanged on the server — you can come back to it later.",
+      "switchConfirm": "Switch anyway",
+      "switchCancel": "Stay here"
     }
   }
 }

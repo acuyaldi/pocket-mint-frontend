@@ -340,6 +340,37 @@ export function useAssistantConversationFlow() {
     recoveryState.kind !== "draftRecovered" &&
     recoveryState.kind !== "actionOutcomeUnknown";
 
+  /**
+   * Switches to an already-persisted conversation (history navigation).
+   * Mirrors `startNewConversation`'s local-state reset but keeps the target
+   * id and marks it as URL-equivalent, so the existing recovery check
+   * (`recoveryTriggerEnabled`) runs exactly as it would for a refresh/direct
+   * nav. Gated by the same `canStartNewConversation` rule — returns `false`
+   * without changing anything when a clarification/draft is unresolved, so
+   * the caller can block or confirm before discarding local state. Never
+   * touches backend state.
+   */
+  function switchConversation(id: string, options: { force?: boolean } = {}) {
+    if (id === conversationId) return true;
+    if (!canStartNewConversation && !options.force) return false;
+    setConversationId(id);
+    setActiveWorkflow(null);
+    setLastResult(null);
+    setInstructionText("");
+    setFormError(null);
+    setPendingOptionToken(null);
+    setOutcomeUnknownAction(null);
+    setOutcomeSnapshot(null);
+    setCameFromUrl(true);
+    sendMessage.reset();
+    selectClarification.reset();
+    cancelClarification.reset();
+    confirmDraft.reset();
+    cancelDraft.reset();
+    router.replace(`/assistant?${CONVERSATION_ID_PARAM}=${encodeURIComponent(id)}`);
+    return true;
+  }
+
   function startNewConversation() {
     if (!canStartNewConversation) return;
     setConversationId(null);
@@ -384,5 +415,6 @@ export function useAssistantConversationFlow() {
     confirm,
     cancelActiveDraft,
     startNewConversation,
+    switchConversation,
   };
 }

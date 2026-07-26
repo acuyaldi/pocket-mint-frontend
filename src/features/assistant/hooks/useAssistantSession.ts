@@ -1,5 +1,5 @@
 "use client";
-import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { QueryClient, useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   archiveAssistantSession,
   getAssistantRecoveryState,
@@ -30,6 +30,21 @@ export const useAssistantConversations = (params: ListAssistantConversationsPara
   return useQuery<AssistantPage<AssistantConversationSummary>, Error>({
     queryKey: assistantKeys.conversations(page, limit),
     queryFn: () => listAssistantConversations(params),
+    staleTime: STALE_TIME,
+  });
+};
+
+/**
+ * Bounded, "Load more"-paginated conversation history for the history
+ * navigation UI. Backend order (`lastActivityAt desc, id desc`) is preserved
+ * as-is — pages are appended in fetch order only, never client-sorted.
+ */
+export const useAssistantConversationHistory = (limit = 20) => {
+  return useInfiniteQuery<AssistantPage<AssistantConversationSummary>, Error>({
+    queryKey: assistantKeys.conversations(undefined, limit),
+    queryFn: ({ pageParam }) => listAssistantConversations({ page: pageParam as number, limit }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.page + 1 : undefined),
     staleTime: STALE_TIME,
   });
 };
