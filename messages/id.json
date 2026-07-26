@@ -1094,6 +1094,24 @@
       "retry": "Coba lagi",
       "retrying": "Mencoba lagi",
       "retrySuccess": "Selesai."
+    },
+    "history": {
+      "title": "Riwayat percakapan",
+      "openLabel": "Buka riwayat percakapan",
+      "listLabel": "Percakapan sebelumnya",
+      "newConversation": "Percakapan baru",
+      "activeConversationLabel": "aktif",
+      "conversationFromDate": "Percakapan dari {date}",
+      "loading": "Memuat percakapan...",
+      "loadingMore": "Memuat lagi",
+      "empty": "Belum ada percakapan sebelumnya.",
+      "error": "Riwayat percakapan tidak dapat dimuat.",
+      "retry": "Coba lagi",
+      "loadMore": "Muat lebih banyak",
+      "switchBlockedTitle": "Ganti percakapan?",
+      "switchBlockedDescription": "Ada klarifikasi atau draf yang belum diselesaikan pada percakapan ini. Berganti akan menghapusnya di peramban Anda, tetapi tidak mengubah apa pun di server — Anda dapat kembali ke sana nanti.",
+      "switchConfirm": "Tetap ganti",
+      "switchCancel": "Tetap di sini"
     }
   }
 }

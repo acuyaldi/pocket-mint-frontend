@@ -9,6 +9,7 @@ import { INTL_LOCALE } from "@/i18n/config";
 import { useAssistantConversationFlow } from "@/src/features/assistant/hooks/useAssistantConversationFlow";
 import { readAssistantErrorMessage } from "@/src/features/assistant/utils/errors";
 import { AssistantConversation, type AssistantConversationLabels } from "@/src/features/assistant/components/AssistantConversation";
+import { AssistantConversationHistory } from "@/src/features/assistant/components/AssistantConversationHistory";
 import type { AssistantFinancialDraftStatus } from "@/src/types/assistant";
 
 /**
@@ -121,7 +122,16 @@ export default function AssistantPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title={t("pageTitle")} description={t("pageDescription")} />
+      <div className="flex items-start justify-between gap-4">
+        <PageHeader title={t("pageTitle")} description={t("pageDescription")} />
+        <AssistantConversationHistory
+          conversationId={flow.conversationId}
+          canStartNewConversation={flow.canStartNewConversation}
+          onSwitchConversation={flow.switchConversation}
+          onStartNewConversation={flow.startNewConversation}
+          intlLocale={intlLocale}
+        />
+      </div>
 
       <AssistantConversation
         conversationId={flow.conversationId}
