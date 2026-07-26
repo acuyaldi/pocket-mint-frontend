@@ -241,3 +241,54 @@ export interface AssistantError {
   conversationId?: string;
   turnId?: string;
 }
+
+/**
+ * `GET /assistant/conversations/:conversationId/recovery-state` — read-only,
+ * used only to rediscover an unresolved clarification/draft after a
+ * refresh/direct-nav, or to reconcile an ambiguous mutation failure. Never
+ * re-exposes a raw clarification token.
+ */
+export interface AssistantRecoveryClarificationOption {
+  label: string;
+  discriminator?: string;
+}
+
+export interface AssistantRecoveryClarification {
+  clarificationId: string;
+  entityType: AssistantClarificationEntityType;
+  prompt: string;
+  /** No `token` field — these options are display-only, never usable to call `select`. */
+  options: AssistantRecoveryClarificationOption[];
+  expiresAt: string;
+}
+
+export interface AssistantRecoveryDraftPreview {
+  operation: string;
+  type: "INCOME" | "EXPENSE";
+  amount: string;
+  walletId: string;
+  categoryId: string;
+  date: string;
+  description?: string;
+  expiresAt: string;
+}
+
+export interface AssistantRecoveryDraft {
+  draftId: string;
+  status: "PENDING_CONFIRMATION";
+  preview: AssistantRecoveryDraftPreview;
+}
+
+export interface AssistantRecoveryTerminalClarification {
+  clarificationId: string;
+  entityType: AssistantClarificationEntityType;
+  status: "CONSUMED" | "CANCELLED" | "STALE";
+  terminalCode?: string;
+  restartRequired: boolean;
+}
+
+export interface AssistantRecoveryStateResponse {
+  activeClarification?: AssistantRecoveryClarification;
+  pendingDraft?: AssistantRecoveryDraft;
+  latestTerminalClarification?: AssistantRecoveryTerminalClarification;
+}

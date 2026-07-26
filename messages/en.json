@@ -1081,6 +1081,19 @@
       "confirmSuccess": "Draft confirmed.",
       "cancelSuccess": "Draft cancelled.",
       "genericError": "Something went wrong. Please try again."
+    },
+    "recovery": {
+      "clarificationRecoveredTitle": "You still have a pending question in this conversation",
+      "composerDisabled": "Check what happened with your previous action above before sending a new instruction."
+    },
+    "outcomeUnknown": {
+      "heading": "We couldn't confirm what happened",
+      "description": "Your previous action may or may not have gone through. It hasn't failed and it hasn't necessarily succeeded either. Check the conversation to see the real outcome, or try again if it's safe to do so.",
+      "check": "Check conversation",
+      "checking": "Checking",
+      "retry": "Try again",
+      "retrying": "Trying again",
+      "retrySuccess": "Done."
     }
   }
 }

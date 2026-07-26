@@ -33,6 +33,8 @@ export default function AssistantPage() {
   const tCompletion = useTranslations("assistant.completion");
   const tErrors = useTranslations("assistant.errors");
   const tDraft = useTranslations("assistant.draftReview");
+  const tRecovery = useTranslations("assistant.recovery");
+  const tOutcome = useTranslations("assistant.outcomeUnknown");
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const intlLocale = INTL_LOCALE[locale as keyof typeof INTL_LOCALE];
@@ -40,15 +42,12 @@ export default function AssistantPage() {
   const flow = useAssistantConversationFlow();
 
   const workflowHeadingRef = useRef<HTMLElement>(null);
-  const focusKey = flow.activeWorkflow?.kind ?? (flow.lastResult ? "result" : "idle");
+  const focusKey = flow.activeWorkflow?.kind ?? flow.recoveryState.kind ?? (flow.lastResult ? "result" : "idle");
   useEffect(() => {
     workflowHeadingRef.current?.focus();
   }, [focusKey]);
 
   const messages = flow.session.data?.messages.items ?? [];
-  const latestTurnStatus = flow.session.data?.turns.at(-1)?.status;
-  const showTransientUnavailable =
-    !flow.activeWorkflow && latestTurnStatus === "CLARIFICATION_REQUIRED" && !flow.isSendingMessage;
 
   const statusValues: Record<AssistantFinancialDraftStatus, string> = {
     PENDING_CONFIRMATION: tDraft("status.PENDING_CONFIRMATION"),
@@ -73,7 +72,6 @@ export default function AssistantPage() {
     examplesLabel: tConversation("examplesLabel"),
     examples: [tConversation("example1"), tConversation("example2")],
     pendingResponse: tConversation("pendingResponse"),
-    transientUnavailable: tConversation("transientUnavailable"),
     newConversation: tConversation("newConversation"),
     resetBlocked: tConversation("resetBlocked"),
     continueLabel: tCompletion("newInstruction"),
@@ -86,6 +84,7 @@ export default function AssistantPage() {
     },
     composerDisabledClarification: tConversation("composerDisabledClarification"),
     composerDisabledDraft: tConversation("composerDisabledDraft"),
+    composerDisabledOutcomeUnknown: tRecovery("composerDisabled"),
     clarification: { cancel: tCommon("actions.cancel"), cancelling: tClarification("cancelling") },
     draft: {
       income: tDraft("income"),
@@ -104,6 +103,20 @@ export default function AssistantPage() {
       cancel: tCommon("actions.cancel"),
       cancelling: tDraft("cancelling"),
     },
+    recoveryBanner: {
+      transientLostTitle: tConversation("transientUnavailable"),
+      clarificationRecoveredTitle: tRecovery("clarificationRecoveredTitle"),
+      cancel: tCommon("actions.cancel"),
+      cancelling: tClarification("cancelling"),
+    },
+    outcomeUnknown: {
+      heading: tOutcome("heading"),
+      description: tOutcome("description"),
+      check: tOutcome("check"),
+      checking: tOutcome("checking"),
+      retry: tOutcome("retry"),
+      retrying: tOutcome("retrying"),
+    },
   };
 
   return (
@@ -116,7 +129,7 @@ export default function AssistantPage() {
         isLoadingHistory={flow.session.isLoading}
         historyErrorMessage={flow.session.isError ? readAssistantErrorMessage(flow.session.error, tErrors) : null}
         onRetryHistory={() => flow.session.refetch()}
-        showTransientUnavailable={showTransientUnavailable}
+        recoveryState={flow.recoveryState}
         activeWorkflow={flow.activeWorkflow}
         lastResult={flow.lastResult}
         instructionText={flow.instructionText}
@@ -150,6 +163,15 @@ export default function AssistantPage() {
           flow.cancelActiveDraft(
             tErrors,
             () => toast(tDraft("cancelSuccess"), "success"),
+            (message) => toast(message, "error")
+          )
+        }
+        isCheckingOutcome={flow.isCheckingOutcome}
+        onCheckOutcome={() => flow.checkOutcome()}
+        onRetryOutcome={() =>
+          flow.retryOutcomeAction(
+            tErrors,
+            () => toast(tOutcome("retrySuccess"), "success"),
             (message) => toast(message, "error")
           )
         }

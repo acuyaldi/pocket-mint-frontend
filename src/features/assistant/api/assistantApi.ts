@@ -7,6 +7,7 @@ import type {
   AssistantDraftCancelled,
   AssistantDraftConfirmed,
   AssistantPage,
+  AssistantRecoveryStateResponse,
   AssistantSession,
   AssistantTurnResult,
 } from "@/src/types/assistant";
@@ -46,6 +47,19 @@ export function getAssistantSession(
 ): Promise<AssistantSession> {
   return api
     .get<{ success: boolean; data: AssistantSession }>(`/assistant/conversations/${conversationId}`, { params })
+    .then((res) => res.data.data);
+}
+
+/**
+ * Read-only recovery lookup — rediscovers an unresolved clarification/draft
+ * after a refresh/direct-nav, or reconciles an ambiguous mutation failure.
+ * Same auth/ownership/404 behavior as `getAssistantSession`.
+ */
+export function getAssistantRecoveryState(conversationId: string): Promise<AssistantRecoveryStateResponse> {
+  return api
+    .get<{ success: boolean; data: AssistantRecoveryStateResponse }>(
+      `/assistant/conversations/${conversationId}/recovery-state`
+    )
     .then((res) => res.data.data);
 }
 

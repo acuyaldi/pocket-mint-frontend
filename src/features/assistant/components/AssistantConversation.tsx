@@ -12,8 +12,11 @@ import { ClarificationCard, type ClarificationCardLabels } from "./Clarification
 import { DraftSummaryCard, type DraftSummaryCardLabels } from "./DraftSummaryCard";
 import { DraftActionBar, type DraftActionBarLabels } from "./DraftActionBar";
 import { AssistantResultState } from "./AssistantResultState";
+import { AssistantRecoveryBanner, type AssistantRecoveryBannerLabels } from "./AssistantRecoveryBanner";
+import { AssistantOutcomeUnknown, type AssistantOutcomeUnknownLabels } from "./AssistantOutcomeUnknown";
 import type { AssistantMessage as AssistantMessageDto } from "@/src/types/assistant";
 import type { AssistantActiveWorkflow, AssistantLastResult } from "@/src/features/assistant/hooks/useAssistantConversationFlow";
+import { isAssistantActionRetrySafe, type AssistantRecoveryState } from "@/src/features/assistant/types/recovery";
 
 export interface AssistantConversationLabels {
   regionLabel: string;
@@ -26,16 +29,18 @@ export interface AssistantConversationLabels {
   examplesLabel: string;
   examples: string[];
   pendingResponse: string;
-  transientUnavailable: string;
   newConversation: string;
   resetBlocked: string;
   continueLabel: string;
   composer: AssistantCommandFormLabels;
   composerDisabledClarification: string;
   composerDisabledDraft: string;
+  composerDisabledOutcomeUnknown: string;
   clarification: ClarificationCardLabels;
   draft: DraftSummaryCardLabels;
   draftActions: DraftActionBarLabels;
+  recoveryBanner: AssistantRecoveryBannerLabels;
+  outcomeUnknown: AssistantOutcomeUnknownLabels;
 }
 
 interface AssistantConversationProps {
@@ -44,7 +49,7 @@ interface AssistantConversationProps {
   isLoadingHistory: boolean;
   historyErrorMessage: string | null;
   onRetryHistory: () => void;
-  showTransientUnavailable: boolean;
+  recoveryState: AssistantRecoveryState;
   activeWorkflow: AssistantActiveWorkflow;
   lastResult: AssistantLastResult;
   instructionText: string;
@@ -61,6 +66,9 @@ interface AssistantConversationProps {
   isCancellingDraft: boolean;
   onConfirmDraft: () => void;
   onCancelDraft: () => void;
+  isCheckingOutcome: boolean;
+  onCheckOutcome: () => void;
+  onRetryOutcome: () => void;
   canStartNewConversation: boolean;
   onStartNewConversation: () => void;
   intlLocale: string;
@@ -81,7 +89,7 @@ export function AssistantConversation({
   isLoadingHistory,
   historyErrorMessage,
   onRetryHistory,
-  showTransientUnavailable,
+  recoveryState,
   activeWorkflow,
   lastResult,
   instructionText,
@@ -98,6 +106,9 @@ export function AssistantConversation({
   isCancellingDraft,
   onConfirmDraft,
   onCancelDraft,
+  isCheckingOutcome,
+  onCheckOutcome,
+  onRetryOutcome,
   canStartNewConversation,
   onStartNewConversation,
   intlLocale,
@@ -111,7 +122,13 @@ export function AssistantConversation({
     ? activeWorkflow.kind === "clarification"
       ? labels.composerDisabledClarification
       : labels.composerDisabledDraft
-    : null;
+    : recoveryState.kind === "clarificationRecovered"
+      ? labels.composerDisabledClarification
+      : recoveryState.kind === "draftRecovered"
+        ? labels.composerDisabledDraft
+        : recoveryState.kind === "actionOutcomeUnknown"
+          ? labels.composerDisabledOutcomeUnknown
+          : null;
 
   return (
     <section aria-label={labels.regionLabel} className="space-y-6">
@@ -163,10 +180,44 @@ export function AssistantConversation({
       {/* Narrow live region: only the transient workflow item currently in
           play is announced once when it appears — not the whole history. */}
       <div aria-live="polite" className="space-y-6">
-        {showTransientUnavailable ? (
-          <p role="status" className="rounded-xl border border-amber/30 bg-amber/10 px-4 py-3 text-sm text-foreground">
-            {labels.transientUnavailable}
-          </p>
+        {recoveryState.kind === "transientClarificationLost" ? (
+          <AssistantRecoveryBanner kind="transientClarificationLost" labels={labels.recoveryBanner} />
+        ) : null}
+
+        {recoveryState.kind === "clarificationRecovered" ? (
+          <AssistantRecoveryBanner
+            kind="clarificationRecovered"
+            clarification={recoveryState.clarification}
+            isCancelling={isCancellingClarification}
+            onCancel={onCancelClarification}
+            labels={labels.recoveryBanner}
+            headingRef={workflowHeadingRef}
+          />
+        ) : null}
+
+        {recoveryState.kind === "draftRecovered" ? (
+          <div ref={workflowHeadingRef as RefObject<HTMLDivElement>} tabIndex={-1} className="max-w-xl space-y-6 outline-none">
+            <DraftSummaryCard draft={recoveryState.draft} intlLocale={intlLocale} labels={labels.draft} />
+            <DraftActionBar
+              onConfirm={onConfirmDraft}
+              onCancel={onCancelDraft}
+              isConfirming={isConfirmingDraft}
+              isCancelling={isCancellingDraft}
+              disabled={recoveryState.draft.status !== "PENDING_CONFIRMATION"}
+              labels={labels.draftActions}
+            />
+          </div>
+        ) : null}
+
+        {recoveryState.kind === "actionOutcomeUnknown" ? (
+          <AssistantOutcomeUnknown
+            onCheck={onCheckOutcome}
+            onRetry={isAssistantActionRetrySafe(recoveryState.action) ? onRetryOutcome : undefined}
+            isChecking={isCheckingOutcome}
+            isRetrying={isConfirmingDraft || isCancellingDraft || isCancellingClarification}
+            labels={labels.outcomeUnknown}
+            headingRef={workflowHeadingRef}
+          />
         ) : null}
 
         {isSendingMessage ? <AssistantPendingResponse label={labels.pendingResponse} /> : null}

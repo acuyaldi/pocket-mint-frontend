@@ -2,12 +2,18 @@
 import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   archiveAssistantSession,
+  getAssistantRecoveryState,
   getAssistantSession,
   listAssistantConversations,
 } from "@/src/features/assistant/api/assistantApi";
 import { assistantKeys } from "@/src/features/assistant/constants/queryKeys";
 import type { ListAssistantConversationsParams } from "@/src/features/assistant/types";
-import type { AssistantConversationSummary, AssistantPage, AssistantSession } from "@/src/types/assistant";
+import type {
+  AssistantConversationSummary,
+  AssistantPage,
+  AssistantRecoveryStateResponse,
+  AssistantSession,
+} from "@/src/types/assistant";
 
 const STALE_TIME = 5 * 60 * 1000;
 
@@ -15,6 +21,7 @@ export const invalidateAssistantSessionDependents = (queryClient: QueryClient, c
   queryClient.invalidateQueries({ queryKey: ["assistant", "conversations"] });
   if (conversationId) {
     queryClient.invalidateQueries({ queryKey: assistantKeys.session(conversationId) });
+    queryClient.invalidateQueries({ queryKey: assistantKeys.recoveryState(conversationId) });
   }
 };
 
@@ -33,6 +40,20 @@ export const useAssistantSession = (conversationId: string | null) => {
     queryFn: () => getAssistantSession(conversationId as string),
     enabled: !!conversationId,
     staleTime: STALE_TIME,
+  });
+};
+
+/**
+ * Recovery-state lookup — deliberately NOT auto-fetched alongside the
+ * session. Only enabled when a caller has an actual signal something might
+ * be unresolved (see `useAssistantConversationFlow`'s recovery trigger).
+ */
+export const useAssistantRecoveryState = (conversationId: string | null, enabled: boolean) => {
+  return useQuery<AssistantRecoveryStateResponse, Error>({
+    queryKey: assistantKeys.recoveryState(conversationId ?? ""),
+    queryFn: () => getAssistantRecoveryState(conversationId as string),
+    enabled: !!conversationId && enabled,
+    staleTime: 0,
   });
 };
 
