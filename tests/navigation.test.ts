@@ -33,4 +33,13 @@ describe("bill navigation source contract", () => {
   it("redirects the legacy Cicilan route", () => {
     expect(legacyRoute).toContain('redirect("/tagihan")');
   });
+
+  it("gives instant click feedback on the desktop primary nav without disabling prefetch", () => {
+    // A route-level loading.tsx was tried and measurably regressed navigation
+    // (Next.js narrows Link prefetch scope for routes with a loading
+    // boundary), so feedback is done via useLinkStatus instead — it only
+    // surfaces once prefetch hasn't already made the transition instant.
+    expect(sidebar).toContain("NavLinkPendingHint");
+    expect(sidebar).not.toContain("prefetch={false}");
+  });
 });

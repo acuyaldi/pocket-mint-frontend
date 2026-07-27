@@ -95,4 +95,18 @@ describe("DashboardHeroCard — Net Worth (PM-STAB-001)", () => {
     expect(markup).toContain("animate-pulse");
     expect(markup).not.toContain(formatCurrency(0));
   });
+
+  it("keeps the net worth <h2> mounted while loading (perf: avoids a late LCP element swap)", () => {
+    // The net worth heading is this page's largest paintable element. It must
+    // stay in the tree across the loading -> loaded transition rather than
+    // being swapped in only once data arrives, or its first real paint keeps
+    // arriving late (a second, later LCP candidate) on every load.
+    const loadingMarkup = render({ isLoading: true });
+    const loadedMarkup = render({ isLoading: false, netWorth: 9_800_000 });
+
+    expect(loadingMarkup).toContain("<h2");
+    expect(loadedMarkup).toContain("<h2");
+    // The loading state still gives the heading an accessible name.
+    expect(loadingMarkup).toContain("sr-only");
+  });
 });
