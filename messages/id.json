@@ -258,6 +258,7 @@
   "dashboard": {
     "financialPosition": "Posisi keuangan bersih",
     "failedToLoadSummary": "Gagal memuat ringkasan keuangan.",
+    "loadingNetWorth": "Memuat kekayaan bersih…",
     "lastUpdated": "Terakhir diperbarui: sekarang",
     "totalAssets": "Total aset",
     "totalDebts": "Total hutang",

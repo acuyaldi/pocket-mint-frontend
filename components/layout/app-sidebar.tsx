@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { PocketMintLogo } from "@/components/Logo";
 import { useLogout } from "@/components/LogoutProvider";
+import { NavLinkPendingHint } from "@/components/layout/nav-link-pending-hint";
 import { createClient } from "@/lib/supabase/client";
 import { useDueBillCount } from "@/src/features/bills/hooks/useBills";
 
@@ -83,6 +84,7 @@ export function AppSidebar() {
             >
               <Icon className="size-5" strokeWidth={isActive ? 2.4 : 2} />
               {item.label}
+              <NavLinkPendingHint />
               {item.href === "/tagihan" && dueBillCount > 0 ? (
                 <span
                   aria-label={t("dueBillsAria", { count: dueBillCount })}

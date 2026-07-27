@@ -49,14 +49,6 @@ export default function TagihanPage() {
     0,
   );
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <LoaderCircle className="size-10 animate-spin text-primary" aria-label={t("loadingAria")} />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-8">
       <PageHeader
@@ -64,37 +56,49 @@ export default function TagihanPage() {
         description={t("pageDescription")}
       />
 
-      {dueSoonCount > 0 ? (
-        <div className="flex items-center gap-3 rounded-xl border border-amber/30 bg-amber/10 p-4" role="status">
-          <AlertTriangle className="size-5 shrink-0 text-amber" />
-          <p className="text-sm font-medium text-foreground">
-            {t("dueSoonWarning", { count: dueSoonCount })}
-          </p>
+      {isLoading ? (
+        <div
+          className="flex min-h-[40vh] items-center justify-center"
+          role="status"
+          aria-live="polite"
+        >
+          <LoaderCircle className="size-10 animate-spin text-primary" aria-label={t("loadingAria")} />
         </div>
-      ) : null}
-
-      <section className="grid gap-4 md:grid-cols-3">
-        <StatCard label={t("activeInstallments")} value={String(activeBills.length)} helper={t("activeInstallmentsHelper")} />
-        <StatCard label={t("nextPayment")} value={formatCurrency(amountDue, intlLocale)} helper={t("nextPaymentHelper", { count: dueSoonCount })} />
-        <StatCard label={t("totalOutstanding")} value={formatCurrency(outstanding, intlLocale)} helper={t("totalOutstandingHelper")} />
-      </section>
-
-      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-        <CalendarClock className="size-5 text-primary" /> {t("listTitle")}
-      </div>
-
-      {activeBills.length > 0 ? (
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {activeBills.map((bill) => (
-            <BillCard key={bill.id} bill={bill} onPay={setSelectedBill} />
-          ))}
-        </section>
       ) : (
-        <div className="rounded-xl border border-dashed border-border bg-card py-12 text-center">
-          <CircleDollarSign className="mx-auto size-8 text-muted-foreground" />
-          <p className="mt-3 text-sm font-medium text-foreground">{t("emptyTitle")}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{t("emptyBody")}</p>
-        </div>
+        <>
+          {dueSoonCount > 0 ? (
+            <div className="flex items-center gap-3 rounded-xl border border-amber/30 bg-amber/10 p-4" role="status">
+              <AlertTriangle className="size-5 shrink-0 text-amber" />
+              <p className="text-sm font-medium text-foreground">
+                {t("dueSoonWarning", { count: dueSoonCount })}
+              </p>
+            </div>
+          ) : null}
+
+          <section className="grid gap-4 md:grid-cols-3">
+            <StatCard label={t("activeInstallments")} value={String(activeBills.length)} helper={t("activeInstallmentsHelper")} />
+            <StatCard label={t("nextPayment")} value={formatCurrency(amountDue, intlLocale)} helper={t("nextPaymentHelper", { count: dueSoonCount })} />
+            <StatCard label={t("totalOutstanding")} value={formatCurrency(outstanding, intlLocale)} helper={t("totalOutstandingHelper")} />
+          </section>
+
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <CalendarClock className="size-5 text-primary" /> {t("listTitle")}
+          </div>
+
+          {activeBills.length > 0 ? (
+            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {activeBills.map((bill) => (
+                <BillCard key={bill.id} bill={bill} onPay={setSelectedBill} />
+              ))}
+            </section>
+          ) : (
+            <div className="rounded-xl border border-dashed border-border bg-card py-12 text-center">
+              <CircleDollarSign className="mx-auto size-8 text-muted-foreground" />
+              <p className="mt-3 text-sm font-medium text-foreground">{t("emptyTitle")}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t("emptyBody")}</p>
+            </div>
+          )}
+        </>
       )}
 
       {selectedBill ? (

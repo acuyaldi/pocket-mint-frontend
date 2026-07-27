@@ -258,6 +258,7 @@
   "dashboard": {
     "financialPosition": "Net financial position",
     "failedToLoadSummary": "Failed to load your financial summary.",
+    "loadingNetWorth": "Loading net worth…",
     "lastUpdated": "Last updated: just now",
     "totalAssets": "Total assets",
     "totalDebts": "Total debt",
