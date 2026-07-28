@@ -1,9 +1,7 @@
 "use client";
 
-import { Loader2, Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
-import { Input } from "@/components/ui/input";
+import { ChatPromptInput } from "@/components/ui/chat-prompt-input";
 
 export interface AssistantCommandFormLabels {
   label: string;
@@ -30,7 +28,12 @@ interface AssistantCommandFormProps {
   disabledReason?: string | null;
 }
 
-/** The conversation composer — submits one natural-language financial instruction at a time onto the active (or a new) conversation. */
+/**
+ * The conversation composer — submits one natural-language financial instruction
+ * at a time onto the active (or a new) conversation. The label/helper/error stay
+ * on the shared `FormField` (which wires the textarea's id + validation state),
+ * while the chat-style entry and send affordance live in `ChatPromptInput`.
+ */
 export function AssistantCommandForm({
   value,
   onChange,
@@ -44,34 +47,25 @@ export function AssistantCommandForm({
   const canSubmit = value.trim().length > 0 && !isDisabled;
 
   return (
-    <form
-      className="max-w-xl space-y-4"
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (canSubmit) onSubmit();
-      }}
-    >
+    <div className="max-w-xl">
       <FormField
         label={labels.label}
         htmlFor="assistant-instruction"
         description={disabledReason ?? labels.helper}
         error={error ?? undefined}
       >
-        <Input
-          id="assistant-instruction"
+        <ChatPromptInput
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={onChange}
+          onSend={() => {
+            if (canSubmit) onSubmit();
+          }}
           placeholder={labels.placeholder}
           disabled={isDisabled}
-          autoComplete="off"
+          isSending={isSubmitting}
+          sendLabel={isSubmitting ? labels.submitting : labels.submit}
         />
       </FormField>
-      {/* Fixed min-width keeps the button geometry identical between the idle
-          and pending labels, so the pending state never shifts layout. */}
-      <Button type="submit" disabled={!canSubmit} className="h-11 min-w-32 justify-center gap-2 px-4">
-        {isSubmitting ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Send className="size-4" aria-hidden="true" />}
-        {isSubmitting ? labels.submitting : labels.submit}
-      </Button>
-    </form>
+    </div>
   );
 }

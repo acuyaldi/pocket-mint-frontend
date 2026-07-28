@@ -4,6 +4,12 @@
 export interface SendAssistantMessageInput {
   message: string;
   conversationId?: string;
+  /**
+   * BCP-47 locale of the active UI (e.g. "id-ID" / "en-US"). Sent so the
+   * backend replies in the user's language instead of defaulting to English;
+   * omitted, the backend falls back to its own default ("id-ID").
+   */
+  locale?: string;
 }
 
 export interface ExecuteAssistantIntentInput {
