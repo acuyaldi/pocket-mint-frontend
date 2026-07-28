@@ -40,6 +40,22 @@ const toExportPeriod = (p: AnalyticsPeriod): "month" | "quarter" | "six-months" 
   return null; // current-year, custom → no direct export mapping, disabled
 };
 
+/**
+ * Neutral, reduced-motion-safe placeholder that reserves a chart body's height
+ * while its query loads, so the <article> doesn't grow (and shove siblings
+ * down) when the chart mounts. Height is passed per chart to match the loaded
+ * body: CashFlow is deterministic (fixed 300px chart + legend); the
+ * data-sized charts reserve a representative height near their loaded size.
+ */
+function ChartSkeleton({ className }: { className: string }) {
+  return (
+    <div
+      className={`w-full rounded-lg bg-surface-high motion-safe:animate-pulse ${className}`}
+      aria-hidden="true"
+    />
+  );
+}
+
 export default function AnalyticsPage() {
   const t = useTranslations("analytics");
   const locale = useLocale();
@@ -137,6 +153,12 @@ export default function AnalyticsPage() {
     >
       <PageHeader title={t("pageTitle")} description={t("pageDescription")} />
 
+      {/* Accessible loading announcement — the visual loading state is the
+          in-place skeletons below, which are aria-hidden. */}
+      <div className="sr-only" role="status" aria-live="polite">
+        {isLoading ? t("loading") : ""}
+      </div>
+
       {/* --- Period selector + export --- */}
       <section className="sticky top-16 z-10 flex flex-wrap items-center justify-between gap-4 border-y border-border/50 bg-background py-3">
         <AnalyticsPeriodSelector state={periodState} onChange={handlePeriodChange} />
@@ -161,41 +183,55 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {/* --- Overview cards --- */}
-      {overview.data && (
+      {/* --- Overview cards ---
+          Always mounted (real cards or same-geometry loading skeletons) so the
+          section is never inserted above the charts on data arrival. That
+          insertion was the dominant /analytics layout-shift cluster. */}
+      {!overview.isError && (
         <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <AnalyticsSummaryCard
-            label={t("overview.income")}
-            value={formatCurrency(overview.data.income, intlLocale)}
-            change={overview.data.change.income}
-            percentageChange={overview.data.percentageChange.income}
-            intlLocale={intlLocale}
-            increaseIsGood={true}
-          />
-          <AnalyticsSummaryCard
-            label={t("overview.expense")}
-            value={formatCurrency(overview.data.expense, intlLocale)}
-            change={overview.data.change.expense}
-            percentageChange={overview.data.percentageChange.expense}
-            intlLocale={intlLocale}
-            increaseIsGood={false}
-          />
-          <AnalyticsSummaryCard
-            label={t("overview.netCashFlow")}
-            value={formatCurrency(overview.data.netCashFlow, intlLocale)}
-            change={overview.data.change.netCashFlow}
-            percentageChange={overview.data.percentageChange.netCashFlow}
-            intlLocale={intlLocale}
-            increaseIsGood={true}
-          />
-          <AnalyticsSummaryCard
-            label={t("overview.transactionCount")}
-            value={overview.data.transactionCount.toLocaleString(intlLocale)}
-            change={0}
-            percentageChange={{ value: null, reason: "ZERO_BASELINE" }}
-            intlLocale={intlLocale}
-            changeIsCurrency={false}
-          />
+          {overview.data ? (
+            <>
+              <AnalyticsSummaryCard
+                label={t("overview.income")}
+                value={formatCurrency(overview.data.income, intlLocale)}
+                change={overview.data.change.income}
+                percentageChange={overview.data.percentageChange.income}
+                intlLocale={intlLocale}
+                increaseIsGood={true}
+              />
+              <AnalyticsSummaryCard
+                label={t("overview.expense")}
+                value={formatCurrency(overview.data.expense, intlLocale)}
+                change={overview.data.change.expense}
+                percentageChange={overview.data.percentageChange.expense}
+                intlLocale={intlLocale}
+                increaseIsGood={false}
+              />
+              <AnalyticsSummaryCard
+                label={t("overview.netCashFlow")}
+                value={formatCurrency(overview.data.netCashFlow, intlLocale)}
+                change={overview.data.change.netCashFlow}
+                percentageChange={overview.data.percentageChange.netCashFlow}
+                intlLocale={intlLocale}
+                increaseIsGood={true}
+              />
+              <AnalyticsSummaryCard
+                label={t("overview.transactionCount")}
+                value={overview.data.transactionCount.toLocaleString(intlLocale)}
+                change={0}
+                percentageChange={{ value: null, reason: "ZERO_BASELINE" }}
+                intlLocale={intlLocale}
+                changeIsCurrency={false}
+              />
+            </>
+          ) : (
+            <>
+              <AnalyticsSummaryCard loading />
+              <AnalyticsSummaryCard loading />
+              <AnalyticsSummaryCard loading />
+              <AnalyticsSummaryCard loading />
+            </>
+          )}
         </section>
       )}
 
@@ -210,6 +246,8 @@ export default function AnalyticsPage() {
           </div>
           {trends.data ? (
             <CashFlowTrend data={trends.data} intlLocale={intlLocale} />
+          ) : trends.isLoading ? (
+            <ChartSkeleton className="h-83" />
           ) : null}
         </article>
 
@@ -224,6 +262,8 @@ export default function AnalyticsPage() {
           {/* ponytail: type toggle deferred — only EXPENSE for now; add INCOME toggle when categories model supports it meaningfully */}
           {categories.data ? (
             <CategoryBreakdown data={categories.data} intlLocale={intlLocale} />
+          ) : categories.isLoading ? (
+            <ChartSkeleton className="h-70" />
           ) : null}
         </article>
 
@@ -237,6 +277,8 @@ export default function AnalyticsPage() {
           </div>
           {wallets.data ? (
             <WalletBreakdown data={wallets.data} intlLocale={intlLocale} />
+          ) : wallets.isLoading ? (
+            <ChartSkeleton className="h-80" />
           ) : null}
         </article>
 
@@ -250,6 +292,8 @@ export default function AnalyticsPage() {
           </div>
           {budgetPerf.data ? (
             <BudgetPerformance data={budgetPerf.data} intlLocale={intlLocale} />
+          ) : budgetPerf.isLoading ? (
+            <ChartSkeleton className="h-40" />
           ) : null}
         </article>
       </section>
