@@ -188,7 +188,7 @@ export default function AnalyticsPage() {
           section is never inserted above the charts on data arrival. That
           insertion was the dominant /analytics layout-shift cluster. */}
       {!overview.isError && (
-        <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <section className="grid grid-cols-2 gap-4 overflow-visible max-[359px]:grid-flow-col max-[359px]:grid-cols-none max-[359px]:auto-cols-[minmax(9.5rem,1fr)] max-[359px]:overflow-x-auto max-[359px]:pb-2 md:gap-6 xl:grid-cols-4">
           {overview.data ? (
             <>
               <AnalyticsSummaryCard
