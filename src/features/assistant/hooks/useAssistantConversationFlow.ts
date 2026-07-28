@@ -54,6 +54,15 @@ export type AssistantLastResult = { renderedText: string } | null;
 const CONVERSATION_ID_PARAM = "conversationId";
 
 /**
+ * Client-side guard mirroring the backend's `MAX_ASSISTANT_MESSAGE_LENGTH`
+ * (`pocket-mint-be/src/assistant/persistence.ts`). An over-length instruction is
+ * a genuine field-validation error — it surfaces inline on the input, never as a
+ * snackbar, and never leaves the browser. Not a business-rule change: the backend
+ * would reject it identically.
+ */
+const MAX_ASSISTANT_INSTRUCTION_LENGTH = 10_000;
+
+/**
  * Centralizes the Assistant interaction orchestration so the conversation UI
  * and the underlying submit → clarification → draft → confirm/cancel flow
  * stay one canonical path. Every mutation/query here is the exact Phase
@@ -202,12 +211,29 @@ export function useAssistantConversationFlow() {
     onError(readAssistantErrorMessage(error, tErrors));
   }
 
+  /**
+   * Sends the composed instruction. Error ownership is split by kind:
+   * - Field validation (too-long) → inline `formError` on the input; the
+   *   request never leaves the browser.
+   * - Ambiguous failure (no HTTP response) → the `actionOutcomeUnknown`
+   *   recovery UI, exactly as before — never a snackbar, because the mutation
+   *   might have succeeded.
+   * - Definite request/provider/server failure → `onRequestError` (the top
+   *   snackbar). It is never rendered inline and never marks the input invalid.
+   * The typed instruction is cleared only on success, so a failure leaves it in
+   * place for an immediate retry.
+   */
   const submit = (
     tErrors: (key: string) => string,
+    onRequestError: (message: string) => void,
     onGenericError: () => void
   ) => {
     const message = instructionText.trim();
     if (!message || sendMessage.isPending || activeWorkflow) return;
+    if (message.length > MAX_ASSISTANT_INSTRUCTION_LENGTH) {
+      setFormError(tErrors("tooLong"));
+      return;
+    }
     setFormError(null);
     setOutcomeUnknownAction(null);
     sendMessage.mutate(
@@ -223,7 +249,7 @@ export function useAssistantConversationFlow() {
             setOutcomeUnknownAction("sendMessage");
             return;
           }
-          setFormError(readAssistantErrorMessage(error, tErrors));
+          onRequestError(readAssistantErrorMessage(error, tErrors));
         },
       }
     );

@@ -2,8 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { Plus } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/page-header";
+import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toaster";
 import { INTL_LOCALE } from "@/i18n/config";
 import { useAssistantConversationFlow } from "@/src/features/assistant/hooks/useAssistantConversationFlow";
@@ -73,8 +75,6 @@ export default function AssistantPage() {
     examplesLabel: tConversation("examplesLabel"),
     examples: [tConversation("example1"), tConversation("example2")],
     pendingResponse: tConversation("pendingResponse"),
-    newConversation: tConversation("newConversation"),
-    resetBlocked: tConversation("resetBlocked"),
     continueLabel: tCompletion("newInstruction"),
     composer: {
       label: tCommand("label"),
@@ -121,17 +121,33 @@ export default function AssistantPage() {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-start justify-between gap-4">
+    <div className="flex flex-col gap-6">
+      {/* Compact header: title/description on the left, conversation actions
+          grouped on the right. The action group wraps below the title on narrow
+          screens rather than overflowing. */}
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <PageHeader title={t("pageTitle")} description={t("pageDescription")} />
-        <AssistantConversationHistory
-          conversationId={flow.conversationId}
-          canStartNewConversation={flow.canStartNewConversation}
-          onSwitchConversation={flow.switchConversation}
-          onStartNewConversation={flow.startNewConversation}
-          intlLocale={intlLocale}
-        />
-      </div>
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={flow.startNewConversation}
+            disabled={!flow.canStartNewConversation}
+            title={flow.canStartNewConversation ? undefined : tConversation("resetBlocked")}
+            className="h-11 gap-1.5"
+          >
+            <Plus className="size-4" aria-hidden="true" />
+            {tConversation("newConversation")}
+          </Button>
+          <AssistantConversationHistory
+            conversationId={flow.conversationId}
+            canStartNewConversation={flow.canStartNewConversation}
+            onSwitchConversation={flow.switchConversation}
+            onStartNewConversation={flow.startNewConversation}
+            intlLocale={intlLocale}
+          />
+        </div>
+      </header>
 
       <AssistantConversation
         conversationId={flow.conversationId}
@@ -144,7 +160,7 @@ export default function AssistantPage() {
         lastResult={flow.lastResult}
         instructionText={flow.instructionText}
         onInstructionChange={flow.setInstructionText}
-        onSubmit={() => flow.submit(tErrors, () => flow.startNewConversation())}
+        onSubmit={() => flow.submit(tErrors, (message) => toast(message, "error"), () => flow.startNewConversation())}
         isSendingMessage={flow.isSendingMessage}
         formError={flow.formError}
         pendingOptionToken={flow.pendingOptionToken}
@@ -185,7 +201,6 @@ export default function AssistantPage() {
             (message) => toast(message, "error")
           )
         }
-        canStartNewConversation={flow.canStartNewConversation}
         onStartNewConversation={flow.startNewConversation}
         intlLocale={intlLocale}
         labels={labels}

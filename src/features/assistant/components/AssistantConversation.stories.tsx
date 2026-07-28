@@ -16,8 +16,6 @@ const LABELS: AssistantConversationLabels = {
   examplesLabel: "Examples",
   examples: ["bayar internet 350 ribu dari BCA", "gaji bulan ini masuk ke BCA 8 juta"],
   pendingResponse: "Waiting for the assistant's response...",
-  newConversation: "New conversation",
-  resetBlocked: "Resolve the current clarification or draft before starting a new conversation.",
   continueLabel: "New instruction",
   composer: {
     label: "What would you like to record?",
@@ -177,7 +175,6 @@ const BASE = {
   isCheckingOutcome: false,
   onCheckOutcome: fn(),
   onRetryOutcome: fn(),
-  canStartNewConversation: true,
   onStartNewConversation: fn(),
   intlLocale: "id-ID",
   labels: LABELS,
@@ -215,7 +212,6 @@ export const WithClarification: Story = {
     conversationId: "conv-1",
     messages: MESSAGES,
     activeWorkflow: { kind: "clarification", clarification: CLARIFICATION },
-    canStartNewConversation: false,
   },
 };
 
@@ -225,7 +221,6 @@ export const WithDraftReview: Story = {
     conversationId: "conv-1",
     messages: MESSAGES,
     activeWorkflow: { kind: "draft", draft: DRAFT },
-    canStartNewConversation: false,
   },
 };
 
@@ -253,7 +248,6 @@ export const ClarificationRecoveredAfterRefresh: Story = {
     conversationId: "conv-1",
     messages: MESSAGES,
     recoveryState: { kind: "clarificationRecovered", clarification: RECOVERED_CLARIFICATION },
-    canStartNewConversation: false,
   },
 };
 
@@ -263,7 +257,6 @@ export const DraftRecoveredAfterRefresh: Story = {
     conversationId: "conv-1",
     messages: MESSAGES,
     recoveryState: { kind: "draftRecovered", draft: RECOVERED_DRAFT },
-    canStartNewConversation: false,
   },
 };
 
@@ -273,7 +266,6 @@ export const ActionOutcomeUnknownWithRetry: Story = {
     conversationId: "conv-1",
     messages: MESSAGES,
     recoveryState: { kind: "actionOutcomeUnknown", action: "confirmDraft" },
-    canStartNewConversation: false,
   },
 };
 
@@ -283,7 +275,6 @@ export const ActionOutcomeUnknownWithoutRetry: Story = {
     conversationId: "conv-1",
     messages: MESSAGES,
     recoveryState: { kind: "actionOutcomeUnknown", action: "sendMessage" },
-    canStartNewConversation: false,
   },
 };
 
@@ -307,15 +298,6 @@ export const SubmitInteraction: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: LABELS.composer.submit }));
     expect(args.onSubmit).toHaveBeenCalledOnce();
-  },
-};
-
-export const NewConversationInteraction: Story = {
-  args: { ...BASE, conversationId: "conv-1", messages: MESSAGES },
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: LABELS.newConversation }));
-    expect(args.onStartNewConversation).toHaveBeenCalledOnce();
   },
 };
 

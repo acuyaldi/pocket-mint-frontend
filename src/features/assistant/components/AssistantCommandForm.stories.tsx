@@ -44,8 +44,14 @@ export const Submitting: Story = {
   args: { ...Filled.args, isSubmitting: true },
 };
 
-export const WithError: Story = {
-  args: { ...Filled.args, error: "That instruction couldn't be understood. Try rephrasing it." },
+/**
+ * Inline errors are reserved for genuine field validation (e.g. an over-length
+ * instruction). Global request/provider/network failures are shown via the top
+ * snackbar, never here — so the input is only ever marked invalid for real
+ * input validation.
+ */
+export const WithValidationError: Story = {
+  args: { ...Filled.args, error: "That instruction is too long. Please shorten it." },
 };
 
 export const DisabledForClarification: Story = {

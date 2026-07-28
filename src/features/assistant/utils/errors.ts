@@ -21,6 +21,10 @@ export function classifyAssistantMutationError(error: unknown): AssistantErrorAm
 const ASSISTANT_ERROR_MESSAGE_KEYS: Record<string, string> = {
   ASSISTANT_INVALID_REQUEST: "invalidInput",
   ASSISTANT_INVALID_INPUT: "invalidInput",
+  // 503s from the provider must read as a calm "try again later", never the raw
+  // backend string "Assistant provider is unavailable".
+  ASSISTANT_PROVIDER_UNAVAILABLE: "providerUnavailable",
+  ASSISTANT_PROVIDER_CONFIGURATION_ERROR: "providerUnavailable",
   ASSISTANT_CLARIFICATION_EXPIRED: "clarificationExpired",
   ASSISTANT_CLARIFICATION_STALE: "clarificationExpired",
   ASSISTANT_CLARIFICATION_ALREADY_CONSUMED: "clarificationConsumed",

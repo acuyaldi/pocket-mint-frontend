@@ -1,10 +1,14 @@
+import { getTranslations } from "next-intl/server";
+
 import { AppShell } from "@/components/layout/app-shell";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppTopbar } from "@/components/layout/app-topbar";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { Toaster } from "@/components/ui/toaster";
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const t = await getTranslations("common.snackbar");
+
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
       <AppSidebar />
@@ -17,7 +21,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </AppShell>
 
       <BottomNav />
-      <Toaster />
+      <Toaster closeLabel={t("close")} regionLabel={t("regionLabel")} />
     </div>
   );
 }
