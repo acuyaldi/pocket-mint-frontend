@@ -804,6 +804,7 @@
   "analytics": {
     "pageTitle": "Analitik",
     "pageDescription": "Pantau tren dan performa finansial Anda",
+    "loading": "Memuat analitik…",
     "exportReport": "Ekspor laporan",
     "exportFailed": "Ekspor laporan gagal. Coba lagi.",
     "periodSelector": {

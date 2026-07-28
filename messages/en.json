@@ -804,6 +804,7 @@
   "analytics": {
     "pageTitle": "Analytics",
     "pageDescription": "Track your financial trends and performance",
+    "loading": "Loading analytics…",
     "exportReport": "Export report",
     "exportFailed": "Report export failed. Try again.",
     "periodSelector": {

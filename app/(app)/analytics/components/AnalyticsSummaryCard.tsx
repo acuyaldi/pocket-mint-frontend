@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl";
 import { formatCurrency } from "@/lib/utils";
 import type { PercentageChange } from "@/src/types/analytics";
 
-export interface AnalyticsSummaryCardProps {
+interface AnalyticsSummaryCardDataProps {
+  loading?: false;
   label: string;
   /** Already-formatted headline value (money string or plain count) — caller controls formatting. */
   value: string;
@@ -18,27 +19,86 @@ export interface AnalyticsSummaryCardProps {
   increaseIsGood?: boolean;
 }
 
-export function AnalyticsSummaryCard({
+/**
+ * Loading variant. Renders the SAME card frame and the same three text
+ * line-boxes (label / value / change) as the loaded card, with the text
+ * replaced by neutral skeleton bars. Keeping identical geometry lets the
+ * overview section stay mounted during loading so it reserves its final
+ * height instead of being inserted above the charts on data arrival — the
+ * root cause of the /analytics layout-shift cluster.
+ */
+interface AnalyticsSummaryCardLoadingProps {
+  loading: true;
+}
+
+export type AnalyticsSummaryCardProps =
+  | AnalyticsSummaryCardDataProps
+  | AnalyticsSummaryCardLoadingProps;
+
+const CARD_CLASS = "rounded-xl border border-border/70 bg-card p-6 shadow-sm";
+
+function AnalyticsSummaryCardSkeleton() {
+  return (
+    <article className={CARD_CLASS} aria-hidden="true">
+      <p className="text-[12px] font-semibold uppercase tracking-[0.12em]">
+        <span className="inline-block h-3 w-20 rounded bg-surface-high align-middle motion-safe:animate-pulse" />
+      </p>
+      <p className="mt-4 text-[28px] font-semibold leading-tight">
+        <span className="inline-block h-7 w-32 rounded bg-surface-high align-middle motion-safe:animate-pulse" />
+      </p>
+      <div className="mt-3 flex h-5 items-center">
+        <span className="inline-block h-3.5 w-28 rounded bg-surface-high motion-safe:animate-pulse" />
+      </div>
+    </article>
+  );
+}
+
+export function AnalyticsSummaryCard(props: AnalyticsSummaryCardProps) {
+  if (props.loading) {
+    return <AnalyticsSummaryCardSkeleton />;
+  }
+
+  const {
+    label,
+    value,
+    change,
+    percentageChange,
+    intlLocale,
+    changeIsCurrency = true,
+    increaseIsGood = true,
+  } = props;
+  return <AnalyticsSummaryCardContent {...{ label, value, change, percentageChange, intlLocale, changeIsCurrency, increaseIsGood }} />;
+}
+
+function AnalyticsSummaryCardContent({
   label,
   value,
   change,
   percentageChange,
   intlLocale,
-  changeIsCurrency = true,
-  increaseIsGood = true,
-}: AnalyticsSummaryCardProps) {
+  changeIsCurrency,
+  increaseIsGood,
+}: Required<Omit<AnalyticsSummaryCardDataProps, "loading">>) {
   const t = useTranslations("analytics.overview");
   const direction = change > 0 ? "up" : change < 0 ? "down" : "flat";
   const isFavorable = direction === "flat" ? null : direction === "up" ? increaseIsGood : !increaseIsGood;
+  // AA-safe text tones for change text on the white card. The bright
+  // --color-mint / --color-coral are decorative-only; the design system
+  // provides -strong variants for colored text on light surfaces (see
+  // app/globals.css). The direction arrow is the non-color status cue.
   const toneClass =
-    isFavorable === null ? "text-muted-foreground" : isFavorable ? "text-mint" : "text-coral";
+    isFavorable === null
+      ? "text-muted-foreground"
+      : isFavorable
+        ? "text-mint-strong"
+        : "text-coral-strong";
 
   const changeText = changeIsCurrency
     ? formatCurrency(Math.abs(change), intlLocale)
     : Math.abs(change).toLocaleString(intlLocale);
 
   return (
-    <article className="rounded-xl border border-border/70 bg-card p-6 shadow-sm">
+    <article className={CARD_CLASS}>
       <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
       <p className="mt-4 text-[28px] font-semibold leading-tight tabular-nums text-primary">{value}</p>
 
