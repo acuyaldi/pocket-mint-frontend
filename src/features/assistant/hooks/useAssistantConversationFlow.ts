@@ -154,12 +154,28 @@ export function useAssistantConversationFlow() {
   function applyTurnResult(result: AssistantTurnResult) {
     persistConversationId(result.conversationId);
     if (result.status === "clarification_required") {
-      if (result.data && isClarificationRequest(result.data.clarification)) {
-        setActiveWorkflow({ kind: "clarification", clarification: result.data.clarification });
-        return;
+      // Entity-ambiguity clarification: a structured pick-an-option payload
+      // (`data.kind === "ambiguous"`). Blocks the composer until an option is
+      // selected via the clarification endpoint.
+      if (result.data) {
+        if (isClarificationRequest(result.data.clarification)) {
+          setActiveWorkflow({ kind: "clarification", clarification: result.data.clarification });
+          return;
+        }
+        // `data` present but malformed — a genuine contract violation, surfaced
+        // generically rather than mistaken for a normal turn.
+        setActiveWorkflow(null);
+        return "generic-error" as const;
       }
+      // Provider clarification: one bounded free-form question. Backend contract
+      // (`pocket-mint-be` provider-runtime.ts) is `clarification_required` with
+      // NO `data`, persisted as an ASSISTANT turn (source `PROVIDER_CLARIFICATION`)
+      // and answered by typing a follow-up — it is neither an option-selection
+      // nor an error. Let it land in the persisted timeline and keep the composer
+      // open; never block, never reset the conversation.
       setActiveWorkflow(null);
-      return "generic-error" as const;
+      setLastResult(null);
+      return;
     }
     setLastResult(null);
     if (isAssistantDraft(result.data)) {
@@ -167,7 +183,11 @@ export function useAssistantConversationFlow() {
       return;
     }
     setActiveWorkflow(null);
-    setLastResult({ renderedText: result.renderedText });
+    // Echo the deterministic rendered text only when the backend actually sent
+    // one. A non-tool result without it (e.g. an HTTP-200 `unsupported` reply that
+    // carries `message` but no `renderedText`) still lands in the persisted
+    // timeline — there is nothing to echo, and an empty result card must never appear.
+    if (result.renderedText) setLastResult({ renderedText: result.renderedText });
     return;
   }
 

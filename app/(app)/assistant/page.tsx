@@ -160,7 +160,7 @@ export default function AssistantPage() {
         lastResult={flow.lastResult}
         instructionText={flow.instructionText}
         onInstructionChange={flow.setInstructionText}
-        onSubmit={() => flow.submit(tErrors, (message) => toast(message, "error"), () => flow.startNewConversation())}
+        onSubmit={() => flow.submit(tErrors, (message) => toast(message, "error"), () => toast(tErrors("generic"), "error"))}
         isSendingMessage={flow.isSendingMessage}
         formError={flow.formError}
         pendingOptionToken={flow.pendingOptionToken}
