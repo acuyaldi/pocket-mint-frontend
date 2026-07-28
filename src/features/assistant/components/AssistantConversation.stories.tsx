@@ -81,6 +81,29 @@ const MESSAGES: AssistantMessage[] = [
   },
 ];
 
+// A provider clarification persists as an ordinary ASSISTANT turn (backend
+// source `PROVIDER_CLARIFICATION`) — a bounded free-form question, not a
+// pick-an-option payload. `AssistantMessage` renders by role, so it reads as a
+// normal assistant bubble; the difference is only that it's answered by typing.
+const PROVIDER_CLARIFICATION_MESSAGES: AssistantMessage[] = [
+  {
+    id: "msg-1",
+    turnId: "turn-1",
+    role: "USER",
+    source: "USER_PROVIDED",
+    content: "bayar internet 350 ribu dari BCA",
+    createdAt: "2026-07-25T10:00:00.000Z",
+  },
+  {
+    id: "msg-2",
+    turnId: "turn-1",
+    role: "ASSISTANT",
+    source: "PROVIDER_CLARIFICATION",
+    content: "Untuk transaksi ini, kategorinya apa dan tanggal berapa?",
+    createdAt: "2026-07-25T10:00:01.000Z",
+  },
+];
+
 const CLARIFICATION: ClarificationRequest = {
   clarificationId: "clar-1",
   entityType: "wallet",
@@ -186,6 +209,16 @@ export const EmptyConversation: Story = {
 
 export const WithMessages: Story = {
   args: { ...BASE, conversationId: "conv-1", messages: MESSAGES },
+};
+
+/**
+ * Regression cover for fix/assistant-conversation-response-ui: a provider
+ * clarification ("what is the category and date?") is a conversational turn in
+ * the timeline, with the composer left open so the user answers by typing. It
+ * previously reset the conversation and left the empty-state card visible.
+ */
+export const ProviderClarification: Story = {
+  args: { ...BASE, conversationId: "conv-1", messages: PROVIDER_CLARIFICATION_MESSAGES },
 };
 
 export const PendingResponse: Story = {

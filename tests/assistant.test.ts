@@ -981,3 +981,37 @@ describe("assistant conversation history (Phase 23.6)", () => {
     }
   });
 });
+
+describe("assistant provider clarification renders as a conversational turn, not a reset (fix/assistant-conversation-response-ui)", () => {
+  // Backend contract: the PROVIDER_CLARIFICATION path returns
+  // `{ status: "clarification_required", message, conversationId, turnId }` with NO `data`
+  // (pocket-mint-be provider-runtime.ts; docs/api/assistant-conversations.md — "one bounded
+  // plain-text clarification question"). It is a persisted ASSISTANT turn answered by typing,
+  // distinct from the entity-ambiguity `data.kind === "ambiguous"` pick-an-option payload.
+  it("branches on the presence of `data` inside the clarification_required case so a data-less provider question isn't treated as an error", () => {
+    expect(flowHookSource).toMatch(/status === "clarification_required"[\s\S]*?if \(result\.data\)/);
+    // The structured entity-ambiguity branch stays gated behind a valid clarification payload.
+    expect(flowHookSource).toContain("isClarificationRequest(result.data.clarification)");
+  });
+
+  it("does not block the composer or set a workflow for a provider clarification — it flows into the timeline and the composer stays open", () => {
+    // The data-less branch clears any workflow/echo and returns without the "generic-error"
+    // sentinel, so no clarification/draft workflow is engaged and the composer is never disabled.
+    expect(flowHookSource).toMatch(
+      /Provider clarification[\s\S]*?setActiveWorkflow\(null\);\s*setLastResult\(null\);\s*return;/
+    );
+  });
+
+  it("a malformed successful response no longer wipes the conversation — the submit generic-error handler is a snackbar, not startNewConversation", () => {
+    expect(pageSource).toContain('() => toast(tErrors("generic"), "error")');
+    // The pre-fix destructive submit handler is gone: a successful-but-unhandled response
+    // must never null the conversation id and drop the user back to the empty state.
+    expect(pageSource).not.toContain("() => flow.startNewConversation()");
+  });
+
+  it("only echoes a deterministic result card when the backend actually sent renderedText", () => {
+    // Guards against an empty AssistantResultState for an HTTP-200 non-tool reply
+    // (e.g. `unsupported`) that carries `message` but no `renderedText`.
+    expect(flowHookSource).toContain("if (result.renderedText) setLastResult({ renderedText: result.renderedText })");
+  });
+});
