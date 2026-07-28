@@ -2,7 +2,6 @@
 
 import type { RefObject } from "react";
 
-import { Button } from "@/components/ui/button";
 import { AssistantMessageList } from "./AssistantMessageList";
 import { AssistantMessage as AssistantMessageComponent, type AssistantMessageLabels } from "./AssistantMessage";
 import { AssistantConversationEmptyState } from "./AssistantConversationEmptyState";
@@ -29,8 +28,6 @@ export interface AssistantConversationLabels {
   examplesLabel: string;
   examples: string[];
   pendingResponse: string;
-  newConversation: string;
-  resetBlocked: string;
   continueLabel: string;
   composer: AssistantCommandFormLabels;
   composerDisabledClarification: string;
@@ -69,7 +66,6 @@ interface AssistantConversationProps {
   isCheckingOutcome: boolean;
   onCheckOutcome: () => void;
   onRetryOutcome: () => void;
-  canStartNewConversation: boolean;
   onStartNewConversation: () => void;
   intlLocale: string;
   labels: AssistantConversationLabels;
@@ -109,7 +105,6 @@ export function AssistantConversation({
   isCheckingOutcome,
   onCheckOutcome,
   onRetryOutcome,
-  canStartNewConversation,
   onStartNewConversation,
   intlLocale,
   labels,
@@ -131,23 +126,10 @@ export function AssistantConversation({
           : null;
 
   return (
-    <section aria-label={labels.regionLabel} className="space-y-6">
-      <div className="flex items-center justify-end gap-4">
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onStartNewConversation}
-          disabled={!canStartNewConversation}
-          title={canStartNewConversation ? undefined : labels.resetBlocked}
-          className="h-11 px-4"
-        >
-          {labels.newConversation}
-        </Button>
-      </div>
-
+    <section aria-label={labels.regionLabel} className="flex flex-col gap-5">
       {/* Persisted history is not itself an aria-live region — refetching it
           (e.g. after invalidation) must not re-announce every message. */}
-      <div className="space-y-6">
+      <div className="space-y-5">
         {conversationId ? (
           <AssistantMessageList
             messages={messages}

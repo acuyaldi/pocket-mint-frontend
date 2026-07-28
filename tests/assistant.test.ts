@@ -244,10 +244,27 @@ describe("assistant clarification flow (Phase 23.3, orchestration now in useAssi
     expect(flowHookSource).toContain("instructionText.trim()");
   });
 
-  it("preserves the entered instruction after a recoverable submit failure", () => {
-    expect(flowHookSource).toContain("setFormError(readAssistantErrorMessage(error, tErrors))");
-    // Only a successful submission clears the instruction text.
+  it("routes a definite submit request failure to the snackbar callback, never an inline field error", () => {
+    // A provider/server failure is a global error, not a field-validation error:
+    // submit forwards the normalized message to onRequestError (the top snackbar)
+    // and never writes it into the inline formError.
+    expect(flowHookSource).toContain("onRequestError(readAssistantErrorMessage(error, tErrors))");
+    expect(flowHookSource).not.toContain("setFormError(readAssistantErrorMessage");
+  });
+
+  it("keeps the inline formError for local field validation only (over-length instruction)", () => {
+    expect(flowHookSource).toContain("MAX_ASSISTANT_INSTRUCTION_LENGTH");
+    expect(flowHookSource).toContain('setFormError(tErrors("tooLong"))');
+  });
+
+  it("preserves the entered instruction after a failed submit — only a successful submission clears it", () => {
     expect(flowHookSource).toMatch(/onSuccess:\s*\(result\)\s*=>\s*\{\s*setInstructionText\(""\);/);
+  });
+
+  it("wires the submit request-error channel to the top snackbar at the page level (single ownership)", () => {
+    // The page hands submit a toast("...","error") callback, so one failed send
+    // produces exactly one snackbar and no inline API error.
+    expect(pageSource).toContain('flow.submit(tErrors, (message) => toast(message, "error")');
   });
 
   it("an immediate draft response enters draft review directly", () => {
@@ -542,6 +559,33 @@ describe("assistant clarification and error utilities", () => {
   it("readAssistantErrorMessage falls back to a generic localized message for network/unknown failures", () => {
     const t = (key: string) => `translated:${key}`;
     expect(readAssistantErrorMessage({}, t)).toBe("translated:generic");
+  });
+});
+
+describe("assistant provider-unavailable copy is friendly, never raw backend text", () => {
+  it("maps the 503 provider code to a localized friendly message key instead of the backend string", () => {
+    expect(errorsSource).toContain('ASSISTANT_PROVIDER_UNAVAILABLE: "providerUnavailable"');
+    const t = (key: string) => `translated:${key}`;
+    const error = {
+      response: { data: { error: { code: "ASSISTANT_PROVIDER_UNAVAILABLE", message: "Assistant provider is unavailable" } } },
+    };
+    // The raw backend string "Assistant provider is unavailable" never reaches the user.
+    expect(readAssistantErrorMessage(error, t)).toBe("translated:providerUnavailable");
+  });
+
+  it("defines friendly, non-raw provider-unavailable and too-long copy in both locales", () => {
+    for (const messages of [idMessages, enMessages]) {
+      const errors = messages.assistant.errors as Record<string, string>;
+      expect(errors.providerUnavailable).toBeTruthy();
+      expect(errors.tooLong).toBeTruthy();
+      expect(errors.providerUnavailable.toLowerCase()).not.toContain("provider is unavailable");
+    }
+    expect(enMessages.assistant.errors.providerUnavailable).toBe(
+      "Assistant is temporarily unavailable. Please try again shortly.",
+    );
+    expect(idMessages.assistant.errors.providerUnavailable).toBe(
+      "Asisten sedang tidak tersedia. Silakan coba lagi sebentar lagi.",
+    );
   });
 });
 

@@ -18,6 +18,15 @@
       "loading": "Memuat...",
       "empty": "Belum ada data"
     },
+    "snackbar": {
+      "close": "Tutup notifikasi",
+      "regionLabel": "Notifikasi"
+    },
+    "errors": {
+      "requestFailed": "Terjadi kesalahan. Silakan coba lagi.",
+      "network": "Anda sepertinya sedang offline. Periksa koneksi lalu coba lagi.",
+      "timeout": "Permintaan memakan waktu terlalu lama. Silakan coba lagi."
+    },
     "currencyPrefix": "Rp"
   },
   "nav": {
@@ -1072,6 +1081,8 @@
     },
     "errors": {
       "invalidInput": "Instruksi tersebut tidak dapat dipahami. Coba ubah kalimatnya.",
+      "tooLong": "Instruksi tersebut terlalu panjang. Mohon persingkat.",
+      "providerUnavailable": "Asisten sedang tidak tersedia. Silakan coba lagi sebentar lagi.",
       "clarificationExpired": "Klarifikasi ini sudah kedaluwarsa. Mulai lagi.",
       "clarificationConsumed": "Klarifikasi ini sudah digunakan. Mulai lagi.",
       "invalidOption": "Opsi tersebut sudah tidak berlaku. Mulai lagi.",

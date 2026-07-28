@@ -18,6 +18,15 @@
       "loading": "Loading...",
       "empty": "No data yet"
     },
+    "snackbar": {
+      "close": "Close notification",
+      "regionLabel": "Notifications"
+    },
+    "errors": {
+      "requestFailed": "Something went wrong. Please try again.",
+      "network": "You appear to be offline. Check your connection and try again.",
+      "timeout": "The request took too long. Please try again."
+    },
     "currencyPrefix": "IDR"
   },
   "nav": {
@@ -1072,6 +1081,8 @@
     },
     "errors": {
       "invalidInput": "That instruction couldn't be understood. Try rephrasing it.",
+      "tooLong": "That instruction is too long. Please shorten it.",
+      "providerUnavailable": "Assistant is temporarily unavailable. Please try again shortly.",
       "clarificationExpired": "This clarification has expired. Start over.",
       "clarificationConsumed": "This clarification was already used. Start over.",
       "invalidOption": "That option is no longer valid. Start over.",

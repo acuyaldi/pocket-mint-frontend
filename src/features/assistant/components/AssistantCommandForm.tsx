@@ -18,6 +18,12 @@ interface AssistantCommandFormProps {
   onChange: (value: string) => void;
   onSubmit: () => void;
   isSubmitting: boolean;
+  /**
+   * Inline field-validation error only (e.g. an over-length instruction). Global
+   * request/provider/network failures are shown via the top snackbar, never
+   * here — so this never fires for a server failure and the input is only marked
+   * `aria-invalid` for genuine input validation.
+   */
   error?: string | null;
   labels: AssistantCommandFormLabels;
   /** Present while a clarification/draft is unresolved — disables the composer and explains why instead of just going inert. */
@@ -60,7 +66,9 @@ export function AssistantCommandForm({
           autoComplete="off"
         />
       </FormField>
-      <Button type="submit" disabled={!canSubmit} className="h-11 gap-2 px-4">
+      {/* Fixed min-width keeps the button geometry identical between the idle
+          and pending labels, so the pending state never shifts layout. */}
+      <Button type="submit" disabled={!canSubmit} className="h-11 min-w-32 justify-center gap-2 px-4">
         {isSubmitting ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Send className="size-4" aria-hidden="true" />}
         {isSubmitting ? labels.submitting : labels.submit}
       </Button>
