@@ -336,6 +336,53 @@ describe("assistant clarification flow (Phase 23.3, orchestration now in useAssi
   });
 });
 
+describe("assistant API failures never render as inline field errors (regression guard, PR #72)", () => {
+  // Pre-#72 the submit onError wrote the normalized API error straight into the
+  // inline field state: `setFormError(readAssistantErrorMessage(error, tErrors))`.
+  // That rendered a global/API failure as a field error under the composer, with
+  // the input's red ring and aria-invalid. This guard fails if any inline-error
+  // write is ever fed anything other than a local, pre-request validation result.
+  const setFormErrorWrites = flowHookSource
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.includes("setFormError(") && !line.startsWith("//") && !line.includes("useState"));
+
+  it("only ever writes the inline formError from local validation or a reset — never a normalized API error", () => {
+    expect(setFormErrorWrites.length).toBeGreaterThan(0);
+    for (const line of setFormErrorWrites) {
+      const isReset = /setFormError\(null\)/.test(line);
+      const isLocalValidation = /setFormError\(tErrors\("tooLong"\)\)/.test(line);
+      expect(isReset || isLocalValidation, `unexpected inline-error write: ${line}`).toBe(true);
+    }
+    // The exact pre-#72 regression, forbidden verbatim.
+    expect(flowHookSource).not.toContain("setFormError(readAssistantErrorMessage");
+  });
+
+  it("routes every Assistant mutation failure to onRequestError/onError, not the inline field error", () => {
+    // submit's definite failure forwards to onRequestError (the snackbar callback);
+    // every other mutation forwards to onError via handleMutationError.
+    expect(flowHookSource).toContain("onRequestError(readAssistantErrorMessage(error, tErrors))");
+    expect(flowHookSource).toContain("onError(readAssistantErrorMessage(error, tErrors))");
+  });
+
+  it("the composer's only inline-error source is the local formError, with no request/api error channel", () => {
+    expect(conversationSource).toContain("error={formError}");
+    expect(conversationSource).not.toMatch(/error=\{[^}]*(requestError|submitError|apiError|historyError)/);
+    // aria-invalid is reachable only through FormField's `error` prop (i.e. formError),
+    // never hardcoded as a JSX attribute on the Assistant input for an API failure.
+    // (The string still appears in the component's doc comment, hence matching an attribute.)
+    expect(commandFormSource).not.toMatch(/aria-invalid\s*=/);
+  });
+
+  it("wires every page-level Assistant mutation error callback to the top snackbar (single owner)", () => {
+    // submit, selectOption, cancelClarification, confirmDraft, cancelDraft, retryOutcome.
+    const toastErrorCallbacks = pageSource.match(/\(message\)\s*=>\s*toast\(message,\s*"error"\)/g) ?? [];
+    expect(toastErrorCallbacks.length).toBeGreaterThanOrEqual(6);
+    // The page never re-introduces an inline field-error channel for API failures.
+    expect(pageSource).not.toContain("setFormError");
+  });
+});
+
 describe("assistant conversation experience (Phase 23.4)", () => {
   it("reuses useAssistantSession for history retrieval instead of a new fetch path", () => {
     expect(flowHookSource).toContain('from "@/src/features/assistant/hooks/useAssistantSession"');
