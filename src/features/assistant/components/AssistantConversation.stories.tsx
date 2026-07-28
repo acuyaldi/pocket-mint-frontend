@@ -162,7 +162,7 @@ const meta: Meta<typeof AssistantConversation> = {
   tags: ["autodocs"],
   decorators: [
     (Story) => (
-      <div className="max-w-2xl p-4">
+      <div className="flex h-[calc(100vh-2rem)] max-w-2xl flex-col p-4">
         <Story />
       </div>
     ),

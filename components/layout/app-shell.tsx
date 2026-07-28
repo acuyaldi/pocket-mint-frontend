@@ -20,7 +20,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   return (
-    <main ref={scrollRef} className="min-w-0 flex-1 overflow-y-auto bg-background">
+    <main ref={scrollRef} className="flex min-w-0 flex-1 flex-col overflow-y-auto bg-background">
       {children}
     </main>
   );

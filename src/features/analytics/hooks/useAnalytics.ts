@@ -14,6 +14,24 @@ import type {
 
 const STALE_TIME = 5 * 60 * 1000;
 
+interface ApiEnvelope<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+export function unwrapAnalyticsResponse<T>(payload: T | ApiEnvelope<T>): T {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "data" in payload &&
+    "success" in payload
+  ) {
+    return (payload as ApiEnvelope<T>).data;
+  }
+  return payload;
+}
+
 /** Query-param object for a period selection, dropping startDate/endDate unless period is "custom". */
 function periodParams(params: AnalyticsPeriodParams): Record<string, string> {
   const query: Record<string, string> = { period: params.period };
@@ -42,8 +60,10 @@ export const useAnalyticsOverview = (params: AnalyticsPeriodParams) => {
   return useQuery<AnalyticsOverview, Error>({
     queryKey: ["analytics", "overview", ...periodKey(params)],
     queryFn: async () => {
-      const response = await api.get<AnalyticsOverview>("/analytics/overview", { params: periodParams(params) });
-      return response.data;
+      const response = await api.get<
+        AnalyticsOverview | ApiEnvelope<AnalyticsOverview>
+      >("/analytics/overview", { params: periodParams(params) });
+      return unwrapAnalyticsResponse(response.data);
     },
     enabled: isPeriodReady(params),
     staleTime: STALE_TIME,
@@ -54,8 +74,10 @@ export const useAnalyticsTrends = (params: AnalyticsPeriodParams) => {
   return useQuery<AnalyticsTrends, Error>({
     queryKey: ["analytics", "trends", ...periodKey(params)],
     queryFn: async () => {
-      const response = await api.get<AnalyticsTrends>("/analytics/trends", { params: periodParams(params) });
-      return response.data;
+      const response = await api.get<
+        AnalyticsTrends | ApiEnvelope<AnalyticsTrends>
+      >("/analytics/trends", { params: periodParams(params) });
+      return unwrapAnalyticsResponse(response.data);
     },
     enabled: isPeriodReady(params),
     staleTime: STALE_TIME,
@@ -69,10 +91,12 @@ export const useAnalyticsCategories = (
   return useQuery<AnalyticsCategories, Error>({
     queryKey: ["analytics", "categories", type, ...periodKey(params)],
     queryFn: async () => {
-      const response = await api.get<AnalyticsCategories>("/analytics/categories", {
+      const response = await api.get<
+        AnalyticsCategories | ApiEnvelope<AnalyticsCategories>
+      >("/analytics/categories", {
         params: { ...periodParams(params), type },
       });
-      return response.data;
+      return unwrapAnalyticsResponse(response.data);
     },
     enabled: isPeriodReady(params),
     staleTime: STALE_TIME,
@@ -83,8 +107,10 @@ export const useAnalyticsWallets = (params: AnalyticsPeriodParams) => {
   return useQuery<AnalyticsWallets, Error>({
     queryKey: ["analytics", "wallets", ...periodKey(params)],
     queryFn: async () => {
-      const response = await api.get<AnalyticsWallets>("/analytics/wallets", { params: periodParams(params) });
-      return response.data;
+      const response = await api.get<
+        AnalyticsWallets | ApiEnvelope<AnalyticsWallets>
+      >("/analytics/wallets", { params: periodParams(params) });
+      return unwrapAnalyticsResponse(response.data);
     },
     enabled: isPeriodReady(params),
     staleTime: STALE_TIME,
@@ -96,8 +122,11 @@ export const useAnalyticsBudgetPerformance = () => {
   return useQuery<AnalyticsBudgetPerformance[], Error>({
     queryKey: ["analytics", "budget-performance"],
     queryFn: async () => {
-      const response = await api.get<AnalyticsBudgetPerformance[]>("/analytics/budget-performance");
-      return Array.isArray(response.data) ? response.data : [];
+      const response = await api.get<
+        AnalyticsBudgetPerformance[] | ApiEnvelope<AnalyticsBudgetPerformance[]>
+      >("/analytics/budget-performance");
+      const data = unwrapAnalyticsResponse(response.data);
+      return Array.isArray(data) ? data : [];
     },
     staleTime: STALE_TIME,
   });
@@ -109,10 +138,12 @@ export const useAnalyticsTransactions = (params: AnalyticsDrillDownParams, enabl
   return useQuery<AnalyticsDrillDownResult, Error>({
     queryKey: ["analytics", "transactions", ...periodKey(period), type, categoryId, walletId, page, limit],
     queryFn: async () => {
-      const response = await api.get<AnalyticsDrillDownResult>("/analytics/transactions", {
+      const response = await api.get<
+        AnalyticsDrillDownResult | ApiEnvelope<AnalyticsDrillDownResult>
+      >("/analytics/transactions", {
         params: { ...periodParams(period), type, categoryId, walletId, page, limit },
       });
-      return response.data;
+      return unwrapAnalyticsResponse(response.data);
     },
     enabled: enabled && isPeriodReady(period),
     staleTime: STALE_TIME,

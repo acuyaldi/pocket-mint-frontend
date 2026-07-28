@@ -26,6 +26,8 @@ const messagesHookSource = readFileSync(root + "src/features/assistant/hooks/use
 const draftHookSource = readFileSync(root + "src/features/assistant/hooks/useAssistantDraft.ts", "utf8");
 const typesSource = readFileSync(root + "src/types/assistant.ts", "utf8");
 const pageSource = readFileSync(root + "app/(app)/assistant/page.tsx", "utf8");
+const appLayoutSource = readFileSync(root + "app/(app)/layout.tsx", "utf8");
+const appShellSource = readFileSync(root + "components/layout/app-shell.tsx", "utf8");
 const sidebarSource = readFileSync(root + "components/layout/app-sidebar.tsx", "utf8");
 const bottomNavSource = readFileSync(root + "components/layout/bottom-nav.tsx", "utf8");
 const libApiSource = readFileSync(root + "lib/api.ts", "utf8");
@@ -502,6 +504,29 @@ describe("assistant conversation experience (Phase 23.4)", () => {
         expect(conversation[key]).toBeTruthy();
       }
     }
+  });
+});
+
+describe("assistant chat workspace layout", () => {
+  it("lets authenticated pages receive the app shell's remaining height without fixed Assistant positioning", () => {
+    expect(appShellSource).toContain("flex min-w-0 flex-1 flex-col overflow-y-auto");
+    expect(appLayoutSource).toContain("flex min-h-0 w-full max-w-[1280px] flex-1 flex-col");
+    expect(pageSource).toContain("flex min-h-0 flex-1 flex-col");
+    expect(conversationSource).not.toContain("fixed");
+  });
+
+  it("uses one conversation viewport and one composer dock instead of leaving the composer in ordinary document flow", () => {
+    expect(conversationSource).toContain("const hasActiveConversation");
+    expect(conversationSource).toContain("min-h-0 flex-1 overflow-y-auto");
+    expect(conversationSource).toContain("shrink-0 border-t border-border/60");
+    expect(conversationSource).toContain("const composer = (");
+    expect(conversationSource).not.toContain("ConversationTimeline");
+  });
+
+  it("keeps empty and active conversation layouts intentionally separate", () => {
+    expect(conversationSource).toContain("if (!hasActiveConversation)");
+    expect(conversationSource).toContain("flex min-h-[28rem] flex-1 items-center justify-center");
+    expect(conversationSource).toContain("AssistantConversationEmptyState");
   });
 });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import type { RefObject } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 
 import { AssistantMessageList } from "./AssistantMessageList";
 import { AssistantMessage as AssistantMessageComponent, type AssistantMessageLabels } from "./AssistantMessage";
@@ -110,8 +110,16 @@ export function AssistantConversation({
   labels,
   workflowHeadingRef,
 }: AssistantConversationProps) {
+  const viewportRef = useRef<HTMLDivElement>(null);
   const hasHistory = messages.length > 0;
   const showEmptyState = !conversationId && !hasHistory && !activeWorkflow && !isSendingMessage;
+  const hasActiveConversation =
+    Boolean(conversationId) ||
+    hasHistory ||
+    Boolean(activeWorkflow) ||
+    Boolean(lastResult) ||
+    isSendingMessage ||
+    recoveryState.kind !== "ready";
 
   const composerDisabledReason = activeWorkflow
     ? activeWorkflow.kind === "clarification"
@@ -125,39 +133,45 @@ export function AssistantConversation({
           ? labels.composerDisabledOutcomeUnknown
           : null;
 
-  return (
-    <section aria-label={labels.regionLabel} className="flex flex-col gap-5">
-      {/* Persisted history is not itself an aria-live region — refetching it
-          (e.g. after invalidation) must not re-announce every message. */}
-      <div className="space-y-5">
-        {conversationId ? (
-          <AssistantMessageList
-            messages={messages}
-            isLoading={isLoadingHistory}
-            errorMessage={historyErrorMessage}
-            loadingLabel={labels.historyLoading}
-            errorRetryLabel={labels.historyRetry}
-            onRetry={onRetryHistory}
-            messageLabels={labels.message}
-            listLabel={labels.listLabel}
-          />
-        ) : null}
+  useEffect(() => {
+    if (!hasActiveConversation) return;
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    viewport.scrollTo({ top: viewport.scrollHeight, behavior: "auto" });
+  }, [activeWorkflow?.kind, hasActiveConversation, isSendingMessage, lastResult?.renderedText, messages.length, recoveryState.kind]);
 
-        {showEmptyState ? (
-          <AssistantConversationEmptyState
-            title={labels.emptyTitle}
-            description={labels.emptyDescription}
-            examplesLabel={labels.examplesLabel}
-            examples={labels.examples}
-          />
-        ) : null}
+  const composer = (
+    <AssistantCommandForm
+      value={instructionText}
+      onChange={onInstructionChange}
+      onSubmit={onSubmit}
+      isSubmitting={isSendingMessage}
+      error={formError}
+      disabledReason={composerDisabledReason}
+      labels={labels.composer}
+    />
+  );
 
-        {isSendingMessage && instructionText ? (
-          <ul aria-label={labels.listLabel} className="flex flex-col gap-4">
-            <AssistantMessageComponent message={{ role: "USER", content: instructionText }} labels={labels.message} />
-          </ul>
-        ) : null}
-      </div>
+  const conversationItems = (
+    <>
+      {conversationId ? (
+        <AssistantMessageList
+          messages={messages}
+          isLoading={isLoadingHistory}
+          errorMessage={historyErrorMessage}
+          loadingLabel={labels.historyLoading}
+          errorRetryLabel={labels.historyRetry}
+          onRetry={onRetryHistory}
+          messageLabels={labels.message}
+          listLabel={labels.listLabel}
+        />
+      ) : null}
+
+      {isSendingMessage && instructionText ? (
+        <ul aria-label={labels.listLabel} className="flex flex-col gap-4">
+          <AssistantMessageComponent message={{ role: "USER", content: instructionText }} labels={labels.message} />
+        </ul>
+      ) : null}
 
       {/* Narrow live region: only the transient workflow item currently in
           play is announced once when it appears — not the whole history. */}
@@ -240,17 +254,44 @@ export function AssistantConversation({
           />
         ) : null}
       </div>
+    </>
+  );
 
-      <AssistantCommandForm
-        value={instructionText}
-        onChange={onInstructionChange}
-        onSubmit={onSubmit}
-        isSubmitting={isSendingMessage}
-        error={formError}
-        disabledReason={composerDisabledReason}
-        labels={labels.composer}
-      />
+  if (!hasActiveConversation) {
+    return (
+      <section aria-label={labels.regionLabel} className="flex min-h-[28rem] flex-1 items-center justify-center">
+        <div className="flex w-full max-w-2xl flex-col gap-5">
+          {showEmptyState ? (
+            <AssistantConversationEmptyState
+              title={labels.emptyTitle}
+              description={labels.emptyDescription}
+              examplesLabel={labels.examplesLabel}
+              examples={labels.examples}
+            />
+          ) : null}
+          <div className="mx-auto w-full max-w-xl">{composer}</div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section aria-label={labels.regionLabel} className="flex min-h-0 flex-1 flex-col rounded-xl border border-border/60 bg-card/45">
+      <div
+        ref={viewportRef}
+        tabIndex={0}
+        aria-label={labels.listLabel}
+        className="min-h-0 flex-1 overflow-y-auto px-4 py-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card md:px-6"
+      >
+        <div className="flex min-h-full flex-col gap-5">
+          <div aria-hidden="true" className="mt-auto" />
+          {conversationItems}
+        </div>
+      </div>
+
+      <div className="shrink-0 border-t border-border/60 bg-background/95 px-4 py-4 md:px-6">
+        <div className="mx-auto w-full max-w-2xl">{composer}</div>
+      </div>
     </section>
   );
 }
-

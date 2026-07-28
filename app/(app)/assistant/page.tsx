@@ -121,7 +121,7 @@ export default function AssistantPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-5">
       {/* Compact header: title/description on the left, conversation actions
           grouped on the right. The action group wraps below the title on narrow
           screens rather than overflowing. */}

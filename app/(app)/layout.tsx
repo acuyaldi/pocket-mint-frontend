@@ -15,7 +15,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       <AppShell>
         <AppTopbar />
-        <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-6 px-5 py-6 pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:px-10 md:pt-6 md:pb-10">
+        <div className="mx-auto flex min-h-0 w-full max-w-[1280px] flex-1 flex-col gap-6 px-5 py-6 pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:px-10 md:pt-6 md:pb-10">
           {children}
         </div>
       </AppShell>
