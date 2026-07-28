@@ -549,8 +549,11 @@ describe("assistant draft review components", () => {
 
   it("AssistantCommandForm reuses the shared form primitives, not a hand-rolled input", () => {
     expect(commandFormSource).toContain('import { FormField } from "@/components/ui/form-field";');
-    expect(commandFormSource).toContain('import { Input } from "@/components/ui/input";');
-    expect(commandFormSource).toContain('import { Button } from "@/components/ui/button";');
+    // The plain single-line Input was replaced by the shared chat composer
+    // primitive (auto-growing textarea + send button); it still reuses a
+    // components/ui primitive rather than hand-rolling the field, and the send
+    // Button lives inside ChatPromptInput.
+    expect(commandFormSource).toContain('import { ChatPromptInput } from "@/components/ui/chat-prompt-input";');
   });
 
   it("ClarificationOptions never fabricates options — only renders the backend-provided list", () => {
