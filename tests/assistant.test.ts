@@ -533,6 +533,41 @@ describe("assistant conversation experience (Phase 23.4)", () => {
     }
   });
 
+  it("uses canonical Pocket Mint buttons for Assistant header actions", () => {
+    expect(pageSource).toContain('<Button\n            type="button"\n            variant="default"\n            size="touch"');
+    expect(pageSource).toContain("<Plus data-icon=\"inline-start\" aria-hidden=\"true\" />");
+    expect(historyTriggerSource).toContain('import { Button } from "@/components/ui/button";');
+    expect(historyTriggerSource).toContain('variant="outline"');
+    expect(historyTriggerSource).toContain('size="icon-touch"');
+    expect(historyTriggerSource).toContain("<History aria-hidden=\"true\" />");
+  });
+
+  it("keeps history management honest to the current backend contract", () => {
+    expect(apiSource).toContain("archiveAssistantSession");
+    expect(apiSource).not.toContain("deleteAssistant");
+    expect(apiSource).not.toContain("restoreAssistant");
+    expect(apiSource).not.toContain("bulk");
+    expect(historySource).toContain("Archive is the only cleanup mutation exposed by the current backend");
+    expect(historySource).not.toContain("deleteAll");
+    expect(historySource).not.toContain("Delete all");
+  });
+
+  it("renders a scalable loaded-history management surface with search, filters, and single archive confirmation", () => {
+    expect(historySource).toContain('size="lg"');
+    expect(historySource).toContain('className="sm:max-w-3xl"');
+    expect(historySource).toContain("const [searchText, setSearchText] = useState(\"\");");
+    expect(historySource).toContain('const [statusFilter, setStatusFilter] = useState<"all" | "active" | "archived">("all");');
+    expect(historySource).not.toContain("selectedIds");
+    expect(historySource).not.toContain("selectAllLoaded");
+    expect(historySource).not.toContain("Promise.all");
+    expect(historySource).toContain("archiveConfirmation");
+    expect(historySource).toContain("useArchiveAssistantSession");
+    expect(historyListSource).toContain("filteredCount");
+    expect(historyListSource).toContain("onArchive");
+    expect(historySource).toContain("labels.searchLoaded");
+    expect(historyListSource).toContain("labels.archivedStatus");
+  });
+
   it("lays out the empty conversation as a full-height chat workspace with a bottom-docked composer", () => {
     expect(conversationSource).toContain('className="flex min-h-[calc(100dvh-14rem)] flex-col');
     expect(conversationSource).toContain('className="flex flex-1 flex-col');
@@ -769,6 +804,7 @@ describe("assistant resilience/recovery — recovery-state API wrapper and query
   it("the flow hook only enables the recovery-state fetch when there's no in-memory workflow, a URL-loaded conversation, and history", () => {
     expect(flowHookSource).toContain("activeWorkflow === null && !!conversationId && cameFromUrl && turnCount > 0");
   });
+
 });
 
 describe("assistant resilience/recovery — bounded recovery-state model", () => {
@@ -962,9 +998,13 @@ describe("assistant conversation history (Phase 23.6)", () => {
     );
   });
 
-  it("no delete, archive, rename, search, or pin functionality exists in the history feature", () => {
+  it("only loaded search and single archive cleanup exists in the history feature", () => {
+    expect(historySource).toContain("searchText");
+    expect(historySource).toContain("useArchiveAssistantSession");
+    expect(historySource).toContain("await archiveMutation.mutateAsync(archiveConfirmation.id)");
+    expect(historySource).not.toContain("Promise.all");
     for (const source of [historySource, historyListSource, historyTriggerSource]) {
-      for (const forbidden of [/\barchive/i, /\bdelete/i, /\brename/i, /\bsearch/i, /\bpin\b/i, /\bDELETE\b/, /\bPATCH\b/]) {
+      for (const forbidden of [/\bdelete/i, /\brestore/i, /\bbulk/i, /\brename/i, /\bpin\b/i, /\bDELETE\b/, /\bPATCH\b/]) {
         expect(source).not.toMatch(forbidden);
       }
     }

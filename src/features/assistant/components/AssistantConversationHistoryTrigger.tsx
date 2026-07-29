@@ -1,6 +1,7 @@
 "use client";
 
 import { History } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface AssistantConversationHistoryTriggerProps {
   label: string;
@@ -10,13 +11,14 @@ interface AssistantConversationHistoryTriggerProps {
 /** Opens the conversation history dialog. Icon-only with a stable accessible name — no unread badge (conversation history has no unread concept). */
 export function AssistantConversationHistoryTrigger({ label, onClick }: AssistantConversationHistoryTriggerProps) {
   return (
-    <button
+    <Button
       type="button"
+      variant="outline"
+      size="icon-touch"
       aria-label={label}
       onClick={onClick}
-      className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-surface-high hover:text-primary active:scale-95"
     >
-      <History className="size-5" aria-hidden="true" />
-    </button>
+      <History aria-hidden="true" />
+    </Button>
   );
 }

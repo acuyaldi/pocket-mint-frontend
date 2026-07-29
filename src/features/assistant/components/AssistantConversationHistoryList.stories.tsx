@@ -12,6 +12,16 @@ const LABELS: AssistantConversationHistoryLabels = {
   loadMore: "Load more",
   loadingMore: "Loading more",
   activeConversationLabel: "active",
+  archivedStatus: "Archived",
+  searchLoaded: "Search loaded conversations",
+  searchPlaceholder: "Search previews already loaded",
+  filterAll: "All",
+  filterActive: "Active",
+  filterArchived: "Archived",
+  showingLoaded: "Loaded 3 of 103 conversations",
+  noSearchResults: "No loaded conversations match this search.",
+  archive: "Archive",
+  archiving: "Archiving",
   conversationFromDate: (date: string) => `Conversation from ${date}`,
 };
 
@@ -50,7 +60,7 @@ const meta: Meta<typeof AssistantConversationHistoryList> = {
   tags: ["autodocs"],
   decorators: [
     (Story) => (
-      <div className="max-w-sm p-4">
+      <div className="max-w-3xl p-4">
         <Story />
       </div>
     ),
@@ -63,11 +73,14 @@ type Story = StoryObj<typeof AssistantConversationHistoryList>;
 export const Populated: Story = {
   args: {
     items: ITEMS,
+    loadedCount: ITEMS.length,
+    filteredCount: ITEMS.length,
     isLoading: false,
     isError: false,
     onRetry: fn(),
     selectedId: "conv-1",
     onSelect: fn(),
+    onArchive: fn(),
     hasMore: false,
     isLoadingMore: false,
     onLoadMore: fn(),
@@ -77,7 +90,11 @@ export const Populated: Story = {
 };
 
 export const Empty: Story = {
-  args: { ...Populated.args, items: [] },
+  args: { ...Populated.args, items: [], loadedCount: 0, filteredCount: 0 },
+};
+
+export const NoSearchResults: Story = {
+  args: { ...Populated.args, items: [], loadedCount: ITEMS.length, filteredCount: 0 },
 };
 
 export const Loading: Story = {
@@ -108,6 +125,19 @@ export const SelectInteraction: Story = {
     await userEvent.click(canvas.getByText(/Gaji bulan ini/));
     expect(args.onSelect).toHaveBeenCalledWith("conv-3");
   },
+};
+
+export const ArchiveInteraction: Story = {
+  args: Populated.args,
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getAllByRole("button", { name: /Archive:/ })[0]);
+    expect(args.onArchive).toHaveBeenCalledWith(ITEMS[0]);
+  },
+};
+
+export const PaginatedHundredPlus: Story = {
+  args: { ...Populated.args, loadedCount: 20, filteredCount: 20, hasMore: true },
 };
 
 export const Mobile: Story = {
