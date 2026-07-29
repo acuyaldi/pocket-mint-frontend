@@ -26,9 +26,7 @@ const meta = {
   decorators: [
     (Story) => (
       <NextIntlClientProvider locale="id" messages={messages}>
-        <div className="max-w-[320px]">
-          <Story />
-        </div>
+        <Story />
       </NextIntlClientProvider>
     ),
   ],
@@ -40,6 +38,47 @@ export default meta;
 // Stories set args/render explicitly, so a loose StoryObj keeps them type-safe
 // to author without fighting the union.
 type Story = StoryObj;
+
+const sampleCards = [
+  {
+    label: "Pemasukan",
+    value: "Rp 8.200.000",
+    change: 1_200_000,
+    percentageChange: { value: 17.1, reason: null },
+    increaseIsGood: true,
+  },
+  {
+    label: "Pengeluaran",
+    value: "Rp 5.750.000",
+    change: 640_000,
+    percentageChange: { value: 12.5, reason: null },
+    increaseIsGood: false,
+  },
+  {
+    label: "Arus kas bersih",
+    value: "Rp 2.450.000",
+    change: -180_000,
+    percentageChange: { value: -6.8, reason: null },
+    increaseIsGood: true,
+  },
+  {
+    label: "Transaksi",
+    value: "128",
+    change: 0,
+    percentageChange: { value: null, reason: "ZERO_BASELINE" },
+    changeIsCurrency: false,
+  },
+] as const;
+
+function SummaryGrid({ className }: { className: string }) {
+  return (
+    <div className={className}>
+      {sampleCards.map((card) => (
+        <AnalyticsSummaryCard key={card.label} {...card} intlLocale="id-ID" />
+      ))}
+    </div>
+  );
+}
 
 /** Positive change (income up) — favorable tone. */
 export const IncomeUp: Story = {
@@ -86,21 +125,46 @@ export const Loading: Story = {
 export const LoadedVsLoading: Story = {
   parameters: { layout: "fullscreen" },
   render: () => (
-    <NextIntlClientProvider locale="id" messages={messages}>
-      <div className="grid grid-cols-1 gap-6 p-8 md:grid-cols-2 lg:grid-cols-4">
-        <AnalyticsSummaryCard
-          label="Pemasukan"
-          value="Rp 8.200.000"
-          change={1_200_000}
-          percentageChange={{ value: 17.1, reason: null }}
-          intlLocale="id-ID"
-          increaseIsGood
-        />
-        <AnalyticsSummaryCard loading />
-        <AnalyticsSummaryCard loading />
-        <AnalyticsSummaryCard loading />
-      </div>
-    </NextIntlClientProvider>
+    <div className="grid grid-cols-2 gap-4 p-8 md:gap-6 xl:grid-cols-4">
+      <AnalyticsSummaryCard
+        label="Pemasukan"
+        value="Rp 8.200.000"
+        change={1_200_000}
+        percentageChange={{ value: 17.1, reason: null }}
+        intlLocale="id-ID"
+        increaseIsGood
+      />
+      <AnalyticsSummaryCard loading />
+      <AnalyticsSummaryCard loading />
+      <AnalyticsSummaryCard loading />
+    </div>
+  ),
+};
+
+export const Desktop: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => (
+    <div className="w-[1280px] p-8">
+      <SummaryGrid className="grid grid-cols-4 gap-6" />
+    </div>
+  ),
+};
+
+export const Tablet: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => (
+    <div className="w-[768px] p-6">
+      <SummaryGrid className="grid grid-cols-2 gap-6" />
+    </div>
+  ),
+};
+
+export const Mobile: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => (
+    <div className="w-[390px] p-4">
+      <SummaryGrid className="grid grid-cols-2 gap-4" />
+    </div>
   ),
 };
 
@@ -113,6 +177,43 @@ export const LargeValue: Story = {
     percentageChange: { value: 8.3, reason: null },
     intlLocale: "id-ID",
     increaseIsGood: true,
+  },
+};
+
+export const LongCurrencyValues: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => (
+    <div className="w-[390px] p-4">
+      <div className="grid grid-cols-2 gap-4">
+        <AnalyticsSummaryCard
+          label="Pemasukan"
+          value="Rp 1.284.560.000.000.000"
+          change={250_000_000_000}
+          percentageChange={{ value: 8.3, reason: null }}
+          intlLocale="id-ID"
+          increaseIsGood
+        />
+        <AnalyticsSummaryCard
+          label="Pengeluaran"
+          value="Rp 999.999.999.999.999"
+          change={999_999_999_999}
+          percentageChange={{ value: 144.4, reason: null }}
+          intlLocale="id-ID"
+          increaseIsGood={false}
+        />
+      </div>
+    </div>
+  ),
+};
+
+export const LargeNumbers: Story = {
+  args: {
+    label: "Transaksi",
+    value: "12.845.600",
+    change: 1_245_000,
+    percentageChange: { value: 24.8, reason: null },
+    intlLocale: "id-ID",
+    changeIsCurrency: false,
   },
 };
 

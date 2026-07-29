@@ -28,11 +28,13 @@ const sidebarSource = readFileSync(root + "components/layout/app-sidebar.tsx", "
 const bottomNavSource = readFileSync(root + "components/layout/bottom-nav.tsx", "utf8");
 
 describe("saving goal navigation", () => {
-  it("adds a first-class nav entry on both desktop and mobile", () => {
+  it("keeps the saving-goals feature deep-linkable while hiding it from desktop and mobile navigation", () => {
     for (const source of [sidebarSource, bottomNavSource]) {
-      expect(source).toContain('href: "/target-tabungan"');
-      expect(source).toContain('label: t("savingGoals")');
+      expect(source).not.toContain('href: "/target-tabungan"');
+      expect(source).not.toContain('label: t("savingGoals")');
     }
+    expect(pageSource).toContain("export default function SavingGoalsPage");
+    expect(hookSource).toContain('"/saving-goals"');
     expect(idMessages.nav.savingGoals).toBe("Target Tabungan");
     expect(enMessages.nav.savingGoals).toBeTruthy();
   });

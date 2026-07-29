@@ -35,6 +35,36 @@ describe("AnalyticsSummaryCard", () => {
     expect(html).toMatch(CARD_FRAME);
   });
 
+  it("lets long currency values wrap within the card instead of overflowing or overlapping", () => {
+    const html = render({
+      label: "Net Cash Flow",
+      value: "Rp 1.284.560.000.000.000",
+      change: 250_000_000_000,
+      percentageChange: { value: 8.3, reason: null },
+      intlLocale: "id-ID",
+    });
+
+    expect(html).toContain("min-w-0");
+    expect(html).toContain("max-w-full");
+    expect(html).toContain("[overflow-wrap:anywhere]");
+    expect(html).toContain("text-[clamp(1.25rem,1rem+1vw,1.75rem)]");
+  });
+
+  it("keeps comparison text readable when the formatted amount is large", () => {
+    const html = render({
+      label: "Expense",
+      value: "Rp 5.000.000",
+      change: 999_999_999_999,
+      percentageChange: { value: 144.4, reason: null },
+      intlLocale: "id-ID",
+      increaseIsGood: false,
+    });
+
+    expect(html).toContain("min-w-0");
+    expect(html).toContain("flex-wrap");
+    expect(html).toContain("[overflow-wrap:anywhere]");
+  });
+
   it("loading state keeps the SAME card frame so the section reserves its final height (no insertion shift)", () => {
     const loaded = render({
       label: "Income",

@@ -11,7 +11,6 @@ import {
   Gauge,
   LayoutDashboard,
   LogOut,
-  PiggyBank,
   Sparkles,
   User,
   Wallet,
@@ -36,7 +35,6 @@ export function AppSidebar() {
     { label: t("transactions"), href: "/transactions", icon: ArrowLeftRight },
     { label: t("installments"), href: "/tagihan", icon: CalendarClock },
     { label: t("analytics"), href: "/analytics", icon: BarChart3 },
-    { label: t("savingGoals"), href: "/target-tabungan", icon: PiggyBank },
     { label: t("budgets"), href: "/anggaran", icon: Gauge },
     { label: t("assistant"), href: "/assistant", icon: Sparkles },
   ];
