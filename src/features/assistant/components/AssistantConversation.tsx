@@ -121,7 +121,7 @@ export function AssistantConversation({
       ? labels.composerDisabledClarification
       : recoveryState.kind === "draftRecovered"
         ? labels.composerDisabledDraft
-        : recoveryState.kind === "actionOutcomeUnknown"
+        : recoveryState.kind === "recoveryLoading" || recoveryState.kind === "actionOutcomeUnknown"
           ? labels.composerDisabledOutcomeUnknown
           : null;
 
@@ -163,6 +163,10 @@ export function AssistantConversation({
         {/* Narrow live region: only the transient workflow item currently in
             play is announced once when it appears — not the whole history. */}
         <div aria-live="polite" className="space-y-6">
+          {recoveryState.kind === "recoveryLoading" ? (
+            <AssistantRecoveryBanner kind="recoveryLoading" labels={labels.recoveryBanner} />
+          ) : null}
+
           {recoveryState.kind === "transientClarificationLost" ? (
             <AssistantRecoveryBanner kind="transientClarificationLost" labels={labels.recoveryBanner} />
           ) : null}

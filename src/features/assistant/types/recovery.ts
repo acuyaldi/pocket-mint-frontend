@@ -28,6 +28,7 @@ export function isAssistantActionRetrySafe(action: AssistantPendingActionKind): 
 
 export type AssistantRecoveryState =
   | { kind: "ready" }
+  | { kind: "recoveryLoading" }
   | { kind: "transientClarificationLost" }
   | { kind: "clarificationRecovered"; clarification: AssistantRecoveryClarification }
   | { kind: "draftRecovered"; draft: AssistantDraft }

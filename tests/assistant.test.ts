@@ -552,19 +552,20 @@ describe("assistant conversation experience (Phase 23.4)", () => {
     expect(historySource).not.toContain("Delete all");
   });
 
-  it("renders a scalable loaded-history management surface with search, filters, and single archive confirmation", () => {
+  it("renders a scalable loaded-history management surface with search, filter, selection, and archive confirmation", () => {
     expect(historySource).toContain('size="lg"');
     expect(historySource).toContain('className="sm:max-w-3xl"');
     expect(historySource).toContain("const [searchText, setSearchText] = useState(\"\");");
     expect(historySource).toContain('const [statusFilter, setStatusFilter] = useState<"all" | "active" | "archived">("all");');
-    expect(historySource).not.toContain("selectedIds");
-    expect(historySource).not.toContain("selectAllLoaded");
-    expect(historySource).not.toContain("Promise.all");
+    expect(historySource).toContain("selectedIds");
+    expect(historySource).toContain("selectAllLoaded");
     expect(historySource).toContain("archiveConfirmation");
     expect(historySource).toContain("useArchiveAssistantSession");
     expect(historyListSource).toContain("filteredCount");
     expect(historyListSource).toContain("onArchive");
+    expect(historyListSource).toContain("onToggleSelect");
     expect(historySource).toContain("labels.searchLoaded");
+    expect(historyListSource).toContain("labels.selectAllLoaded");
     expect(historyListSource).toContain("labels.archivedStatus");
   });
 
@@ -805,6 +806,12 @@ describe("assistant resilience/recovery — recovery-state API wrapper and query
     expect(flowHookSource).toContain("activeWorkflow === null && !!conversationId && cameFromUrl && turnCount > 0");
   });
 
+  it("surfaces a recovery-loading state while the recovery endpoint is pending, so a delayed terminal banner is not the first recovery paint", () => {
+    expect(recoveryTypesSource).toContain('| { kind: "recoveryLoading" }');
+    expect(flowHookSource).toContain('if (recoveryStateQuery.isPending) return { kind: "recoveryLoading" };');
+    expect(conversationSource).toContain('recoveryState.kind === "recoveryLoading"');
+    expect(recoveryBannerSource).toContain('kind: "recoveryLoading"');
+  });
 });
 
 describe("assistant resilience/recovery — bounded recovery-state model", () => {
@@ -998,13 +1005,9 @@ describe("assistant conversation history (Phase 23.6)", () => {
     );
   });
 
-  it("only loaded search and single archive cleanup exists in the history feature", () => {
-    expect(historySource).toContain("searchText");
-    expect(historySource).toContain("useArchiveAssistantSession");
-    expect(historySource).toContain("await archiveMutation.mutateAsync(archiveConfirmation.id)");
-    expect(historySource).not.toContain("Promise.all");
+  it("no delete, rename, pin, or unsupported mutation functionality exists in the history feature", () => {
     for (const source of [historySource, historyListSource, historyTriggerSource]) {
-      for (const forbidden of [/\bdelete/i, /\brestore/i, /\bbulk/i, /\brename/i, /\bpin\b/i, /\bDELETE\b/, /\bPATCH\b/]) {
+      for (const forbidden of [/deleteAssistant/i, /Delete all/i, /\brename/i, /\bpin\b/i, /\bDELETE\b/, /\bPATCH\b/]) {
         expect(source).not.toMatch(forbidden);
       }
     }

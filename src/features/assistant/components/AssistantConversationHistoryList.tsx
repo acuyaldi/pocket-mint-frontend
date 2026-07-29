@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, Loader2 } from "lucide-react";
+import { Archive, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { AssistantConversationSummary } from "@/src/types/assistant";
@@ -22,6 +22,9 @@ export interface AssistantConversationHistoryLabels {
   filterArchived: string;
   showingLoaded: string;
   noSearchResults: string;
+  selectConversation: string;
+  selectAllLoaded: string;
+  clearSelection: string;
   archive: string;
   archiving: string;
   conversationFromDate: (date: string) => string;
@@ -51,7 +54,11 @@ interface AssistantConversationHistoryListProps {
   isError: boolean;
   onRetry: () => void;
   selectedId: string | null;
+  selectedIds: Set<string>;
   onSelect: (id: string) => void;
+  onToggleSelect: (id: string) => void;
+  onSelectAllLoaded: () => void;
+  onClearSelection: () => void;
   onArchive: (item: AssistantConversationSummary) => void;
   hasMore: boolean;
   isLoadingMore: boolean;
@@ -68,7 +75,11 @@ export function AssistantConversationHistoryList({
   isError,
   onRetry,
   selectedId,
+  selectedIds,
   onSelect,
+  onToggleSelect,
+  onSelectAllLoaded,
+  onClearSelection,
   onArchive,
   hasMore,
   isLoadingMore,
@@ -107,21 +118,42 @@ export function AssistantConversationHistoryList({
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">{filteredCount} / {loadedCount}</p>
-        <p className="text-xs text-muted-foreground">{labels.showingLoaded}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" variant="ghost" size="sm" onClick={onClearSelection}>
+            {labels.clearSelection}
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={onSelectAllLoaded}>
+            {labels.selectAllLoaded}
+          </Button>
+        </div>
       </div>
       <ul aria-label={labels.listLabel} className="flex min-h-0 max-h-[52vh] flex-col gap-1 overflow-y-auto pr-1">
         {items.map((item) => {
           const isSelected = item.id === selectedId;
+          const isChecked = selectedIds.has(item.id);
           const label = resolveConversationLabel(item, labels, intlLocale);
           const isArchived = item.status === "ARCHIVED";
           return (
             <li key={item.id}>
               <div
                 className={cn(
-                  "grid min-h-20 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 transition-colors hover:bg-muted/60",
+                  "grid min-h-20 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 transition-colors hover:bg-muted/60",
                   isSelected && "border-border bg-muted"
                 )}
               >
+                <button
+                  type="button"
+                  aria-label={`${labels.selectConversation}: ${label}`}
+                  aria-pressed={isChecked}
+                  onClick={() => onToggleSelect(item.id)}
+                  disabled={isArchived}
+                  className={cn(
+                    "flex size-11 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50",
+                    isChecked && "bg-primary text-primary-foreground"
+                  )}
+                >
+                  {isChecked ? <Check aria-hidden="true" /> : null}
+                </button>
                 <button
                   type="button"
                   aria-current={isSelected ? "true" : undefined}

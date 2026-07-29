@@ -4,6 +4,8 @@ import { AssistantRecoveryBanner, type AssistantRecoveryBannerLabels } from "./A
 import type { AssistantRecoveryClarification } from "@/src/types/assistant";
 
 const LABELS: AssistantRecoveryBannerLabels = {
+  recoveryLoading:
+    "Checking this conversation's recovery status before showing any clarification or draft that may still be pending after the page reload. You are still in the same conversation.",
   transientLostTitle: "The pending clarification for this conversation couldn't be restored after reloading.",
   clarificationRecoveredTitle: "You still have a pending question in this conversation",
   cancel: "Cancel",
@@ -33,6 +35,10 @@ const meta: Meta<typeof AssistantRecoveryBanner> = {
 
 export default meta;
 type Story = StoryObj<typeof AssistantRecoveryBanner>;
+
+export const RecoveryLoading: Story = {
+  args: { kind: "recoveryLoading", labels: LABELS },
+};
 
 export const TransientLost: Story = {
   args: { kind: "transientClarificationLost", labels: LABELS },

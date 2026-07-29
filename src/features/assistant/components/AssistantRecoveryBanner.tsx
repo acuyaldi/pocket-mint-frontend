@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import type { AssistantRecoveryClarification } from "@/src/types/assistant";
 
 export interface AssistantRecoveryBannerLabels {
+  recoveryLoading: string;
   transientLostTitle: string;
   clarificationRecoveredTitle: string;
   cancel: string;
@@ -13,6 +14,10 @@ export interface AssistantRecoveryBannerLabels {
 }
 
 type AssistantRecoveryBannerProps =
+  | {
+      kind: "recoveryLoading";
+      labels: AssistantRecoveryBannerLabels;
+    }
   | {
       kind: "transientClarificationLost";
       labels: AssistantRecoveryBannerLabels;
@@ -35,9 +40,21 @@ type AssistantRecoveryBannerProps =
  * Cancel is wired here, never `select`.
  */
 export function AssistantRecoveryBanner(props: AssistantRecoveryBannerProps) {
+  if (props.kind === "recoveryLoading") {
+    return (
+      <p
+        role="status"
+        className="flex min-h-16 items-center gap-2 rounded-xl border border-amber/30 bg-amber/10 px-4 py-3 text-sm text-foreground"
+      >
+        <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden="true" />
+        {props.labels.recoveryLoading}
+      </p>
+    );
+  }
+
   if (props.kind === "transientClarificationLost") {
     return (
-      <p role="status" className="rounded-xl border border-amber/30 bg-amber/10 px-4 py-3 text-sm text-foreground">
+      <p role="status" className="min-h-16 rounded-xl border border-amber/30 bg-amber/10 px-4 py-3 text-sm text-foreground">
         {props.labels.transientLostTitle}
       </p>
     );

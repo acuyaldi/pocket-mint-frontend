@@ -134,12 +134,21 @@ export function useAssistantConversationFlow() {
     if (activeWorkflow !== null) return { kind: "ready" };
     if (session.isError) return { kind: "historyUnavailable" };
     if (!recoveryTriggerEnabled) return { kind: "ready" };
+    if (recoveryStateQuery.isPending) return { kind: "recoveryLoading" };
     if (recoveryStateQuery.isError) {
       return latestTurnStatus === "CLARIFICATION_REQUIRED" ? { kind: "transientClarificationLost" } : { kind: "ready" };
     }
     if (recoveryStateQuery.data) return resolveRecoveryState(recoveryStateQuery.data);
     return { kind: "ready" };
-  }, [activeWorkflow, session.isError, recoveryTriggerEnabled, recoveryStateQuery.isError, recoveryStateQuery.data, latestTurnStatus]);
+  }, [
+    activeWorkflow,
+    session.isError,
+    recoveryTriggerEnabled,
+    recoveryStateQuery.isPending,
+    recoveryStateQuery.isError,
+    recoveryStateQuery.data,
+    latestTurnStatus,
+  ]);
 
   const recoveryState: AssistantRecoveryState = outcomeUnknownAction
     ? { kind: "actionOutcomeUnknown", action: outcomeUnknownAction }
@@ -383,6 +392,7 @@ export function useAssistantConversationFlow() {
   /** Blocked while a clarification/draft is unresolved — the user must cancel it via the real endpoint first (including a rediscovered/ambiguous one). */
   const canStartNewConversation =
     activeWorkflow === null &&
+    recoveryState.kind !== "recoveryLoading" &&
     recoveryState.kind !== "clarificationRecovered" &&
     recoveryState.kind !== "draftRecovered" &&
     recoveryState.kind !== "actionOutcomeUnknown";

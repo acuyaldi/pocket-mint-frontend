@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Plus } from "lucide-react";
+import { Archive, Loader2, Plus } from "lucide-react";
 import { AppModal, ModalCancelButton, ModalSubmitButton } from "@/components/ui/app-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,7 +42,8 @@ export function AssistantConversationHistory({
   const [blockedTargetId, setBlockedTargetId] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "archived">("all");
-  const [archiveConfirmation, setArchiveConfirmation] = useState<AssistantConversationSummary | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const [archiveConfirmation, setArchiveConfirmation] = useState<AssistantConversationSummary[] | null>(null);
 
   const query = useAssistantConversationHistory();
   const archiveMutation = useArchiveAssistantSession();
@@ -62,6 +63,12 @@ export function AssistantConversationHistory({
     });
   }, [items, searchText, statusFilter]);
 
+  const selectedLoadedItems = useMemo(
+    () => items.filter((item) => selectedIds.has(item.id) && item.status === "ACTIVE"),
+    [items, selectedIds]
+  );
+  const selectedLoadedCount = selectedLoadedItems.length;
+
   const labels = {
     listLabel: t("listLabel"),
     loading: t("loading"),
@@ -79,6 +86,9 @@ export function AssistantConversationHistory({
     filterArchived: t("filterArchived"),
     showingLoaded: t("showingLoaded", { loaded: items.length, total: totalCount }),
     noSearchResults: t("noSearchResults"),
+    selectConversation: t("selectConversation"),
+    selectAllLoaded: t("selectAllLoaded"),
+    clearSelection: t("clearSelection"),
     archive: t("archive"),
     archiving: t("archiving"),
     conversationFromDate: (date: string) => t("conversationFromDate", { date }),
@@ -88,6 +98,7 @@ export function AssistantConversationHistory({
     setIsOpen(false);
     setBlockedTargetId(null);
     setArchiveConfirmation(null);
+    setSelectedIds(new Set());
   }
 
   function handleSelect(id: string) {
@@ -104,14 +115,33 @@ export function AssistantConversationHistory({
     handleClose();
   }
 
+  function toggleSelected(id: string) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function selectAllLoaded() {
+    setSelectedIds(new Set(filteredItems.filter((item) => item.status === "ACTIVE").map((item) => item.id)));
+  }
+
+  function clearSelection() {
+    setSelectedIds(new Set());
+  }
+
   async function confirmArchive() {
-    if (!archiveConfirmation) return;
+    if (!archiveConfirmation?.length) return;
+    const ids = archiveConfirmation.map((item) => item.id);
     try {
-      // Archive is the only cleanup mutation exposed by the current backend; keep this action one conversation per request.
-      await archiveMutation.mutateAsync(archiveConfirmation.id);
-      if (conversationId === archiveConfirmation.id) onStartNewConversation();
+      // Archive is the only cleanup mutation exposed by the current backend; selected archive is therefore bounded to loaded rows.
+      await Promise.all(ids.map((id) => archiveMutation.mutateAsync(id)));
+      if (conversationId && ids.includes(conversationId)) onStartNewConversation();
       setArchiveConfirmation(null);
-      toast(t("archiveSuccess"), "success");
+      setSelectedIds(new Set());
+      toast(t("archiveSuccess", { count: ids.length }), "success");
     } catch {
       toast(t("archiveError"), "error");
     }
@@ -119,7 +149,8 @@ export function AssistantConversationHistory({
 
   const archiveDescription = archiveConfirmation
     ? t("archiveDescription", {
-        active: conversationId === archiveConfirmation.id ? t("archiveActiveWarning") : "",
+        count: archiveConfirmation.length,
+        active: conversationId && archiveConfirmation.some((item) => item.id === conversationId) ? t("archiveActiveWarning") : "",
       })
     : undefined;
 
@@ -133,7 +164,7 @@ export function AssistantConversationHistory({
         className="sm:max-w-3xl"
         role={archiveConfirmation ? "alertdialog" : "dialog"}
         isPending={archiveMutation.isPending}
-        title={archiveConfirmation ? t("archiveTitle") : blockedTargetId ? t("switchBlockedTitle") : t("title")}
+        title={archiveConfirmation ? t("archiveTitle", { count: archiveConfirmation.length }) : blockedTargetId ? t("switchBlockedTitle") : t("title")}
         description={archiveConfirmation ? archiveDescription : blockedTargetId ? t("switchBlockedDescription") : undefined}
         footer={
           archiveConfirmation ? (
@@ -214,6 +245,27 @@ export function AssistantConversationHistory({
               </div>
             </div>
 
+            {selectedLoadedCount > 0 ? (
+              <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface-low p-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm font-medium text-foreground">{t("selectedCount", { count: selectedLoadedCount })}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button type="button" variant="ghost" size="sm" onClick={clearSelection}>
+                    {labels.clearSelection}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setArchiveConfirmation(selectedLoadedItems)}
+                    disabled={archiveMutation.isPending}
+                  >
+                    {archiveMutation.isPending ? <Loader2 data-icon="inline-start" className="animate-spin" aria-hidden="true" /> : <Archive data-icon="inline-start" aria-hidden="true" />}
+                    {labels.archive}
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+
             <AssistantConversationHistoryList
               items={filteredItems}
               loadedCount={items.length}
@@ -222,8 +274,12 @@ export function AssistantConversationHistory({
               isError={query.isError}
               onRetry={() => query.refetch()}
               selectedId={conversationId}
+              selectedIds={selectedIds}
               onSelect={handleSelect}
-              onArchive={setArchiveConfirmation}
+              onToggleSelect={toggleSelected}
+              onSelectAllLoaded={selectAllLoaded}
+              onClearSelection={clearSelection}
+              onArchive={(item) => setArchiveConfirmation([item])}
               hasMore={!!query.hasNextPage}
               isLoadingMore={query.isFetchingNextPage}
               onLoadMore={() => query.fetchNextPage()}

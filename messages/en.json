@@ -1116,6 +1116,7 @@
       "genericError": "Something went wrong. Please try again."
     },
     "recovery": {
+      "loading": "Checking this conversation's recovery status before showing any clarification or draft that may still be pending after the page reload. You are still in the same conversation.",
       "clarificationRecoveredTitle": "You still have a pending question in this conversation",
       "composerDisabled": "Check what happened with your previous action above before sending a new instruction."
     },
@@ -1150,14 +1151,18 @@
       "filterArchived": "Archived",
       "showingLoaded": "Loaded {loaded} of {total} conversations",
       "noSearchResults": "No loaded conversations match this search.",
+      "selectConversation": "Select conversation",
+      "selectAllLoaded": "Select all loaded active conversations",
+      "clearSelection": "Clear selection",
+      "selectedCount": "{count, plural, one {# conversation selected} other {# conversations selected}}",
       "archive": "Archive",
       "archiving": "Archiving",
-      "archiveTitle": "Archive this conversation?",
+      "archiveTitle": "{count, plural, one {Archive this conversation?} other {Archive # conversations?}}",
       "archiveDescription": "Archived conversations are kept in history but can no longer be continued. {active}Financial transactions, wallets, categories, and notes will not be changed.",
       "archiveActiveWarning": "The active conversation will close. ",
       "archiveConfirm": "Archive",
       "archiveCancel": "Cancel",
-      "archiveSuccess": "Conversation archived.",
+      "archiveSuccess": "{count, plural, one {Conversation archived.} other {Conversations archived.}}",
       "archiveError": "Conversation history could not be updated. Please try again.",
       "contractNote": "Archive is available now. Restore and permanent deletion need backend support.",
       "switchBlockedTitle": "Switch conversations?",

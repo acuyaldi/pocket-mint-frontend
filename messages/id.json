@@ -1116,6 +1116,7 @@
       "genericError": "Terjadi kesalahan. Silakan coba lagi."
     },
     "recovery": {
+      "loading": "Memeriksa status pemulihan percakapan ini sebelum menampilkan klarifikasi atau draf yang mungkin masih tertunda setelah halaman dimuat ulang. Anda tetap berada di percakapan yang sama.",
       "clarificationRecoveredTitle": "Masih ada pertanyaan yang belum dijawab pada percakapan ini",
       "composerDisabled": "Periksa apa yang terjadi pada tindakan sebelumnya di atas sebelum mengirim instruksi baru."
     },
@@ -1150,14 +1151,18 @@
       "filterArchived": "Diarsipkan",
       "showingLoaded": "Memuat {loaded} dari {total} percakapan",
       "noSearchResults": "Tidak ada percakapan yang sudah dimuat cocok dengan pencarian ini.",
+      "selectConversation": "Pilih percakapan",
+      "selectAllLoaded": "Pilih semua percakapan aktif yang sudah dimuat",
+      "clearSelection": "Hapus pilihan",
+      "selectedCount": "{count, plural, one {# percakapan dipilih} other {# percakapan dipilih}}",
       "archive": "Arsipkan",
       "archiving": "Mengarsipkan",
-      "archiveTitle": "Arsipkan percakapan ini?",
+      "archiveTitle": "{count, plural, one {Arsipkan percakapan ini?} other {Arsipkan # percakapan?}}",
       "archiveDescription": "Percakapan yang diarsipkan tetap ada di riwayat, tetapi tidak bisa dilanjutkan. {active}Data transaksi, dompet, kategori, dan catatan keuangan tidak akan berubah.",
       "archiveActiveWarning": "Percakapan aktif akan ditutup. ",
       "archiveConfirm": "Arsipkan",
       "archiveCancel": "Batal",
-      "archiveSuccess": "Percakapan diarsipkan.",
+      "archiveSuccess": "{count, plural, one {Percakapan diarsipkan.} other {Percakapan diarsipkan.}}",
       "archiveError": "Riwayat percakapan tidak dapat diperbarui. Silakan coba lagi.",
       "contractNote": "Arsip tersedia sekarang. Pulihkan dan hapus permanen memerlukan dukungan backend.",
       "switchBlockedTitle": "Ganti percakapan?",

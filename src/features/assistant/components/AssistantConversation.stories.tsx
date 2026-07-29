@@ -47,6 +47,8 @@ const LABELS: AssistantConversationLabels = {
   },
   draftActions: { confirm: "Confirm", confirming: "Confirming", cancel: "Cancel", cancelling: "Cancelling" },
   recoveryBanner: {
+    recoveryLoading:
+      "Checking this conversation's recovery status before showing any clarification or draft that may still be pending after the page reload. You are still in the same conversation.",
     transientLostTitle: "The pending clarification for this conversation couldn't be restored after reloading.",
     clarificationRecoveredTitle: "You still have a pending question in this conversation",
     cancel: "Cancel",

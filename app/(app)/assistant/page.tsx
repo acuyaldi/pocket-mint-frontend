@@ -105,6 +105,7 @@ export default function AssistantPage() {
       cancelling: tDraft("cancelling"),
     },
     recoveryBanner: {
+      recoveryLoading: tRecovery("loading"),
       transientLostTitle: tConversation("transientUnavailable"),
       clarificationRecoveredTitle: tRecovery("clarificationRecoveredTitle"),
       cancel: tCommon("actions.cancel"),
