@@ -4,19 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import {
-  ArrowLeftRight,
-  BarChart3,
-  CalendarClock,
-  Gauge,
-  LayoutDashboard,
-  LogOut,
-  Sparkles,
-  User,
-  Wallet,
-} from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { PocketMintLogo } from "@/components/Logo";
 import { useLogout } from "@/components/LogoutProvider";
+import { getAppNavigationItems } from "@/components/layout/navigation-items";
 import { NavLinkPendingHint } from "@/components/layout/nav-link-pending-hint";
 import { createClient } from "@/lib/supabase/client";
 import { useDueBillCount } from "@/src/features/bills/hooks/useBills";
@@ -29,15 +20,7 @@ export function AppSidebar() {
   const { handleLogout } = useLogout();
   const [accountLabel, setAccountLabel] = useState(t("account"));
 
-  const NAV_ITEMS = [
-    { label: t("dashboard"), href: "/dashboard", icon: LayoutDashboard },
-    { label: t("wallets"), href: "/wallets", icon: Wallet },
-    { label: t("transactions"), href: "/transactions", icon: ArrowLeftRight },
-    { label: t("installments"), href: "/tagihan", icon: CalendarClock },
-    { label: t("analytics"), href: "/analytics", icon: BarChart3 },
-    { label: t("budgets"), href: "/anggaran", icon: Gauge },
-    { label: t("assistant"), href: "/assistant", icon: Sparkles },
-  ];
+  const navItems = getAppNavigationItems(t);
 
   useEffect(() => {
     const supabase = createClient();
@@ -64,7 +47,7 @@ export function AppSidebar() {
       </div>
 
       <nav aria-label={t("ariaMain")} className="flex-grow space-y-1">
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;

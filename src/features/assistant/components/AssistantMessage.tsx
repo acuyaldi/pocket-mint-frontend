@@ -29,7 +29,7 @@ export function AssistantMessage({ message, labels }: AssistantMessageProps) {
       </span>
       <p
         className={cn(
-          "max-w-[85%] whitespace-pre-line rounded-xl px-4 py-2.5 text-sm",
+          "max-w-[min(42rem,85%)] whitespace-pre-line rounded-xl px-4 py-2.5 text-sm",
           isUser ? "bg-slate text-primary-foreground" : "border border-border/70 bg-card text-foreground"
         )}
       >

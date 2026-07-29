@@ -47,7 +47,7 @@ export function AssistantCommandForm({
   const canSubmit = value.trim().length > 0 && !isDisabled;
 
   return (
-    <div className="max-w-xl">
+    <div className="w-full">
       <FormField
         label={labels.label}
         htmlFor="assistant-instruction"

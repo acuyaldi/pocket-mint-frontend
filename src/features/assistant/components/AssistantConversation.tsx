@@ -126,45 +126,46 @@ export function AssistantConversation({
           : null;
 
   return (
-    <section aria-label={labels.regionLabel} className="flex flex-col gap-5">
+    <section aria-label={labels.regionLabel} className="flex min-h-[calc(100dvh-14rem)] flex-col">
       {/* Persisted history is not itself an aria-live region — refetching it
           (e.g. after invalidation) must not re-announce every message. */}
-      <div className="space-y-5">
-        {conversationId ? (
-          <AssistantMessageList
-            messages={messages}
-            isLoading={isLoadingHistory}
-            errorMessage={historyErrorMessage}
-            loadingLabel={labels.historyLoading}
-            errorRetryLabel={labels.historyRetry}
-            onRetry={onRetryHistory}
-            messageLabels={labels.message}
-            listLabel={labels.listLabel}
-          />
-        ) : null}
+      <div className="flex flex-1 flex-col gap-5 overflow-y-auto pb-5">
+        <div className={showEmptyState ? "flex flex-1 items-center justify-center py-8" : "space-y-5"}>
+          {conversationId ? (
+            <AssistantMessageList
+              messages={messages}
+              isLoading={isLoadingHistory}
+              errorMessage={historyErrorMessage}
+              loadingLabel={labels.historyLoading}
+              errorRetryLabel={labels.historyRetry}
+              onRetry={onRetryHistory}
+              messageLabels={labels.message}
+              listLabel={labels.listLabel}
+            />
+          ) : null}
 
-        {showEmptyState ? (
-          <AssistantConversationEmptyState
-            title={labels.emptyTitle}
-            description={labels.emptyDescription}
-            examplesLabel={labels.examplesLabel}
-            examples={labels.examples}
-          />
-        ) : null}
+          {showEmptyState ? (
+            <AssistantConversationEmptyState
+              title={labels.emptyTitle}
+              description={labels.emptyDescription}
+              examplesLabel={labels.examplesLabel}
+              examples={labels.examples}
+            />
+          ) : null}
 
-        {isSendingMessage && instructionText ? (
-          <ul aria-label={labels.listLabel} className="flex flex-col gap-4">
-            <AssistantMessageComponent message={{ role: "USER", content: instructionText }} labels={labels.message} />
-          </ul>
-        ) : null}
-      </div>
+          {isSendingMessage && instructionText ? (
+            <ul aria-label={labels.listLabel} className="flex flex-col gap-4">
+              <AssistantMessageComponent message={{ role: "USER", content: instructionText }} labels={labels.message} />
+            </ul>
+          ) : null}
+        </div>
 
-      {/* Narrow live region: only the transient workflow item currently in
-          play is announced once when it appears — not the whole history. */}
-      <div aria-live="polite" className="space-y-6">
-        {recoveryState.kind === "transientClarificationLost" ? (
-          <AssistantRecoveryBanner kind="transientClarificationLost" labels={labels.recoveryBanner} />
-        ) : null}
+        {/* Narrow live region: only the transient workflow item currently in
+            play is announced once when it appears — not the whole history. */}
+        <div aria-live="polite" className="space-y-6">
+          {recoveryState.kind === "transientClarificationLost" ? (
+            <AssistantRecoveryBanner kind="transientClarificationLost" labels={labels.recoveryBanner} />
+          ) : null}
 
         {recoveryState.kind === "clarificationRecovered" ? (
           <AssistantRecoveryBanner
@@ -239,18 +240,20 @@ export function AssistantConversation({
             headingRef={workflowHeadingRef}
           />
         ) : null}
+        </div>
       </div>
 
-      <AssistantCommandForm
-        value={instructionText}
-        onChange={onInstructionChange}
-        onSubmit={onSubmit}
-        isSubmitting={isSendingMessage}
-        error={formError}
-        disabledReason={composerDisabledReason}
-        labels={labels.composer}
-      />
+      <div className="w-full border-t border-border pt-4">
+        <AssistantCommandForm
+          value={instructionText}
+          onChange={onInstructionChange}
+          onSubmit={onSubmit}
+          isSubmitting={isSendingMessage}
+          error={formError}
+          disabledReason={composerDisabledReason}
+          labels={labels.composer}
+        />
+      </div>
     </section>
   );
 }
-
