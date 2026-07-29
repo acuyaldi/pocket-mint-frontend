@@ -24,15 +24,25 @@ const hookSource = readFileSync(
   root + "src/features/savingGoals/hooks/useSavingGoals.ts",
   "utf8",
 );
+const visibilitySource = readFileSync(root + "components/layout/navigation-visibility.ts", "utf8");
+const navItemsSource = readFileSync(root + "components/layout/navigation-items.ts", "utf8");
 const sidebarSource = readFileSync(root + "components/layout/app-sidebar.tsx", "utf8");
 const bottomNavSource = readFileSync(root + "components/layout/bottom-nav.tsx", "utf8");
 
 describe("saving goal navigation", () => {
-  it("adds a first-class nav entry on both desktop and mobile", () => {
+  it("temporarily hides the first-class nav entry on both desktop and mobile through one reversible flag", () => {
+    expect(visibilitySource).toContain("HIDE_SAVING_GOALS_NAVIGATION = true");
+    expect(navItemsSource).toContain("HIDE_SAVING_GOALS_NAVIGATION");
+    expect(navItemsSource).toContain('href: "/target-tabungan"');
+    expect(navItemsSource).toContain('label: t("savingGoals")');
+    expect(navItemsSource).toContain('item.href !== "/target-tabungan"');
     for (const source of [sidebarSource, bottomNavSource]) {
-      expect(source).toContain('href: "/target-tabungan"');
-      expect(source).toContain('label: t("savingGoals")');
+      expect(source).toContain("getAppNavigationItems(t)");
+      expect(source).not.toContain('href: "/target-tabungan"');
+      expect(source).not.toContain('label: t("savingGoals")');
     }
+    expect(pageSource).toContain('useTranslations("savingGoals")');
+    expect(hookSource).toContain('"/saving-goals"');
     expect(idMessages.nav.savingGoals).toBe("Target Tabungan");
     expect(enMessages.nav.savingGoals).toBeTruthy();
   });

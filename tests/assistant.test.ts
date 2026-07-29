@@ -28,6 +28,7 @@ const typesSource = readFileSync(root + "src/types/assistant.ts", "utf8");
 const pageSource = readFileSync(root + "app/(app)/assistant/page.tsx", "utf8");
 const sidebarSource = readFileSync(root + "components/layout/app-sidebar.tsx", "utf8");
 const bottomNavSource = readFileSync(root + "components/layout/bottom-nav.tsx", "utf8");
+const navItemsSource = readFileSync(root + "components/layout/navigation-items.ts", "utf8");
 const libApiSource = readFileSync(root + "lib/api.ts", "utf8");
 const draftSummaryCardSource = readFileSync(root + "src/features/assistant/components/DraftSummaryCard.tsx", "utf8");
 const draftActionBarSource = readFileSync(root + "src/features/assistant/components/DraftActionBar.tsx", "utf8");
@@ -109,9 +110,10 @@ const VALID_DRAFT: AssistantDraft = {
 describe("assistant navigation", () => {
   it("adds a first-class nav entry on both desktop and mobile, matching each other", () => {
     for (const source of [sidebarSource, bottomNavSource]) {
-      expect(source).toContain('href: "/assistant"');
-      expect(source).toContain('label: t("assistant")');
+      expect(source).toContain("getAppNavigationItems(t)");
     }
+    expect(navItemsSource).toContain('href: "/assistant"');
+    expect(navItemsSource).toContain('label: t("assistant")');
     expect(enMessages.nav.assistant).toBeTruthy();
     expect(idMessages.nav.assistant).toBeTruthy();
   });
@@ -424,6 +426,22 @@ describe("assistant conversation experience (Phase 23.4)", () => {
     expect(conversationSource).toContain("AssistantMessageList");
     expect(conversationSource).toContain("AssistantPendingResponse");
     expect(conversationSource).toContain("isSendingMessage");
+  });
+
+  it("aligns the chat timeline to the app workspace gutters instead of centering a narrow timeline column", () => {
+    expect(conversationSource).toContain('className="flex min-h-[calc(100dvh-14rem)] flex-col');
+    expect(conversationSource).toContain('className="flex flex-1 flex-col');
+    expect(conversationSource).toContain(': "space-y-5"');
+    expect(conversationSource).not.toContain("mx-auto w-full max-w-2xl");
+    expect(conversationSource).not.toContain("mx-auto w-full max-w-xl");
+  });
+
+  it("keeps bubble readability at the message level while the composer spans the workspace", () => {
+    expect(commandFormSource).not.toContain('className="max-w-xl"');
+    expect(commandFormSource).toContain('className="w-full"');
+    expect(conversationSource).toContain('className="w-full border-t border-border pt-4"');
+    expect(messageSource).toContain("max-w-[min(42rem,85%)]");
+    expect(messageSource).toContain('isUser ? "items-end" : "items-start"');
   });
 
   it("renders plain text only — no markdown/HTML rendering of Assistant content", () => {

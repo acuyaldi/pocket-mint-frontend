@@ -3,18 +3,9 @@
 import * as React from "react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import {
-  LayoutDashboard,
-  ArrowLeftRight,
-  Wallet,
-  CalendarClock,
-  BarChart3,
-  Gauge,
-  PiggyBank,
-  Sparkles,
-  User,
-} from "lucide-react";
+import { User } from "lucide-react";
 import { AccountMenuItems } from "./account-menu";
+import { getAppNavigationItems } from "@/components/layout/navigation-items";
 import { DockMorph, type DockMorphItemData } from "@/components/ui/dock-morph";
 import {
   DropdownMenu,
@@ -31,18 +22,9 @@ export function BottomNav() {
   const items = React.useMemo<DockMorphItemData[]>(() => {
     // Labels and order mirror the desktop sidebar (app-sidebar.tsx) — same
     // vocabulary on both surfaces so wayfinding transfers between devices
-    const NAV_ITEMS = [
-      { label: t("dashboard"), href: "/dashboard", icon: LayoutDashboard },
-      { label: t("wallets"), href: "/wallets", icon: Wallet },
-      { label: t("transactions"), href: "/transactions", icon: ArrowLeftRight },
-      { label: t("installments"), href: "/tagihan", icon: CalendarClock },
-      { label: t("analytics"), href: "/analytics", icon: BarChart3 },
-      { label: t("savingGoals"), href: "/target-tabungan", icon: PiggyBank },
-      { label: t("budgets"), href: "/anggaran", icon: Gauge },
-      { label: t("assistant"), href: "/assistant", icon: Sparkles },
-    ];
+    const primaryItems = getAppNavigationItems(t);
 
-    const navItems: DockMorphItemData[] = NAV_ITEMS.map((item) => {
+    const navItems: DockMorphItemData[] = primaryItems.map((item) => {
       const isActive =
         pathname === item.href || pathname.startsWith(item.href + "/");
       const Icon = item.icon;

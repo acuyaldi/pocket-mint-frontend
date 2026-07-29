@@ -8,15 +8,18 @@ import idMessages from "@/messages/id.json";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const sidebar = readFileSync(root + "components/layout/app-sidebar.tsx", "utf8");
 const bottomNav = readFileSync(root + "components/layout/bottom-nav.tsx", "utf8");
+const navItems = readFileSync(root + "components/layout/navigation-items.ts", "utf8");
 const legacyRoute = readFileSync(root + "app/(app)/cicilan/page.tsx", "utf8");
 
 describe("bill navigation source contract", () => {
   it("uses the Cicilan label and route on desktop and mobile", () => {
     for (const source of [sidebar, bottomNav]) {
-      expect(source).toContain('label: t("installments")');
-      expect(source).toContain('href: "/tagihan"');
+      expect(source).toContain("getAppNavigationItems(t)");
       expect(source).not.toContain('href: "/cicilan"');
     }
+    expect(navItems).toContain('label: t("installments")');
+    expect(navItems).toContain('href: "/tagihan"');
+    expect(navItems).not.toContain('href: "/cicilan"');
     expect(idMessages.nav.installments).toBe("Cicilan");
   });
 
