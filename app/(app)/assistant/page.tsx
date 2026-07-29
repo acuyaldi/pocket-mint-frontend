@@ -86,7 +86,28 @@ export default function AssistantPage() {
     composerDisabledClarification: tConversation("composerDisabledClarification"),
     composerDisabledDraft: tConversation("composerDisabledDraft"),
     composerDisabledOutcomeUnknown: tRecovery("composerDisabled"),
-    clarification: { cancel: tCommon("actions.cancel"), cancelling: tClarification("cancelling") },
+    clarification: {
+      cancel: tCommon("actions.cancel"),
+      cancelling: tClarification("cancelling"),
+      titleByEntity: {
+        wallet: tClarification("title.wallet"),
+        merchant: tClarification("title.merchant"),
+        category: tClarification("title.category"),
+      },
+      descriptionByEntity: {
+        wallet: tClarification("description.wallet"),
+        merchant: tClarification("description.merchant"),
+        category: tClarification("description.category"),
+      },
+    },
+    guidedClarification: {
+      field: {
+        category: tClarification("guided.field.category"),
+        date: tClarification("guided.field.date"),
+      },
+      submit: tClarification("guided.submit"),
+      cancel: tCommon("actions.cancel"),
+    },
     draft: {
       income: tDraft("income"),
       expense: tDraft("expense"),
@@ -169,6 +190,9 @@ export default function AssistantPage() {
         isCancellingClarification={flow.isCancellingClarification}
         onSelectOption={(token) =>
           flow.selectOption(token, tErrors, (message) => toast(message, "error"))
+        }
+        onSubmitGuidedFields={(fields) =>
+          flow.submitGuidedFields(fields, tErrors, (message) => toast(message, "error"))
         }
         onCancelClarification={() =>
           flow.cancelActiveClarification(

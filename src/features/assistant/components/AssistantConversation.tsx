@@ -8,6 +8,7 @@ import { AssistantConversationEmptyState } from "./AssistantConversationEmptySta
 import { AssistantPendingResponse } from "./AssistantPendingResponse";
 import { AssistantCommandForm, type AssistantCommandFormLabels } from "./AssistantCommandForm";
 import { ClarificationCard, type ClarificationCardLabels } from "./ClarificationCard";
+import { GuidedClarificationCard, type GuidedClarificationCardLabels } from "./GuidedClarificationCard";
 import { DraftSummaryCard, type DraftSummaryCardLabels } from "./DraftSummaryCard";
 import { DraftActionBar, type DraftActionBarLabels } from "./DraftActionBar";
 import { AssistantResultState } from "./AssistantResultState";
@@ -34,6 +35,7 @@ export interface AssistantConversationLabels {
   composerDisabledDraft: string;
   composerDisabledOutcomeUnknown: string;
   clarification: ClarificationCardLabels;
+  guidedClarification: GuidedClarificationCardLabels;
   draft: DraftSummaryCardLabels;
   draftActions: DraftActionBarLabels;
   recoveryBanner: AssistantRecoveryBannerLabels;
@@ -58,6 +60,7 @@ interface AssistantConversationProps {
   isSelectingClarification: boolean;
   isCancellingClarification: boolean;
   onSelectOption: (token: string) => void;
+  onSubmitGuidedFields: (fields: Record<string, string>) => void;
   onCancelClarification: () => void;
   isConfirmingDraft: boolean;
   isCancellingDraft: boolean;
@@ -97,6 +100,7 @@ export function AssistantConversation({
   isSelectingClarification,
   isCancellingClarification,
   onSelectOption,
+  onSubmitGuidedFields,
   onCancelClarification,
   isConfirmingDraft,
   isCancellingDraft,
@@ -114,7 +118,7 @@ export function AssistantConversation({
   const showEmptyState = !conversationId && !hasHistory && !activeWorkflow && !isSendingMessage;
 
   const composerDisabledReason = activeWorkflow
-    ? activeWorkflow.kind === "clarification"
+    ? activeWorkflow.kind === "clarification" || activeWorkflow.kind === "guidedClarification"
       ? labels.composerDisabledClarification
       : labels.composerDisabledDraft
     : recoveryState.kind === "clarificationRecovered"
@@ -218,6 +222,19 @@ export function AssistantConversation({
               onSelect={onSelectOption}
               onCancel={onCancelClarification}
               labels={labels.clarification}
+              headingRef={workflowHeadingRef}
+            />
+          ) : null}
+
+          {activeWorkflow?.kind === "guidedClarification" ? (
+            <GuidedClarificationCard
+              clarification={activeWorkflow.clarification}
+              prompt={activeWorkflow.prompt}
+              labels={labels.guidedClarification}
+              isSubmitting={isSelectingClarification}
+              isCancelling={isCancellingClarification}
+              onSubmit={onSubmitGuidedFields}
+              onCancel={onCancelClarification}
               headingRef={workflowHeadingRef}
             />
           ) : null}

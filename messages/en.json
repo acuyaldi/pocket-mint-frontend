@@ -1075,7 +1075,24 @@
     },
     "clarification": {
       "cancelling": "Cancelling",
-      "cancelSuccess": "Clarification cancelled."
+      "cancelSuccess": "Clarification cancelled.",
+      "title": {
+        "wallet": "Choose wallet",
+        "merchant": "Choose merchant",
+        "category": "Choose category"
+      },
+      "description": {
+        "wallet": "Select the wallet that should fund this transaction.",
+        "merchant": "Select the merchant this transaction refers to.",
+        "category": "Select one of your existing categories."
+      },
+      "guided": {
+        "field": {
+          "category": "Category",
+          "date": "Date"
+        },
+        "submit": "Continue"
+      }
     },
     "completion": {
       "newInstruction": "New instruction"

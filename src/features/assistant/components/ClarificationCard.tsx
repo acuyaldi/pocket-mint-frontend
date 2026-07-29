@@ -4,11 +4,13 @@ import type { RefObject } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClarificationOptions } from "./ClarificationOptions";
-import type { ClarificationRequest } from "@/src/types/assistant";
+import type { AssistantClarificationEntityType, ClarificationRequest } from "@/src/types/assistant";
 
 export interface ClarificationCardLabels {
   cancel: string;
   cancelling: string;
+  titleByEntity: Record<AssistantClarificationEntityType, string>;
+  descriptionByEntity: Record<AssistantClarificationEntityType, string>;
 }
 
 interface ClarificationCardProps {
@@ -33,6 +35,9 @@ export function ClarificationCard({
   labels,
   headingRef,
 }: ClarificationCardProps) {
+  const title = labels.titleByEntity[clarification.entityType];
+  const description = labels.descriptionByEntity[clarification.entityType];
+
   return (
     <article className="max-w-xl rounded-xl border border-border/70 bg-card p-6 shadow-sm">
       <h2
@@ -40,11 +45,14 @@ export function ClarificationCard({
         tabIndex={-1}
         className="text-base font-semibold text-foreground outline-none"
       >
-        {clarification.prompt}
+        {title}
       </h2>
+      <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+      <p className="mt-4 text-sm text-foreground">{clarification.prompt}</p>
 
       <div className="mt-4">
         <ClarificationOptions
+          entityType={clarification.entityType}
           options={clarification.options}
           pendingToken={pendingToken}
           disabled={isSelecting || isCancelling}

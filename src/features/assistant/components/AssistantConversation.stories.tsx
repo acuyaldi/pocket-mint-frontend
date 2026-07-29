@@ -2,7 +2,7 @@ import type { ComponentProps } from "react";
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { AssistantConversation, type AssistantConversationLabels } from "./AssistantConversation";
-import type { AssistantMessage, AssistantDraft, AssistantRecoveryClarification, ClarificationRequest } from "@/src/types/assistant";
+import type { AssistantMessage, AssistantDraft, AssistantRecoveryClarification, ClarificationRequest, GuidedClarification } from "@/src/types/assistant";
 import type { AssistantRecoveryState } from "@/src/features/assistant/types/recovery";
 
 const LABELS: AssistantConversationLabels = {
@@ -27,7 +27,25 @@ const LABELS: AssistantConversationLabels = {
   composerDisabledClarification: "Answer the clarification above before sending a new instruction.",
   composerDisabledDraft: "Confirm or cancel the draft above before sending a new instruction.",
   composerDisabledOutcomeUnknown: "Check what happened with your previous action above before sending a new instruction.",
-  clarification: { cancel: "Cancel", cancelling: "Cancelling" },
+  clarification: {
+    cancel: "Cancel",
+    cancelling: "Cancelling",
+    titleByEntity: {
+      wallet: "Choose wallet",
+      merchant: "Choose merchant",
+      category: "Choose category",
+    },
+    descriptionByEntity: {
+      wallet: "Select the wallet that should fund this transaction.",
+      merchant: "Select the merchant Pocket Mint should use.",
+      category: "Select one of your existing categories.",
+    },
+  },
+  guidedClarification: {
+    field: { category: "Category", date: "Date" },
+    submit: "Continue",
+    cancel: "Cancel",
+  },
   draft: {
     income: "Income",
     expense: "Expense",
@@ -117,6 +135,16 @@ const CLARIFICATION: ClarificationRequest = {
   expiresAt: "2026-07-25T15:30:00.000Z",
 };
 
+const GUIDED_CLARIFICATION: GuidedClarification = {
+  kind: "guided",
+  clarificationId: "clar-guided-1",
+  fields: [
+    { field: "category", required: true, input: { type: "text", placeholder: "Nama kategori" } },
+    { field: "date", required: true, input: { type: "date" } },
+  ],
+  expiresAt: "2026-07-25T15:30:00.000Z",
+};
+
 const RECOVERED_CLARIFICATION: AssistantRecoveryClarification = {
   clarificationId: "clar-1",
   entityType: "wallet",
@@ -192,6 +220,7 @@ const BASE = {
   isSelectingClarification: false,
   isCancellingClarification: false,
   onSelectOption: fn(),
+  onSubmitGuidedFields: fn(),
   onCancelClarification: fn(),
   isConfirmingDraft: false,
   isCancellingDraft: false,
@@ -247,6 +276,19 @@ export const WithClarification: Story = {
     conversationId: "conv-1",
     messages: MESSAGES,
     activeWorkflow: { kind: "clarification", clarification: CLARIFICATION },
+  },
+};
+
+export const WithGuidedClarification: Story = {
+  args: {
+    ...BASE,
+    conversationId: "conv-1",
+    messages: MESSAGES,
+    activeWorkflow: {
+      kind: "guidedClarification",
+      clarification: GUIDED_CLARIFICATION,
+      prompt: "Beberapa detail transaksi belum lengkap. Lengkapi kategori dan tanggal transaksi.",
+    },
   },
 };
 
@@ -340,7 +382,7 @@ export const ClarificationSelectInteraction: Story = {
   args: WithClarification.args,
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: "BCA Tabungan" }));
+    await userEvent.click(canvas.getByRole("button", { name: /BCA Tabungan/ }));
     expect(args.onSelectOption).toHaveBeenCalledWith("tok-1");
   },
 };

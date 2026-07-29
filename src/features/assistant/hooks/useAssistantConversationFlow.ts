@@ -12,7 +12,7 @@ import {
 import { useAssistantSession, useAssistantRecoveryState } from "@/src/features/assistant/hooks/useAssistantSession";
 import { useAssistantReconciliation } from "@/src/features/assistant/hooks/useAssistantReconciliation";
 import { parseAssistantDraftParam, isAssistantDraft } from "@/src/features/assistant/utils/draftParam";
-import { isClarificationRequest } from "@/src/features/assistant/utils/clarification";
+import { isClarificationRequest, isGuidedClarification } from "@/src/features/assistant/utils/clarification";
 import { readAssistantErrorMessage, classifyAssistantMutationError } from "@/src/features/assistant/utils/errors";
 import {
   resolveRecoveryState,
@@ -25,6 +25,7 @@ import type {
   AssistantDraft,
   AssistantTurnResult,
   ClarificationRequest,
+  GuidedClarification,
 } from "@/src/types/assistant";
 
 /**
@@ -35,6 +36,7 @@ import type {
  */
 export type AssistantActiveWorkflow =
   | { kind: "clarification"; clarification: ClarificationRequest }
+  | { kind: "guidedClarification"; clarification: GuidedClarification; prompt: string }
   | { kind: "draft"; draft: AssistantDraft }
   | null;
 
@@ -163,25 +165,23 @@ export function useAssistantConversationFlow() {
   function applyTurnResult(result: AssistantTurnResult) {
     persistConversationId(result.conversationId);
     if (result.status === "clarification_required") {
-      // Entity-ambiguity clarification: a structured pick-an-option payload
-      // (`data.kind === "ambiguous"`). Blocks the composer until an option is
-      // selected via the clarification endpoint.
-      if (result.data) {
+      if (result.data?.kind === "entity_selection") {
         if (isClarificationRequest(result.data.clarification)) {
           setActiveWorkflow({ kind: "clarification", clarification: result.data.clarification });
           return;
         }
-        // `data` present but malformed — a genuine contract violation, surfaced
-        // generically rather than mistaken for a normal turn.
         setActiveWorkflow(null);
         return "generic-error" as const;
       }
-      // Provider clarification: one bounded free-form question. Backend contract
-      // (`pocket-mint-be` provider-runtime.ts) is `clarification_required` with
-      // NO `data`, persisted as an ASSISTANT turn (source `PROVIDER_CLARIFICATION`)
-      // and answered by typing a follow-up — it is neither an option-selection
-      // nor an error. Let it land in the persisted timeline and keep the composer
-      // open; never block, never reset the conversation.
+      if (result.data?.kind === "guided_fields") {
+        if (isGuidedClarification(result.data.clarification)) {
+          setActiveWorkflow({ kind: "guidedClarification", clarification: result.data.clarification, prompt: result.message });
+          return;
+        }
+        setActiveWorkflow(null);
+        return "generic-error" as const;
+      }
+      // Provider clarification: one bounded free-form question answered by typing a follow-up.
       setActiveWorkflow(null);
       setLastResult(null);
       return;
@@ -203,8 +203,12 @@ export function useAssistantConversationFlow() {
   function applySelectResult(result: AssistantClarificationSelectResult) {
     persistConversationId(result.conversationId);
     if (result.status === "clarification_required") {
-      if (isClarificationRequest(result.data.clarification)) {
+      if (result.data.kind === "entity_selection" && isClarificationRequest(result.data.clarification)) {
         setActiveWorkflow({ kind: "clarification", clarification: result.data.clarification });
+        return;
+      }
+      if (result.data.kind === "guided_fields" && isGuidedClarification(result.data.clarification)) {
+        setActiveWorkflow({ kind: "guidedClarification", clarification: result.data.clarification, prompt: result.message });
         return;
       }
       setActiveWorkflow(null);
@@ -308,6 +312,27 @@ export function useAssistantConversationFlow() {
     );
   };
 
+  const submitGuidedFields = (fields: Record<string, string>, tErrors: (key: string) => string, onError: (message: string) => void) => {
+    if (activeWorkflow?.kind !== "guidedClarification" || selectClarification.isPending || cancelClarification.isPending) return;
+    setOutcomeUnknownAction(null);
+    selectClarification.mutate(
+      { conversationId: conversationId as string, clarificationId: activeWorkflow.clarification.clarificationId, fields },
+      {
+        onSuccess: (result) => {
+          if (applySelectResult(result) === "generic-error") onError(tErrors("generic"));
+        },
+        onError: (error) =>
+          handleMutationError(
+            error,
+            "selectClarification",
+            { clarificationId: activeWorkflow.clarification.clarificationId },
+            tErrors,
+            onError
+          ),
+      }
+    );
+  };
+
   const cancelActiveClarification = (
     tErrors: (key: string) => string,
     onSuccess: () => void,
@@ -316,6 +341,8 @@ export function useAssistantConversationFlow() {
     const clarification =
       activeWorkflow?.kind === "clarification"
         ? activeWorkflow.clarification
+        : activeWorkflow?.kind === "guidedClarification"
+          ? activeWorkflow.clarification
         : recoveryState.kind === "clarificationRecovered"
           ? recoveryState.clarification
           : null;
@@ -468,6 +495,7 @@ export function useAssistantConversationFlow() {
     retryOutcomeAction,
     submit,
     selectOption,
+    submitGuidedFields,
     cancelActiveClarification,
     confirm,
     cancelActiveDraft,
