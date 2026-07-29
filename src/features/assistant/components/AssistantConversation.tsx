@@ -132,16 +132,18 @@ export function AssistantConversation({
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto pb-5">
         <div className={showEmptyState ? "flex flex-1 items-center justify-center py-8" : "space-y-5"}>
           {conversationId ? (
-            <AssistantMessageList
-              messages={messages}
-              isLoading={isLoadingHistory}
-              errorMessage={historyErrorMessage}
-              loadingLabel={labels.historyLoading}
-              errorRetryLabel={labels.historyRetry}
-              onRetry={onRetryHistory}
-              messageLabels={labels.message}
-              listLabel={labels.listLabel}
-            />
+            <div className="mx-auto w-full max-w-2xl">
+              <AssistantMessageList
+                messages={messages}
+                isLoading={isLoadingHistory}
+                errorMessage={historyErrorMessage}
+                loadingLabel={labels.historyLoading}
+                errorRetryLabel={labels.historyRetry}
+                onRetry={onRetryHistory}
+                messageLabels={labels.message}
+                listLabel={labels.listLabel}
+              />
+            </div>
           ) : null}
 
           {showEmptyState ? (
@@ -154,7 +156,7 @@ export function AssistantConversation({
           ) : null}
 
           {isSendingMessage && instructionText ? (
-            <ul aria-label={labels.listLabel} className="flex flex-col gap-4">
+            <ul aria-label={labels.listLabel} className="mx-auto flex w-full max-w-2xl flex-col gap-4">
               <AssistantMessageComponent message={{ role: "USER", content: instructionText }} labels={labels.message} />
             </ul>
           ) : null}
@@ -162,84 +164,84 @@ export function AssistantConversation({
 
         {/* Narrow live region: only the transient workflow item currently in
             play is announced once when it appears — not the whole history. */}
-        <div aria-live="polite" className="space-y-6">
+        <div aria-live="polite" className="mx-auto w-full max-w-xl space-y-6">
           {recoveryState.kind === "transientClarificationLost" ? (
             <AssistantRecoveryBanner kind="transientClarificationLost" labels={labels.recoveryBanner} />
           ) : null}
 
-        {recoveryState.kind === "clarificationRecovered" ? (
-          <AssistantRecoveryBanner
-            kind="clarificationRecovered"
-            clarification={recoveryState.clarification}
-            isCancelling={isCancellingClarification}
-            onCancel={onCancelClarification}
-            labels={labels.recoveryBanner}
-            headingRef={workflowHeadingRef}
-          />
-        ) : null}
-
-        {recoveryState.kind === "draftRecovered" ? (
-          <div ref={workflowHeadingRef as RefObject<HTMLDivElement>} tabIndex={-1} className="max-w-xl space-y-6 outline-none">
-            <DraftSummaryCard draft={recoveryState.draft} intlLocale={intlLocale} labels={labels.draft} />
-            <DraftActionBar
-              onConfirm={onConfirmDraft}
-              onCancel={onCancelDraft}
-              isConfirming={isConfirmingDraft}
-              isCancelling={isCancellingDraft}
-              disabled={recoveryState.draft.status !== "PENDING_CONFIRMATION"}
-              labels={labels.draftActions}
+          {recoveryState.kind === "clarificationRecovered" ? (
+            <AssistantRecoveryBanner
+              kind="clarificationRecovered"
+              clarification={recoveryState.clarification}
+              isCancelling={isCancellingClarification}
+              onCancel={onCancelClarification}
+              labels={labels.recoveryBanner}
+              headingRef={workflowHeadingRef}
             />
-          </div>
-        ) : null}
+          ) : null}
 
-        {recoveryState.kind === "actionOutcomeUnknown" ? (
-          <AssistantOutcomeUnknown
-            onCheck={onCheckOutcome}
-            onRetry={isAssistantActionRetrySafe(recoveryState.action) ? onRetryOutcome : undefined}
-            isChecking={isCheckingOutcome}
-            isRetrying={isConfirmingDraft || isCancellingDraft || isCancellingClarification}
-            labels={labels.outcomeUnknown}
-            headingRef={workflowHeadingRef}
-          />
-        ) : null}
+          {recoveryState.kind === "draftRecovered" ? (
+            <div ref={workflowHeadingRef as RefObject<HTMLDivElement>} tabIndex={-1} className="max-w-xl space-y-6 outline-none">
+              <DraftSummaryCard draft={recoveryState.draft} intlLocale={intlLocale} labels={labels.draft} />
+              <DraftActionBar
+                onConfirm={onConfirmDraft}
+                onCancel={onCancelDraft}
+                isConfirming={isConfirmingDraft}
+                isCancelling={isCancellingDraft}
+                disabled={recoveryState.draft.status !== "PENDING_CONFIRMATION"}
+                labels={labels.draftActions}
+              />
+            </div>
+          ) : null}
 
-        {isSendingMessage ? <AssistantPendingResponse label={labels.pendingResponse} /> : null}
-
-        {activeWorkflow?.kind === "clarification" ? (
-          <ClarificationCard
-            clarification={activeWorkflow.clarification}
-            pendingToken={pendingOptionToken}
-            isSelecting={isSelectingClarification}
-            isCancelling={isCancellingClarification}
-            onSelect={onSelectOption}
-            onCancel={onCancelClarification}
-            labels={labels.clarification}
-            headingRef={workflowHeadingRef}
-          />
-        ) : null}
-
-        {activeWorkflow?.kind === "draft" ? (
-          <div ref={workflowHeadingRef as RefObject<HTMLDivElement>} tabIndex={-1} className="max-w-xl space-y-6 outline-none">
-            <DraftSummaryCard draft={activeWorkflow.draft} intlLocale={intlLocale} labels={labels.draft} />
-            <DraftActionBar
-              onConfirm={onConfirmDraft}
-              onCancel={onCancelDraft}
-              isConfirming={isConfirmingDraft}
-              isCancelling={isCancellingDraft}
-              disabled={activeWorkflow.draft.status !== "PENDING_CONFIRMATION"}
-              labels={labels.draftActions}
+          {recoveryState.kind === "actionOutcomeUnknown" ? (
+            <AssistantOutcomeUnknown
+              onCheck={onCheckOutcome}
+              onRetry={isAssistantActionRetrySafe(recoveryState.action) ? onRetryOutcome : undefined}
+              isChecking={isCheckingOutcome}
+              isRetrying={isConfirmingDraft || isCancellingDraft || isCancellingClarification}
+              labels={labels.outcomeUnknown}
+              headingRef={workflowHeadingRef}
             />
-          </div>
-        ) : null}
+          ) : null}
 
-        {lastResult && !activeWorkflow ? (
-          <AssistantResultState
-            renderedText={lastResult.renderedText}
-            actionLabel={labels.continueLabel}
-            onAction={onStartNewConversation}
-            headingRef={workflowHeadingRef}
-          />
-        ) : null}
+          {isSendingMessage ? <AssistantPendingResponse label={labels.pendingResponse} /> : null}
+
+          {activeWorkflow?.kind === "clarification" ? (
+            <ClarificationCard
+              clarification={activeWorkflow.clarification}
+              pendingToken={pendingOptionToken}
+              isSelecting={isSelectingClarification}
+              isCancelling={isCancellingClarification}
+              onSelect={onSelectOption}
+              onCancel={onCancelClarification}
+              labels={labels.clarification}
+              headingRef={workflowHeadingRef}
+            />
+          ) : null}
+
+          {activeWorkflow?.kind === "draft" ? (
+            <div ref={workflowHeadingRef as RefObject<HTMLDivElement>} tabIndex={-1} className="max-w-xl space-y-6 outline-none">
+              <DraftSummaryCard draft={activeWorkflow.draft} intlLocale={intlLocale} labels={labels.draft} />
+              <DraftActionBar
+                onConfirm={onConfirmDraft}
+                onCancel={onCancelDraft}
+                isConfirming={isConfirmingDraft}
+                isCancelling={isCancellingDraft}
+                disabled={activeWorkflow.draft.status !== "PENDING_CONFIRMATION"}
+                labels={labels.draftActions}
+              />
+            </div>
+          ) : null}
+
+          {lastResult && !activeWorkflow ? (
+            <AssistantResultState
+              renderedText={lastResult.renderedText}
+              actionLabel={labels.continueLabel}
+              onAction={onStartNewConversation}
+              headingRef={workflowHeadingRef}
+            />
+          ) : null}
         </div>
       </div>
 

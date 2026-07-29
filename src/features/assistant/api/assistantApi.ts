@@ -26,7 +26,10 @@ import type {
  */
 
 export function sendAssistantMessage(input: SendAssistantMessageInput): Promise<AssistantTurnResult> {
-  return api.post<{ success: boolean; data: AssistantTurnResult }>("/assistant/messages", input).then((res) => res.data.data);
+  const body = input.conversationId
+    ? { message: input.message, conversationId: input.conversationId, locale: input.locale }
+    : { message: input.message, locale: input.locale };
+  return api.post<{ success: boolean; data: AssistantTurnResult }>("/assistant/messages", body).then((res) => res.data.data);
 }
 
 export function executeAssistantIntent(input: ExecuteAssistantIntentInput): Promise<AssistantTurnResult> {
