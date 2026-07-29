@@ -130,13 +130,13 @@ export default function AssistantPage() {
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           <Button
             type="button"
-            variant="outline"
+            variant="default"
+            size="touch"
             onClick={flow.startNewConversation}
             disabled={!flow.canStartNewConversation}
             title={flow.canStartNewConversation ? undefined : tConversation("resetBlocked")}
-            className="h-11 gap-1.5"
           >
-            <Plus className="size-4" aria-hidden="true" />
+            <Plus data-icon="inline-start" aria-hidden="true" />
             {tConversation("newConversation")}
           </Button>
           <AssistantConversationHistory
