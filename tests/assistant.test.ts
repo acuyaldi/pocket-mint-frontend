@@ -540,11 +540,12 @@ describe("assistant conversation experience (Phase 23.4)", () => {
     expect(conversationSource).toContain('className="w-full border-t border-border');
   });
 
-  it("separates readable message width from the full-width bottom composer", () => {
+  it("keeps message bubbles readable while the timeline and composer span the workspace", () => {
     expect(commandFormSource).not.toContain('className="max-w-xl"');
     expect(conversationSource).toContain('className="w-full border-t border-border pt-4"');
-    expect(conversationSource).toContain('className="mx-auto w-full max-w-2xl');
-    expect(conversationSource).toContain('className="mx-auto w-full max-w-xl');
+    expect(conversationSource).not.toContain("mx-auto w-full max-w-2xl");
+    expect(conversationSource).not.toContain("mx-auto w-full max-w-xl");
+    expect(messageSource).toContain("max-w-[min(42rem,85%)]");
   });
 });
 

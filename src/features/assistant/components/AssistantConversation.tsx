@@ -132,18 +132,16 @@ export function AssistantConversation({
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto pb-5">
         <div className={showEmptyState ? "flex flex-1 items-center justify-center py-8" : "space-y-5"}>
           {conversationId ? (
-            <div className="mx-auto w-full max-w-2xl">
-              <AssistantMessageList
-                messages={messages}
-                isLoading={isLoadingHistory}
-                errorMessage={historyErrorMessage}
-                loadingLabel={labels.historyLoading}
-                errorRetryLabel={labels.historyRetry}
-                onRetry={onRetryHistory}
-                messageLabels={labels.message}
-                listLabel={labels.listLabel}
-              />
-            </div>
+            <AssistantMessageList
+              messages={messages}
+              isLoading={isLoadingHistory}
+              errorMessage={historyErrorMessage}
+              loadingLabel={labels.historyLoading}
+              errorRetryLabel={labels.historyRetry}
+              onRetry={onRetryHistory}
+              messageLabels={labels.message}
+              listLabel={labels.listLabel}
+            />
           ) : null}
 
           {showEmptyState ? (
@@ -156,7 +154,7 @@ export function AssistantConversation({
           ) : null}
 
           {isSendingMessage && instructionText ? (
-            <ul aria-label={labels.listLabel} className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+            <ul aria-label={labels.listLabel} className="flex flex-col gap-4">
               <AssistantMessageComponent message={{ role: "USER", content: instructionText }} labels={labels.message} />
             </ul>
           ) : null}
@@ -164,7 +162,7 @@ export function AssistantConversation({
 
         {/* Narrow live region: only the transient workflow item currently in
             play is announced once when it appears — not the whole history. */}
-        <div aria-live="polite" className="mx-auto w-full max-w-xl space-y-6">
+        <div aria-live="polite" className="space-y-6">
           {recoveryState.kind === "transientClarificationLost" ? (
             <AssistantRecoveryBanner kind="transientClarificationLost" labels={labels.recoveryBanner} />
           ) : null}
