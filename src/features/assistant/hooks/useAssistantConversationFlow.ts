@@ -2,9 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useLocale } from "next-intl";
-
-import { INTL_LOCALE, type Locale } from "@/i18n/config";
 
 import { useConfirmAssistantDraft, useCancelAssistantDraft } from "@/src/features/assistant/hooks/useAssistantDraft";
 import {
@@ -76,11 +73,6 @@ const MAX_ASSISTANT_INSTRUCTION_LENGTH = 10_000;
 export function useAssistantConversationFlow() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Reply language follows the active UI locale — sent as a BCP-47 tag with
-  // every instruction so an Indonesian UI gets Indonesian answers and an
-  // English UI gets English ones (the backend decides the response language).
-  const uiLocale = useLocale();
-  const requestLocale = INTL_LOCALE[uiLocale as Locale] ?? INTL_LOCALE.id;
 
   const urlConversationId = useMemo(() => {
     const raw = searchParams.get(CONVERSATION_ID_PARAM);
@@ -254,7 +246,8 @@ export function useAssistantConversationFlow() {
   const submit = (
     tErrors: (key: string) => string,
     onRequestError: (message: string) => void,
-    onGenericError: () => void
+    onGenericError: () => void,
+    requestLocale: string
   ) => {
     const message = instructionText.trim();
     if (!message || sendMessage.isPending || activeWorkflow) return;

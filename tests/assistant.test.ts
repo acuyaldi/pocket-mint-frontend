@@ -25,6 +25,7 @@ const sessionHookSource = readFileSync(root + "src/features/assistant/hooks/useA
 const messagesHookSource = readFileSync(root + "src/features/assistant/hooks/useAssistantMessages.ts", "utf8");
 const draftHookSource = readFileSync(root + "src/features/assistant/hooks/useAssistantDraft.ts", "utf8");
 const typesSource = readFileSync(root + "src/types/assistant.ts", "utf8");
+const featureTypesSource = readFileSync(root + "src/features/assistant/types/index.ts", "utf8");
 const pageSource = readFileSync(root + "app/(app)/assistant/page.tsx", "utf8");
 const sidebarSource = readFileSync(root + "components/layout/app-sidebar.tsx", "utf8");
 const bottomNavSource = readFileSync(root + "components/layout/bottom-nav.tsx", "utf8");
@@ -148,6 +149,16 @@ describe("assistant API contract", () => {
 
   it("sends the Idempotency-Key header required by draft confirmation", () => {
     expect(apiSource).toContain('"Idempotency-Key": idempotencyKey');
+  });
+
+  it("submits assistant messages with the active UI locale and no unrelated body fields", () => {
+    expect(featureTypesSource).toContain("locale?: string;");
+    expect(pageSource).toContain("onSubmit={() => flow.submit(");
+    expect(pageSource).toContain("intlLocale)");
+    expect(flowHookSource).toContain("{ message, conversationId: conversationId ?? undefined, locale: requestLocale }");
+    expect(apiSource).toContain("locale: input.locale");
+    expect(apiSource).toContain('api.post<{ success: boolean; data: AssistantTurnResult }>("/assistant/messages", body)');
+    expect(apiSource).not.toContain('"/assistant/messages", input');
   });
 });
 
@@ -520,6 +531,21 @@ describe("assistant conversation experience (Phase 23.4)", () => {
         expect(conversation[key]).toBeTruthy();
       }
     }
+  });
+
+  it("lays out the empty conversation as a full-height chat workspace with a bottom-docked composer", () => {
+    expect(conversationSource).toContain('className="flex min-h-[calc(100dvh-14rem)] flex-col');
+    expect(conversationSource).toContain('className="flex flex-1 flex-col');
+    expect(conversationSource).toContain('"flex flex-1 items-center justify-center py-8"');
+    expect(conversationSource).toContain('className="w-full border-t border-border');
+  });
+
+  it("keeps message bubbles readable while the timeline and composer span the workspace", () => {
+    expect(commandFormSource).not.toContain('className="max-w-xl"');
+    expect(conversationSource).toContain('className="w-full border-t border-border pt-4"');
+    expect(conversationSource).not.toContain("mx-auto w-full max-w-2xl");
+    expect(conversationSource).not.toContain("mx-auto w-full max-w-xl");
+    expect(messageSource).toContain("max-w-[min(42rem,85%)]");
   });
 });
 
