@@ -35,7 +35,7 @@ export type AnalyticsSummaryCardProps =
   | AnalyticsSummaryCardDataProps
   | AnalyticsSummaryCardLoadingProps;
 
-const CARD_CLASS = "rounded-xl border border-border/70 bg-card p-6 shadow-sm";
+const CARD_CLASS = "min-w-0 overflow-hidden rounded-xl border border-border/70 bg-card p-4 shadow-sm sm:p-5 xl:p-6";
 
 function AnalyticsSummaryCardSkeleton() {
   return (
@@ -43,7 +43,7 @@ function AnalyticsSummaryCardSkeleton() {
       <p className="text-[12px] font-semibold uppercase tracking-[0.12em]">
         <span className="inline-block h-3 w-20 rounded bg-surface-high align-middle motion-safe:animate-pulse" />
       </p>
-      <p className="mt-4 text-[28px] font-semibold leading-tight">
+      <p className="mt-4 text-[clamp(1.25rem,1rem+1vw,1.75rem)] font-semibold leading-tight">
         <span className="inline-block h-7 w-32 rounded bg-surface-high align-middle motion-safe:animate-pulse" />
       </p>
       <div className="mt-3 flex h-5 items-center">
@@ -100,9 +100,11 @@ function AnalyticsSummaryCardContent({
   return (
     <article className={CARD_CLASS}>
       <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
-      <p className="mt-4 text-[28px] font-semibold leading-tight tabular-nums text-primary">{value}</p>
+      <p className="mt-4 max-w-full text-[clamp(1.25rem,1rem+1vw,1.75rem)] font-semibold leading-tight tabular-nums text-primary [overflow-wrap:anywhere]">
+        {value}
+      </p>
 
-      <div className={`mt-3 flex items-center gap-1.5 text-sm font-medium ${toneClass}`}>
+      <div className={`mt-3 flex min-w-0 flex-wrap items-center gap-1.5 text-sm font-medium [overflow-wrap:anywhere] ${toneClass}`}>
         {direction === "up" ? (
           <ArrowUp className="size-4" aria-hidden="true" />
         ) : direction === "down" ? (
@@ -113,7 +115,7 @@ function AnalyticsSummaryCardContent({
         {percentageChange.reason === "ZERO_BASELINE" || percentageChange.value === null ? (
           <span>{t("noComparison")}</span>
         ) : (
-          <span>
+          <span className="min-w-0">
             {t("changeVsPrevious", {
               percent: `${percentageChange.value >= 0 ? "+" : ""}${Math.round(percentageChange.value * 10) / 10}%`,
               amount: changeText,

@@ -54,11 +54,23 @@ describe("Analytics page — CLS structural contract", () => {
 
   it("keeps the page heading mounted ahead of any data-dependent section", () => {
     const headerIdx = page.indexOf("<PageHeader");
-    const overviewIdx = page.indexOf("lg:grid-cols-4");
+    const overviewIdx = page.indexOf("xl:grid-cols-4");
     const chartsIdx = page.indexOf("lg:grid-cols-2");
     expect(headerIdx).toBeGreaterThan(-1);
     expect(headerIdx).toBeLessThan(overviewIdx);
     expect(overviewIdx).toBeLessThan(chartsIdx);
+  });
+
+  it("uses a two-column-first overview grid, with four columns only at desktop width", () => {
+    expect(page).toContain("grid-cols-2");
+    expect(page).toContain("xl:grid-cols-4");
+    expect(page).not.toContain("grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4");
+  });
+
+  it("only enables horizontal scrolling for the extremely narrow overview fallback", () => {
+    expect(page).toContain("max-[359px]:overflow-x-auto");
+    expect(page).toContain("max-[359px]:grid-flow-col");
+    expect(page).toContain("max-[359px]:auto-cols-[minmax(9.5rem,1fr)]");
   });
 
   it("announces analytics loading to assistive tech (accessible loading state)", () => {

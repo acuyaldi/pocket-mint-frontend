@@ -42,6 +42,7 @@ describe("saving goal navigation", () => {
       expect(source).not.toContain('label: t("savingGoals")');
     }
     expect(pageSource).toContain('useTranslations("savingGoals")');
+    expect(pageSource).toContain("export default function SavingGoalsPage");
     expect(hookSource).toContain('"/saving-goals"');
     expect(idMessages.nav.savingGoals).toBe("Target Tabungan");
     expect(enMessages.nav.savingGoals).toBeTruthy();
