@@ -118,12 +118,45 @@ export interface AssistantSuccessResult {
   turnId: string;
 }
 
-/** `data` shape of an `AssistantClarificationRequiredResult` — the actual union member the backend sends for entity-ambiguity clarification. */
-export interface AssistantClarificationData {
-  kind: "ambiguous";
+export interface EntitySelectionClarificationData {
+  kind: "entity_selection";
   entityType: AssistantClarificationEntityType;
   clarification: ClarificationRequest;
 }
+
+export type GuidedClarificationField =
+  | {
+      field: "category";
+      required: true;
+      input: { type: "text"; placeholder?: string };
+    }
+  | {
+      field: "date";
+      required: true;
+      input: { type: "date"; min?: string; max?: string };
+    };
+
+export interface GuidedClarification {
+  kind: "guided";
+  clarificationId: string;
+  fields: GuidedClarificationField[];
+  expiresAt: string;
+}
+
+export interface GuidedFieldsClarificationData {
+  kind: "guided_fields";
+  clarification: GuidedClarification;
+}
+
+export interface ProviderTextClarificationData {
+  kind: "provider_text";
+}
+
+/** `data` shape of an `AssistantClarificationRequiredResult`. */
+export type AssistantClarificationData =
+  | EntitySelectionClarificationData
+  | GuidedFieldsClarificationData
+  | ProviderTextClarificationData;
 
 export interface AssistantClarificationRequiredResult {
   status: "clarification_required";
@@ -206,7 +239,7 @@ export type AssistantClarificationSelectResult =
       correlationId: string;
       conversationId: string;
       turnId: string;
-      data: AssistantClarificationData;
+      data: EntitySelectionClarificationData | GuidedFieldsClarificationData;
     }
   | {
       status: "success";

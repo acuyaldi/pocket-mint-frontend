@@ -6,6 +6,16 @@ import type { ClarificationRequest } from "@/src/types/assistant";
 const LABELS: ClarificationCardLabels = {
   cancel: "Cancel",
   cancelling: "Cancelling",
+  titleByEntity: {
+    wallet: "Choose wallet",
+    merchant: "Choose merchant",
+    category: "Choose category",
+  },
+  descriptionByEntity: {
+    wallet: "Select the wallet that should fund this transaction.",
+    merchant: "Select the merchant Pocket Mint should use.",
+    category: "Select one of your existing categories.",
+  },
 };
 
 const CLARIFICATION: ClarificationRequest = {
@@ -44,6 +54,37 @@ export const Default: Story = {
     onSelect: fn(),
     onCancel: fn(),
     labels: LABELS,
+  },
+};
+
+export const Category: Story = {
+  args: {
+    ...Default.args,
+    clarification: {
+      ...CLARIFICATION,
+      entityType: "category",
+      prompt: "Which category did you mean?",
+      options: [
+        { token: "tok-cat-1", label: "Internet", discriminator: "EXPENSE" },
+        { token: "tok-cat-2", label: "Tagihan", discriminator: "EXPENSE" },
+        { token: "tok-cat-3", label: "Belanja", discriminator: "EXPENSE" },
+      ],
+    },
+  },
+};
+
+export const Merchant: Story = {
+  args: {
+    ...Default.args,
+    clarification: {
+      ...CLARIFICATION,
+      entityType: "merchant",
+      prompt: "Which merchant did you mean?",
+      options: [
+        { token: "tok-merchant-1", label: "Indomaret Point" },
+        { token: "tok-merchant-2", label: "Indomaret Fresh" },
+      ],
+    },
   },
 };
 

@@ -39,6 +39,10 @@ const clarificationOptionsSource = readFileSync(
   root + "src/features/assistant/components/ClarificationOptions.tsx",
   "utf8"
 );
+const guidedClarificationCardSource = readFileSync(
+  root + "src/features/assistant/components/GuidedClarificationCard.tsx",
+  "utf8"
+);
 const resultStateSource = readFileSync(root + "src/features/assistant/components/AssistantResultState.tsx", "utf8");
 const flowHookSource = readFileSync(
   root + "src/features/assistant/hooks/useAssistantConversationFlow.ts",
@@ -286,15 +290,37 @@ describe("assistant clarification flow (Phase 23.3, orchestration now in useAssi
   });
 
   it("a clarification_required response renders only backend-provided options", () => {
+    expect(flowHookSource).toContain('result.data?.kind === "entity_selection"');
     expect(flowHookSource).toContain("isClarificationRequest(result.data.clarification)");
+    expect(flowHookSource).toContain('result.data?.kind === "guided_fields"');
+    expect(flowHookSource).toContain("isGuidedClarification(result.data.clarification)");
     expect(conversationSource).toContain("ClarificationCard");
+    expect(conversationSource).toContain("GuidedClarificationCard");
     expect(clarificationOptionsSource).toContain("options.map((option)");
     expect(clarificationOptionsSource).not.toContain(".sort(");
+  });
+
+  it("renders structured entity clarifications as guided controls, not a free-text question", () => {
+    expect(clarificationCardSource).toContain("titleByEntity");
+    expect(clarificationCardSource).toContain("clarification.entityType");
+    expect(clarificationOptionsSource).toContain("variantByEntity");
+    expect(clarificationOptionsSource).toContain("aria-pressed={isPending}");
+    expect(clarificationOptionsSource).toContain("role=\"group\"");
+  });
+
+  it("uses entity-specific guided affordances for wallet, category, and merchant options", () => {
+    expect(clarificationOptionsSource).toContain('wallet: "grid gap-2 sm:grid-cols-2"');
+    expect(clarificationOptionsSource).toContain('category: "flex flex-wrap gap-2"');
+    expect(clarificationOptionsSource).toContain('merchant: "flex flex-wrap gap-2"');
+    expect(clarificationOptionsSource).toContain("option.discriminator");
   });
 
   it("only forwards the exact backend-issued option token, never a client value", () => {
     expect(clarificationOptionsSource).toContain("onSelect(option.token)");
     expect(flowHookSource).toContain("optionToken: token");
+    expect(messagesHookSource).toContain("optionToken ? { optionToken } : { fields: fields ?? {} }");
+    expect(guidedClarificationCardSource).toContain("onSubmit(values)");
+    expect(guidedClarificationCardSource).toContain("labels.field[field.field]");
   });
 
   it("clarification token/id are forwarded unchanged, never decoded or altered", () => {
@@ -346,6 +372,14 @@ describe("assistant clarification flow (Phase 23.3, orchestration now in useAssi
       expect(pageSource).not.toContain(forbidden);
       expect(conversationSource).not.toContain(forbidden);
     }
+  });
+
+  it("keeps provider clarification as the typed fallback instead of inventing fake UI", () => {
+    expect(typesSource).toContain('kind: "provider_text"');
+    expect(flowHookSource).toContain("Provider clarification");
+    expect(flowHookSource).toContain("setActiveWorkflow(null)");
+    expect(conversationSource).toContain("composerDisabledReason");
+    expect(commandFormSource).toContain("disabledReason ?? labels.helper");
   });
 });
 
@@ -1073,13 +1107,14 @@ describe("assistant conversation history (Phase 23.6)", () => {
 });
 
 describe("assistant provider clarification renders as a conversational turn, not a reset (fix/assistant-conversation-response-ui)", () => {
-  // Backend contract: the PROVIDER_CLARIFICATION path returns
-  // `{ status: "clarification_required", message, conversationId, turnId }` with NO `data`
-  // (pocket-mint-be provider-runtime.ts; docs/api/assistant-conversations.md — "one bounded
-  // plain-text clarification question"). It is a persisted ASSISTANT turn answered by typing,
-  // distinct from the entity-ambiguity `data.kind === "ambiguous"` pick-an-option payload.
+  // Backend contract: provider-style clarification text returns typed
+  // `{ status: "clarification_required", message, data: { kind: "provider_text" }, ... }`
+  // (pocket-mint-be provider-runtime.ts; docs/api/assistant-conversations.md). It is a
+  // persisted ASSISTANT turn answered by typing, distinct from `entity_selection`
+  // pick-an-option payloads and `guided_fields` form payloads.
   it("branches on the presence of `data` inside the clarification_required case so a data-less provider question isn't treated as an error", () => {
-    expect(flowHookSource).toMatch(/status === "clarification_required"[\s\S]*?if \(result\.data\)/);
+    expect(flowHookSource).toMatch(/status === "clarification_required"[\s\S]*?result\.data\?\.kind === "entity_selection"/);
+    expect(flowHookSource).toMatch(/status === "clarification_required"[\s\S]*?result\.data\?\.kind === "guided_fields"/);
     // The structured entity-ambiguity branch stays gated behind a valid clarification payload.
     expect(flowHookSource).toContain("isClarificationRequest(result.data.clarification)");
   });

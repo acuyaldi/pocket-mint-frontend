@@ -1075,7 +1075,24 @@
     },
     "clarification": {
       "cancelling": "Membatalkan",
-      "cancelSuccess": "Klarifikasi dibatalkan."
+      "cancelSuccess": "Klarifikasi dibatalkan.",
+      "title": {
+        "wallet": "Pilih dompet",
+        "merchant": "Pilih merchant",
+        "category": "Pilih kategori"
+      },
+      "description": {
+        "wallet": "Pilih dompet yang akan digunakan untuk transaksi ini.",
+        "merchant": "Pilih merchant yang dimaksud oleh transaksi ini.",
+        "category": "Pilih salah satu kategori Anda yang sudah tersedia."
+      },
+      "guided": {
+        "field": {
+          "category": "Kategori",
+          "date": "Tanggal"
+        },
+        "submit": "Lanjutkan"
+      }
     },
     "completion": {
       "newInstruction": "Instruksi baru"

@@ -38,11 +38,17 @@ export const useSelectAssistantClarification = () => {
       conversationId,
       clarificationId,
       optionToken,
+      fields,
     }: {
       conversationId: string;
       clarificationId: string;
-      optionToken: string;
-    }) => selectAssistantClarification(conversationId, clarificationId, optionToken),
+      optionToken?: string;
+      fields?: Record<string, string>;
+    }) => selectAssistantClarification(
+      conversationId,
+      clarificationId,
+      optionToken ? { optionToken } : { fields: fields ?? {} }
+    ),
     onSuccess: (_result, variables) => invalidateAssistantSessionDependents(queryClient, variables.conversationId),
   });
 };

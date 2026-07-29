@@ -95,12 +95,12 @@ export function cancelAssistantDraft(draftId: string): Promise<AssistantDraftCan
 export function selectAssistantClarification(
   conversationId: string,
   clarificationId: string,
-  optionToken: string
+  payload: { optionToken: string } | { fields: Record<string, string> }
 ): Promise<AssistantClarificationSelectResult> {
   return api
     .post<{ success: boolean; data: AssistantClarificationSelectResult }>(
       `/assistant/conversations/${conversationId}/clarifications/${clarificationId}/select`,
-      { optionToken }
+      payload
     )
     .then((res) => res.data.data);
 }

@@ -1,4 +1,4 @@
-import type { ClarificationOption, ClarificationRequest } from "@/src/types/assistant";
+import type { ClarificationOption, ClarificationRequest, GuidedClarification } from "@/src/types/assistant";
 
 const ENTITY_TYPES = new Set(["wallet", "merchant", "category"]);
 
@@ -24,5 +24,29 @@ export function isClarificationRequest(value: unknown): value is ClarificationRe
     typeof v.expiresAt === "string" &&
     Array.isArray(v.options) &&
     v.options.every(isClarificationOption)
+  );
+}
+
+function isGuidedField(value: unknown) {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  if (v.field === "date") {
+    return v.required === true && typeof v.input === "object" && v.input !== null && (v.input as { type?: unknown }).type === "date";
+  }
+  if (v.field === "category") {
+    return v.required === true && typeof v.input === "object" && v.input !== null && (v.input as { type?: unknown }).type === "text";
+  }
+  return false;
+}
+
+export function isGuidedClarification(value: unknown): value is GuidedClarification {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    v.kind === "guided" &&
+    typeof v.clarificationId === "string" &&
+    typeof v.expiresAt === "string" &&
+    Array.isArray(v.fields) &&
+    v.fields.every(isGuidedField)
   );
 }
