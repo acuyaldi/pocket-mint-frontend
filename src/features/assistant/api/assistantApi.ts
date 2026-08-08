@@ -76,11 +76,21 @@ export function archiveAssistantSession(
     .then((res) => res.data.data);
 }
 
-export function confirmAssistantDraft(draftId: string, idempotencyKey: string): Promise<AssistantDraftConfirmed> {
+/** Fields a user may override when confirming a draft. All optional — missing fields use the draft's original values. */
+export interface DraftConfirmOverrides {
+  amount?: number;
+  walletId?: string;
+  categoryId?: string;
+  description?: string;
+  /** YYYY-MM-DD */
+  date?: string;
+}
+
+export function confirmAssistantDraft(draftId: string, idempotencyKey: string, overrides?: DraftConfirmOverrides): Promise<AssistantDraftConfirmed> {
   return api
     .post<{ success: boolean; data: AssistantDraftConfirmed }>(
       `/assistant/drafts/${draftId}/confirm`,
-      undefined,
+      overrides ?? undefined,
       { headers: { "Idempotency-Key": idempotencyKey } }
     )
     .then((res) => res.data.data);

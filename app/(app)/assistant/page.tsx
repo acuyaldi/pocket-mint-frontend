@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Plus } from "lucide-react";
 
@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toaster";
 import { INTL_LOCALE } from "@/i18n/config";
+import type { DraftConfirmOverrides } from "@/src/features/assistant/api/assistantApi";
 import { useAssistantConversationFlow } from "@/src/features/assistant/hooks/useAssistantConversationFlow";
 import { readAssistantErrorMessage } from "@/src/features/assistant/utils/errors";
 import { AssistantConversation, type AssistantConversationLabels } from "@/src/features/assistant/components/AssistantConversation";
@@ -43,6 +44,34 @@ export default function AssistantPage() {
   const intlLocale = INTL_LOCALE[locale as keyof typeof INTL_LOCALE];
 
   const flow = useAssistantConversationFlow();
+
+  // Draft edit state — transient, held in React state. Never persisted.
+  // Lost on refresh (by design — the recovery flow always starts in view mode).
+  const [isEditingDraft, setIsEditingDraft] = useState(false);
+  const [draftOverrides, setDraftOverrides] = useState<DraftConfirmOverrides>({});
+
+  const handleStartEditDraft = useCallback(() => {
+    const draft = flow.activeWorkflow?.kind === "draft" ? flow.activeWorkflow.draft : null;
+    if (!draft) return;
+    setDraftOverrides({
+      amount: draft.preview.amount ? Number(draft.preview.amount) : undefined,
+      walletId: draft.preview.walletId,
+      categoryId: undefined, // We don't have categoryId in preview, only category name
+      description: draft.preview.description,
+      date: undefined, // Date from preview is rendered, not ISO
+    });
+    setIsEditingDraft(true);
+  }, [flow.activeWorkflow]);
+
+  const handleCancelEditDraft = useCallback(() => {
+    setIsEditingDraft(false);
+    setDraftOverrides({});
+  }, []);
+
+  const handleSaveEditDraft = useCallback(() => {
+    // "Simpan Perubahan" — frontend only, returns to view mode with edits applied
+    setIsEditingDraft(false);
+  }, []);
 
   const workflowHeadingRef = useRef<HTMLElement>(null);
   const focusKey = flow.activeWorkflow?.kind ?? flow.recoveryState.kind ?? (flow.lastResult ? "result" : "idle");
@@ -118,6 +147,9 @@ export default function AssistantPage() {
       notes: tDraft("notes"),
       expiresAt: tDraft("expiresAt"),
       statusValues,
+      edit: tDraft("edit"),
+      saveChanges: tDraft("saveChanges"),
+      cancelEdit: tDraft("cancelEdit"),
     },
     draftActions: {
       confirm: tDraft("confirm"),
@@ -125,6 +157,17 @@ export default function AssistantPage() {
       cancel: tCommon("actions.cancel"),
       cancelling: tDraft("cancelling"),
     },
+    draftEdit: {
+      edit: tDraft("edit"),
+      saveChanges: tDraft("saveChanges"),
+      saving: tDraft("saving"),
+      cancelEdit: tDraft("cancelEdit"),
+      confirmTransaction: tDraft("confirmTransaction"),
+      confirming: tDraft("confirming"),
+      cancel: tCommon("actions.cancel"),
+      cancelling: tDraft("cancelling"),
+    },
+    reviewHeading: tDraft("reviewHeading"),
     recoveryBanner: {
       recoveryLoading: tRecovery("loading"),
       transientLostTitle: tConversation("transientUnavailable"),
@@ -205,8 +248,13 @@ export default function AssistantPage() {
         isCancellingDraft={flow.isCancellingDraft}
         onConfirmDraft={() =>
           flow.confirm(
+            Object.keys(draftOverrides).length > 0 ? draftOverrides : undefined,
             tErrors,
-            () => toast(tDraft("confirmSuccess"), "success"),
+            () => {
+              setDraftOverrides({});
+              setIsEditingDraft(false);
+              toast(tDraft("confirmSuccess"), "success");
+            },
             (message) => toast(message, "error")
           )
         }
@@ -230,6 +278,12 @@ export default function AssistantPage() {
         intlLocale={intlLocale}
         labels={labels}
         workflowHeadingRef={workflowHeadingRef}
+        isEditingDraft={isEditingDraft}
+        draftOverrides={draftOverrides}
+        onStartEditDraft={handleStartEditDraft}
+        onCancelEditDraft={handleCancelEditDraft}
+        onSaveEditDraft={handleSaveEditDraft}
+        onDraftOverrideChange={setDraftOverrides}
       />
     </div>
   );

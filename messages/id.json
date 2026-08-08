@@ -1128,8 +1128,14 @@
       "confirming": "Mengonfirmasi",
       "cancel": "Batalkan",
       "cancelling": "Membatalkan",
-      "confirmSuccess": "Draf dikonfirmasi.",
+      "confirmSuccess": "Transaksi berhasil disimpan.",
       "cancelSuccess": "Draf dibatalkan.",
+      "edit": "Edit",
+      "saveChanges": "Simpan Perubahan",
+      "saving": "Menyimpan",
+      "cancelEdit": "Batal",
+      "confirmTransaction": "Simpan Transaksi",
+      "reviewHeading": "Transaction Review",
       "genericError": "Terjadi kesalahan. Silakan coba lagi."
     },
     "recovery": {

@@ -111,7 +111,8 @@ export interface AssistantSession {
 /** Common result shape returned by `/execute`, `/messages`, and clarification select/cancel. */
 export interface AssistantSuccessResult {
   status: "success";
-  renderedText: string;
+  /** Chat-bubble text for analytics responses. Absent for draft creation — the Transaction Review workspace replaces it. */
+  renderedText?: string;
   data: unknown;
   correlationId: string;
   conversationId: string;
@@ -196,7 +197,8 @@ export interface AssistantDraft {
   expiresAt: string;
   preview: AssistantDraftPreview;
   confirmationRequired: true;
-  renderedText: string;
+  /** Deprecated — no longer rendered. The Transaction Review workspace replaces chat bubbles for drafts. */
+  renderedText?: string;
 }
 
 export interface AssistantDraftConfirmed {
@@ -205,7 +207,6 @@ export interface AssistantDraftConfirmed {
   transactionId: string;
   conversationId: string;
   turnId?: string;
-  renderedText: string;
 }
 
 export interface AssistantDraftCancelled {
@@ -213,7 +214,6 @@ export interface AssistantDraftCancelled {
   status: "CANCELLED" | "EXPIRED";
   conversationId: string;
   turnId?: string;
-  renderedText: string;
 }
 
 export interface ClarificationOption {

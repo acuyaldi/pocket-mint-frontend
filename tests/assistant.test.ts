@@ -185,6 +185,18 @@ describe("assistant React Query hooks", () => {
     expect(draftHookSource).toContain("createIdempotencyKey()");
   });
 
+  it("confirming a draft also invalidates transaction-derived caches (regression: Transaksi/Dashboard staying stale after confirm)", () => {
+    expect(draftHookSource).toContain(
+      'import { invalidateTransactionDependents } from "@/src/features/transactions/hooks/useTransactions";'
+    );
+    const confirmMutation = draftHookSource.slice(
+      draftHookSource.indexOf("useConfirmAssistantDraft"),
+      draftHookSource.indexOf("useCancelAssistantDraft")
+    );
+    expect(confirmMutation).toContain("invalidateAssistantSessionDependents(queryClient, result.conversationId)");
+    expect(confirmMutation).toContain("invalidateTransactionDependents(queryClient)");
+  });
+
   it("no hook manages its own useState-based cache — TanStack Query only, no Redux/Zustand", () => {
     for (const source of [sessionHookSource, messagesHookSource, draftHookSource]) {
       expect(source).not.toContain("zustand");
@@ -226,7 +238,7 @@ describe("assistant draft review route (Phase 23.2)", () => {
   it("wires Confirm/Cancel to the existing draft mutation hooks only", () => {
     expect(flowHookSource).toContain("useConfirmAssistantDraft");
     expect(flowHookSource).toContain("useCancelAssistantDraft");
-    expect(flowHookSource).toContain("confirmDraft.mutate(draft.draftId");
+    expect(flowHookSource).toContain("confirmDraft.mutate({ draftId:");
     expect(flowHookSource).toContain("cancelDraft.mutate(draft.draftId");
   });
 

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { type DraftConfirmOverrides } from "@/src/features/assistant/api/assistantApi";
 import { useConfirmAssistantDraft, useCancelAssistantDraft } from "@/src/features/assistant/hooks/useAssistantDraft";
 import {
   useSelectAssistantClarification,
@@ -361,15 +362,24 @@ export function useAssistantConversationFlow() {
     );
   };
 
-  const confirm = (tErrors: (key: string) => string, onSuccess: () => void, onError: (message: string) => void) => {
+  const confirm = (overrides: DraftConfirmOverrides | undefined, tErrors: (key: string) => string, onSuccess: () => void, onError: (message: string) => void) => {
     const draft =
       activeWorkflow?.kind === "draft" ? activeWorkflow.draft : recoveryState.kind === "draftRecovered" ? recoveryState.draft : null;
     if (!draft) return;
     setOutcomeUnknownAction(null);
-    confirmDraft.mutate(draft.draftId, {
-      onSuccess: (result) => {
+    confirmDraft.mutate({ draftId: draft.draftId, overrides }, {
+      onSuccess: () => {
+        // Transaction committed — reset to empty state. No chat bubble, no lastResult echo.
         setActiveWorkflow(null);
-        setLastResult({ renderedText: result.renderedText });
+        setLastResult(null);
+        setConversationId(null);
+        setInstructionText("");
+        setFormError(null);
+        setPendingOptionToken(null);
+        setOutcomeUnknownAction(null);
+        setOutcomeSnapshot(null);
+        setCameFromUrl(false);
+        router.replace("/assistant");
         onSuccess();
       },
       onError: (error) => handleMutationError(error, "confirmDraft", { draftId: draft.draftId }, tErrors, onError),
@@ -382,10 +392,11 @@ export function useAssistantConversationFlow() {
     if (!draft) return;
     setOutcomeUnknownAction(null);
     cancelDraft.mutate(draft.draftId, {
-      onSuccess: (result) => {
+      onSuccess: () => {
         confirmDraft.clearIdempotencyKey(draft.draftId);
         setActiveWorkflow(null);
-        setLastResult({ renderedText: result.renderedText });
+        setLastResult(null);
+        startNewConversation();
         onSuccess();
       },
       onError: (error) => handleMutationError(error, "cancelDraft", { draftId: draft.draftId }, tErrors, onError),
@@ -411,7 +422,7 @@ export function useAssistantConversationFlow() {
   /** Only offered when `isAssistantActionRetrySafe(outcomeUnknownAction)` is true (draft confirm/cancel, clarification cancel). */
   const retryOutcomeAction = (tErrors: (key: string) => string, onSuccess: () => void, onError: (message: string) => void) => {
     if (!outcomeUnknownAction || !isAssistantActionRetrySafe(outcomeUnknownAction)) return;
-    if (outcomeUnknownAction === "confirmDraft") confirm(tErrors, onSuccess, onError);
+    if (outcomeUnknownAction === "confirmDraft") confirm(undefined, tErrors, onSuccess, onError);
     else if (outcomeUnknownAction === "cancelDraft") cancelActiveDraft(tErrors, onSuccess, onError);
     else if (outcomeUnknownAction === "cancelClarification") cancelActiveClarification(tErrors, onSuccess, onError);
   };

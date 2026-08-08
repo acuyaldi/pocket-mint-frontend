@@ -62,8 +62,22 @@ const LABELS: AssistantConversationLabels = {
       EXPIRED: "Expired",
       FAILED: "Failed",
     },
+    edit: "Edit",
+    saveChanges: "Save Changes",
+    cancelEdit: "Cancel",
   },
   draftActions: { confirm: "Confirm", confirming: "Confirming", cancel: "Cancel", cancelling: "Cancelling" },
+  draftEdit: {
+    edit: "Edit",
+    saveChanges: "Save Changes",
+    saving: "Saving",
+    cancelEdit: "Cancel",
+    confirmTransaction: "Save Transaction",
+    confirming: "Confirming",
+    cancel: "Cancel",
+    cancelling: "Cancelling",
+  },
+  reviewHeading: "Transaction Review",
   recoveryBanner: {
     recoveryLoading:
       "Checking this conversation's recovery status before showing any clarification or draft that may still be pending after the page reload. You are still in the same conversation.",
@@ -232,6 +246,12 @@ const BASE = {
   onStartNewConversation: fn(),
   intlLocale: "id-ID",
   labels: LABELS,
+  isEditingDraft: false,
+  draftOverrides: {},
+  onStartEditDraft: fn(),
+  onCancelEditDraft: fn(),
+  onSaveEditDraft: fn(),
+  onDraftOverrideChange: fn(),
 } satisfies ComponentProps<typeof AssistantConversation>;
 
 export const EmptyConversation: Story = {

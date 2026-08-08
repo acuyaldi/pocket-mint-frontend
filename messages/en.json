@@ -1128,8 +1128,14 @@
       "confirming": "Confirming",
       "cancel": "Cancel",
       "cancelling": "Cancelling",
-      "confirmSuccess": "Draft confirmed.",
+      "confirmSuccess": "Transaction saved.",
       "cancelSuccess": "Draft cancelled.",
+      "edit": "Edit",
+      "saveChanges": "Save Changes",
+      "saving": "Saving",
+      "cancelEdit": "Cancel",
+      "confirmTransaction": "Save Transaction",
+      "reviewHeading": "Transaction Review",
       "genericError": "Something went wrong. Please try again."
     },
     "recovery": {
