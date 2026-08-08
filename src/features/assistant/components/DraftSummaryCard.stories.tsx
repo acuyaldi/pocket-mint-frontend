@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { DraftSummaryCard, type DraftSummaryCardLabels } from "./DraftSummaryCard";
 import type { AssistantDraft } from "@/src/types/assistant";
 
+const noop = () => {};
+
 const LABELS: DraftSummaryCardLabels = {
   income: "Income",
   expense: "Expense",
@@ -18,6 +20,9 @@ const LABELS: DraftSummaryCardLabels = {
     EXPIRED: "Expired",
     FAILED: "Failed",
   },
+  edit: "Edit",
+  saveChanges: "Save Changes",
+  cancelEdit: "Cancel",
 };
 
 const EXPENSE_DRAFT: AssistantDraft = {
@@ -52,6 +57,17 @@ const INCOME_DRAFT: AssistantDraft = {
   },
 };
 
+const BASE_ARGS = {
+  labels: LABELS,
+  intlLocale: "id-ID" as const,
+  isEditing: false,
+  overrides: {},
+  onOverrideChange: noop,
+  onStartEdit: noop,
+  onSaveEdit: noop,
+  onCancelEdit: noop,
+};
+
 const meta: Meta<typeof DraftSummaryCard> = {
   title: "Features/Assistant/DraftSummaryCard",
   component: DraftSummaryCard,
@@ -69,19 +85,23 @@ export default meta;
 type Story = StoryObj<typeof DraftSummaryCard>;
 
 export const Expense: Story = {
-  args: { draft: EXPENSE_DRAFT, labels: LABELS, intlLocale: "id-ID" },
+  args: { draft: EXPENSE_DRAFT, ...BASE_ARGS },
+};
+
+export const EditMode: Story = {
+  args: { draft: EXPENSE_DRAFT, ...BASE_ARGS, isEditing: true, overrides: { description: "Belanja bulanan" } },
 };
 
 export const Income: Story = {
-  args: { draft: INCOME_DRAFT, labels: LABELS, intlLocale: "id-ID" },
+  args: { draft: INCOME_DRAFT, ...BASE_ARGS },
 };
 
 export const Committed: Story = {
-  args: { draft: { ...EXPENSE_DRAFT, status: "COMMITTED" }, labels: LABELS, intlLocale: "id-ID" },
+  args: { draft: { ...EXPENSE_DRAFT, status: "COMMITTED" }, ...BASE_ARGS },
 };
 
 export const Expired: Story = {
-  args: { draft: { ...EXPENSE_DRAFT, status: "EXPIRED" }, labels: LABELS, intlLocale: "id-ID" },
+  args: { draft: { ...EXPENSE_DRAFT, status: "EXPIRED" }, ...BASE_ARGS },
 };
 
 export const DarkMode: Story = {

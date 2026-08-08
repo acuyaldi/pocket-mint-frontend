@@ -1,8 +1,9 @@
 "use client";
 import { useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { cancelAssistantDraft, confirmAssistantDraft } from "@/src/features/assistant/api/assistantApi";
+import { cancelAssistantDraft, confirmAssistantDraft, type DraftConfirmOverrides } from "@/src/features/assistant/api/assistantApi";
 import { invalidateAssistantSessionDependents } from "@/src/features/assistant/hooks/useAssistantSession";
+import { invalidateTransactionDependents } from "@/src/features/transactions/hooks/useTransactions";
 import { createIdempotencyKey } from "@/src/features/assistant/utils/idempotency";
 
 /**
@@ -36,10 +37,12 @@ export const useConfirmAssistantDraft = () => {
   };
 
   const mutation = useMutation({
-    mutationFn: (draftId: string) => confirmAssistantDraft(draftId, getIdempotencyKey(draftId)),
-    onSuccess: (result, draftId) => {
+    mutationFn: ({ draftId, overrides }: { draftId: string; overrides?: DraftConfirmOverrides }) =>
+      confirmAssistantDraft(draftId, getIdempotencyKey(draftId), overrides),
+    onSuccess: (result, { draftId }) => {
       clearIdempotencyKey(draftId);
       invalidateAssistantSessionDependents(queryClient, result.conversationId);
+      invalidateTransactionDependents(queryClient);
     },
   });
 

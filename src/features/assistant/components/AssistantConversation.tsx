@@ -1,7 +1,9 @@
 "use client";
 
-import type { RefObject } from "react";
+import type { Dispatch, RefObject, SetStateAction } from "react";
+import { Loader2 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { AssistantMessageList } from "./AssistantMessageList";
 import { AssistantMessage as AssistantMessageComponent, type AssistantMessageLabels } from "./AssistantMessage";
 import { AssistantConversationEmptyState } from "./AssistantConversationEmptyState";
@@ -17,6 +19,7 @@ import { AssistantOutcomeUnknown, type AssistantOutcomeUnknownLabels } from "./A
 import type { AssistantMessage as AssistantMessageDto } from "@/src/types/assistant";
 import type { AssistantActiveWorkflow, AssistantLastResult } from "@/src/features/assistant/hooks/useAssistantConversationFlow";
 import { isAssistantActionRetrySafe, type AssistantRecoveryState } from "@/src/features/assistant/types/recovery";
+import type { DraftConfirmOverrides } from "@/src/features/assistant/api/assistantApi";
 
 export interface AssistantConversationLabels {
   regionLabel: string;
@@ -38,8 +41,21 @@ export interface AssistantConversationLabels {
   guidedClarification: GuidedClarificationCardLabels;
   draft: DraftSummaryCardLabels;
   draftActions: DraftActionBarLabels;
+  draftEdit: DraftSummaryCardEditLabels;
+  reviewHeading: string;
   recoveryBanner: AssistantRecoveryBannerLabels;
   outcomeUnknown: AssistantOutcomeUnknownLabels;
+}
+
+export interface DraftSummaryCardEditLabels {
+  edit: string;
+  saveChanges: string;
+  saving: string;
+  cancelEdit: string;
+  confirmTransaction: string;
+  confirming: string;
+  cancel: string;
+  cancelling: string;
 }
 
 interface AssistantConversationProps {
@@ -73,6 +89,13 @@ interface AssistantConversationProps {
   intlLocale: string;
   labels: AssistantConversationLabels;
   workflowHeadingRef?: RefObject<HTMLElement | null>;
+  /** Draft edit-mode controls — transient React state, never persisted. */
+  isEditingDraft: boolean;
+  draftOverrides: DraftConfirmOverrides;
+  onStartEditDraft: () => void;
+  onCancelEditDraft: () => void;
+  onSaveEditDraft: () => void;
+  onDraftOverrideChange: Dispatch<SetStateAction<DraftConfirmOverrides>>;
 }
 
 /**
@@ -113,6 +136,12 @@ export function AssistantConversation({
   intlLocale,
   labels,
   workflowHeadingRef,
+  isEditingDraft,
+  draftOverrides,
+  onStartEditDraft,
+  onCancelEditDraft,
+  onSaveEditDraft,
+  onDraftOverrideChange,
 }: AssistantConversationProps) {
   const hasHistory = messages.length > 0;
   const showEmptyState = !conversationId && !hasHistory && !activeWorkflow && !isSendingMessage;
@@ -188,15 +217,38 @@ export function AssistantConversation({
 
           {recoveryState.kind === "draftRecovered" ? (
             <div ref={workflowHeadingRef as RefObject<HTMLDivElement>} tabIndex={-1} className="max-w-xl space-y-6 outline-none">
-              <DraftSummaryCard draft={recoveryState.draft} intlLocale={intlLocale} labels={labels.draft} />
-              <DraftActionBar
-                onConfirm={onConfirmDraft}
-                onCancel={onCancelDraft}
-                isConfirming={isConfirmingDraft}
-                isCancelling={isCancellingDraft}
-                disabled={recoveryState.draft.status !== "PENDING_CONFIRMATION"}
-                labels={labels.draftActions}
+              <DraftSummaryCard
+                draft={recoveryState.draft}
+                intlLocale={intlLocale}
+                labels={labels.draft}
+                isEditing={false}
+                overrides={{}}
+                onOverrideChange={() => {}}
+                onStartEdit={() => {}}
+                onSaveEdit={() => {}}
+                onCancelEdit={() => {}}
               />
+              <div className="flex flex-col-reverse gap-3 sm:flex-row">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCancelDraft}
+                  disabled={isCancellingDraft || recoveryState.draft.status !== "PENDING_CONFIRMATION"}
+                  className="h-11 flex-1 gap-2 bg-card"
+                >
+                  {isCancellingDraft ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
+                  {isCancellingDraft ? labels.draftEdit.cancelling : labels.draftEdit.cancel}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={onConfirmDraft}
+                  disabled={isConfirmingDraft || recoveryState.draft.status !== "PENDING_CONFIRMATION"}
+                  className="h-11 flex-1 gap-2"
+                >
+                  {isConfirmingDraft ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
+                  {isConfirmingDraft ? labels.draftEdit.confirming : labels.draftEdit.confirmTransaction}
+                </Button>
+              </div>
             </div>
           ) : null}
 
@@ -240,17 +292,55 @@ export function AssistantConversation({
           ) : null}
 
           {activeWorkflow?.kind === "draft" ? (
-            <div ref={workflowHeadingRef as RefObject<HTMLDivElement>} tabIndex={-1} className="max-w-xl space-y-6 outline-none">
-              <DraftSummaryCard draft={activeWorkflow.draft} intlLocale={intlLocale} labels={labels.draft} />
-              <DraftActionBar
-                onConfirm={onConfirmDraft}
-                onCancel={onCancelDraft}
-                isConfirming={isConfirmingDraft}
-                isCancelling={isCancellingDraft}
-                disabled={activeWorkflow.draft.status !== "PENDING_CONFIRMATION"}
-                labels={labels.draftActions}
-              />
-            </div>
+            <>
+              {/* Separator between chat timeline and Transaction Review workspace */}
+              <div className="border-t border-border pt-4">
+                <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-muted-foreground">
+                  {labels.reviewHeading}
+                </h2>
+                <div ref={workflowHeadingRef as RefObject<HTMLDivElement>} tabIndex={-1} className="max-w-xl space-y-6 outline-none">
+                  <DraftSummaryCard
+                    draft={activeWorkflow.draft}
+                    intlLocale={intlLocale}
+                    labels={labels.draft}
+                    isEditing={isEditingDraft}
+                    overrides={draftOverrides}
+                    onOverrideChange={onDraftOverrideChange}
+                    onStartEdit={onStartEditDraft}
+                    onSaveEdit={onSaveEditDraft}
+                    onCancelEdit={onCancelEditDraft}
+                  />
+                  {/* View-mode only: [Simpan Transaksi] button */}
+                  {!isEditingDraft ? (
+                    <div className="flex flex-col-reverse gap-3 sm:flex-row">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={onCancelDraft}
+                        disabled={isConfirmingDraft || activeWorkflow.draft.status !== "PENDING_CONFIRMATION"}
+                        className="h-11 flex-1 gap-2 bg-card"
+                      >
+                        {isCancellingDraft ? (
+                          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                        ) : null}
+                        {isCancellingDraft ? labels.draftEdit.cancelling : labels.draftEdit.cancel}
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={onConfirmDraft}
+                        disabled={isConfirmingDraft || activeWorkflow.draft.status !== "PENDING_CONFIRMATION"}
+                        className="h-11 flex-1 gap-2"
+                      >
+                        {isConfirmingDraft ? (
+                          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                        ) : null}
+                        {isConfirmingDraft ? labels.draftEdit.confirming : labels.draftEdit.confirmTransaction}
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </>
           ) : null}
 
           {lastResult && !activeWorkflow ? (

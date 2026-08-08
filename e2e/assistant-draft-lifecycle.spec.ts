@@ -54,6 +54,13 @@ test.describe("Assistant — draft review, confirm, cancel", () => {
     await expect(draftCard).not.toBeVisible({ timeout: 15_000 });
     await expect(cancelButton).not.toBeVisible();
     await expect(composer).toBeEnabled();
+
+    // Regression: confirming used to leave the Transactions/Dashboard query
+    // caches stale, so the transaction existed in the DB but never appeared
+    // here without a manual reload (see useAssistantDraft.ts onSuccess).
+    await page.goto("/transactions");
+    await page.getByPlaceholder("Search transactions...").fill(merchant);
+    await expect(page.getByText(merchant)).toBeVisible({ timeout: 15_000 });
   });
 
   test("cancels a draft without creating a transaction", async ({ page }) => {
