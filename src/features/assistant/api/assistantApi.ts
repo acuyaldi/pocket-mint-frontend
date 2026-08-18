@@ -76,6 +76,23 @@ export function archiveAssistantSession(
     .then((res) => res.data.data);
 }
 
+export function restoreAssistantSession(
+  conversationId: string
+): Promise<{ id: string; status: AssistantConversationStatus; archivedAt: string | null }> {
+  return api
+    .post<{ success: boolean; data: { id: string; status: AssistantConversationStatus; archivedAt: string | null } }>(
+      `/assistant/conversations/${conversationId}/restore`
+    )
+    .then((res) => res.data.data);
+}
+
+/** Permanent delete — distinct from archive. Removes the conversation and its history; cannot be undone. */
+export function deleteAssistantSession(conversationId: string): Promise<{ id: string }> {
+  return api
+    .delete<{ success: boolean; data: { id: string } }>(`/assistant/conversations/${conversationId}`)
+    .then((res) => res.data.data);
+}
+
 /** Fields a user may override when confirming a draft. All optional — missing fields use the draft's original values. */
 export interface DraftConfirmOverrides {
   amount?: number;

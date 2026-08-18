@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Archive, Loader2, Plus } from "lucide-react";
+import { Archive, Loader2, Plus, Trash2 } from "lucide-react";
 import { AppModal, ModalCancelButton, ModalSubmitButton } from "@/components/ui/app-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ import { AssistantConversationHistoryTrigger } from "@/src/features/assistant/co
 import {
   useArchiveAssistantSession,
   useAssistantConversationHistory,
+  useDeleteAssistantSession,
+  useRestoreAssistantSession,
 } from "@/src/features/assistant/hooks/useAssistantSession";
 import type { AssistantConversationSummary } from "@/src/types/assistant";
 
@@ -19,7 +21,7 @@ interface AssistantConversationHistoryProps {
   conversationId: string | null;
   canStartNewConversation: boolean;
   onSwitchConversation: (id: string, options?: { force?: boolean }) => boolean;
-  onStartNewConversation: () => void;
+  onStartNewConversation: (options?: { force?: boolean }) => void;
   intlLocale: string;
 }
 
@@ -44,9 +46,13 @@ export function AssistantConversationHistory({
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "archived">("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [archiveConfirmation, setArchiveConfirmation] = useState<AssistantConversationSummary[] | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<AssistantConversationSummary[] | null>(null);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
 
   const query = useAssistantConversationHistory();
   const archiveMutation = useArchiveAssistantSession();
+  const deleteMutation = useDeleteAssistantSession();
+  const restoreMutation = useRestoreAssistantSession();
   const items = useMemo(() => query.data?.pages.flatMap((page) => page.items) ?? [], [query.data?.pages]);
   const totalCount = query.data?.pages[0]?.total ?? 0;
 
@@ -59,25 +65,36 @@ export function AssistantConversationHistory({
         (statusFilter === "archived" && item.status === "ARCHIVED");
       if (!matchesStatus) return false;
       if (!normalizedSearch) return true;
-      return item.lastMessage?.toLocaleLowerCase().includes(normalizedSearch) ?? false;
+      return (
+        (item.title?.toLocaleLowerCase().includes(normalizedSearch) ?? false) ||
+        (item.lastMessage?.toLocaleLowerCase().includes(normalizedSearch) ?? false)
+      );
     });
   }, [items, searchText, statusFilter]);
 
-  const selectedLoadedItems = useMemo(
-    () => items.filter((item) => selectedIds.has(item.id) && item.status === "ACTIVE"),
-    [items, selectedIds]
-  );
-  const selectedLoadedCount = selectedLoadedItems.length;
+  const emptyMessage = useMemo(() => {
+    if (searchText.trim()) return t("noSearchResults");
+    if (statusFilter === "active") return t("emptyActive");
+    if (statusFilter === "archived") return t("emptyArchived");
+    return t("emptyAll");
+  }, [searchText, statusFilter, t]);
+
+  const selectedItems = useMemo(() => items.filter((item) => selectedIds.has(item.id)), [items, selectedIds]);
+  const selectedActiveItems = useMemo(() => selectedItems.filter((item) => item.status === "ACTIVE"), [selectedItems]);
+  const selectedCount = selectedItems.length;
 
   const labels = {
     listLabel: t("listLabel"),
     loading: t("loading"),
     error: t("error"),
     retry: t("retry"),
-    empty: t("empty"),
+    emptyAll: t("emptyAll"),
+    emptyActive: t("emptyActive"),
+    emptyArchived: t("emptyArchived"),
     loadMore: t("loadMore"),
     loadingMore: t("loadingMore"),
     activeConversationLabel: t("activeConversationLabel"),
+    statusActive: t("statusActive"),
     archivedStatus: t("archivedStatus"),
     searchLoaded: t("searchLoaded"),
     searchPlaceholder: t("searchPlaceholder"),
@@ -91,6 +108,10 @@ export function AssistantConversationHistory({
     clearSelection: t("clearSelection"),
     archive: t("archive"),
     archiving: t("archiving"),
+    restore: t("restore"),
+    restoring: t("restoring"),
+    delete: t("delete"),
+    actionsFor: (label: string) => t("actionsFor", { label }),
     conversationFromDate: (date: string) => t("conversationFromDate", { date }),
   };
 
@@ -98,6 +119,7 @@ export function AssistantConversationHistory({
     setIsOpen(false);
     setBlockedTargetId(null);
     setArchiveConfirmation(null);
+    setDeleteConfirmation(null);
     setSelectedIds(new Set());
   }
 
@@ -125,7 +147,7 @@ export function AssistantConversationHistory({
   }
 
   function selectAllLoaded() {
-    setSelectedIds(new Set(filteredItems.filter((item) => item.status === "ACTIVE").map((item) => item.id)));
+    setSelectedIds(new Set(filteredItems.map((item) => item.id)));
   }
 
   function clearSelection() {
@@ -136,7 +158,6 @@ export function AssistantConversationHistory({
     if (!archiveConfirmation?.length) return;
     const ids = archiveConfirmation.map((item) => item.id);
     try {
-      // Archive is the only cleanup mutation exposed by the current backend; selected archive is therefore bounded to loaded rows.
       await Promise.all(ids.map((id) => archiveMutation.mutateAsync(id)));
       if (conversationId && ids.includes(conversationId)) onStartNewConversation();
       setArchiveConfirmation(null);
@@ -147,12 +168,44 @@ export function AssistantConversationHistory({
     }
   }
 
+  async function confirmDelete() {
+    if (!deleteConfirmation?.length) return;
+    const ids = deleteConfirmation.map((item) => item.id);
+    try {
+      await Promise.all(ids.map((id) => deleteMutation.mutateAsync(id)));
+      // Deletion is permanent — force the reset even if an unresolved draft/clarification
+      // on this conversation would otherwise block `startNewConversation` (the conversation
+      // it belongs to no longer exists server-side).
+      if (conversationId && ids.includes(conversationId)) onStartNewConversation({ force: true });
+      setDeleteConfirmation(null);
+      setSelectedIds(new Set());
+      toast(t("deleteSuccess", { count: ids.length }), "success");
+    } catch {
+      toast(t("deleteError"), "error");
+    }
+  }
+
+  async function handleRestore(item: AssistantConversationSummary) {
+    setRestoringId(item.id);
+    try {
+      await restoreMutation.mutateAsync(item.id);
+      toast(t("restoreSuccess"), "success");
+    } catch {
+      toast(t("restoreError"), "error");
+    } finally {
+      setRestoringId(null);
+    }
+  }
+
   const archiveDescription = archiveConfirmation
     ? t("archiveDescription", {
         count: archiveConfirmation.length,
         active: conversationId && archiveConfirmation.some((item) => item.id === conversationId) ? t("archiveActiveWarning") : "",
       })
     : undefined;
+
+  const isAlertDialog = Boolean(archiveConfirmation || deleteConfirmation);
+  const isModalPending = archiveMutation.isPending || deleteMutation.isPending;
 
   return (
     <>
@@ -162,10 +215,26 @@ export function AssistantConversationHistory({
         onOpenChange={(open) => (open ? setIsOpen(true) : handleClose())}
         size="lg"
         className="sm:max-w-3xl"
-        role={archiveConfirmation ? "alertdialog" : "dialog"}
-        isPending={archiveMutation.isPending}
-        title={archiveConfirmation ? t("archiveTitle", { count: archiveConfirmation.length }) : blockedTargetId ? t("switchBlockedTitle") : t("title")}
-        description={archiveConfirmation ? archiveDescription : blockedTargetId ? t("switchBlockedDescription") : undefined}
+        role={isAlertDialog ? "alertdialog" : "dialog"}
+        isPending={isModalPending}
+        title={
+          archiveConfirmation
+            ? t("archiveTitle", { count: archiveConfirmation.length })
+            : deleteConfirmation
+              ? t("deleteTitle", { count: deleteConfirmation.length })
+              : blockedTargetId
+                ? t("switchBlockedTitle")
+                : t("title")
+        }
+        description={
+          archiveConfirmation
+            ? archiveDescription
+            : deleteConfirmation
+              ? t("deleteDescription", { count: deleteConfirmation.length })
+              : blockedTargetId
+                ? t("switchBlockedDescription")
+                : undefined
+        }
         footer={
           archiveConfirmation ? (
             <>
@@ -182,6 +251,22 @@ export function AssistantConversationHistory({
                 {t("archiveConfirm")}
               </ModalSubmitButton>
             </>
+          ) : deleteConfirmation ? (
+            <>
+              <ModalCancelButton isPending={deleteMutation.isPending} onClick={() => setDeleteConfirmation(null)}>
+                {t("deleteCancel")}
+              </ModalCancelButton>
+              <ModalSubmitButton
+                type="button"
+                variant="destructive"
+                isPending={deleteMutation.isPending}
+                pendingLabel={t("deleting")}
+                onClick={confirmDelete}
+              >
+                <Trash2 data-icon="inline-start" aria-hidden="true" />
+                {t("deleteConfirm", { count: deleteConfirmation.length })}
+              </ModalSubmitButton>
+            </>
           ) : blockedTargetId ? (
             <>
               <ModalCancelButton onClick={() => setBlockedTargetId(null)}>{t("switchCancel")}</ModalCancelButton>
@@ -191,7 +276,7 @@ export function AssistantConversationHistory({
             </>
           ) : (
             <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs text-muted-foreground">{t("contractNote")}</p>
+              <p className="text-xs text-muted-foreground">{t("permanentDeleteNote")}</p>
               <Button
                 type="button"
                 variant="outline"
@@ -210,7 +295,7 @@ export function AssistantConversationHistory({
           )
         }
       >
-        {blockedTargetId || archiveConfirmation ? null : (
+        {blockedTargetId || archiveConfirmation || deleteConfirmation ? null : (
           <div className="flex min-h-[28rem] flex-col gap-4">
             <div className="flex flex-col gap-3">
               <label className="flex flex-col gap-1.5 text-sm font-medium text-foreground">
@@ -245,9 +330,9 @@ export function AssistantConversationHistory({
               </div>
             </div>
 
-            {selectedLoadedCount > 0 ? (
+            {selectedCount > 0 ? (
               <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface-low p-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm font-medium text-foreground">{t("selectedCount", { count: selectedLoadedCount })}</p>
+                <p className="text-sm font-medium text-foreground">{t("selectedCount", { count: selectedCount })}</p>
                 <div className="flex flex-wrap items-center gap-2">
                   <Button type="button" variant="ghost" size="sm" onClick={clearSelection}>
                     {labels.clearSelection}
@@ -256,11 +341,22 @@ export function AssistantConversationHistory({
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => setArchiveConfirmation(selectedLoadedItems)}
-                    disabled={archiveMutation.isPending}
+                    onClick={() => setArchiveConfirmation(selectedActiveItems)}
+                    disabled={archiveMutation.isPending || selectedActiveItems.length === 0}
                   >
                     {archiveMutation.isPending ? <Loader2 data-icon="inline-start" className="animate-spin" aria-hidden="true" /> : <Archive data-icon="inline-start" aria-hidden="true" />}
                     {labels.archive}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => setDeleteConfirmation(selectedItems)}
+                    disabled={deleteMutation.isPending}
+                  >
+                    {deleteMutation.isPending ? <Loader2 data-icon="inline-start" className="animate-spin" aria-hidden="true" /> : <Trash2 data-icon="inline-start" aria-hidden="true" />}
+                    {labels.delete}
                   </Button>
                 </div>
               </div>
@@ -273,6 +369,7 @@ export function AssistantConversationHistory({
               isLoading={query.isLoading}
               isError={query.isError}
               onRetry={() => query.refetch()}
+              emptyMessage={emptyMessage}
               selectedId={conversationId}
               selectedIds={selectedIds}
               onSelect={handleSelect}
@@ -280,6 +377,9 @@ export function AssistantConversationHistory({
               onSelectAllLoaded={selectAllLoaded}
               onClearSelection={clearSelection}
               onArchive={(item) => setArchiveConfirmation([item])}
+              onRestore={handleRestore}
+              restoringId={restoringId}
+              onDeleteRequest={(item) => setDeleteConfirmation([item])}
               hasMore={!!query.hasNextPage}
               isLoadingMore={query.isFetchingNextPage}
               onLoadMore={() => query.fetchNextPage()}
