@@ -466,8 +466,8 @@ export function useAssistantConversationFlow() {
     return true;
   }
 
-  function startNewConversation() {
-    if (!canStartNewConversation) return;
+  function startNewConversation(options: { force?: boolean } = {}) {
+    if (!canStartNewConversation && !options.force) return;
     setConversationId(null);
     setActiveWorkflow(null);
     setLastResult(null);

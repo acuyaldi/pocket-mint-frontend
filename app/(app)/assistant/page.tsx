@@ -68,6 +68,10 @@ export default function AssistantPage() {
     setDraftOverrides({});
   }, []);
 
+  const handleStartNewConversation = useCallback(() => {
+    flow.startNewConversation();
+  }, [flow]);
+
   const handleSaveEditDraft = useCallback(() => {
     // "Simpan Perubahan" — frontend only, returns to view mode with edits applied
     setIsEditingDraft(false);
@@ -197,7 +201,7 @@ export default function AssistantPage() {
             type="button"
             variant="default"
             size="touch"
-            onClick={flow.startNewConversation}
+            onClick={handleStartNewConversation}
             disabled={!flow.canStartNewConversation}
             title={flow.canStartNewConversation ? undefined : tConversation("resetBlocked")}
           >

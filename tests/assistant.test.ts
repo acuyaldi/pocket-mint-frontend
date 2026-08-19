@@ -356,7 +356,7 @@ describe("assistant clarification flow (Phase 23.3, orchestration now in useAssi
 
   it("clears transient workflow state after a successful clarification cancel or draft confirm/cancel", () => {
     expect(flowHookSource).toContain("setActiveWorkflow(null);");
-    expect(flowHookSource).toContain("function startNewConversation()");
+    expect(flowHookSource).toContain("function startNewConversation(options: { force?: boolean } = {})");
     expect(flowHookSource).toContain("sendMessage.reset()");
     expect(flowHookSource).toContain("selectClarification.reset()");
     expect(flowHookSource).toContain("cancelClarification.reset()");
@@ -464,7 +464,7 @@ describe("assistant conversation experience (Phase 23.4)", () => {
     expect(flowHookSource).toContain('recoveryState.kind !== "clarificationRecovered"');
     expect(flowHookSource).toContain('recoveryState.kind !== "draftRecovered"');
     expect(flowHookSource).toContain('recoveryState.kind !== "actionOutcomeUnknown"');
-    expect(flowHookSource).toContain("if (!canStartNewConversation) return;");
+    expect(flowHookSource).toContain("if (!canStartNewConversation && !options.force) return;");
   });
 
   it("only one unresolved workflow blocks the composer at a time — no parallel instruction submission", () => {
@@ -588,12 +588,15 @@ describe("assistant conversation experience (Phase 23.4)", () => {
     expect(historyTriggerSource).toContain("<History aria-hidden=\"true\" />");
   });
 
-  it("keeps history management honest to the current backend contract", () => {
+  it("keeps history management honest to the current backend contract — archive, restore, and delete each hit their own real endpoint, and bulk stays client-side (no fabricated bulk endpoint)", () => {
     expect(apiSource).toContain("archiveAssistantSession");
-    expect(apiSource).not.toContain("deleteAssistant");
-    expect(apiSource).not.toContain("restoreAssistant");
-    expect(apiSource).not.toContain("bulk");
-    expect(historySource).toContain("Archive is the only cleanup mutation exposed by the current backend");
+    expect(apiSource).toContain("restoreAssistantSession");
+    expect(apiSource).toContain("deleteAssistantSession");
+    expect(apiSource).not.toContain("bulkArchive");
+    expect(apiSource).not.toContain("bulkDelete");
+    // Bulk actions loop the real per-item mutation over selected rows rather than a fake bulk endpoint.
+    expect(historySource).toContain("ids.map((id) => archiveMutation.mutateAsync(id))");
+    expect(historySource).toContain("ids.map((id) => deleteMutation.mutateAsync(id))");
     expect(historySource).not.toContain("deleteAll");
     expect(historySource).not.toContain("Delete all");
   });
@@ -1051,12 +1054,14 @@ describe("assistant conversation history (Phase 23.6)", () => {
     );
   });
 
-  it("no delete, rename, pin, or unsupported mutation functionality exists in the history feature", () => {
+  it("permanent delete and restore are supported, but rename/pin/other unsupported mutations are not", () => {
     for (const source of [historySource, historyListSource, historyTriggerSource]) {
-      for (const forbidden of [/deleteAssistant/i, /Delete all/i, /\brename/i, /\bpin\b/i, /\bDELETE\b/, /\bPATCH\b/]) {
+      for (const forbidden of [/\brename/i, /\bpin\b/i, /\bPATCH\b/]) {
         expect(source).not.toMatch(forbidden);
       }
     }
+    expect(historySource).toContain("useDeleteAssistantSession");
+    expect(historySource).toContain("useRestoreAssistantSession");
   });
 
   it("no durable storage, polling, or streaming is introduced by the history feature", () => {
@@ -1085,13 +1090,54 @@ describe("assistant conversation history (Phase 23.6)", () => {
     expect(historyListSource).toContain('aria-current={isSelected ? "true" : undefined}');
   });
 
-  it("the conversation label is a deterministic preview or date fallback — never AI-generated or parsed", () => {
+  it("the conversation label prefers the first-user-message title over the latest message — never AI-generated or parsed", () => {
     expect(historyListSource).toContain("resolveConversationLabel");
-    expect(historyListSource).toContain("summary.lastMessage?.trim()");
+    // Title (original user intent) is checked before lastMessage (latest message, any role) —
+    // fixes titles like "Konfirmasi draft transaksi..." winning over the opening request.
+    expect(historyListSource).toMatch(/summary\.title\?\.trim\(\)[\s\S]*?summary\.lastMessage\?\.trim\(\)/);
     expect(historyListSource).not.toMatch(/generateTitle|summarize/i);
   });
 
-  it("English and Indonesian catalogs define matching history keys", () => {
+  it("conversation summaries carry a title field distinct from lastMessage", () => {
+    expect(typesSource).toMatch(/title\?:\s*string/);
+  });
+
+  it("the row checkbox is a compact native control, not an oversized fake button", () => {
+    expect(historyListSource).toContain('type="checkbox"');
+    expect(historyListSource).toMatch(/size-4[^"]*accent-primary/);
+    expect(historyListSource).not.toContain("size-11");
+  });
+
+  it("archived rows offer restore instead of archive, and every row can be permanently deleted", () => {
+    expect(historyListSource).toContain("onRestore(item)");
+    expect(historyListSource).toContain("onDeleteRequest(item)");
+    expect(historyListSource).toMatch(/isArchived[\s\S]{0,80}onRestore/);
+  });
+
+  it("delete calls the dedicated delete mutation/endpoint, never reusing archive", () => {
+    expect(apiSource).toContain("/assistant/conversations/${conversationId}/restore");
+    expect(apiSource).toMatch(/api\s*\.delete[\s\S]*?`\/assistant\/conversations\/\$\{conversationId\}`/);
+    expect(sessionHookSource).toContain("useDeleteAssistantSession");
+    expect(sessionHookSource).toContain("useRestoreAssistantSession");
+    expect(sessionHookSource).toContain("deleteAssistantSession");
+    expect(sessionHookSource).toContain("restoreAssistantSession");
+  });
+
+  it("permanent delete requires an explicit alertdialog confirmation naming the consequence, and is not fired straight from the row action", () => {
+    expect(historySource).toContain("deleteConfirmation");
+    expect(historySource).toContain('role={isAlertDialog ? "alertdialog" : "dialog"}');
+    expect(historySource).toContain("deleteTitle");
+    expect(historySource).toContain("deleteDescription");
+    // Clicking delete only stages a pending confirmation; it must not call the mutation directly.
+    expect(historyListSource).not.toMatch(/onDeleteRequest[\s\S]{0,20}mutateAsync/);
+  });
+
+  it("bulk delete confirms the count and clears selection/closes the dialog after success", () => {
+    expect(historySource).toMatch(/deleteConfirmation\.map\(\(item\) => item\.id\)/);
+    expect(historySource).toMatch(/setDeleteConfirmation\(null\);\s*setSelectedIds\(new Set\(\)\);/);
+  });
+
+  it("English and Indonesian catalogs define matching history keys, including delete/restore", () => {
     for (const messages of [idMessages, enMessages]) {
       const history = messages.assistant.history as Record<string, unknown>;
       for (const key of [
@@ -1100,13 +1146,28 @@ describe("assistant conversation history (Phase 23.6)", () => {
         "listLabel",
         "newConversation",
         "activeConversationLabel",
+        "statusActive",
         "conversationFromDate",
         "loading",
         "loadingMore",
-        "empty",
+        "emptyAll",
+        "emptyActive",
+        "emptyArchived",
         "error",
         "retry",
         "loadMore",
+        "restore",
+        "restoring",
+        "restoreSuccess",
+        "restoreError",
+        "delete",
+        "deleting",
+        "deleteTitle",
+        "deleteDescription",
+        "deleteConfirm",
+        "deleteCancel",
+        "deleteSuccess",
+        "deleteError",
         "switchBlockedTitle",
         "switchBlockedDescription",
         "switchConfirm",
@@ -1115,6 +1176,39 @@ describe("assistant conversation history (Phase 23.6)", () => {
         expect(history[key]).toBeTruthy();
       }
     }
+  });
+});
+
+describe("deleting the currently active conversation forces a local reset, even mid-workflow (final safety audit fix)", () => {
+  it("startNewConversation accepts a force option that bypasses the canStartNewConversation guard", () => {
+    expect(flowHookSource).toContain("function startNewConversation(options: { force?: boolean } = {})");
+    expect(flowHookSource).toContain("if (!canStartNewConversation && !options.force) return;");
+  });
+
+  it("confirmDelete force-resets the active conversation when it is among the deleted ids — single or bulk", () => {
+    expect(historySource).toMatch(
+      /async function confirmDelete[\s\S]*?if \(conversationId && ids\.includes\(conversationId\)\) onStartNewConversation\(\{ force: true \}\);/
+    );
+  });
+
+  it("confirmArchive is left unchanged — archived conversations still exist and are not forced", () => {
+    const archiveBody = historySource.slice(
+      historySource.indexOf("async function confirmArchive"),
+      historySource.indexOf("async function confirmDelete")
+    );
+    expect(archiveBody).toContain("if (conversationId && ids.includes(conversationId)) onStartNewConversation();");
+    // Explicitly not the forced call used by delete.
+    expect(archiveBody).not.toContain("{ force: true }");
+  });
+
+  it("onStartNewConversation's prop type allows the caller to force a reset", () => {
+    expect(historySource).toContain("onStartNewConversation: (options?: { force?: boolean }) => void;");
+  });
+
+  it("the standalone 'new conversation' button still goes through the unforced guard, not a bypass", () => {
+    expect(pageSource).toContain("const handleStartNewConversation = useCallback(() => {");
+    expect(pageSource).toMatch(/handleStartNewConversation = useCallback\(\(\) => \{\s*flow\.startNewConversation\(\);/);
+    expect(pageSource).toContain("onClick={handleStartNewConversation}");
   });
 });
 

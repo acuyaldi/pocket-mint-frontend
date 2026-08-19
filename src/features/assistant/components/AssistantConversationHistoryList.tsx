@@ -1,7 +1,13 @@
 "use client";
 
-import { Archive, Check, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Archive, ArchiveRestore, Loader2, MessageSquare, MoreVertical, Trash2 } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { AssistantConversationSummary } from "@/src/types/assistant";
 
@@ -10,10 +16,13 @@ export interface AssistantConversationHistoryLabels {
   loading: string;
   error: string;
   retry: string;
-  empty: string;
+  emptyAll: string;
+  emptyActive: string;
+  emptyArchived: string;
   loadMore: string;
   loadingMore: string;
   activeConversationLabel: string;
+  statusActive: string;
   archivedStatus: string;
   searchLoaded: string;
   searchPlaceholder: string;
@@ -27,6 +36,10 @@ export interface AssistantConversationHistoryLabels {
   clearSelection: string;
   archive: string;
   archiving: string;
+  restore: string;
+  restoring: string;
+  delete: string;
+  actionsFor: (label: string) => string;
   conversationFromDate: (date: string) => string;
 }
 
@@ -36,12 +49,20 @@ function formatActivityDate(value: string, intlLocale: string) {
   );
 }
 
-/** Deterministic, non-AI label: sanitized last-message preview when persisted, else a date fallback. Never parsed or interpreted — plain text only. */
+/**
+ * Deterministic, non-AI label: the first user-authored message (the original
+ * request that started the conversation) when persisted, falling back to the
+ * latest message preview, then a date fallback. Never parsed or interpreted
+ * — plain text only. Prefers `title` over `lastMessage` so the label reflects
+ * original intent instead of whatever turn happened most recently (e.g. a
+ * clarification confirmation).
+ */
 export function resolveConversationLabel(
   summary: AssistantConversationSummary,
   labels: AssistantConversationHistoryLabels,
   intlLocale: string
 ) {
+  if (summary.title?.trim()) return summary.title;
   if (summary.lastMessage?.trim()) return summary.lastMessage;
   return labels.conversationFromDate(formatActivityDate(summary.lastActivityAt, intlLocale));
 }
@@ -53,6 +74,7 @@ interface AssistantConversationHistoryListProps {
   isLoading: boolean;
   isError: boolean;
   onRetry: () => void;
+  emptyMessage: string;
   selectedId: string | null;
   selectedIds: Set<string>;
   onSelect: (id: string) => void;
@@ -60,6 +82,9 @@ interface AssistantConversationHistoryListProps {
   onSelectAllLoaded: () => void;
   onClearSelection: () => void;
   onArchive: (item: AssistantConversationSummary) => void;
+  onRestore: (item: AssistantConversationSummary) => void;
+  restoringId?: string | null;
+  onDeleteRequest: (item: AssistantConversationSummary) => void;
   hasMore: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => void;
@@ -74,6 +99,7 @@ export function AssistantConversationHistoryList({
   isLoading,
   isError,
   onRetry,
+  emptyMessage,
   selectedId,
   selectedIds,
   onSelect,
@@ -81,6 +107,9 @@ export function AssistantConversationHistoryList({
   onSelectAllLoaded,
   onClearSelection,
   onArchive,
+  onRestore,
+  restoringId,
+  onDeleteRequest,
   hasMore,
   isLoadingMore,
   onLoadMore,
@@ -107,11 +136,7 @@ export function AssistantConversationHistoryList({
   }
 
   if (items.length === 0) {
-    return (
-      <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-        {loadedCount > 0 ? labels.noSearchResults : labels.empty}
-      </p>
-    );
+    return <p className="px-3 py-6 text-center text-sm text-muted-foreground">{emptyMessage}</p>;
   }
 
   return (
@@ -133,27 +158,28 @@ export function AssistantConversationHistoryList({
           const isChecked = selectedIds.has(item.id);
           const label = resolveConversationLabel(item, labels, intlLocale);
           const isArchived = item.status === "ARCHIVED";
+          const isRestoring = restoringId === item.id;
           return (
             <li key={item.id}>
               <div
                 className={cn(
-                  "grid min-h-20 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 transition-colors hover:bg-muted/60",
+                  "grid min-h-16 grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 transition-colors hover:bg-muted/60",
                   isSelected && "border-border bg-muted"
                 )}
               >
-                <button
-                  type="button"
+                <input
+                  type="checkbox"
+                  checked={isChecked}
+                  onChange={() => onToggleSelect(item.id)}
                   aria-label={`${labels.selectConversation}: ${label}`}
-                  aria-pressed={isChecked}
-                  onClick={() => onToggleSelect(item.id)}
-                  disabled={isArchived}
-                  className={cn(
-                    "flex size-11 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50",
-                    isChecked && "bg-primary text-primary-foreground"
-                  )}
+                  className="size-4 shrink-0 cursor-pointer rounded border-border accent-primary outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                />
+                <span
+                  aria-hidden="true"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground"
                 >
-                  {isChecked ? <Check aria-hidden="true" /> : null}
-                </button>
+                  <MessageSquare className="size-4" />
+                </span>
                 <button
                   type="button"
                   aria-current={isSelected ? "true" : undefined}
@@ -164,21 +190,49 @@ export function AssistantConversationHistoryList({
                     {label}
                     {isSelected ? <span className="sr-only"> ({labels.activeConversationLabel})</span> : null}
                   </span>
-                  <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                     <span>{formatActivityDate(item.lastActivityAt, intlLocale)}</span>
-                    {isArchived ? <span className="rounded-full border border-border bg-card px-2 py-0.5">{labels.archivedStatus}</span> : null}
+                    <span aria-hidden="true">·</span>
+                    <span>{isArchived ? labels.archivedStatus : labels.statusActive}</span>
                   </span>
                 </button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-touch"
-                  aria-label={`${labels.archive}: ${label}`}
-                  onClick={() => onArchive(item)}
-                  disabled={isArchived}
-                >
-                  <Archive aria-hidden="true" />
-                </Button>
+                {isRestoring ? (
+                  <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" aria-hidden="true" />
+                ) : (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <button
+                          type="button"
+                          aria-label={labels.actionsFor(label)}
+                          className={buttonVariants({ variant: "ghost", size: "icon-touch" })}
+                        >
+                          <MoreVertical aria-hidden="true" />
+                        </button>
+                      }
+                    />
+                    <DropdownMenuContent>
+                      {isArchived ? (
+                        <DropdownMenuItem onClick={() => onRestore(item)}>
+                          <ArchiveRestore aria-hidden="true" />
+                          {labels.restore}
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem onClick={() => onArchive(item)}>
+                          <Archive aria-hidden="true" />
+                          {labels.archive}
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem
+                        onClick={() => onDeleteRequest(item)}
+                        className="text-destructive data-highlighted:bg-destructive/10 data-highlighted:text-destructive"
+                      >
+                        <Trash2 aria-hidden="true" />
+                        {labels.delete}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             </li>
           );

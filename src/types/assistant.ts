@@ -66,6 +66,8 @@ export interface AssistantConversationSummary {
   createdAt: string;
   updatedAt: string;
   lastActivityAt: string;
+  /** First USER-authored message — the original request that started the conversation. */
+  title?: string;
   lastMessage?: string;
 }
 

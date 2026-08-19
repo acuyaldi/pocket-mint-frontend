@@ -2,9 +2,11 @@
 import { QueryClient, useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   archiveAssistantSession,
+  deleteAssistantSession,
   getAssistantRecoveryState,
   getAssistantSession,
   listAssistantConversations,
+  restoreAssistantSession,
 } from "@/src/features/assistant/api/assistantApi";
 import { assistantKeys } from "@/src/features/assistant/constants/queryKeys";
 import type { ListAssistantConversationsParams } from "@/src/features/assistant/types";
@@ -77,6 +79,25 @@ export const useArchiveAssistantSession = () => {
 
   return useMutation<Awaited<ReturnType<typeof archiveAssistantSession>>, Error, string>({
     mutationFn: (conversationId) => archiveAssistantSession(conversationId),
+    onSuccess: (_data, conversationId) => invalidateAssistantSessionDependents(queryClient, conversationId),
+  });
+};
+
+export const useRestoreAssistantSession = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<Awaited<ReturnType<typeof restoreAssistantSession>>, Error, string>({
+    mutationFn: (conversationId) => restoreAssistantSession(conversationId),
+    onSuccess: (_data, conversationId) => invalidateAssistantSessionDependents(queryClient, conversationId),
+  });
+};
+
+/** Permanent delete — distinct from archive/restore. Not optimistic: the row stays until the mutation actually succeeds. */
+export const useDeleteAssistantSession = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<Awaited<ReturnType<typeof deleteAssistantSession>>, Error, string>({
+    mutationFn: (conversationId) => deleteAssistantSession(conversationId),
     onSuccess: (_data, conversationId) => invalidateAssistantSessionDependents(queryClient, conversationId),
   });
 };
