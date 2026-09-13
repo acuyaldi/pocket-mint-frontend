@@ -101,4 +101,37 @@ test.describe("Assistant — conversation history and switching", () => {
     await expect(page).toHaveURL(new RegExp(`conversationId=${activeId}`));
     await expect(page.locator("article").filter({ hasText: "Awaiting confirmation" })).toBeVisible();
   });
+
+  test("deleting the active conversation force-resets even with an unresolved draft, and the deletion is permanent", async ({
+    page,
+  }) => {
+    const activeId = await seedPendingConversation(`Test Noodle Shop E ${Date.now()}`);
+    await page.goto(`/assistant?conversationId=${activeId}`);
+    await expect(page.locator("article").filter({ hasText: "Awaiting confirmation" })).toBeVisible();
+
+    await page.getByRole("button", { name: "Open conversation history" }).click();
+    const dialog = page.getByRole("dialog");
+    const list = dialog.getByRole("list", { name: "Previous conversations" });
+
+    // The row currently open in the composer is the one marked aria-current.
+    const activeRow = list.locator("li").filter({ has: page.locator('button[aria-current="true"]') });
+    await activeRow.getByRole("button", { name: /Actions for/ }).click();
+    await page.getByRole("menuitem", { name: "Delete" }).click();
+
+    const confirmDialog = page.getByRole("alertdialog");
+    await expect(confirmDialog.getByRole("heading", { name: "Delete this conversation?" })).toBeVisible();
+    await confirmDialog.getByRole("button", { name: "Delete" }).click();
+
+    // Deletion is permanent, so the force-reset fires even though this conversation
+    // has an unresolved draft that would otherwise block an ordinary "start new conversation".
+    await expect(page).toHaveURL(/\/assistant$/);
+    await expect(page.getByText("Start a new conversation")).toBeVisible();
+    await expect(page.locator("article").filter({ hasText: "Awaiting confirmation" })).not.toBeVisible();
+
+    // The deleted conversation is gone for good — revisiting its old URL directly
+    // never resurrects its stale draft/workflow state.
+    await page.goto(`/assistant?conversationId=${activeId}`);
+    await expect(page.getByText("Start a new conversation")).toBeVisible();
+    await expect(page.locator("article").filter({ hasText: "Awaiting confirmation" })).not.toBeVisible();
+  });
 });
