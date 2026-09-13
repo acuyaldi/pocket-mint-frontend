@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
-import { AssistantConversationHistoryList, type AssistantConversationHistoryLabels } from "./AssistantConversationHistoryList";
+import {
+  AssistantConversationHistoryList,
+  resolveConversationLabel,
+  type AssistantConversationHistoryLabels,
+} from "./AssistantConversationHistoryList";
 import type { AssistantConversationSummary } from "@/src/types/assistant";
 
 const LABELS: AssistantConversationHistoryLabels = {
@@ -181,6 +185,40 @@ export const ArchivedRowOffersRestore: Story = {
     await userEvent.click(await menu.findByText(LABELS.restore));
     expect(args.onRestore).toHaveBeenCalledWith(ITEMS[2]);
     await waitFor(() => expect(document.querySelector("[data-base-ui-focus-guard]")).toBeNull());
+  },
+};
+
+export const DeleteRequestInteraction: Story = {
+  args: Populated.args,
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getAllByRole("button", { name: /Actions for/ })[0]);
+    const menu = within(document.body);
+    await userEvent.click(await menu.findByText(LABELS.delete));
+    expect(args.onDeleteRequest).toHaveBeenCalledWith(ITEMS[0]);
+    await waitFor(() => expect(document.querySelector("[data-base-ui-focus-guard]")).toBeNull());
+  },
+};
+
+export const ToggleSelectInteraction: Story = {
+  args: Populated.args,
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const label = resolveConversationLabel(ITEMS[1], LABELS, "id-ID");
+    const checkbox = canvas.getByLabelText(`${LABELS.selectConversation}: ${label}`);
+    await userEvent.click(checkbox);
+    expect(args.onToggleSelect).toHaveBeenCalledWith("conv-2");
+  },
+};
+
+export const SelectAllAndClearInteraction: Story = {
+  args: Populated.args,
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: LABELS.selectAllLoaded }));
+    expect(args.onSelectAllLoaded).toHaveBeenCalled();
+    await userEvent.click(canvas.getByRole("button", { name: LABELS.clearSelection }));
+    expect(args.onClearSelection).toHaveBeenCalled();
   },
 };
 
