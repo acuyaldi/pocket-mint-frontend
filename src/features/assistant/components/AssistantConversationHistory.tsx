@@ -159,7 +159,11 @@ export function AssistantConversationHistory({
     const ids = archiveConfirmation.map((item) => item.id);
     try {
       await Promise.all(ids.map((id) => archiveMutation.mutateAsync(id)));
-      if (conversationId && ids.includes(conversationId)) onStartNewConversation();
+      // Archiving the active conversation force-resets it too, matching the delete path
+      // below — an archived conversation is no longer continuable, so leaving the composer
+      // pointed at it would let `canStartNewConversation`'s guard (an unresolved draft/
+      // clarification) silently block the reset the user just asked for.
+      if (conversationId && ids.includes(conversationId)) onStartNewConversation({ force: true });
       setArchiveConfirmation(null);
       setSelectedIds(new Set());
       toast(t("archiveSuccess", { count: ids.length }), "success");

@@ -1141,7 +1141,9 @@
     "recovery": {
       "loading": "Memeriksa status pemulihan percakapan ini sebelum menampilkan klarifikasi atau draf yang mungkin masih tertunda setelah halaman dimuat ulang. Anda tetap berada di percakapan yang sama.",
       "clarificationRecoveredTitle": "Masih ada pertanyaan yang belum dijawab pada percakapan ini",
-      "composerDisabled": "Periksa apa yang terjadi pada tindakan sebelumnya di atas sebelum mengirim instruksi baru."
+      "composerDisabled": "Periksa apa yang terjadi pada tindakan sebelumnya di atas sebelum mengirim instruksi baru.",
+      "turnRunning": "Pesan sebelumnya pada percakapan ini masih diproses. Mohon tunggu sebelum mengirim pesan lain.",
+      "composerDisabledTurnRunning": "Pesan sebelumnya masih diproses. Mohon tunggu sebelum mengirim pesan lain."
     },
     "outcomeUnknown": {
       "heading": "Kami belum bisa memastikan apa yang terjadi",

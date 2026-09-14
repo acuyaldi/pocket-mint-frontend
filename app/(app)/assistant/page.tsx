@@ -119,6 +119,7 @@ export default function AssistantPage() {
     composerDisabledClarification: tConversation("composerDisabledClarification"),
     composerDisabledDraft: tConversation("composerDisabledDraft"),
     composerDisabledOutcomeUnknown: tRecovery("composerDisabled"),
+    composerDisabledTurnRunning: tRecovery("composerDisabledTurnRunning"),
     clarification: {
       cancel: tCommon("actions.cancel"),
       cancelling: tClarification("cancelling"),
@@ -176,6 +177,7 @@ export default function AssistantPage() {
       recoveryLoading: tRecovery("loading"),
       transientLostTitle: tConversation("transientUnavailable"),
       clarificationRecoveredTitle: tRecovery("clarificationRecoveredTitle"),
+      turnRunning: tRecovery("turnRunning"),
       cancel: tCommon("actions.cancel"),
       cancelling: tClarification("cancelling"),
     },

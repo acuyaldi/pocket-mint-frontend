@@ -27,6 +27,7 @@ const LABELS: AssistantConversationLabels = {
   composerDisabledClarification: "Answer the clarification above before sending a new instruction.",
   composerDisabledDraft: "Confirm or cancel the draft above before sending a new instruction.",
   composerDisabledOutcomeUnknown: "Check what happened with your previous action above before sending a new instruction.",
+  composerDisabledTurnRunning: "Your previous message is still being processed. Please wait before sending another one.",
   clarification: {
     cancel: "Cancel",
     cancelling: "Cancelling",
@@ -83,6 +84,7 @@ const LABELS: AssistantConversationLabels = {
       "Checking this conversation's recovery status before showing any clarification or draft that may still be pending after the page reload. You are still in the same conversation.",
     transientLostTitle: "The pending clarification for this conversation couldn't be restored after reloading.",
     clarificationRecoveredTitle: "You still have a pending question in this conversation",
+    turnRunning: "Your previous message in this conversation is still being processed. Please wait before sending another one.",
     cancel: "Cancel",
     cancelling: "Cancelling",
   },

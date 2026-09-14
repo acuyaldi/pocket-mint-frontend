@@ -4,7 +4,7 @@
 // contract (`GET .../recovery-state`, idempotent draft confirm/cancel,
 // token-less clarification cancel).
 
-import type { AssistantDraft, AssistantRecoveryClarification, AssistantRecoveryStateResponse } from "@/src/types/assistant";
+import type { AssistantDraft, AssistantRecoveryActiveTurn, AssistantRecoveryClarification, AssistantRecoveryStateResponse } from "@/src/types/assistant";
 
 /** The mutation kinds that can fail ambiguously and are tracked for reconciliation. */
 export type AssistantPendingActionKind =
@@ -33,7 +33,8 @@ export type AssistantRecoveryState =
   | { kind: "clarificationRecovered"; clarification: AssistantRecoveryClarification }
   | { kind: "draftRecovered"; draft: AssistantDraft }
   | { kind: "actionOutcomeUnknown"; action: AssistantPendingActionKind }
-  | { kind: "historyUnavailable" };
+  | { kind: "historyUnavailable" }
+  | { kind: "turnRunning"; turn: AssistantRecoveryActiveTurn };
 
 /**
  * Adapts the recovery-state draft preview (ids only — the endpoint is
@@ -72,6 +73,9 @@ export function resolveRecoveryState(response: AssistantRecoveryStateResponse): 
   }
   if (response.pendingDraft) {
     return { kind: "draftRecovered", draft: mapRecoveredDraftToAssistantDraft(response.pendingDraft) };
+  }
+  if (response.activeTurn) {
+    return { kind: "turnRunning", turn: response.activeTurn };
   }
   return { kind: "transientClarificationLost" };
 }

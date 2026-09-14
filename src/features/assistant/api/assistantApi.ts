@@ -25,15 +25,29 @@ import type {
  * /assistant/drafts/:draftId` endpoint on the backend today.
  */
 
-export function sendAssistantMessage(input: SendAssistantMessageInput): Promise<AssistantTurnResult> {
+/**
+ * `idempotencyKey` (Phase 27) is optional at this layer only for backward
+ * compatibility with any caller that predates it — every real UI submission
+ * path (`useSendAssistantMessage`) always supplies one. Omitting it reproduces
+ * pre-Phase-27 behavior exactly: no dedup, a fresh turn on every retry.
+ */
+export function sendAssistantMessage(input: SendAssistantMessageInput, idempotencyKey?: string): Promise<AssistantTurnResult> {
   const body = input.conversationId
     ? { message: input.message, conversationId: input.conversationId, locale: input.locale }
     : { message: input.message, locale: input.locale };
-  return api.post<{ success: boolean; data: AssistantTurnResult }>("/assistant/messages", body).then((res) => res.data.data);
+  return api
+    .post<{ success: boolean; data: AssistantTurnResult }>("/assistant/messages", body, {
+      ...(idempotencyKey === undefined ? {} : { headers: { "Idempotency-Key": idempotencyKey } }),
+    })
+    .then((res) => res.data.data);
 }
 
-export function executeAssistantIntent(input: ExecuteAssistantIntentInput): Promise<AssistantTurnResult> {
-  return api.post<{ success: boolean; data: AssistantTurnResult }>("/assistant/execute", input).then((res) => res.data.data);
+export function executeAssistantIntent(input: ExecuteAssistantIntentInput, idempotencyKey?: string): Promise<AssistantTurnResult> {
+  return api
+    .post<{ success: boolean; data: AssistantTurnResult }>("/assistant/execute", input, {
+      ...(idempotencyKey === undefined ? {} : { headers: { "Idempotency-Key": idempotencyKey } }),
+    })
+    .then((res) => res.data.data);
 }
 
 export function listAssistantConversations(
