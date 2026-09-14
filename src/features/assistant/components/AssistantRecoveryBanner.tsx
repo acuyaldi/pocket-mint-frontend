@@ -9,6 +9,7 @@ export interface AssistantRecoveryBannerLabels {
   recoveryLoading: string;
   transientLostTitle: string;
   clarificationRecoveredTitle: string;
+  turnRunning: string;
   cancel: string;
   cancelling: string;
 }
@@ -20,6 +21,10 @@ type AssistantRecoveryBannerProps =
     }
   | {
       kind: "transientClarificationLost";
+      labels: AssistantRecoveryBannerLabels;
+    }
+  | {
+      kind: "turnRunning";
       labels: AssistantRecoveryBannerLabels;
     }
   | {
@@ -56,6 +61,18 @@ export function AssistantRecoveryBanner(props: AssistantRecoveryBannerProps) {
     return (
       <p role="status" className="min-h-16 rounded-xl border border-amber/30 bg-amber/10 px-4 py-3 text-sm text-foreground">
         {props.labels.transientLostTitle}
+      </p>
+    );
+  }
+
+  if (props.kind === "turnRunning") {
+    return (
+      <p
+        role="status"
+        className="flex min-h-16 items-center gap-2 rounded-xl border border-amber/30 bg-amber/10 px-4 py-3 text-sm text-foreground"
+      >
+        <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden="true" />
+        {props.labels.turnRunning}
       </p>
     );
   }

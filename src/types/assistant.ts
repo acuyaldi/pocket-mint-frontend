@@ -322,8 +322,16 @@ export interface AssistantRecoveryTerminalClarification {
   restartRequired: boolean;
 }
 
+/** A turn still `RUNNING` on this conversation (Phase 27) — lets the UI disable duplicate submission and show a still-processing state after a dropped request, instead of guessing. */
+export interface AssistantRecoveryActiveTurn {
+  turnId: string;
+  intent: string;
+  startedAt: string;
+}
+
 export interface AssistantRecoveryStateResponse {
   activeClarification?: AssistantRecoveryClarification;
   pendingDraft?: AssistantRecoveryDraft;
   latestTerminalClarification?: AssistantRecoveryTerminalClarification;
+  activeTurn?: AssistantRecoveryActiveTurn;
 }

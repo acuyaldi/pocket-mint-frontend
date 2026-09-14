@@ -264,7 +264,7 @@ export function useAssistantConversationFlow() {
     requestLocale: string
   ) => {
     const message = instructionText.trim();
-    if (!message || sendMessage.isPending || activeWorkflow) return;
+    if (!message || sendMessage.isPending || activeWorkflow || recoveryState.kind === "turnRunning") return;
     if (message.length > MAX_ASSISTANT_INSTRUCTION_LENGTH) {
       setFormError(tErrors("tooLong"));
       return;
@@ -433,7 +433,8 @@ export function useAssistantConversationFlow() {
     recoveryState.kind !== "recoveryLoading" &&
     recoveryState.kind !== "clarificationRecovered" &&
     recoveryState.kind !== "draftRecovered" &&
-    recoveryState.kind !== "actionOutcomeUnknown";
+    recoveryState.kind !== "actionOutcomeUnknown" &&
+    recoveryState.kind !== "turnRunning";
 
   /**
    * Switches to an already-persisted conversation (history navigation).
@@ -458,6 +459,7 @@ export function useAssistantConversationFlow() {
     setOutcomeSnapshot(null);
     setCameFromUrl(true);
     sendMessage.reset();
+    sendMessage.clearIdempotencyKey();
     selectClarification.reset();
     cancelClarification.reset();
     confirmDraft.reset();
@@ -478,6 +480,7 @@ export function useAssistantConversationFlow() {
     setOutcomeSnapshot(null);
     setCameFromUrl(false);
     sendMessage.reset();
+    sendMessage.clearIdempotencyKey();
     selectClarification.reset();
     cancelClarification.reset();
     confirmDraft.reset();

@@ -5,14 +5,20 @@ export type AssistantErrorAmbiguity = "ambiguous" | "definite";
 /**
  * Classifies a caught Assistant mutation error:
  * - `"ambiguous"` — no HTTP response ever reached the client (network error,
- *   timeout, `AggregateError`) — the mutation's real outcome is unknown and
- *   the financial action might have gone through anyway.
- * - `"definite"` — a real HTTP response came back (including a 401, which is
- *   handled separately by `lib/api.ts`'s own interceptor) — the backend
- *   explicitly handled the request, nothing is ambiguous.
+ *   timeout, `AggregateError`), OR the server explicitly said the original
+ *   submission (same Idempotency-Key) is still running
+ *   (`409 ASSISTANT_REQUEST_IN_PROGRESS`) — in both cases the mutation's real
+ *   outcome is unknown/pending, so the key must be kept: clearing it here
+ *   would hand the next retry a fresh key and let it start a genuine second
+ *   turn/draft while the first is still in flight, defeating Phase 27's
+ *   whole point.
+ * - `"definite"` — a real HTTP response came back with a terminal outcome
+ *   (including a 401, which is handled separately by `lib/api.ts`'s own
+ *   interceptor) — the backend explicitly finished handling the request.
  */
 export function classifyAssistantMutationError(error: unknown): AssistantErrorAmbiguity {
   if (error instanceof AuthenticationRequiredError || error instanceof AuthSessionError) return "definite";
+  if (readBackendError(error)?.code === "ASSISTANT_REQUEST_IN_PROGRESS") return "ambiguous";
   const response = (error as { response?: unknown } | null | undefined)?.response;
   return response === undefined ? "ambiguous" : "definite";
 }

@@ -8,6 +8,7 @@ const LABELS: AssistantRecoveryBannerLabels = {
     "Checking this conversation's recovery status before showing any clarification or draft that may still be pending after the page reload. You are still in the same conversation.",
   transientLostTitle: "The pending clarification for this conversation couldn't be restored after reloading.",
   clarificationRecoveredTitle: "You still have a pending question in this conversation",
+  turnRunning: "Your previous message in this conversation is still being processed. Please wait before sending another one.",
   cancel: "Cancel",
   cancelling: "Cancelling",
 };
@@ -42,6 +43,10 @@ export const RecoveryLoading: Story = {
 
 export const TransientLost: Story = {
   args: { kind: "transientClarificationLost", labels: LABELS },
+};
+
+export const TurnRunning: Story = {
+  args: { kind: "turnRunning", labels: LABELS },
 };
 
 const onCancelRecovered = fn();

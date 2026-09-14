@@ -37,6 +37,7 @@ export interface AssistantConversationLabels {
   composerDisabledClarification: string;
   composerDisabledDraft: string;
   composerDisabledOutcomeUnknown: string;
+  composerDisabledTurnRunning: string;
   clarification: ClarificationCardLabels;
   guidedClarification: GuidedClarificationCardLabels;
   draft: DraftSummaryCardLabels;
@@ -156,7 +157,9 @@ export function AssistantConversation({
         ? labels.composerDisabledDraft
         : recoveryState.kind === "recoveryLoading" || recoveryState.kind === "actionOutcomeUnknown"
           ? labels.composerDisabledOutcomeUnknown
-          : null;
+          : recoveryState.kind === "turnRunning"
+            ? labels.composerDisabledTurnRunning
+            : null;
 
   return (
     <section aria-label={labels.regionLabel} className="flex min-h-[calc(100dvh-14rem)] flex-col">
@@ -202,6 +205,10 @@ export function AssistantConversation({
 
           {recoveryState.kind === "transientClarificationLost" ? (
             <AssistantRecoveryBanner kind="transientClarificationLost" labels={labels.recoveryBanner} />
+          ) : null}
+
+          {recoveryState.kind === "turnRunning" ? (
+            <AssistantRecoveryBanner kind="turnRunning" labels={labels.recoveryBanner} />
           ) : null}
 
           {recoveryState.kind === "clarificationRecovered" ? (

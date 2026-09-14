@@ -161,7 +161,7 @@ describe("assistant API contract", () => {
     expect(pageSource).toContain("intlLocale)");
     expect(flowHookSource).toContain("{ message, conversationId: conversationId ?? undefined, locale: requestLocale }");
     expect(apiSource).toContain("locale: input.locale");
-    expect(apiSource).toContain('api.post<{ success: boolean; data: AssistantTurnResult }>("/assistant/messages", body)');
+    expect(apiSource).toContain('.post<{ success: boolean; data: AssistantTurnResult }>("/assistant/messages", body, {');
     expect(apiSource).not.toContain('"/assistant/messages", input');
   });
 });
@@ -464,11 +464,12 @@ describe("assistant conversation experience (Phase 23.4)", () => {
     expect(flowHookSource).toContain('recoveryState.kind !== "clarificationRecovered"');
     expect(flowHookSource).toContain('recoveryState.kind !== "draftRecovered"');
     expect(flowHookSource).toContain('recoveryState.kind !== "actionOutcomeUnknown"');
+    expect(flowHookSource).toContain('recoveryState.kind !== "turnRunning"');
     expect(flowHookSource).toContain("if (!canStartNewConversation && !options.force) return;");
   });
 
   it("only one unresolved workflow blocks the composer at a time — no parallel instruction submission", () => {
-    expect(flowHookSource).toContain("|| activeWorkflow) return;");
+    expect(flowHookSource).toContain('|| activeWorkflow || recoveryState.kind === "turnRunning") return;');
     expect(conversationSource).toContain("composerDisabledReason");
     expect(commandFormSource).toContain("disabledReason");
   });
@@ -838,6 +839,23 @@ describe("assistant resilience/recovery — ambiguous vs definite error classifi
     expect(classifyAssistantMutationError(new AuthenticationRequiredError())).toBe("definite");
     expect(classifyAssistantMutationError({ response: { status: 401, data: {} } })).toBe("definite");
   });
+
+  it("classifies 409 ASSISTANT_REQUEST_IN_PROGRESS as ambiguous, not definite (Phase 27 fix)", () => {
+    // The original submission (same Idempotency-Key) is still running server-side —
+    // clearing the key here would hand a manual retry a fresh key and let it start a
+    // genuine second turn/draft while the first is still in flight.
+    expect(
+      classifyAssistantMutationError({
+        response: { status: 409, data: { error: { code: "ASSISTANT_REQUEST_IN_PROGRESS" } } },
+      })
+    ).toBe("ambiguous");
+    // A different 409 (e.g. cross-operation key reuse) is still definite.
+    expect(
+      classifyAssistantMutationError({
+        response: { status: 409, data: { error: { code: "ASSISTANT_IDEMPOTENCY_CONFLICT" } } },
+      })
+    ).toBe("definite");
+  });
 });
 
 describe("assistant resilience/recovery — recovery-state API wrapper and query gating", () => {
@@ -1191,14 +1209,12 @@ describe("deleting the currently active conversation forces a local reset, even 
     );
   });
 
-  it("confirmArchive is left unchanged — archived conversations still exist and are not forced", () => {
+  it("confirmArchive force-resets the active conversation too, matching confirmDelete (Phase 27 fix)", () => {
     const archiveBody = historySource.slice(
       historySource.indexOf("async function confirmArchive"),
       historySource.indexOf("async function confirmDelete")
     );
-    expect(archiveBody).toContain("if (conversationId && ids.includes(conversationId)) onStartNewConversation();");
-    // Explicitly not the forced call used by delete.
-    expect(archiveBody).not.toContain("{ force: true }");
+    expect(archiveBody).toContain("if (conversationId && ids.includes(conversationId)) onStartNewConversation({ force: true });");
   });
 
   it("onStartNewConversation's prop type allows the caller to force a reset", () => {

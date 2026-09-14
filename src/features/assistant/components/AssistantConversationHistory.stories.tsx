@@ -351,6 +351,26 @@ export const DeletingActiveConversationForcesNewConversation: Story = {
   },
 };
 
+export const ArchivingActiveConversationForcesNewConversation: Story = {
+  beforeEach: () => resetHistoryApi(ITEMS),
+  args: { conversationId: "conv-active-1" },
+  play: async ({ canvasElement, args }) => {
+    const body = await openHistory(canvasElement);
+    await waitFor(() => expect(body.getByText(/Catat pengeluaran/)).toBeInTheDocument());
+
+    // conv-active-1 is the conversation currently open in the composer (`conversationId` prop).
+    const menu = await openRowMenu(body, 0);
+    await userEvent.click(await menu.findByText("Archive"));
+    const confirmDialog = await within(document.body).findByRole("alertdialog");
+    await userEvent.click(within(confirmDialog).getByRole("button", { name: "Archive" }));
+
+    await waitFor(() => expect(assistantApi.archiveAssistantSession).toHaveBeenCalledWith("conv-active-1"));
+    // Archiving the active conversation force-resets it too (Phase 27 fix) — an archived
+    // conversation is no longer continuable, so it must reset the same way delete does.
+    await waitFor(() => expect(args.onStartNewConversation).toHaveBeenCalledWith({ force: true }));
+  },
+};
+
 export const Mobile: Story = {
   beforeEach: () => resetHistoryApi(ITEMS),
   parameters: { viewport: { defaultViewport: "mobile1" } },
