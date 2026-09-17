@@ -15,6 +15,7 @@ import {
   type BillDto,
 } from "@/src/features/bills/hooks/useBills";
 import { ASSET_WALLET_TYPES, type Wallet } from "@/src/types/wallet";
+import { getApiErrorMessage } from "@/lib/api-errors";
 
 export function PayBillModal({
   bill,
@@ -52,8 +53,7 @@ export function PayBillModal({
       });
       onClose();
     } catch (caught) {
-      const message = (caught as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(caught);
       setError(message ?? t("genericError"));
     }
   }

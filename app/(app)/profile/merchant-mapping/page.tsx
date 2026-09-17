@@ -19,6 +19,7 @@ import { CreateMerchantMappingModal } from "./components/CreateMerchantMappingMo
 import { EditMerchantMappingModal } from "./components/EditMerchantMappingModal";
 import { DeleteMerchantMappingModal } from "./components/DeleteMerchantMappingModal";
 import { MerchantMappingRow } from "./components/MerchantMappingRow";
+import { getApiErrorMessage } from "@/lib/api-errors";
 
 export default function MerchantMappingPage() {
   const t = useTranslations("merchantMappings");
@@ -76,8 +77,7 @@ export default function MerchantMappingPage() {
       setDeleteTarget(null);
       toast(t("toastDeleted"));
     } catch (caught) {
-      const message = (caught as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(caught);
       toast(message ?? t("toastDeleteFailed"), "error");
     } finally {
       setIsDeleting(false);

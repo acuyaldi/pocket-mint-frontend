@@ -45,6 +45,7 @@ import {
   selectTransferEndpoint,
   swapTransferEndpoints,
 } from "./transfer-account-picker";
+import { getApiErrorMessage } from "@/lib/api-errors";
 
 type TxType = "EXPENSE" | "INCOME" | "TRANSFER";
 type Tab = TxType;
@@ -524,8 +525,7 @@ export function AddTransactionModal({
         interestRate: asInstallment ? rateNum : undefined,
       });
     } catch (err) {
-      const message = (err as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(err);
       setError(message ?? t("errors.genericSaveFailed"));
       return;
     }
@@ -546,8 +546,7 @@ export function AddTransactionModal({
           categoryId,
         });
       } catch (caught) {
-        const message = (caught as { response?: { data?: { error?: { message?: string } } } })
-          ?.response?.data?.error?.message;
+        const message = getApiErrorMessage(caught);
         toast(message ?? t("errors.rememberMerchantFailed"), "error");
       }
     }

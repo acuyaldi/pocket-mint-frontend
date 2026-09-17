@@ -9,6 +9,7 @@ import { FormField, FormErrorMessage } from "@/components/ui/form-field";
 import { toast } from "@/components/ui/toaster";
 import { useUpdateWallet } from "@/src/features/wallets/hooks/useWallets";
 import { isCreditWallet, type Wallet } from "@/src/types/wallet";
+import { getApiErrorMessage } from "@/lib/api-errors";
 
 export default function EditWalletModal({
   wallet,
@@ -57,8 +58,7 @@ function EditWalletForm({ wallet, onClose }: { wallet: Wallet; onClose: () => vo
       toast(t("toastSaved", { name: name.trim() }));
       onClose();
     } catch (caught) {
-      const message = (caught as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(caught);
       setError(message ?? t("genericError"));
     }
   };

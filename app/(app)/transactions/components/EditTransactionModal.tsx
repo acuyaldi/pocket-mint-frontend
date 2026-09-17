@@ -8,6 +8,7 @@ import { AppModal, ModalCancelButton, ModalSubmitButton } from "@/components/ui/
 import { FormField, FormErrorMessage } from "@/components/ui/form-field";
 import { Transaction } from "@/src/types/transaction";
 import { formatRupiah } from "./constants";
+import { getApiErrorMessage } from "@/lib/api-errors";
 
 interface EditTransactionModalProps {
   tx: Transaction | null;
@@ -70,8 +71,7 @@ export function EditTransactionModal({ tx, isSaving, onClose, onSubmit }: EditTr
         date: date ? new Date(date).toISOString() : undefined,
       });
     } catch (err) {
-      const message = (err as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(err);
       setError(message ?? t("genericSaveFailed"));
     }
   }, [tx, amount, description, type, date, onSubmit, t]);
