@@ -11,6 +11,7 @@ import type { Wallet } from "@/src/types/wallet";
 import type { Category } from "@/src/features/categories/hooks/useCategories";
 import type { RecurringTransaction } from "@/src/types/recurringTransaction";
 import type { CreateRecurringTransactionDto } from "@/src/features/recurring/hooks/useRecurringTransactions";
+import { getApiErrorMessage } from "@/lib/api-errors";
 
 function todayStr() {
   const date = new Date();
@@ -111,8 +112,7 @@ export function RecurringTransactionModal({
         reminderOffsetDays,
       });
     } catch (err) {
-      const message = (err as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(err);
       setError(message ?? t("errors.genericSaveFailed"));
       return;
     }

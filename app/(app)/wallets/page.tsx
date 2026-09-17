@@ -40,6 +40,7 @@ import {
 } from "@/src/types/wallet";
 import { formatCurrency } from "@/lib/utils";
 import { INTL_LOCALE } from "@/i18n/config";
+import { getApiErrorMessage } from "@/lib/api-errors";
 
 type FilterKey = "all" | "bank" | "ewallet" | "credit" | "paylater" | "loan";
 
@@ -261,8 +262,7 @@ export default function WalletsPage() {
       toast(t("toastAccountDeleted", { name: deletingWallet.name }));
       setDeletingWallet(null);
     } catch (caught) {
-      const message = (caught as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(caught);
       toast(message ?? t("toastAccountDeleteFailed"), "error");
     }
   };

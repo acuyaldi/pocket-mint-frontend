@@ -22,6 +22,7 @@ import { BudgetProgressBar } from "../components/BudgetProgressBar";
 import { EditBudgetModal } from "../components/EditBudgetModal";
 import { ArchiveBudgetModal } from "../components/ArchiveBudgetModal";
 import { RestoreBudgetModal } from "../components/RestoreBudgetModal";
+import { getApiErrorMessage } from "@/lib/api-errors";
 
 export default function BudgetDetailPage() {
   const params = useParams<{ id: string }>();
@@ -78,8 +79,7 @@ export default function BudgetDetailPage() {
       setIsArchiveOpen(false);
       toast(t("toastArchived"));
     } catch (caught) {
-      const message = (caught as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(caught);
       toast(message ?? t("toastArchiveFailed"), "error");
     } finally {
       setIsArchiving(false);
@@ -94,8 +94,7 @@ export default function BudgetDetailPage() {
       setIsRestoreOpen(false);
       toast(t("toastRestored"));
     } catch (caught) {
-      const message = (caught as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(caught);
       toast(message ?? t("toastRestoreFailed"), "error");
     } finally {
       setIsRestoring(false);

@@ -5,6 +5,7 @@ import { Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { AppModal, ModalCancelButton, ModalSubmitButton } from "@/components/ui/app-modal";
 import { FormErrorMessage } from "@/components/ui/form-field";
+import { getApiErrorMessage } from "@/lib/api-errors";
 
 interface DeleteTransactionModalProps {
   isOpen: boolean;
@@ -30,8 +31,7 @@ export function DeleteTransactionModal({ isOpen, isDeleting, onClose, onConfirm 
     try {
       await onConfirm();
     } catch (err) {
-      const message = (err as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(err);
       setError(message ?? t("genericError"));
     }
   };

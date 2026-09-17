@@ -199,7 +199,7 @@ describe("confirm reminder modal", () => {
   });
 
   it("surfaces the backend error message when confirmation fails", () => {
-    expect(modalSource).toContain("?.response?.data?.error?.message;");
+    expect(modalSource).toContain("getApiErrorMessage(err)");
     expect(modalSource).toContain('t("errors.genericFailed")');
   });
 });

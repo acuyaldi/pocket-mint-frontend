@@ -7,6 +7,7 @@ import { AppModal, ModalCancelButton, ModalSubmitButton } from "@/components/ui/
 import { FormField, FormErrorMessage } from "@/components/ui/form-field";
 import type { SavingGoal } from "@/src/types/savingGoal";
 import type { CreateSavingGoalDto } from "@/src/features/savingGoals/hooks/useSavingGoals";
+import { getApiErrorMessage } from "@/lib/api-errors";
 
 const formatRupiahVisual = (value: string): string => {
   const rawNumber = value.replace(/\D/g, "");
@@ -69,8 +70,7 @@ export function SavingGoalModal({ mode, isOpen, isSaving, goal, onClose, onSubmi
         notes: notes.trim() || undefined,
       });
     } catch (err) {
-      const message = (err as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(err);
       setError(message ?? t("errors.genericSaveFailed"));
       return;
     }

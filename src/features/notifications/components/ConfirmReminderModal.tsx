@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { Notification } from "@/src/types/notification";
+import { getApiErrorMessage } from "@/lib/api-errors";
 
 const formatRupiahVisual = (value: string): string => {
   const rawNumber = value.replace(/\D/g, "");
@@ -49,8 +50,7 @@ export function ConfirmReminderModal({ notification, isSaving, onClose, onSubmit
     try {
       await onSubmit(parsedAmount);
     } catch (err) {
-      const message = (err as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(err);
       setError(message ?? t("errors.genericFailed"));
     }
   };
