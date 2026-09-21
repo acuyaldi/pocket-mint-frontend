@@ -1,6 +1,7 @@
 "use client";
 
 import type { Dispatch, RefObject, SetStateAction } from "react";
+import { useMemo } from "react";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ import { DraftActionBar, type DraftActionBarLabels } from "./DraftActionBar";
 import { AssistantResultState } from "./AssistantResultState";
 import { AssistantRecoveryBanner, type AssistantRecoveryBannerLabels } from "./AssistantRecoveryBanner";
 import { AssistantOutcomeUnknown, type AssistantOutcomeUnknownLabels } from "./AssistantOutcomeUnknown";
-import type { AssistantMessage as AssistantMessageDto } from "@/src/types/assistant";
+import type { AssistantMessage as AssistantMessageDto, AssistantTurn as AssistantTurnDto } from "@/src/types/assistant";
 import type { AssistantActiveWorkflow, AssistantLastResult } from "@/src/features/assistant/hooks/useAssistantConversationFlow";
 import { isAssistantActionRetrySafe, type AssistantRecoveryState } from "@/src/features/assistant/types/recovery";
 import type { DraftConfirmOverrides } from "@/src/features/assistant/api/assistantApi";
@@ -62,6 +63,8 @@ export interface DraftSummaryCardEditLabels {
 interface AssistantConversationProps {
   conversationId: string | null;
   messages: AssistantMessageDto[];
+  /** Phase 30 — used only to attribute each message's channel; never rendered as its own timeline item. */
+  turns?: AssistantTurnDto[];
   isLoadingHistory: boolean;
   historyErrorMessage: string | null;
   onRetryHistory: () => void;
@@ -109,6 +112,7 @@ interface AssistantConversationProps {
 export function AssistantConversation({
   conversationId,
   messages,
+  turns,
   isLoadingHistory,
   historyErrorMessage,
   onRetryHistory,
@@ -144,6 +148,12 @@ export function AssistantConversation({
   onSaveEditDraft,
   onDraftOverrideChange,
 }: AssistantConversationProps) {
+  const turnChannelById = useMemo(() => {
+    const map: Record<string, NonNullable<AssistantTurnDto["channel"]>> = {};
+    for (const turn of turns ?? []) if (turn.channel) map[turn.id] = turn.channel;
+    return map;
+  }, [turns]);
+
   const hasHistory = messages.length > 0;
   const showEmptyState = !conversationId && !hasHistory && !activeWorkflow && !isSendingMessage;
 
@@ -177,6 +187,7 @@ export function AssistantConversation({
               onRetry={onRetryHistory}
               messageLabels={labels.message}
               listLabel={labels.listLabel}
+              turnChannelById={turnChannelById}
             />
           ) : null}
 

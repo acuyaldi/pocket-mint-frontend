@@ -10,7 +10,7 @@ const LABELS: AssistantConversationLabels = {
   listLabel: "Conversation messages",
   historyLoading: "Loading conversation...",
   historyRetry: "Retry",
-  message: { USER: "You", ASSISTANT: "Assistant", SYSTEM: "System" },
+  message: { USER: "You", ASSISTANT: "Assistant", SYSTEM: "System", telegramChannel: "Sent from Telegram" },
   emptyTitle: "Start a new conversation",
   emptyDescription: "Describe one income or expense in your own words and Pocket Mint Assistant will help you record it.",
   examplesLabel: "Examples",

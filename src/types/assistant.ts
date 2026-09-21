@@ -13,6 +13,15 @@ export type AssistantTurnStatus =
 
 export type AssistantRole = "USER" | "ASSISTANT" | "SYSTEM";
 
+/**
+ * Phase 30 — which surface produced a turn/conversation. Only ever `"WEB"`
+ * or `"TELEGRAM"` from a current backend; never a Telegram chat/sender id,
+ * callback token, or other provider identifier. Treat a missing field (an
+ * older backend response) or any value outside this union as unknown —
+ * never assume `"WEB"`.
+ */
+export type AssistantChannel = "WEB" | "TELEGRAM";
+
 export type AssistantMessageSource =
   | "USER_PROVIDED"
   | "CANONICAL_FALLBACK"
@@ -69,6 +78,8 @@ export interface AssistantConversationSummary {
   /** First USER-authored message — the original request that started the conversation. */
   title?: string;
   lastMessage?: string;
+  /** Distinct channels that produced at least one turn in this conversation (Phase 30). Absent on an older backend response — treat as unknown, not `["WEB"]`. */
+  sourceChannels?: AssistantChannel[];
 }
 
 export interface AssistantToolExecution {
@@ -94,6 +105,8 @@ export interface AssistantTurn {
   startedAt: string;
   finishedAt: string | null;
   toolExecutions: AssistantToolExecution[];
+  /** Absent on an older backend response — treat as unknown, not `"WEB"`. */
+  channel?: AssistantChannel;
 }
 
 /** `GET /assistant/conversations/:conversationId` — the full session view. */
@@ -105,6 +118,7 @@ export interface AssistantSession {
     createdAt: string;
     updatedAt: string;
     lastActivityAt: string;
+    sourceChannels?: AssistantChannel[];
   };
   messages: AssistantPage<AssistantMessage>;
   turns: AssistantTurn[];

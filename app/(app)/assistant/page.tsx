@@ -102,6 +102,7 @@ export default function AssistantPage() {
       USER: tConversation("authorUser"),
       ASSISTANT: tConversation("authorAssistant"),
       SYSTEM: tConversation("authorSystem"),
+      telegramChannel: tConversation("channelTelegram"),
     },
     emptyTitle: tConversation("emptyTitle"),
     emptyDescription: tConversation("emptyDescription"),
@@ -223,6 +224,7 @@ export default function AssistantPage() {
       <AssistantConversation
         conversationId={flow.conversationId}
         messages={messages}
+        turns={flow.session.data?.turns}
         isLoadingHistory={flow.session.isLoading}
         historyErrorMessage={flow.session.isError ? readAssistantErrorMessage(flow.session.error, tErrors) : null}
         onRetryHistory={() => flow.session.refetch()}
