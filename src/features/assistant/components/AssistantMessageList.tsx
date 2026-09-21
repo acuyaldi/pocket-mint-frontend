@@ -1,6 +1,6 @@
 import { Loader2, TriangleAlert } from "lucide-react";
 import { AssistantMessage, type AssistantMessageLabels } from "./AssistantMessage";
-import type { AssistantChannel, AssistantMessage as AssistantMessageDto } from "@/src/types/assistant";
+import type { AssistantChannel, AssistantDeliveryStatus, AssistantMessage as AssistantMessageDto } from "@/src/types/assistant";
 
 interface AssistantMessageListProps {
   /** Persisted messages only, backend order preserved (ascending `createdAt`). */
@@ -15,6 +15,8 @@ interface AssistantMessageListProps {
   listLabel: string;
   /** Turn id -> channel (Phase 30), so a message can show its originating channel without the backend denormalizing it onto every message row. */
   turnChannelById?: Record<string, AssistantChannel>;
+  /** Turn id -> channel delivery status (Phase 31), same denormalization-avoidance reasoning as `turnChannelById`. */
+  turnDeliveryStatusById?: Record<string, AssistantDeliveryStatus>;
 }
 
 /**
@@ -33,6 +35,7 @@ export function AssistantMessageList({
   messageLabels,
   listLabel,
   turnChannelById,
+  turnDeliveryStatusById,
 }: AssistantMessageListProps) {
   if (isLoading) {
     return (
@@ -62,7 +65,13 @@ export function AssistantMessageList({
   return (
     <ul aria-label={listLabel} className="flex flex-col gap-4">
       {messages.map((message) => (
-        <AssistantMessage key={message.id} message={message} labels={messageLabels} channel={turnChannelById?.[message.turnId]} />
+        <AssistantMessage
+          key={message.id}
+          message={message}
+          labels={messageLabels}
+          channel={turnChannelById?.[message.turnId]}
+          deliveryStatus={turnDeliveryStatusById?.[message.turnId]}
+        />
       ))}
     </ul>
   );

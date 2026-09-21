@@ -154,6 +154,12 @@ export function AssistantConversation({
     return map;
   }, [turns]);
 
+  const turnDeliveryStatusById = useMemo(() => {
+    const map: Record<string, NonNullable<AssistantTurnDto["deliveryStatus"]>> = {};
+    for (const turn of turns ?? []) if (turn.deliveryStatus) map[turn.id] = turn.deliveryStatus;
+    return map;
+  }, [turns]);
+
   const hasHistory = messages.length > 0;
   const showEmptyState = !conversationId && !hasHistory && !activeWorkflow && !isSendingMessage;
 
@@ -188,6 +194,7 @@ export function AssistantConversation({
               messageLabels={labels.message}
               listLabel={labels.listLabel}
               turnChannelById={turnChannelById}
+              turnDeliveryStatusById={turnDeliveryStatusById}
             />
           ) : null}
 

@@ -1,7 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { AssistantMessage, type AssistantMessageLabels } from "./AssistantMessage";
 
-const LABELS: AssistantMessageLabels = { USER: "You", ASSISTANT: "Assistant", SYSTEM: "System", telegramChannel: "Sent from Telegram" };
+const LABELS: AssistantMessageLabels = {
+  USER: "You",
+  ASSISTANT: "Assistant",
+  SYSTEM: "System",
+  telegramChannel: "Sent from Telegram",
+  deliveryDelivering: "Delivering to Telegram",
+  deliverySent: "Delivered to Telegram",
+  deliveryFailed: "Delivery to Telegram failed",
+};
 
 const meta: Meta<typeof AssistantMessage> = {
   title: "Features/Assistant/AssistantMessage",
@@ -46,6 +54,33 @@ export const FromTelegram: Story = {
     message: { role: "USER", content: "bayar internet 350 ribu dari BCA" },
     labels: LABELS,
     channel: "TELEGRAM",
+  },
+};
+
+export const TelegramDelivering: Story = {
+  args: {
+    message: { role: "ASSISTANT", content: "Rp350.000 expense at Internet from BCA, categorized as Tagihan." },
+    labels: LABELS,
+    channel: "TELEGRAM",
+    deliveryStatus: "PROCESSING",
+  },
+};
+
+export const TelegramDelivered: Story = {
+  args: {
+    message: { role: "ASSISTANT", content: "Rp350.000 expense at Internet from BCA, categorized as Tagihan." },
+    labels: LABELS,
+    channel: "TELEGRAM",
+    deliveryStatus: "DELIVERED",
+  },
+};
+
+export const TelegramDeliveryFailed: Story = {
+  args: {
+    message: { role: "ASSISTANT", content: "Rp350.000 expense at Internet from BCA, categorized as Tagihan." },
+    labels: LABELS,
+    channel: "TELEGRAM",
+    deliveryStatus: "FAILED",
   },
 };
 
