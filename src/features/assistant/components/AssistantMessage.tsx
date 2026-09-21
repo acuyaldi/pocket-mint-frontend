@@ -23,7 +23,7 @@ interface AssistantMessageProps {
   deliveryStatus?: AssistantDeliveryStatus;
 }
 
-/** `PENDING`/`PROCESSING` both read as still-in-progress; `NOT_APPLICABLE` and an unknown/absent status render nothing. */
+/** `PENDING`/`PROCESSING` both read as still-in-progress; `NOT_APPLICABLE`, `UNKNOWN` (Phase 32 — retention-purged history, never shown as failure), and an absent status all fall through to `default` and render nothing. */
 function deliveryStateOf(
   deliveryStatus: AssistantDeliveryStatus | undefined,
   labels: AssistantMessageLabels,
