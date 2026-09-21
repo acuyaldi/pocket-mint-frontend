@@ -22,6 +22,16 @@ export type AssistantRole = "USER" | "ASSISTANT" | "SYSTEM";
  */
 export type AssistantChannel = "WEB" | "TELEGRAM";
 
+/**
+ * Phase 31 — safe outbound delivery state for a channel-originated turn's
+ * Assistant reply. Never a provider message id, external chat id, raw
+ * provider payload, or reply markup. `"NOT_APPLICABLE"` for a WEB turn.
+ * Absent on the turn (not `"NOT_APPLICABLE"`) when a TELEGRAM turn's
+ * delivery row is no longer available (retention-purged) or on an older
+ * backend response — treat as unknown, never assume success or failure.
+ */
+export type AssistantDeliveryStatus = "NOT_APPLICABLE" | "PENDING" | "PROCESSING" | "DELIVERED" | "FAILED";
+
 export type AssistantMessageSource =
   | "USER_PROVIDED"
   | "CANONICAL_FALLBACK"
@@ -107,6 +117,8 @@ export interface AssistantTurn {
   toolExecutions: AssistantToolExecution[];
   /** Absent on an older backend response — treat as unknown, not `"WEB"`. */
   channel?: AssistantChannel;
+  /** Phase 31 — see `AssistantDeliveryStatus`. Absent on an older backend response. */
+  deliveryStatus?: AssistantDeliveryStatus;
 }
 
 /** `GET /assistant/conversations/:conversationId` — the full session view. */

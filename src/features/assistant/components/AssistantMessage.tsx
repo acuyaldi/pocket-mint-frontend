@@ -1,6 +1,6 @@
-import { Send } from "lucide-react";
+import { Loader2, Send, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { AssistantChannel, AssistantMessage as AssistantMessageDto } from "@/src/types/assistant";
+import type { AssistantChannel, AssistantDeliveryStatus, AssistantMessage as AssistantMessageDto } from "@/src/types/assistant";
 
 export interface AssistantMessageLabels {
   USER: string;
@@ -8,6 +8,10 @@ export interface AssistantMessageLabels {
   SYSTEM: string;
   /** Phase 30 — shown next to the role label only when `channel` is `"TELEGRAM"`. */
   telegramChannel?: string;
+  /** Phase 31 — delivery-state copy for a Telegram-originated Assistant reply. */
+  deliveryDelivering?: string;
+  deliverySent?: string;
+  deliveryFailed?: string;
 }
 
 interface AssistantMessageProps {
@@ -15,6 +19,26 @@ interface AssistantMessageProps {
   labels: AssistantMessageLabels;
   /** The turn's channel (Phase 30), when known — absent or `"WEB"` renders nothing extra, keeping the default case visually unchanged. */
   channel?: AssistantChannel;
+  /** The turn's channel delivery status (Phase 31) — only ever shown for an ASSISTANT-role message on a TELEGRAM turn. */
+  deliveryStatus?: AssistantDeliveryStatus;
+}
+
+/** `PENDING`/`PROCESSING` both read as still-in-progress; `NOT_APPLICABLE` and an unknown/absent status render nothing. */
+function deliveryStateOf(
+  deliveryStatus: AssistantDeliveryStatus | undefined,
+  labels: AssistantMessageLabels,
+): { label: string; icon: typeof Send } | null {
+  switch (deliveryStatus) {
+    case "PENDING":
+    case "PROCESSING":
+      return labels.deliveryDelivering ? { label: labels.deliveryDelivering, icon: Loader2 } : null;
+    case "DELIVERED":
+      return labels.deliverySent ? { label: labels.deliverySent, icon: Send } : null;
+    case "FAILED":
+      return labels.deliveryFailed ? { label: labels.deliveryFailed, icon: TriangleAlert } : null;
+    default:
+      return null;
+  }
 }
 
 /**
@@ -24,8 +48,10 @@ interface AssistantMessageProps {
  * markdown or HTML, so it is rendered as-is with line breaks preserved via
  * `whitespace-pre-line` — never raw HTML injection.
  */
-export function AssistantMessage({ message, labels, channel }: AssistantMessageProps) {
+export function AssistantMessage({ message, labels, channel, deliveryStatus }: AssistantMessageProps) {
   const isUser = message.role === "USER";
+  // Delivery state is about the outbound reply reaching Telegram — only ever shown on the ASSISTANT side, never on the user's own echoed message.
+  const delivery = message.role === "ASSISTANT" && channel === "TELEGRAM" ? deliveryStateOf(deliveryStatus, labels) : null;
 
   return (
     <li className={cn("flex flex-col gap-1", isUser ? "items-end" : "items-start")}>
@@ -35,6 +61,12 @@ export function AssistantMessage({ message, labels, channel }: AssistantMessageP
           <span title={labels.telegramChannel} className="normal-case">
             <Send className="size-3" aria-hidden="true" />
             <span className="sr-only">{labels.telegramChannel}</span>
+          </span>
+        ) : null}
+        {delivery ? (
+          <span title={delivery.label} className="normal-case">
+            <delivery.icon className={cn("size-3", delivery.icon === Loader2 && "animate-spin")} aria-hidden="true" />
+            <span className="sr-only">{delivery.label}</span>
           </span>
         ) : null}
       </span>
