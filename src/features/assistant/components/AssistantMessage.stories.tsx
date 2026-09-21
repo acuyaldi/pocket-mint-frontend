@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { AssistantMessage, type AssistantMessageLabels } from "./AssistantMessage";
 
-const LABELS: AssistantMessageLabels = { USER: "You", ASSISTANT: "Assistant", SYSTEM: "System" };
+const LABELS: AssistantMessageLabels = { USER: "You", ASSISTANT: "Assistant", SYSTEM: "System", telegramChannel: "Sent from Telegram" };
 
 const meta: Meta<typeof AssistantMessage> = {
   title: "Features/Assistant/AssistantMessage",
@@ -38,6 +38,14 @@ export const LongContent: Story = {
         "Saya mencatat pengeluaran Rp350.000 untuk tagihan internet bulan ini dari dompet BCA Tabungan, dengan kategori Tagihan dan catatan pembayaran rutin bulanan yang cukup panjang untuk menguji pembungkusan teks.",
     },
     labels: LABELS,
+  },
+};
+
+export const FromTelegram: Story = {
+  args: {
+    message: { role: "USER", content: "bayar internet 350 ribu dari BCA" },
+    labels: LABELS,
+    channel: "TELEGRAM",
   },
 };
 

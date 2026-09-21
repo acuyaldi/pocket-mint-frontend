@@ -20,6 +20,7 @@ const LABELS: AssistantConversationHistoryLabels = {
   activeConversationLabel: "active",
   statusActive: "Active",
   archivedStatus: "Archived",
+  telegramBadge: "Also used from Telegram",
   searchLoaded: "Search loaded conversations",
   searchPlaceholder: "Search previews already loaded",
   filterAll: "All",
@@ -49,6 +50,7 @@ const ITEMS: AssistantConversationSummary[] = [
     lastActivityAt: "2026-07-25T09:12:00.000Z",
     title: "Catat pengeluaran 350 ribu untuk internet dari BCA.",
     lastMessage: "Konfirmasi draft transaksi berhasil dibuat.",
+    sourceChannels: ["WEB", "TELEGRAM"],
   },
   {
     id: "conv-2",

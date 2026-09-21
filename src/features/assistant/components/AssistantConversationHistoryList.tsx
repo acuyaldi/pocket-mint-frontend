@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, ArchiveRestore, Loader2, MessageSquare, MoreVertical, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, Loader2, MessageSquare, MoreVertical, Send, Trash2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,6 +24,7 @@ export interface AssistantConversationHistoryLabels {
   activeConversationLabel: string;
   statusActive: string;
   archivedStatus: string;
+  telegramBadge: string;
   searchLoaded: string;
   searchPlaceholder: string;
   filterAll: string;
@@ -194,6 +195,15 @@ export function AssistantConversationHistoryList({
                     <span>{formatActivityDate(item.lastActivityAt, intlLocale)}</span>
                     <span aria-hidden="true">·</span>
                     <span>{isArchived ? labels.archivedStatus : labels.statusActive}</span>
+                    {item.sourceChannels?.includes("TELEGRAM") ? (
+                      <span
+                        title={labels.telegramBadge}
+                        className="flex items-center gap-1 rounded-full border border-border bg-muted px-1.5 py-0.5 text-muted-foreground"
+                      >
+                        <Send className="size-3" aria-hidden="true" />
+                        <span className="sr-only">{labels.telegramBadge}</span>
+                      </span>
+                    ) : null}
                   </span>
                 </button>
                 {isRestoring ? (

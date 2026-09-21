@@ -96,6 +96,7 @@ export function AssistantConversationHistory({
     activeConversationLabel: t("activeConversationLabel"),
     statusActive: t("statusActive"),
     archivedStatus: t("archivedStatus"),
+    telegramBadge: t("telegramBadge"),
     searchLoaded: t("searchLoaded"),
     searchPlaceholder: t("searchPlaceholder"),
     filterAll: t("filterAll"),

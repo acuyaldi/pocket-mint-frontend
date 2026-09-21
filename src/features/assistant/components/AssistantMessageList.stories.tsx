@@ -4,7 +4,7 @@ import { AssistantMessageList } from "./AssistantMessageList";
 import type { AssistantMessageLabels } from "./AssistantMessage";
 import type { AssistantMessage } from "@/src/types/assistant";
 
-const MESSAGE_LABELS: AssistantMessageLabels = { USER: "You", ASSISTANT: "Assistant", SYSTEM: "System" };
+const MESSAGE_LABELS: AssistantMessageLabels = { USER: "You", ASSISTANT: "Assistant", SYSTEM: "System", telegramChannel: "Sent from Telegram" };
 
 const MESSAGES: AssistantMessage[] = [
   { id: "msg-1", turnId: "turn-1", role: "USER", source: "USER_PROVIDED", content: "bayar internet 350 ribu dari BCA", createdAt: "2026-07-25T10:00:00.000Z" },
