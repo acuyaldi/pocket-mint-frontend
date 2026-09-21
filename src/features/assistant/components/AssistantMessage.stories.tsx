@@ -84,6 +84,16 @@ export const TelegramDeliveryFailed: Story = {
   },
 };
 
+/** Phase 32 — a retention-purged Telegram delivery reads `UNKNOWN`, which must render exactly like `TelegramDelivering`'s absent case did before Phase 31: nothing, never a failure icon. This story documents that intent, not a visual difference from `Assistant`. */
+export const TelegramHistoricalUnknown: Story = {
+  args: {
+    message: { role: "ASSISTANT", content: "Rp350.000 expense at Internet from BCA, categorized as Tagihan." },
+    labels: LABELS,
+    channel: "TELEGRAM",
+    deliveryStatus: "UNKNOWN",
+  },
+};
+
 export const Mobile: Story = {
   parameters: { viewport: { defaultViewport: "mobile1" } },
   args: Assistant.args,

@@ -26,11 +26,15 @@ export type AssistantChannel = "WEB" | "TELEGRAM";
  * Phase 31 — safe outbound delivery state for a channel-originated turn's
  * Assistant reply. Never a provider message id, external chat id, raw
  * provider payload, or reply markup. `"NOT_APPLICABLE"` for a WEB turn.
- * Absent on the turn (not `"NOT_APPLICABLE"`) when a TELEGRAM turn's
- * delivery row is no longer available (retention-purged) or on an older
- * backend response — treat as unknown, never assume success or failure.
+ *
+ * Phase 32 — a current backend always includes this field: `"UNKNOWN"` is
+ * the explicit value for a TELEGRAM turn whose delivery row is no longer
+ * retained (retention-purged), distinct from the field being entirely
+ * absent (a pre-Phase-31 backend response). Treat both an absent field and
+ * `"UNKNOWN"` the same way in the UI — never assume success or failure, and
+ * never render `"UNKNOWN"` as a failure.
  */
-export type AssistantDeliveryStatus = "NOT_APPLICABLE" | "PENDING" | "PROCESSING" | "DELIVERED" | "FAILED";
+export type AssistantDeliveryStatus = "NOT_APPLICABLE" | "PENDING" | "PROCESSING" | "DELIVERED" | "FAILED" | "UNKNOWN";
 
 export type AssistantMessageSource =
   | "USER_PROVIDED"
