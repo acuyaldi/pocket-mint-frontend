@@ -31,3 +31,13 @@ export class AuthSessionError extends ApiError {
     this.name = "AuthSessionError";
   }
 }
+
+/**
+ * Pulls the backend's `error.message` out of a caught axios error, if present.
+ * Callers fall back to their own translated generic message when this is
+ * `undefined` (a network failure, a non-axios throw, or an unexpected shape).
+ */
+export function getApiErrorMessage(caught: unknown): string | undefined {
+  return (caught as { response?: { data?: { error?: { message?: string } } } })
+    ?.response?.data?.error?.message;
+}

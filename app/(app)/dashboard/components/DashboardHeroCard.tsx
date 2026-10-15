@@ -39,14 +39,22 @@ export function DashboardHeroCard({
             <p className="mt-3 text-sm font-semibold text-coral">
               {t("failedToLoadSummary")}
             </p>
-          ) : isLoading ? (
-            <div
-              className="mt-3 h-10 w-56 animate-pulse rounded bg-white/10"
-              aria-hidden="true"
-            />
           ) : (
+            // Always mounted (even while loading) so this heading — the
+            // dashboard's largest paintable element — renders on first paint
+            // instead of popping in once the summary request resolves.
             <h2 className="mt-3 text-[32px] font-semibold leading-tight tabular-nums md:text-[40px]">
-              {formatCurrency(netWorth, intlLocale)}
+              {isLoading ? (
+                <>
+                  <span className="sr-only">{t("loadingNetWorth")}</span>
+                  <span
+                    className="inline-block h-10 w-56 motion-safe:animate-pulse rounded bg-white/10 align-middle"
+                    aria-hidden="true"
+                  />
+                </>
+              ) : (
+                formatCurrency(netWorth, intlLocale)
+              )}
             </h2>
           )}
         </div>

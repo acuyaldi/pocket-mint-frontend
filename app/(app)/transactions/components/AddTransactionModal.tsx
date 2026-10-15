@@ -24,6 +24,9 @@ import { toast } from "@/components/ui/toaster";
 import { formatCurrency } from "@/lib/utils";
 import { INTL_LOCALE } from "@/i18n/config";
 import { useCategories } from "@/src/features/categories/hooks/useCategories";
+import { useCategorySuggestions } from "@/src/features/categories/hooks/useCategorySuggestions";
+import { CategorySuggestionList } from "@/src/features/categories/components/CategorySuggestionList";
+import { useCreateMerchantMapping } from "@/src/features/merchantMapping/hooks/useMerchantMappings";
 import { usePaylaterRates } from "@/src/features/installments/hooks/useInstallments";
 import {
   ASSET_WALLET_TYPES,
@@ -42,6 +45,7 @@ import {
   selectTransferEndpoint,
   swapTransferEndpoints,
 } from "./transfer-account-picker";
+import { getApiErrorMessage } from "@/lib/api-errors";
 
 type TxType = "EXPENSE" | "INCOME" | "TRANSFER";
 type Tab = TxType;
@@ -292,11 +296,29 @@ export function AddTransactionModal({
   >(null);
   const [adminFeeOverride, setAdminFeeOverride] = useState<string | null>(null);
   const [firstDueDate, setFirstDueDate] = useState("");
+  const [rememberMerchant, setRememberMerchant] = useState(false);
   const [error, setError] = useState("");
 
   const router = useRouter();
   const { data: categories = [] } = useCategories();
   const { data: paylaterRates } = usePaylaterRates();
+  const createMerchantMapping = useCreateMerchantMapping();
+
+  const isTransfer = type === "TRANSFER";
+
+  // Category suggestions — fetched when description changes
+  const [dismissedDesc, setDismissedDesc] = useState("");
+  const suggestionDesc = dismissedDesc === description.trim() ? "" : description;
+  const { data: suggestions = [], isLoading: suggestionsLoading } =
+    useCategorySuggestions(suggestionDesc, isTransfer ? "EXPENSE" : type);
+
+  const handleSelectSuggestion = useCallback(
+    (suggestion: { categoryId: string }) => {
+      setCategoryId(suggestion.categoryId);
+      setDismissedDesc(description.trim());
+    },
+    [description],
+  );
 
   const transferWallets = useMemo(() => getTransferWallets(wallets), [wallets]);
   const hasNoWallets =
@@ -324,11 +346,13 @@ export function AddTransactionModal({
     setWalletId("");
     setToWalletId("");
     setCategoryId("");
+    setDismissedDesc("");
     setIsInstallment(false);
     setInstallmentMonths(3);
     setInterestRateOverride(null);
     setAdminFeeOverride(null);
     setFirstDueDate("");
+    setRememberMerchant(false);
     setError("");
   }, []);
 
@@ -501,8 +525,7 @@ export function AddTransactionModal({
         interestRate: asInstallment ? rateNum : undefined,
       });
     } catch (err) {
-      const message = (err as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(err);
       setError(message ?? t("errors.genericSaveFailed"));
       return;
     }
@@ -514,6 +537,19 @@ export function AddTransactionModal({
         ? t("toastIncomeSuccess")
         : t("toastExpenseSuccess"),
     );
+
+    // Explicit opt-in only (PD-010/Phase 19) — never saved automatically.
+    if (rememberMerchant && !isTransfer && categoryId && description.trim()) {
+      try {
+        await createMerchantMapping.mutateAsync({
+          merchantName: description.trim(),
+          categoryId,
+        });
+      } catch (caught) {
+        const message = getApiErrorMessage(caught);
+        toast(message ?? t("errors.rememberMerchantFailed"), "error");
+      }
+    }
 
     setAmount("");
     setType(initialType ?? "EXPENSE");
@@ -527,6 +563,7 @@ export function AddTransactionModal({
     setInterestRateOverride(null);
     setAdminFeeOverride(null);
     setFirstDueDate("");
+    setRememberMerchant(false);
   };
 
   return (
@@ -741,7 +778,36 @@ export function AddTransactionModal({
                     onChange={(event) => setDescription(event.target.value)}
                     className="h-12 border-border/70 bg-card px-3 text-sm"
                   />
+                  {!isTransfer && (
+                    <CategorySuggestionList
+                      suggestions={suggestions}
+                      isLoading={suggestionsLoading}
+                      hasDescription={description.trim().length >= 3}
+                      onSelect={handleSelectSuggestion}
+                    />
+                  )}
                 </FormField>
+
+                {!isTransfer && description.trim().length > 0 && categoryId && (
+                  <label
+                    htmlFor="add-tx-remember-merchant"
+                    className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-border/60 bg-surface-low px-3 py-2.5 text-sm text-foreground"
+                  >
+                    <input
+                      id="add-tx-remember-merchant"
+                      type="checkbox"
+                      checked={rememberMerchant}
+                      onChange={(event) => setRememberMerchant(event.target.checked)}
+                      className="mt-0.5 size-4 shrink-0 rounded border-border/70 text-primary focus-visible:ring-2 focus-visible:ring-primary/40"
+                    />
+                    <span>
+                      {t("rememberMerchant")}
+                      <span className="block text-xs text-muted-foreground">
+                        {t("rememberMerchantDescription")}
+                      </span>
+                    </span>
+                  </label>
+                )}
 
                 {type === "EXPENSE" &&
                   selectedWallet &&

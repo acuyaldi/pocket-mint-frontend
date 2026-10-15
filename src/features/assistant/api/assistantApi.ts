@@ -1,0 +1,158 @@
+import api from "@/lib/api";
+import type {
+  AssistantClarificationCancelResult,
+  AssistantClarificationSelectResult,
+  AssistantConversationSummary,
+  AssistantConversationStatus,
+  AssistantDraftCancelled,
+  AssistantDraftConfirmed,
+  AssistantPage,
+  AssistantRecoveryStateResponse,
+  AssistantSession,
+  AssistantTurnResult,
+} from "@/src/types/assistant";
+import type {
+  ExecuteAssistantIntentInput,
+  ListAssistantConversationsParams,
+  SendAssistantMessageInput,
+} from "@/src/features/assistant/types";
+
+/**
+ * Assistant API wrappers. Every endpoint here matches an existing route in
+ * `pocket-mint-be/src/routes/assistantRoutes.ts` — there is deliberately no
+ * "create session" or "fetch draft" call: a conversation is created
+ * implicitly by the first message/execute call, and there is no `GET
+ * /assistant/drafts/:draftId` endpoint on the backend today.
+ */
+
+/**
+ * `idempotencyKey` (Phase 27) is optional at this layer only for backward
+ * compatibility with any caller that predates it — every real UI submission
+ * path (`useSendAssistantMessage`) always supplies one. Omitting it reproduces
+ * pre-Phase-27 behavior exactly: no dedup, a fresh turn on every retry.
+ */
+export function sendAssistantMessage(input: SendAssistantMessageInput, idempotencyKey?: string): Promise<AssistantTurnResult> {
+  const body = input.conversationId
+    ? { message: input.message, conversationId: input.conversationId, locale: input.locale }
+    : { message: input.message, locale: input.locale };
+  return api
+    .post<{ success: boolean; data: AssistantTurnResult }>("/assistant/messages", body, {
+      ...(idempotencyKey === undefined ? {} : { headers: { "Idempotency-Key": idempotencyKey } }),
+    })
+    .then((res) => res.data.data);
+}
+
+export function executeAssistantIntent(input: ExecuteAssistantIntentInput, idempotencyKey?: string): Promise<AssistantTurnResult> {
+  return api
+    .post<{ success: boolean; data: AssistantTurnResult }>("/assistant/execute", input, {
+      ...(idempotencyKey === undefined ? {} : { headers: { "Idempotency-Key": idempotencyKey } }),
+    })
+    .then((res) => res.data.data);
+}
+
+export function listAssistantConversations(
+  params: ListAssistantConversationsParams = {}
+): Promise<AssistantPage<AssistantConversationSummary>> {
+  return api
+    .get<{ success: boolean; data: AssistantPage<AssistantConversationSummary> }>("/assistant/conversations", { params })
+    .then((res) => res.data.data);
+}
+
+export function getAssistantSession(
+  conversationId: string,
+  params: { page?: number; limit?: number } = {}
+): Promise<AssistantSession> {
+  return api
+    .get<{ success: boolean; data: AssistantSession }>(`/assistant/conversations/${conversationId}`, { params })
+    .then((res) => res.data.data);
+}
+
+/**
+ * Read-only recovery lookup — rediscovers an unresolved clarification/draft
+ * after a refresh/direct-nav, or reconciles an ambiguous mutation failure.
+ * Same auth/ownership/404 behavior as `getAssistantSession`.
+ */
+export function getAssistantRecoveryState(conversationId: string): Promise<AssistantRecoveryStateResponse> {
+  return api
+    .get<{ success: boolean; data: AssistantRecoveryStateResponse }>(
+      `/assistant/conversations/${conversationId}/recovery-state`
+    )
+    .then((res) => res.data.data);
+}
+
+export function archiveAssistantSession(
+  conversationId: string
+): Promise<{ id: string; status: AssistantConversationStatus; archivedAt: string | null }> {
+  return api
+    .post<{ success: boolean; data: { id: string; status: AssistantConversationStatus; archivedAt: string | null } }>(
+      `/assistant/conversations/${conversationId}/archive`
+    )
+    .then((res) => res.data.data);
+}
+
+export function restoreAssistantSession(
+  conversationId: string
+): Promise<{ id: string; status: AssistantConversationStatus; archivedAt: string | null }> {
+  return api
+    .post<{ success: boolean; data: { id: string; status: AssistantConversationStatus; archivedAt: string | null } }>(
+      `/assistant/conversations/${conversationId}/restore`
+    )
+    .then((res) => res.data.data);
+}
+
+/** Permanent delete — distinct from archive. Removes the conversation and its history; cannot be undone. */
+export function deleteAssistantSession(conversationId: string): Promise<{ id: string }> {
+  return api
+    .delete<{ success: boolean; data: { id: string } }>(`/assistant/conversations/${conversationId}`)
+    .then((res) => res.data.data);
+}
+
+/** Fields a user may override when confirming a draft. All optional — missing fields use the draft's original values. */
+export interface DraftConfirmOverrides {
+  amount?: number;
+  walletId?: string;
+  categoryId?: string;
+  description?: string;
+  /** YYYY-MM-DD */
+  date?: string;
+}
+
+export function confirmAssistantDraft(draftId: string, idempotencyKey: string, overrides?: DraftConfirmOverrides): Promise<AssistantDraftConfirmed> {
+  return api
+    .post<{ success: boolean; data: AssistantDraftConfirmed }>(
+      `/assistant/drafts/${draftId}/confirm`,
+      overrides ?? undefined,
+      { headers: { "Idempotency-Key": idempotencyKey } }
+    )
+    .then((res) => res.data.data);
+}
+
+export function cancelAssistantDraft(draftId: string): Promise<AssistantDraftCancelled> {
+  return api
+    .post<{ success: boolean; data: AssistantDraftCancelled }>(`/assistant/drafts/${draftId}/cancel`)
+    .then((res) => res.data.data);
+}
+
+export function selectAssistantClarification(
+  conversationId: string,
+  clarificationId: string,
+  payload: { optionToken: string } | { fields: Record<string, string> }
+): Promise<AssistantClarificationSelectResult> {
+  return api
+    .post<{ success: boolean; data: AssistantClarificationSelectResult }>(
+      `/assistant/conversations/${conversationId}/clarifications/${clarificationId}/select`,
+      payload
+    )
+    .then((res) => res.data.data);
+}
+
+export function cancelAssistantClarification(
+  conversationId: string,
+  clarificationId: string
+): Promise<AssistantClarificationCancelResult> {
+  return api
+    .post<{ success: boolean; data: AssistantClarificationCancelResult }>(
+      `/assistant/conversations/${conversationId}/clarifications/${clarificationId}/cancel`
+    )
+    .then((res) => res.data.data);
+}

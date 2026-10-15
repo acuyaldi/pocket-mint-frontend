@@ -77,30 +77,31 @@ describe("exportTransactionsCsv (PM-EXPORT) — download-flow contract", () => {
     const revokeIndex = hooksSource.indexOf("URL.revokeObjectURL(url)");
     expect(createIndex).toBeGreaterThan(-1);
     expect(revokeIndex).toBeGreaterThan(createIndex);
-    // revokeObjectURL must sit in a `finally` that wraps the DOM/click work, not after it unconditionally.
     const betweenCreateAndRevoke = hooksSource.slice(createIndex, revokeIndex);
     expect(betweenCreateAndRevoke).toMatch(/finally\s*{\s*$/m);
   });
 });
 
-describe("Analytics export button — click and error handling", () => {
-  it("guards against parallel downloads while a request is pending", () => {
-    expect(analyticsSource).toContain("disabled={isExporting}");
-    expect(analyticsSource).toContain("if (isExporting) return;");
+describe("Analytics v2 export button — click and error handling", () => {
+  it("guards against parallel downloads while a request is pending or period unsupported", () => {
+    // Button is disabled when isExporting=true OR the current period has no export mapping
+    expect(analyticsSource).toContain("disabled={isExporting || !exportPeriod}");
+    expect(analyticsSource).toContain("if (isExporting || !exportPeriod) return;");
   });
 
-  it("shows the existing toast error feedback on failure, without a page reload", () => {
-    expect(analyticsSource).toContain('toast(message ?? t("exportFailed"), "error")');
+  it("shows the localized toast error on failure, without a page reload", () => {
+    expect(analyticsSource).toContain('toast(t("exportFailed"), "error")');
     expect(analyticsSource).not.toMatch(/location\.(href|reload)/);
     expect(analyticsSource).not.toContain("window.location");
   });
 
-  it("always clears the pending state, success or failure", () => {
-    const clickHandler = analyticsSource.slice(
-      analyticsSource.indexOf("onClick={async () => {"),
-      analyticsSource.indexOf("}}", analyticsSource.indexOf("onClick={async () => {")) + 2,
+  it("always clears the pending state in a finally block", () => {
+    // handleExport uses try/catch/finally with setIsExporting(false) in finally
+    const handleExport = analyticsSource.slice(
+      analyticsSource.indexOf("const handleExport = async () => {"),
+      analyticsSource.indexOf("// --- Derived loading state"),
     );
-    expect(clickHandler).toContain("finally {");
-    expect(clickHandler).toContain("setIsExporting(false);");
+    expect(handleExport).toContain("finally {");
+    expect(handleExport).toContain("setIsExporting(false);");
   });
 });

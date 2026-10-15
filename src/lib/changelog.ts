@@ -7,6 +7,32 @@ import type { Release, ReleaseChanges, ReleaseStatus } from "@/src/types/changel
  */
 export const RELEASES: Release[] = [
   {
+    version: "0.6.0",
+    title: "Asisten Pencatatan Transaksi",
+    publishedAt: "2026-10-15",
+    summary:
+      "Pocket Mint kini punya Asisten: catat transaksi dengan mengetik atau mengirim pesan Telegram, lalu tinjau dan koreksi draf sebelum disimpan. Riwayat percakapan dapat diarsipkan, dipulihkan, atau dihapus. Analitik tampil dengan filter periode dan rincian baru, dan kategori transaksi kini bisa dibantu saran otomatis serta pemetaan nama merchant.",
+    status: "beta",
+    changes: {
+      added: [
+        "Asisten: catat transaksi pemasukan/pengeluaran dengan bahasa natural lewat halaman Asisten atau Telegram yang terhubung ke akun Anda",
+        "Asisten menyiapkan draf transaksi untuk ditinjau — jumlah, dompet, kategori, dan tanggal dapat dikoreksi sebelum dikonfirmasi dan disimpan",
+        "Riwayat percakapan Asisten: cari, filter (aktif/diarsipkan), arsipkan, pulihkan, atau hapus percakapan sebelumnya",
+        "Pesan dari Telegram ditandai dengan indikator sumber dan status pengiriman balasan pada riwayat percakapan",
+        "Saran kategori otomatis saat mencatat transaksi, dengan tingkat keyakinan (tinggi/sedang/rendah)",
+        "Pemetaan nama merchant ke kategori: kelola pemetaan manual di halaman Akun untuk membantu Asisten mengenali transaksi serupa di kemudian hari",
+        "Hubungkan dan putuskan akun Telegram dari halaman Akun",
+      ],
+      improved: [
+        "Halaman Analitik dirombak dengan filter periode yang lebih fleksibel (bulan ini, bulan lalu, 3/6 bulan terakhir, tahun ini, atau rentang kustom) yang tersimpan di URL",
+        "Analitik kini menampilkan rincian tren arus kas, kategori, dompet, performa anggaran, dan penelusuran transaksi dalam tampilan terpisah",
+      ],
+    },
+    knownIssues: [
+      "Koreksi draf transaksi pada halaman Asisten belum tersimpan jika halaman dimuat ulang saat draf masih dalam proses konfirmasi",
+    ],
+  },
+  {
     version: "0.5.0",
     title: "Anggaran Bulanan per Kategori",
     publishedAt: "2026-07-22",

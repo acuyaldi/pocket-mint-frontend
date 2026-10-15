@@ -18,6 +18,15 @@
       "loading": "Loading...",
       "empty": "No data yet"
     },
+    "snackbar": {
+      "close": "Close notification",
+      "regionLabel": "Notifications"
+    },
+    "errors": {
+      "requestFailed": "Something went wrong. Please try again.",
+      "network": "You appear to be offline. Check your connection and try again.",
+      "timeout": "The request took too long. Please try again."
+    },
     "currencyPrefix": "IDR"
   },
   "nav": {
@@ -39,7 +48,8 @@
     "logoutFailed": "Sign-out failed — check your connection and try again.",
     "loggingOut": "Signing you out…",
     "savingGoals": "Saving Goals",
-    "budgets": "Budgets"
+    "budgets": "Budgets",
+    "assistant": "Assistant"
   },
   "notificationCenter": {
     "title": "Notifications",
@@ -209,7 +219,31 @@
       "wrongCurrentPassword": "Current password is incorrect."
     },
     "successChanged": "Password changed successfully. Redirecting to sign in...",
-    "successChangedRedirectMessage": "Password changed successfully. Please sign in with your new password."
+    "successChangedRedirectMessage": "Password changed successfully. Please sign in with your new password.",
+    "merchantMapping": {
+      "title": "Merchant Mapping",
+      "subtitle": "Manage merchants that always map to a specific category."
+    },
+    "telegram": {
+      "title": "Telegram",
+      "subtitle": "Link your Telegram account to message the Assistant directly.",
+      "loading": "Checking connection status...",
+      "statusLinked": "Connected to Telegram",
+      "statusNotLinked": "Not connected yet.",
+      "generate": "Generate linking code",
+      "generating": "Generating...",
+      "instructions": "Open Telegram, message the Pocket Mint bot, and send the command below.",
+      "copy": "Copy command",
+      "expiresAt": "Expires at {time}",
+      "disconnect": "Disconnect",
+      "disconnectConfirm": {
+        "title": "Disconnect Telegram?",
+        "description": "The Assistant will no longer respond to messages from this Telegram account until you link it again."
+      },
+      "errors": {
+        "generateFailed": "Could not generate a linking code. Please try again."
+      }
+    }
   },
   "authErrors": {
     "invalidCredentials": "Incorrect email or password.",
@@ -233,6 +267,7 @@
   "dashboard": {
     "financialPosition": "Net financial position",
     "failedToLoadSummary": "Failed to load your financial summary.",
+    "loadingNetWorth": "Loading net worth…",
     "lastUpdated": "Last updated: just now",
     "totalAssets": "Total assets",
     "totalDebts": "Total debt",
@@ -723,11 +758,14 @@
         "transferFromCreditNotAllowed": "Transfers can't be made from a credit card or paylater account.",
         "incomeToDebtNotAllowed": "Income can't be recorded to a credit card or paylater account.",
         "insufficientBalance": "{name}'s balance isn't enough.",
-        "genericSaveFailed": "Couldn't save the transaction. Try again."
+        "genericSaveFailed": "Couldn't save the transaction. Try again.",
+        "rememberMerchantFailed": "Failed to save merchant mapping. The transaction was still saved."
       },
       "toastTransferSuccess": "Transfer recorded",
       "toastIncomeSuccess": "Income recorded",
-      "toastExpenseSuccess": "Expense recorded"
+      "toastExpenseSuccess": "Expense recorded",
+      "rememberMerchant": "Remember this merchant",
+      "rememberMerchantDescription": "Future transactions with this description will be suggested this category first."
     },
     "accountPicker": {
       "noWalletsAvailable": "No transfer wallets available.",
@@ -775,50 +813,83 @@
   "analytics": {
     "pageTitle": "Analytics",
     "pageDescription": "Track your financial trends and performance",
-    "periods": {
-      "month": "This month",
-      "quarter": "3 months",
-      "sixMonths": "6 months"
-    },
+    "loading": "Loading analytics…",
     "exportReport": "Export report",
     "exportFailed": "Report export failed. Try again.",
-    "realData": "Real data",
-    "savingsRate": "Savings rate",
-    "savingsRateHelper": "{amount} cash flow left this period",
-    "cashFlow": "Cash flow",
-    "cashFlowHelper": "{income} in · {expenses} out",
-    "debtRatio": "Debt ratio",
-    "debtRatioHelper": "{debt} of {limit} limit",
-    "cashFlowChart": {
-      "title": "Cash flow",
-      "subtitle": "Income and expenses over the last 6 months",
+    "periodSelector": {
+      "label": "Select reporting period",
+      "options": {
+        "currentMonth": "This month",
+        "previousMonth": "Last month",
+        "last3Months": "3 months",
+        "last6Months": "6 months",
+        "currentYear": "This year",
+        "custom": "Custom"
+      },
+      "startDate": "Start",
+      "endDate": "End",
+      "apply": "Apply",
+      "errorStartAfterEnd": "Start date must be before end date.",
+      "errorInvalidRange": "Enter valid start and end dates."
+    },
+    "overview": {
       "income": "Income",
-      "expenses": "Expenses",
-      "empty": "No transactions yet to build a cash flow chart.",
-      "incomeTooltip": "Income {month}: {amount}",
-      "expenseTooltip": "Expenses {month}: {amount}"
+      "expense": "Expense",
+      "netCashFlow": "Net cash flow",
+      "transactionCount": "Transactions",
+      "changeVsPrevious": "{percent} ({amount} vs previous period)",
+      "noComparison": "No previous data to compare"
     },
-    "allocation": {
-      "title": "Spending allocation",
-      "subtitle": "Largest categories for the selected period",
-      "empty": "No expenses yet for this period.",
+    "trends": {
+      "title": "Cash flow",
+      "subtitle": "Income and expense trends over the selected period",
+      "income": "Income",
+      "expense": "Expense",
+      "net": "Net",
+      "empty": "No transactions for this period.",
+      "summaryUp": "Cash flow trended up {percent} over this period.",
+      "summaryDown": "Cash flow trended down {percent} over this period.",
+      "summaryFlat": "Cash flow was relatively stable this period."
+    },
+    "categories": {
+      "title": "Spending by category",
+      "subtitle": "Largest expense categories for the selected period",
+      "typeLabel": "Type",
+      "options": {
+        "EXPENSE": "Expenses",
+        "INCOME": "Incomes"
+      },
+      "uncategorized": "Uncategorized",
+      "empty": "No {type} transactions for this period.",
+      "percentageOfTotal": "{percent} of total"
+    },
+    "wallets": {
+      "title": "Wallet activity",
+      "subtitle": "Income, expense, and net per wallet",
+      "columns": {
+        "wallet": "Wallet",
+        "income": "Income",
+        "expense": "Expense",
+        "net": "Net"
+      },
+      "empty": "No wallet activity for this period."
+    },
+    "budgetPerformance": {
+      "title": "Budget performance",
+      "subtitle": "Spending against active budgets this month",
+      "empty": "No active budgets.",
+      "limitLabel": "{limit} limit",
+      "spentLabel": "{spent} spent",
+      "remainingLabel": "{remaining} left"
+    },
+    "drillDown": {
+      "title": "Transactions",
+      "subtitle": "{count} transactions matching the current filters",
+      "empty": "No transactions match the current filters.",
+      "close": "Close",
+      "page": "Page {page} of {total}",
+      "viewAll": "View all transactions",
       "noCategory": "No category"
-    },
-    "composition": {
-      "title": "Wallet composition",
-      "subtitle": "Assets and liabilities from current balances",
-      "assets": "Assets",
-      "liabilities": "Liabilities"
-    },
-    "insights": {
-      "title": "Insights",
-      "subtitle": "Automatic summary from the data available",
-      "noTransactions": "No transactions yet for this period.",
-      "positiveCashFlow": "Cash flow is positive this period, at {amount}.",
-      "negativeCashFlow": "Expenses exceeded income by {amount}.",
-      "expenseRatio": "Spending is at {percent} of income.",
-      "topCategory": "Biggest category: {label}, at {amount}.",
-      "activeInstallments": "{count} active installments need monitoring."
     }
   },
   "changelog": {
@@ -916,6 +987,235 @@
         "help": "Help",
         "contact": "Contact"
       }
+    }
+  },
+  "merchantMappings": {
+    "pageTitle": "Merchant Mapping",
+    "pageDescription": "Map merchant names to your favorite categories — category suggestions will follow this mapping first.",
+    "addMapping": "Add Mapping",
+    "searchPlaceholder": "Search merchants...",
+    "searchAria": "Search merchant mappings",
+    "loading": "Loading merchant mappings...",
+    "loadError": "Failed to load merchant mappings. Try again.",
+    "empty": "No merchant mappings yet.",
+    "emptyDescription": "Add your first merchant so future transactions are automatically suggested the right category.",
+    "noSearchResults": "No merchants match \"{search}\".",
+    "edit": "Edit",
+    "delete": "Delete",
+    "editAria": "Edit mapping for {name}",
+    "deleteAria": "Delete mapping for {name}",
+    "toastCreated": "Merchant mapping created.",
+    "toastUpdated": "Merchant mapping updated.",
+    "toastDeleted": "Merchant mapping deleted.",
+    "toastDeleteFailed": "Failed to delete merchant mapping. Please try again.",
+    "errors": {
+      "BAD_REQUEST": "The request is incomplete or invalid. Check the form and try again.",
+      "INVALID_MERCHANT_NAME": "Merchant name must contain at least one letter or digit.",
+      "CATEGORY_NOT_FOUND": "This category is no longer available.",
+      "DUPLICATE_MERCHANT": "This merchant is already mapped to another category.",
+      "NOT_FOUND": "This merchant mapping no longer exists or is not accessible.",
+      "GENERIC": "Something went wrong. Please try again."
+    }
+  },
+  "merchantMappingModals": {
+    "create": {
+      "title": "Add Merchant Mapping",
+      "description": "Map a merchant name to a category. Future transactions with this name will be suggested that category first.",
+      "merchantName": "Merchant Name",
+      "merchantNamePlaceholder": "e.g. Bu Siti's Warung",
+      "category": "Category",
+      "categoryPlaceholder": "Choose a category",
+      "submit": "Save Mapping"
+    },
+    "edit": {
+      "title": "Edit Merchant Mapping",
+      "description": "Update the merchant name or target category.",
+      "merchantName": "Merchant Name",
+      "merchantNamePlaceholder": "e.g. Bu Siti's Warung",
+      "category": "Category",
+      "categoryPlaceholder": "Choose a category",
+      "submit": "Save Changes"
+    },
+    "delete": {
+      "title": "Delete Merchant Mapping?",
+      "description": "The mapping for \"{name}\" will be deleted. Existing transactions are unaffected, and suggestions for this merchant will fall back to keyword matching.",
+      "confirm": "Delete"
+    }
+  },
+  "assistant": {
+    "pageTitle": "Assistant",
+    "pageDescription": "A conversational assistant for your finances.",
+    "underDevelopment": "Assistant is under development.",
+    "conversation": {
+      "regionLabel": "Assistant conversation",
+      "listLabel": "Conversation messages",
+      "historyLoading": "Loading conversation...",
+      "retry": "Retry",
+      "authorUser": "You",
+      "authorAssistant": "Assistant",
+      "authorSystem": "System",
+      "channelTelegram": "Sent from Telegram",
+      "deliveryDelivering": "Delivering to Telegram",
+      "deliverySent": "Delivered to Telegram",
+      "deliveryFailed": "Delivery to Telegram failed",
+      "emptyTitle": "Start a new conversation",
+      "emptyDescription": "Describe one income or expense in your own words and Pocket Mint Assistant will help you record it.",
+      "examplesLabel": "Examples",
+      "example1": "bayar internet 350 ribu dari BCA",
+      "example2": "gaji bulan ini masuk ke BCA 8 juta",
+      "pendingResponse": "Waiting for the assistant's response...",
+      "transientUnavailable": "The pending clarification for this conversation couldn't be restored after reloading. You can continue by sending a new instruction.",
+      "newConversation": "New conversation",
+      "resetBlocked": "Resolve the current clarification or draft before starting a new conversation.",
+      "composerDisabledClarification": "Answer the clarification above before sending a new instruction.",
+      "composerDisabledDraft": "Confirm or cancel the draft above before sending a new instruction."
+    },
+    "command": {
+      "label": "What would you like to record?",
+      "placeholder": "e.g. bayar internet 350 ribu dari BCA",
+      "helper": "Describe one income or expense in your own words.",
+      "submit": "Send",
+      "submitting": "Sending"
+    },
+    "clarification": {
+      "cancelling": "Cancelling",
+      "cancelSuccess": "Clarification cancelled.",
+      "title": {
+        "wallet": "Choose wallet",
+        "merchant": "Choose merchant",
+        "category": "Choose category"
+      },
+      "description": {
+        "wallet": "Select the wallet that should fund this transaction.",
+        "merchant": "Select the merchant this transaction refers to.",
+        "category": "Select one of your existing categories."
+      },
+      "guided": {
+        "field": {
+          "category": "Category",
+          "date": "Date"
+        },
+        "submit": "Continue"
+      }
+    },
+    "completion": {
+      "newInstruction": "New instruction"
+    },
+    "errors": {
+      "invalidInput": "That instruction couldn't be understood. Try rephrasing it.",
+      "tooLong": "That instruction is too long. Please shorten it.",
+      "providerUnavailable": "Assistant is temporarily unavailable. Please try again shortly.",
+      "clarificationExpired": "This clarification has expired. Start over.",
+      "clarificationConsumed": "This clarification was already used. Start over.",
+      "invalidOption": "That option is no longer valid. Start over.",
+      "draftConflict": "This draft can no longer be confirmed or cancelled.",
+      "idempotencyConflict": "This action was already submitted.",
+      "generic": "Something went wrong. Please try again."
+    },
+    "draftReview": {
+      "income": "Income",
+      "expense": "Expense",
+      "wallet": "Wallet",
+      "category": "Category",
+      "merchant": "Merchant",
+      "date": "Date",
+      "notes": "Notes",
+      "expiresAt": "Expires",
+      "status": {
+        "PENDING_CONFIRMATION": "Awaiting confirmation",
+        "COMMITTED": "Confirmed",
+        "CANCELLED": "Cancelled",
+        "EXPIRED": "Expired",
+        "FAILED": "Failed"
+      },
+      "confirm": "Confirm",
+      "confirming": "Confirming",
+      "cancel": "Cancel",
+      "cancelling": "Cancelling",
+      "confirmSuccess": "Transaction saved.",
+      "cancelSuccess": "Draft cancelled.",
+      "edit": "Edit",
+      "saveChanges": "Save Changes",
+      "saving": "Saving",
+      "cancelEdit": "Cancel",
+      "confirmTransaction": "Save Transaction",
+      "reviewHeading": "Transaction Review",
+      "genericError": "Something went wrong. Please try again."
+    },
+    "recovery": {
+      "loading": "Checking this conversation's recovery status before showing any clarification or draft that may still be pending after the page reload. You are still in the same conversation.",
+      "clarificationRecoveredTitle": "You still have a pending question in this conversation",
+      "composerDisabled": "Check what happened with your previous action above before sending a new instruction.",
+      "turnRunning": "Your previous message in this conversation is still being processed. Please wait before sending another one.",
+      "composerDisabledTurnRunning": "Your previous message is still being processed. Please wait before sending another one."
+    },
+    "outcomeUnknown": {
+      "heading": "We couldn't confirm what happened",
+      "description": "Your previous action may or may not have gone through. It hasn't failed and it hasn't necessarily succeeded either. Check the conversation to see the real outcome, or try again if it's safe to do so.",
+      "check": "Check conversation",
+      "checking": "Checking",
+      "retry": "Try again",
+      "retrying": "Trying again",
+      "retrySuccess": "Done."
+    },
+    "history": {
+      "title": "Conversation history",
+      "openLabel": "Open conversation history",
+      "listLabel": "Previous conversations",
+      "newConversation": "New conversation",
+      "activeConversationLabel": "active",
+      "statusActive": "Active",
+      "conversationFromDate": "Conversation from {date}",
+      "loading": "Loading conversations...",
+      "loadingMore": "Loading more",
+      "emptyAll": "No previous conversations yet.",
+      "emptyActive": "No active conversations yet.",
+      "emptyArchived": "No archived conversations yet.",
+      "error": "Couldn't load conversation history.",
+      "retry": "Retry",
+      "loadMore": "Load more",
+      "archivedStatus": "Archived",
+      "telegramBadge": "Also used from Telegram",
+      "searchLoaded": "Search loaded conversations",
+      "searchPlaceholder": "Search previews already loaded",
+      "filterLabel": "History filters",
+      "filterAll": "All",
+      "filterActive": "Active",
+      "filterArchived": "Archived",
+      "showingLoaded": "Loaded {loaded} of {total} conversations",
+      "noSearchResults": "No conversations match this search.",
+      "selectConversation": "Select conversation",
+      "selectAllLoaded": "Select all loaded conversations",
+      "clearSelection": "Clear selection",
+      "selectedCount": "{count, plural, one {# conversation selected} other {# conversations selected}}",
+      "actionsFor": "Actions for {label}",
+      "archive": "Archive",
+      "archiving": "Archiving",
+      "archiveTitle": "{count, plural, one {Archive this conversation?} other {Archive # conversations?}}",
+      "archiveDescription": "Archived conversations are kept in history but can no longer be continued. {active}Financial transactions, wallets, categories, and notes will not be changed.",
+      "archiveActiveWarning": "The active conversation will close. ",
+      "archiveConfirm": "Archive",
+      "archiveCancel": "Cancel",
+      "archiveSuccess": "{count, plural, one {Conversation archived.} other {Conversations archived.}}",
+      "archiveError": "Conversation history could not be updated. Please try again.",
+      "restore": "Restore",
+      "restoring": "Restoring",
+      "restoreSuccess": "Conversation restored.",
+      "restoreError": "The conversation could not be restored. Please try again.",
+      "delete": "Delete",
+      "deleting": "Deleting",
+      "deleteTitle": "{count, plural, one {Delete this conversation?} other {Delete # conversations?}}",
+      "deleteDescription": "{count, plural, one {This conversation will be permanently deleted and cannot be restored.} other {# conversations will be permanently deleted and cannot be restored.}}",
+      "deleteConfirm": "{count, plural, one {Delete} other {Delete # conversations}}",
+      "deleteCancel": "Cancel",
+      "deleteSuccess": "{count, plural, one {Conversation deleted.} other {# conversations deleted.}}",
+      "deleteError": "The conversation could not be deleted. Please try again.",
+      "contractNote": "Archive, restore, and permanent deletion are available now.",
+      "permanentDeleteNote": "Deleted conversations are permanently removed and cannot be restored.",
+      "switchBlockedTitle": "Switch conversations?",
+      "switchBlockedDescription": "You have an unresolved clarification or draft in this conversation. Switching will clear it here in your browser, but it stays unchanged on the server — you can come back to it later.",
+      "switchConfirm": "Switch anyway",
+      "switchCancel": "Stay here"
     }
   }
 }

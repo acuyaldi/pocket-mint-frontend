@@ -29,13 +29,15 @@ const transactionsHookSource = readFileSync(root + "src/features/transactions/ho
 const typesSource = readFileSync(root + "src/types/budget.ts", "utf8");
 const sidebarSource = readFileSync(root + "components/layout/app-sidebar.tsx", "utf8");
 const bottomNavSource = readFileSync(root + "components/layout/bottom-nav.tsx", "utf8");
+const navItemsSource = readFileSync(root + "components/layout/navigation-items.ts", "utf8");
 
 describe("budget navigation", () => {
   it("adds a first-class nav entry on both desktop and mobile, matching each other", () => {
     for (const source of [sidebarSource, bottomNavSource]) {
-      expect(source).toContain('href: "/anggaran"');
-      expect(source).toContain('label: t("budgets")');
+      expect(source).toContain("getAppNavigationItems(t)");
     }
+    expect(navItemsSource).toContain('href: "/anggaran"');
+    expect(navItemsSource).toContain('label: t("budgets")');
     expect(idMessages.nav.budgets).toBe("Anggaran");
     expect(enMessages.nav.budgets).toBeTruthy();
   });

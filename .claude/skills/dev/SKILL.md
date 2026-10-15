@@ -1,23 +1,21 @@
 ---
 name: dev
-description: Start Pocket Mint's frontend and backend dev servers together. Use when the user asks to run, start, or launch the app locally, or wants to test a change end to end.
+description: Start Pocket Mint's frontend dev server. Use when the user asks to run, start, or launch the app locally, or wants to test a change end to end.
 disable-model-invocation: true
 ---
 
-Start both apps for local development. There is no root script that does this — each app is run independently.
+Start the frontend for local development:
 
-1. Start the backend (Express + Prisma) in the background:
-   ```
-   cd apps/backend && npm run dev
-   ```
-   This uses `ts-node-dev` with auto-respawn on file changes.
+```
+npm run dev
+```
 
-2. Start the frontend (Next.js) in the background:
-   ```
-   cd apps/frontend && npm run dev
-   ```
-   This runs on **port 4000** (not the Next.js default 3000).
+This runs Next.js on **port 4000** (not the default 3000).
 
-3. Report both URLs back to the user once ready (backend port comes from `apps/backend/.env`'s `PORT`; frontend is `http://localhost:4000`).
+The backend is a separate repository (`pocket-mint-be`), not part of this
+repo — start it independently if the task needs a live API. Point
+`NEXT_PUBLIC_API_URL` (`.env`) at wherever that backend is running.
 
-If either `npm install` hasn't been run in that app's directory, run it first — the backend's `postinstall` also runs `prisma generate`, which is required before the backend will start successfully.
+If `npm install` hasn't been run yet, run it first.
+
+Report the URL back to the user once ready: `http://localhost:4000`.

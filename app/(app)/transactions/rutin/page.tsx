@@ -19,6 +19,7 @@ import {
 import type { RecurringTransaction } from "@/src/types/recurringTransaction";
 import { RecurringTransactionModal, type RecurringTransactionFormValues } from "./components/RecurringTransactionModal";
 import DeleteRecurringModal from "./components/DeleteRecurringModal";
+import { getApiErrorMessage } from "@/lib/api-errors";
 
 function reminderValueKey(reminderOffsetDays: number): "reminderOnDueDate" | "reminder1Day" | "reminder3Days" | "reminderLegacy" {
   if (reminderOffsetDays === 0) return "reminderOnDueDate";
@@ -94,8 +95,7 @@ export default function RecurringTransactionsPage() {
       await deleteRecurring.mutateAsync(deleteTarget.id);
       setDeleteTarget(null);
     } catch (caught) {
-      const message = (caught as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(caught);
       toast(message ?? t("toastDeleteFailed"), "error");
     } finally {
       setIsDeleting(false);

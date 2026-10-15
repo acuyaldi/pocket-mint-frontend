@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { AppModal, ModalCancelButton, ModalSubmitButton } from "@/components/ui/app-modal";
 import { FormField, FormErrorMessage } from "@/components/ui/form-field";
 import type { SavingGoal } from "@/src/types/savingGoal";
+import { getApiErrorMessage } from "@/lib/api-errors";
 
 const formatRupiahVisual = (value: string): string => {
   const rawNumber = value.replace(/\D/g, "");
@@ -43,8 +44,7 @@ export function UpdateProgressModal({ goal, isSaving, onClose, onSubmit }: Updat
     try {
       await onSubmit(parseRupiahToNumber(currentAmount));
     } catch (err) {
-      const message = (err as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(err);
       setError(message ?? t("errors.genericSaveFailed"));
     }
   };

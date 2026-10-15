@@ -1,0 +1,1336 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+import { describe, expect, it } from "vitest";
+
+/**
+ * Source-text contract tests, matching this repo's convention (see
+ * `tests/budgets.test.ts` header) — no jsdom/testing-library is installed,
+ * so these assert exact substrings in the real source rather than rendering
+ * components or calling hooks.
+ */
+
+import idMessages from "@/messages/id.json";
+import enMessages from "@/messages/en.json";
+import { parseAssistantDraftParam, isAssistantDraft } from "@/src/features/assistant/utils/draftParam";
+import { buildDraftEditOverrides } from "@/src/features/assistant/utils/draftEdit";
+import { isClarificationRequest } from "@/src/features/assistant/utils/clarification";
+import { readAssistantErrorMessage, classifyAssistantMutationError } from "@/src/features/assistant/utils/errors";
+import { isAssistantActionRetrySafe, resolveRecoveryState } from "@/src/features/assistant/types/recovery";
+import { AuthenticationRequiredError } from "@/lib/api-errors";
+import type { AssistantDraft, AssistantRecoveryStateResponse, ClarificationRequest } from "@/src/types/assistant";
+
+const root = fileURLToPath(new URL("../", import.meta.url));
+const apiSource = readFileSync(root + "src/features/assistant/api/assistantApi.ts", "utf8");
+const sessionHookSource = readFileSync(root + "src/features/assistant/hooks/useAssistantSession.ts", "utf8");
+const messagesHookSource = readFileSync(root + "src/features/assistant/hooks/useAssistantMessages.ts", "utf8");
+const draftHookSource = readFileSync(root + "src/features/assistant/hooks/useAssistantDraft.ts", "utf8");
+const typesSource = readFileSync(root + "src/types/assistant.ts", "utf8");
+const featureTypesSource = readFileSync(root + "src/features/assistant/types/index.ts", "utf8");
+const pageSource = readFileSync(root + "app/(app)/assistant/page.tsx", "utf8");
+const sidebarSource = readFileSync(root + "components/layout/app-sidebar.tsx", "utf8");
+const bottomNavSource = readFileSync(root + "components/layout/bottom-nav.tsx", "utf8");
+const navItemsSource = readFileSync(root + "components/layout/navigation-items.ts", "utf8");
+const libApiSource = readFileSync(root + "lib/api.ts", "utf8");
+const draftSummaryCardSource = readFileSync(root + "src/features/assistant/components/DraftSummaryCard.tsx", "utf8");
+const draftActionBarSource = readFileSync(root + "src/features/assistant/components/DraftActionBar.tsx", "utf8");
+const commandFormSource = readFileSync(root + "src/features/assistant/components/AssistantCommandForm.tsx", "utf8");
+const clarificationCardSource = readFileSync(root + "src/features/assistant/components/ClarificationCard.tsx", "utf8");
+const clarificationOptionsSource = readFileSync(
+  root + "src/features/assistant/components/ClarificationOptions.tsx",
+  "utf8"
+);
+const guidedClarificationCardSource = readFileSync(
+  root + "src/features/assistant/components/GuidedClarificationCard.tsx",
+  "utf8"
+);
+const resultStateSource = readFileSync(root + "src/features/assistant/components/AssistantResultState.tsx", "utf8");
+const flowHookSource = readFileSync(
+  root + "src/features/assistant/hooks/useAssistantConversationFlow.ts",
+  "utf8"
+);
+const conversationSource = readFileSync(
+  root + "src/features/assistant/components/AssistantConversation.tsx",
+  "utf8"
+);
+const messageSource = readFileSync(root + "src/features/assistant/components/AssistantMessage.tsx", "utf8");
+const messageListSource = readFileSync(
+  root + "src/features/assistant/components/AssistantMessageList.tsx",
+  "utf8"
+);
+const errorsSource = readFileSync(root + "src/features/assistant/utils/errors.ts", "utf8");
+const recoveryTypesSource = readFileSync(root + "src/features/assistant/types/recovery.ts", "utf8");
+const reconciliationSource = readFileSync(
+  root + "src/features/assistant/hooks/useAssistantReconciliation.ts",
+  "utf8"
+);
+const recoveryBannerSource = readFileSync(
+  root + "src/features/assistant/components/AssistantRecoveryBanner.tsx",
+  "utf8"
+);
+const outcomeUnknownSource = readFileSync(
+  root + "src/features/assistant/components/AssistantOutcomeUnknown.tsx",
+  "utf8"
+);
+const historySource = readFileSync(
+  root + "src/features/assistant/components/AssistantConversationHistory.tsx",
+  "utf8"
+);
+const historyListSource = readFileSync(
+  root + "src/features/assistant/components/AssistantConversationHistoryList.tsx",
+  "utf8"
+);
+const historyTriggerSource = readFileSync(
+  root + "src/features/assistant/components/AssistantConversationHistoryTrigger.tsx",
+  "utf8"
+);
+
+const VALID_CLARIFICATION: ClarificationRequest = {
+  clarificationId: "clar-1",
+  entityType: "wallet",
+  prompt: "Which wallet did you mean?",
+  options: [
+    { token: "tok-1", label: "BCA", discriminator: "BANK" },
+    { token: "tok-2", label: "Cash" },
+  ],
+  expiresAt: "2026-07-25T15:30:00.000Z",
+};
+
+const VALID_DRAFT: AssistantDraft = {
+  draftId: "draft-1",
+  status: "PENDING_CONFIRMATION",
+  expiresAt: "2026-07-25T15:30:00.000Z",
+  confirmationRequired: true,
+  renderedText: "Rp50.000 expense at Indomaret from BCA.",
+  preview: {
+    type: "EXPENSE",
+    amount: 50000,
+    wallet: "BCA",
+    walletId: "wallet-1",
+    categoryId: "cat-1",
+    category: "Makanan",
+    merchant: "Indomaret",
+    date: "2026-07-25",
+    transactionDate: "2026-07-25",
+  },
+};
+
+describe("assistant navigation", () => {
+  it("adds a first-class nav entry on both desktop and mobile, matching each other", () => {
+    for (const source of [sidebarSource, bottomNavSource]) {
+      expect(source).toContain("getAppNavigationItems(t)");
+    }
+    expect(navItemsSource).toContain('href: "/assistant"');
+    expect(navItemsSource).toContain('label: t("assistant")');
+    expect(enMessages.nav.assistant).toBeTruthy();
+    expect(idMessages.nav.assistant).toBeTruthy();
+  });
+});
+
+describe("assistant API contract", () => {
+  it("reuses the shared lib/api.ts client — no second HTTP client", () => {
+    expect(apiSource).toContain('import api from "@/lib/api";');
+    expect(apiSource).not.toContain("axios.create");
+  });
+
+  it("hits only real backend routes under /assistant", () => {
+    expect(apiSource).toContain('"/assistant/messages"');
+    expect(apiSource).toContain('"/assistant/execute"');
+    expect(apiSource).toContain('"/assistant/conversations"');
+    expect(apiSource).toContain("`/assistant/conversations/${conversationId}`");
+    expect(apiSource).toContain("`/assistant/conversations/${conversationId}/archive`");
+    expect(apiSource).toContain("`/assistant/drafts/${draftId}/confirm`");
+    expect(apiSource).toContain("`/assistant/drafts/${draftId}/cancel`");
+    expect(apiSource).toContain(
+      "`/assistant/conversations/${conversationId}/clarifications/${clarificationId}/select`"
+    );
+    expect(apiSource).toContain(
+      "`/assistant/conversations/${conversationId}/clarifications/${clarificationId}/cancel`"
+    );
+  });
+
+  it("never invents a create-session or fetch-draft endpoint — neither exists on the backend", () => {
+    expect(apiSource).not.toContain("/assistant/sessions");
+    expect(apiSource).not.toMatch(/api\.get.*\/assistant\/drafts/);
+  });
+
+  it("sends the Idempotency-Key header required by draft confirmation", () => {
+    expect(apiSource).toContain('"Idempotency-Key": idempotencyKey');
+  });
+
+  it("submits assistant messages with the active UI locale and no unrelated body fields", () => {
+    expect(featureTypesSource).toContain("locale?: string;");
+    expect(pageSource).toContain("onSubmit={() => flow.submit(");
+    expect(pageSource).toContain("intlLocale)");
+    expect(flowHookSource).toContain("{ message, conversationId: conversationId ?? undefined, locale: requestLocale }");
+    expect(apiSource).toContain("locale: input.locale");
+    expect(apiSource).toContain('.post<{ success: boolean; data: AssistantTurnResult }>("/assistant/messages", body, {');
+    expect(apiSource).not.toContain('"/assistant/messages", input');
+  });
+});
+
+describe("assistant React Query hooks", () => {
+  it("session hooks use the assistantKeys factory and reuse the shared api client", () => {
+    expect(sessionHookSource).toContain("assistantKeys.conversations(page, limit)");
+    expect(sessionHookSource).toContain("assistantKeys.session(conversationId ?? \"\")");
+    expect(sessionHookSource).toContain('enabled: !!conversationId');
+  });
+
+  it("messages hook selects out of the shared session query instead of a second fetch", () => {
+    expect(messagesHookSource).toContain("assistantKeys.session(conversationId ?? \"\")");
+    expect(messagesHookSource).toContain("select: (session): AssistantMessage[] => session.messages.items");
+  });
+
+  it("draft hook only exposes confirm/cancel mutations — no fetch-draft query", () => {
+    expect(draftHookSource).toContain("useConfirmAssistantDraft");
+    expect(draftHookSource).toContain("useCancelAssistantDraft");
+    expect(draftHookSource).not.toMatch(/\buseQuery\b/);
+    expect(draftHookSource).toContain("createIdempotencyKey()");
+  });
+
+  it("confirming a draft also invalidates transaction-derived caches (regression: Transaksi/Dashboard staying stale after confirm)", () => {
+    expect(draftHookSource).toContain(
+      'import { invalidateTransactionDependents } from "@/src/features/transactions/hooks/useTransactions";'
+    );
+    const confirmMutation = draftHookSource.slice(
+      draftHookSource.indexOf("useConfirmAssistantDraft"),
+      draftHookSource.indexOf("useCancelAssistantDraft")
+    );
+    expect(confirmMutation).toContain("invalidateAssistantSessionDependents(queryClient, result.conversationId)");
+    expect(confirmMutation).toContain("invalidateTransactionDependents(queryClient)");
+  });
+
+  it("no hook manages its own useState-based cache — TanStack Query only, no Redux/Zustand", () => {
+    for (const source of [sessionHookSource, messagesHookSource, draftHookSource]) {
+      expect(source).not.toContain("zustand");
+      expect(source).not.toContain("redux");
+      expect(source).not.toContain("createStore");
+    }
+  });
+});
+
+describe("assistant domain types", () => {
+  it("uses the exact backend enums, never re-derived", () => {
+    expect(typesSource).toContain('"ACTIVE" | "ARCHIVED" | "EXPIRED"');
+    expect(typesSource).toContain('"USER" | "ASSISTANT" | "SYSTEM"');
+    expect(typesSource).toContain("AssistantFinancialDraftStatus =");
+    for (const status of ["PENDING_CONFIRMATION", "COMMITTED", "CANCELLED", "EXPIRED", "FAILED"]) {
+      expect(typesSource).toContain(`"${status}"`);
+    }
+  });
+});
+
+describe("assistant draft review route (Phase 23.2)", () => {
+  it("reuses the shared PageHeader", () => {
+    expect(pageSource).toContain('import { PageHeader } from "@/components/layout/page-header";');
+    expect(pageSource).toContain('t("pageTitle")');
+  });
+
+  it("does not implement chat timeline, streaming, markdown, or attachment UI", () => {
+    for (const forbidden of ["ReactMarkdown", "EventSource", "WebSocket", "<textarea"]) {
+      expect(pageSource).not.toContain(forbidden);
+      expect(commandFormSource).not.toContain(forbidden);
+    }
+  });
+
+  it("still supports reading a draft out of the URL — no GET endpoint exists to fetch one instead", () => {
+    expect(flowHookSource).toContain("parseAssistantDraftParam(searchParams)");
+    expect(apiSource).not.toMatch(/api\.get.*\/assistant\/drafts/);
+  });
+
+  it("wires Confirm/Cancel to the existing draft mutation hooks only", () => {
+    expect(flowHookSource).toContain("useConfirmAssistantDraft");
+    expect(flowHookSource).toContain("useCancelAssistantDraft");
+    expect(flowHookSource).toContain("confirmDraft.mutate({ draftId:");
+    expect(flowHookSource).toContain("cancelDraft.mutate(draft.draftId");
+  });
+
+  it("shows loading via the mutation pending state, not a duplicate submit path", () => {
+    expect(flowHookSource).toContain("isConfirmingDraft: confirmDraft.isPending");
+    expect(flowHookSource).toContain("isCancellingDraft: cancelDraft.isPending");
+    expect(flowHookSource).toContain("isSendingMessage: sendMessage.isPending");
+  });
+
+  it("i18n catalogs define matching draft-review keys in both locales", () => {
+    for (const messages of [idMessages, enMessages]) {
+      expect(messages.assistant.pageTitle).toBeTruthy();
+      expect(messages.assistant.draftReview.confirm).toBeTruthy();
+      expect(messages.assistant.draftReview.cancel).toBeTruthy();
+      const statusLabels = messages.assistant.draftReview.status as Record<string, string>;
+      for (const status of ["PENDING_CONFIRMATION", "COMMITTED", "CANCELLED", "EXPIRED", "FAILED"]) {
+        expect(statusLabels[status]).toBeTruthy();
+      }
+    }
+  });
+});
+
+describe("assistant draft edit-to-confirm overrides (Phase 34 — draft correction completion)", () => {
+  it("seeds edit-mode overrides from the draft's own raw categoryId/transactionDate — never blank, never the display-only category/date strings", () => {
+    expect(buildDraftEditOverrides(VALID_DRAFT)).toEqual({
+      amount: 50000,
+      walletId: "wallet-1",
+      categoryId: "cat-1",
+      description: undefined,
+      date: "2026-07-25",
+    });
+  });
+
+  it("regression: a draft with a different category/date than its display labels still seeds the raw ids/date, not the label text", () => {
+    const draft: AssistantDraft = {
+      ...VALID_DRAFT,
+      preview: { ...VALID_DRAFT.preview, categoryId: "cat-transport", category: "Transportasi", transactionDate: "2026-08-01", date: "2026-08-01" },
+    };
+    expect(buildDraftEditOverrides(draft)).toMatchObject({ categoryId: "cat-transport", date: "2026-08-01" });
+  });
+
+  it("page.tsx seeds edit overrides via the shared buildDraftEditOverrides helper — not an inline reconstruction that can drift out of sync with the fix", () => {
+    expect(pageSource).toContain("buildDraftEditOverrides(draft)");
+    // Regression guard for the exact prior bug: categoryId/date were hardcoded
+    // undefined because the preview didn't carry raw ids yet.
+    expect(pageSource).not.toContain("categoryId: undefined");
+    expect(pageSource).not.toContain("date: undefined, // Date from preview is rendered, not ISO");
+  });
+
+  it("forwards the exact override payload to the existing confirm mutation — no separate edit endpoint, no payload rebuilt along the way", () => {
+    // page.tsx -> flow.confirm(draftOverrides, ...)
+    expect(pageSource).toContain("flow.confirm(\n            Object.keys(draftOverrides).length > 0 ? draftOverrides : undefined,");
+    // flow.confirm -> confirmDraft.mutate({ draftId, overrides })
+    expect(flowHookSource).toContain("const confirm = (overrides: DraftConfirmOverrides | undefined");
+    expect(flowHookSource).toContain("confirmDraft.mutate({ draftId: draft.draftId, overrides }");
+    // useConfirmAssistantDraft -> confirmAssistantDraft(draftId, idempotencyKey, overrides)
+    expect(draftHookSource).toContain("confirmAssistantDraft(draftId, getIdempotencyKey(draftId), overrides)");
+    // assistantApi -> POST body is the overrides object itself, unmodified
+    expect(apiSource).toContain("overrides ?? undefined");
+    expect(apiSource).not.toMatch(/Idempotency-Key.*overrides|overrides.*filter|overrides.*map/);
+  });
+
+  it("no PATCH/PUT draft route and no separate edit endpoint exist anywhere in the API layer", () => {
+    expect(apiSource).not.toMatch(/api\.(patch|put)/i);
+    expect(apiSource).not.toMatch(/\/assistant\/drafts\/.*\/edit/);
+  });
+});
+
+describe("assistant clarification flow (Phase 23.3, orchestration now in useAssistantConversationFlow)", () => {
+  it("wires the instruction composer to the real message endpoint", () => {
+    expect(flowHookSource).toContain("useSendAssistantMessage");
+    expect(flowHookSource).toContain("sendMessage.mutate(");
+    expect(conversationSource).toContain("AssistantCommandForm");
+  });
+
+  it("rejects blank or whitespace-only instructions before submitting", () => {
+    expect(commandFormSource).toContain("value.trim().length > 0");
+    expect(flowHookSource).toContain("instructionText.trim()");
+  });
+
+  it("routes a definite submit request failure to the snackbar callback, never an inline field error", () => {
+    // A provider/server failure is a global error, not a field-validation error:
+    // submit forwards the normalized message to onRequestError (the top snackbar)
+    // and never writes it into the inline formError.
+    expect(flowHookSource).toContain("onRequestError(readAssistantErrorMessage(error, tErrors))");
+    expect(flowHookSource).not.toContain("setFormError(readAssistantErrorMessage");
+  });
+
+  it("keeps the inline formError for local field validation only (over-length instruction)", () => {
+    expect(flowHookSource).toContain("MAX_ASSISTANT_INSTRUCTION_LENGTH");
+    expect(flowHookSource).toContain('setFormError(tErrors("tooLong"))');
+  });
+
+  it("preserves the entered instruction after a failed submit — only a successful submission clears it", () => {
+    expect(flowHookSource).toMatch(/onSuccess:\s*\(result\)\s*=>\s*\{\s*setInstructionText\(""\);/);
+  });
+
+  it("wires the submit request-error channel to the top snackbar at the page level (single ownership)", () => {
+    // The page hands submit a toast("...","error") callback, so one failed send
+    // produces exactly one snackbar and no inline API error.
+    expect(pageSource).toContain('flow.submit(tErrors, (message) => toast(message, "error")');
+  });
+
+  it("an immediate draft response enters draft review directly", () => {
+    expect(flowHookSource).toContain("isAssistantDraft(result.data)");
+    expect(flowHookSource).toContain('setActiveWorkflow({ kind: "draft", draft: result.data })');
+  });
+
+  it("a clarification_required response renders only backend-provided options", () => {
+    expect(flowHookSource).toContain('result.data?.kind === "entity_selection"');
+    expect(flowHookSource).toContain("isClarificationRequest(result.data.clarification)");
+    expect(flowHookSource).toContain('result.data?.kind === "guided_fields"');
+    expect(flowHookSource).toContain("isGuidedClarification(result.data.clarification)");
+    expect(conversationSource).toContain("ClarificationCard");
+    expect(conversationSource).toContain("GuidedClarificationCard");
+    expect(clarificationOptionsSource).toContain("options.map((option)");
+    expect(clarificationOptionsSource).not.toContain(".sort(");
+  });
+
+  it("renders structured entity clarifications as guided controls, not a free-text question", () => {
+    expect(clarificationCardSource).toContain("titleByEntity");
+    expect(clarificationCardSource).toContain("clarification.entityType");
+    expect(clarificationOptionsSource).toContain("variantByEntity");
+    expect(clarificationOptionsSource).toContain("aria-pressed={isPending}");
+    expect(clarificationOptionsSource).toContain("role=\"group\"");
+  });
+
+  it("uses entity-specific guided affordances for wallet, category, and merchant options", () => {
+    expect(clarificationOptionsSource).toContain('wallet: "grid gap-2 sm:grid-cols-2"');
+    expect(clarificationOptionsSource).toContain('category: "flex flex-wrap gap-2"');
+    expect(clarificationOptionsSource).toContain('merchant: "flex flex-wrap gap-2"');
+    expect(clarificationOptionsSource).toContain("option.discriminator");
+  });
+
+  it("only forwards the exact backend-issued option token, never a client value", () => {
+    expect(clarificationOptionsSource).toContain("onSelect(option.token)");
+    expect(flowHookSource).toContain("optionToken: token");
+    expect(messagesHookSource).toContain("optionToken ? { optionToken } : { fields: fields ?? {} }");
+    expect(guidedClarificationCardSource).toContain("onSubmit(values)");
+    expect(guidedClarificationCardSource).toContain("labels.field[field.field]");
+  });
+
+  it("clarification token/id are forwarded unchanged, never decoded or altered", () => {
+    expect(flowHookSource).toContain("clarificationId: activeWorkflow.clarification.clarificationId");
+    expect(flowHookSource).not.toMatch(/atob\(|JSON\.parse\(token/);
+  });
+
+  it("blocks duplicate option submission while a selection is pending", () => {
+    expect(flowHookSource).toContain("selectClarification.isPending || cancelClarification.isPending) return;");
+  });
+
+  it("handles chained clarification by replacing the current clarification, not assuming a draft", () => {
+    expect(flowHookSource).toContain("function applySelectResult");
+    expect(flowHookSource).toMatch(/applySelectResult[\s\S]*?status === "clarification_required"/);
+  });
+
+  it("a resolved clarification reuses the Phase 23.2 draft review components", () => {
+    expect(conversationSource).toContain('from "./DraftSummaryCard"');
+    expect(conversationSource).toContain('from "./DraftActionBar"');
+  });
+
+  it("clears transient workflow state after a successful clarification cancel or draft confirm/cancel", () => {
+    expect(flowHookSource).toContain("setActiveWorkflow(null);");
+    expect(flowHookSource).toContain("function startNewConversation(options: { force?: boolean } = {})");
+    expect(flowHookSource).toContain("sendMessage.reset()");
+    expect(flowHookSource).toContain("selectClarification.reset()");
+    expect(flowHookSource).toContain("cancelClarification.reset()");
+    expect(flowHookSource).toContain("confirmDraft.reset()");
+    expect(flowHookSource).toContain("cancelDraft.reset()");
+  });
+
+  it("never calls a transaction-creation endpoint directly — the backend is the sole authority", () => {
+    for (const forbidden of ["/transactions", "createTransaction", "/wallets"]) {
+      expect(flowHookSource).not.toContain(forbidden);
+      expect(pageSource).not.toContain(forbidden);
+    }
+  });
+
+  it("the draft handoff stays in bounded component/hook state, not a global store or the URL", () => {
+    expect(flowHookSource).not.toMatch(/router\.(push|replace)\(`?\/assistant\?draft=/);
+    expect(flowHookSource).not.toContain("sessionStorage");
+    expect(flowHookSource).not.toContain("localStorage");
+    expect(pageSource).not.toContain("sessionStorage");
+    expect(pageSource).not.toContain("localStorage");
+  });
+
+  it("no chat timeline, avatars, or typing-indicator UI is introduced", () => {
+    for (const forbidden of ["ChatBubble", "TypingIndicator", "MessageAvatar", "ConversationTimeline"]) {
+      expect(pageSource).not.toContain(forbidden);
+      expect(conversationSource).not.toContain(forbidden);
+    }
+  });
+
+  it("keeps provider clarification as the typed fallback instead of inventing fake UI", () => {
+    expect(typesSource).toContain('kind: "provider_text"');
+    expect(flowHookSource).toContain("Provider clarification");
+    expect(flowHookSource).toContain("setActiveWorkflow(null)");
+    expect(conversationSource).toContain("composerDisabledReason");
+    expect(commandFormSource).toContain("disabledReason ?? labels.helper");
+  });
+});
+
+describe("assistant API failures never render as inline field errors (regression guard, PR #72)", () => {
+  // Pre-#72 the submit onError wrote the normalized API error straight into the
+  // inline field state: `setFormError(readAssistantErrorMessage(error, tErrors))`.
+  // That rendered a global/API failure as a field error under the composer, with
+  // the input's red ring and aria-invalid. This guard fails if any inline-error
+  // write is ever fed anything other than a local, pre-request validation result.
+  const setFormErrorWrites = flowHookSource
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.includes("setFormError(") && !line.startsWith("//") && !line.includes("useState"));
+
+  it("only ever writes the inline formError from local validation or a reset — never a normalized API error", () => {
+    expect(setFormErrorWrites.length).toBeGreaterThan(0);
+    for (const line of setFormErrorWrites) {
+      const isReset = /setFormError\(null\)/.test(line);
+      const isLocalValidation = /setFormError\(tErrors\("tooLong"\)\)/.test(line);
+      expect(isReset || isLocalValidation, `unexpected inline-error write: ${line}`).toBe(true);
+    }
+    // The exact pre-#72 regression, forbidden verbatim.
+    expect(flowHookSource).not.toContain("setFormError(readAssistantErrorMessage");
+  });
+
+  it("routes every Assistant mutation failure to onRequestError/onError, not the inline field error", () => {
+    // submit's definite failure forwards to onRequestError (the snackbar callback);
+    // every other mutation forwards to onError via handleMutationError.
+    expect(flowHookSource).toContain("onRequestError(readAssistantErrorMessage(error, tErrors))");
+    expect(flowHookSource).toContain("onError(readAssistantErrorMessage(error, tErrors))");
+  });
+
+  it("the composer's only inline-error source is the local formError, with no request/api error channel", () => {
+    expect(conversationSource).toContain("error={formError}");
+    expect(conversationSource).not.toMatch(/error=\{[^}]*(requestError|submitError|apiError|historyError)/);
+    // aria-invalid is reachable only through FormField's `error` prop (i.e. formError),
+    // never hardcoded as a JSX attribute on the Assistant input for an API failure.
+    // (The string still appears in the component's doc comment, hence matching an attribute.)
+    expect(commandFormSource).not.toMatch(/aria-invalid\s*=/);
+  });
+
+  it("wires every page-level Assistant mutation error callback to the top snackbar (single owner)", () => {
+    // submit, selectOption, cancelClarification, confirmDraft, cancelDraft, retryOutcome.
+    const toastErrorCallbacks = pageSource.match(/\(message\)\s*=>\s*toast\(message,\s*"error"\)/g) ?? [];
+    expect(toastErrorCallbacks.length).toBeGreaterThanOrEqual(6);
+    // The page never re-introduces an inline field-error channel for API failures.
+    expect(pageSource).not.toContain("setFormError");
+  });
+});
+
+describe("assistant conversation experience (Phase 23.4)", () => {
+  it("reuses useAssistantSession for history retrieval instead of a new fetch path", () => {
+    expect(flowHookSource).toContain('from "@/src/features/assistant/hooks/useAssistantSession"');
+    expect(flowHookSource).toContain("useAssistantSession(conversationId)");
+  });
+
+  it("retains the conversation id as an opaque query param, never a draft payload or clarification token", () => {
+    expect(flowHookSource).toContain('const CONVERSATION_ID_PARAM = "conversationId"');
+    expect(flowHookSource).toContain("router.replace(`/assistant?${CONVERSATION_ID_PARAM}=${encodeURIComponent(id)}`)");
+    expect(flowHookSource).not.toContain("draftId=");
+    expect(flowHookSource).not.toContain("clarificationId=");
+    expect(flowHookSource).not.toContain("optionToken=");
+  });
+
+  it("session retrieval is only enabled once a conversation id exists — no fetch with a malformed/absent id", () => {
+    expect(sessionHookSource).toContain("enabled: !!conversationId");
+  });
+
+  it("blocks starting a new conversation while a clarification/draft is unresolved", () => {
+    expect(flowHookSource).toContain('recoveryState.kind !== "clarificationRecovered"');
+    expect(flowHookSource).toContain('recoveryState.kind !== "draftRecovered"');
+    expect(flowHookSource).toContain('recoveryState.kind !== "actionOutcomeUnknown"');
+    expect(flowHookSource).toContain('recoveryState.kind !== "turnRunning"');
+    expect(flowHookSource).toContain("if (!canStartNewConversation && !options.force) return;");
+  });
+
+  it("only one unresolved workflow blocks the composer at a time — no parallel instruction submission", () => {
+    expect(flowHookSource).toContain('|| activeWorkflow || recoveryState.kind === "turnRunning") return;');
+    expect(conversationSource).toContain("composerDisabledReason");
+    expect(commandFormSource).toContain("disabledReason");
+  });
+
+  it("persisted messages render in backend order — no client-side sort/reverse", () => {
+    expect(messageListSource).toContain("messages.map((message)");
+    expect(messageListSource).not.toContain(".sort(");
+    expect(messageListSource).not.toContain(".reverse(");
+  });
+
+  it("distinguishes persisted history from a pending local submission — no fabricated message id/role/status", () => {
+    expect(conversationSource).toContain("AssistantMessageList");
+    expect(conversationSource).toContain("AssistantPendingResponse");
+    expect(conversationSource).toContain("isSendingMessage");
+  });
+
+  it("aligns the chat timeline to the app workspace gutters instead of centering a narrow timeline column", () => {
+    expect(conversationSource).toContain('className="flex min-h-[calc(100dvh-14rem)] flex-col');
+    expect(conversationSource).toContain('className="flex flex-1 flex-col');
+    expect(conversationSource).toContain(': "space-y-5"');
+    expect(conversationSource).not.toContain("mx-auto w-full max-w-2xl");
+    expect(conversationSource).not.toContain("mx-auto w-full max-w-xl");
+  });
+
+  it("keeps bubble readability at the message level while the composer spans the workspace", () => {
+    expect(commandFormSource).not.toContain('className="max-w-xl"');
+    expect(commandFormSource).toContain('className="w-full"');
+    expect(conversationSource).toContain('className="w-full border-t border-border pt-4"');
+    expect(messageSource).toContain("max-w-[min(42rem,85%)]");
+    expect(messageSource).toContain('isUser ? "items-end" : "items-start"');
+  });
+
+  it("renders plain text only — no markdown/HTML rendering of Assistant content", () => {
+    for (const forbidden of ["dangerouslySetInnerHTML", "ReactMarkdown", "<textarea"]) {
+      expect(messageSource).not.toContain(forbidden);
+      expect(conversationSource).not.toContain(forbidden);
+    }
+  });
+
+  it("documents the exact refresh limitation: a stuck clarification-required turn can't be reconstructed after reload, and is resolved via recovery-state instead", () => {
+    expect(flowHookSource).toContain('latestTurnStatus === "CLARIFICATION_REQUIRED"');
+    expect(pageSource).toContain("recoveryState={flow.recoveryState}");
+    expect(conversationSource).toContain("recoveryState");
+  });
+
+  it("never reconstructs a draft or clarification by parsing rendered message text", () => {
+    for (const source of [flowHookSource, conversationSource, messageSource]) {
+      expect(source).not.toMatch(/parse.*renderedText|content\.match\(/i);
+    }
+  });
+
+  it("no draft/token/message payload is written to durable browser storage", () => {
+    for (const source of [flowHookSource, conversationSource, pageSource]) {
+      expect(source).not.toContain("localStorage");
+      expect(source).not.toContain("sessionStorage");
+      expect(source).not.toContain("indexedDB");
+    }
+  });
+
+  it("no streaming/WebSocket/SSE/voice/attachment integration exists", () => {
+    for (const source of [flowHookSource, conversationSource, pageSource]) {
+      for (const forbidden of ["EventSource", "WebSocket", "MediaRecorder", "<audio", "<video", "FileReader"]) {
+        expect(source).not.toContain(forbidden);
+      }
+    }
+  });
+
+  it("no second Assistant API client or duplicate mutation implementation was added", () => {
+    expect(flowHookSource).not.toContain("axios.create");
+    expect(flowHookSource).not.toContain("fetch(");
+    // Every mutation call site reuses the exact Phase 23.2/23.3 hook names.
+    for (const hookName of [
+      "useSendAssistantMessage",
+      "useSelectAssistantClarification",
+      "useCancelAssistantClarification",
+      "useConfirmAssistantDraft",
+      "useCancelAssistantDraft",
+    ]) {
+      expect(flowHookSource).toContain(hookName);
+    }
+  });
+
+  it("English and Indonesian catalogs define matching conversation keys", () => {
+    for (const messages of [idMessages, enMessages]) {
+      const conversation = messages.assistant.conversation as Record<string, unknown>;
+      for (const key of [
+        "regionLabel",
+        "listLabel",
+        "historyLoading",
+        "retry",
+        "authorUser",
+        "authorAssistant",
+        "authorSystem",
+        "emptyTitle",
+        "emptyDescription",
+        "examplesLabel",
+        "example1",
+        "example2",
+        "pendingResponse",
+        "transientUnavailable",
+        "newConversation",
+        "resetBlocked",
+        "composerDisabledClarification",
+        "composerDisabledDraft",
+      ]) {
+        expect(conversation[key]).toBeTruthy();
+      }
+    }
+  });
+
+  it("uses canonical Pocket Mint buttons for Assistant header actions", () => {
+    expect(pageSource).toContain('<Button\n            type="button"\n            variant="default"\n            size="touch"');
+    expect(pageSource).toContain("<Plus data-icon=\"inline-start\" aria-hidden=\"true\" />");
+    expect(historyTriggerSource).toContain('import { Button } from "@/components/ui/button";');
+    expect(historyTriggerSource).toContain('variant="outline"');
+    expect(historyTriggerSource).toContain('size="icon-touch"');
+    expect(historyTriggerSource).toContain("<History aria-hidden=\"true\" />");
+  });
+
+  it("keeps history management honest to the current backend contract — archive, restore, and delete each hit their own real endpoint, and bulk stays client-side (no fabricated bulk endpoint)", () => {
+    expect(apiSource).toContain("archiveAssistantSession");
+    expect(apiSource).toContain("restoreAssistantSession");
+    expect(apiSource).toContain("deleteAssistantSession");
+    expect(apiSource).not.toContain("bulkArchive");
+    expect(apiSource).not.toContain("bulkDelete");
+    // Bulk actions loop the real per-item mutation over selected rows rather than a fake bulk endpoint.
+    expect(historySource).toContain("ids.map((id) => archiveMutation.mutateAsync(id))");
+    expect(historySource).toContain("ids.map((id) => deleteMutation.mutateAsync(id))");
+    expect(historySource).not.toContain("deleteAll");
+    expect(historySource).not.toContain("Delete all");
+  });
+
+  it("renders a scalable loaded-history management surface with search, filter, selection, and archive confirmation", () => {
+    expect(historySource).toContain('size="lg"');
+    expect(historySource).toContain('className="sm:max-w-3xl"');
+    expect(historySource).toContain("const [searchText, setSearchText] = useState(\"\");");
+    expect(historySource).toContain('const [statusFilter, setStatusFilter] = useState<"all" | "active" | "archived">("all");');
+    expect(historySource).toContain("selectedIds");
+    expect(historySource).toContain("selectAllLoaded");
+    expect(historySource).toContain("archiveConfirmation");
+    expect(historySource).toContain("useArchiveAssistantSession");
+    expect(historyListSource).toContain("filteredCount");
+    expect(historyListSource).toContain("onArchive");
+    expect(historyListSource).toContain("onToggleSelect");
+    expect(historySource).toContain("labels.searchLoaded");
+    expect(historyListSource).toContain("labels.selectAllLoaded");
+    expect(historyListSource).toContain("labels.archivedStatus");
+  });
+
+  it("lays out the empty conversation as a full-height chat workspace with a bottom-docked composer", () => {
+    expect(conversationSource).toContain('className="flex min-h-[calc(100dvh-14rem)] flex-col');
+    expect(conversationSource).toContain('className="flex flex-1 flex-col');
+    expect(conversationSource).toContain('"flex flex-1 items-center justify-center py-8"');
+    expect(conversationSource).toContain('className="w-full border-t border-border');
+  });
+
+  it("keeps message bubbles readable while the timeline and composer span the workspace", () => {
+    expect(commandFormSource).not.toContain('className="max-w-xl"');
+    expect(conversationSource).toContain('className="w-full border-t border-border pt-4"');
+    expect(conversationSource).not.toContain("mx-auto w-full max-w-2xl");
+    expect(conversationSource).not.toContain("mx-auto w-full max-w-xl");
+    expect(messageSource).toContain("max-w-[min(42rem,85%)]");
+  });
+});
+
+describe("assistant draft param parsing", () => {
+  it("returns null when the draft param is absent", () => {
+    expect(parseAssistantDraftParam(new URLSearchParams())).toBeNull();
+  });
+
+  it("returns null for malformed JSON instead of throwing", () => {
+    expect(parseAssistantDraftParam(new URLSearchParams({ draft: "{not-json" }))).toBeNull();
+  });
+
+  it("returns null when required fields are missing", () => {
+    const incomplete = JSON.stringify({ draftId: "draft-1" });
+    expect(parseAssistantDraftParam(new URLSearchParams({ draft: incomplete }))).toBeNull();
+  });
+
+  it("returns the parsed draft for a valid payload", () => {
+    const params = new URLSearchParams({ draft: JSON.stringify(VALID_DRAFT) });
+    expect(parseAssistantDraftParam(params)).toEqual(VALID_DRAFT);
+  });
+
+  it("rejects a preview missing the raw categoryId/transactionDate fields (Phase 34) — never waves through a stale-shaped draft as if it had them", () => {
+    const previewWithoutCategoryId: Record<string, unknown> = { ...VALID_DRAFT.preview };
+    delete previewWithoutCategoryId.categoryId;
+    expect(isAssistantDraft({ ...VALID_DRAFT, preview: previewWithoutCategoryId })).toBe(false);
+
+    const previewWithoutTransactionDate: Record<string, unknown> = { ...VALID_DRAFT.preview };
+    delete previewWithoutTransactionDate.transactionDate;
+    expect(isAssistantDraft({ ...VALID_DRAFT, preview: previewWithoutTransactionDate })).toBe(false);
+  });
+});
+
+describe("assistant draft review components", () => {
+  it("DraftSummaryCard only renders fields AssistantDraft actually carries", () => {
+    expect(draftSummaryCardSource).toContain("preview.wallet");
+    expect(draftSummaryCardSource).toContain("preview.category");
+    expect(draftSummaryCardSource).toContain("preview.merchant");
+    expect(draftSummaryCardSource).toContain("preview.date");
+    expect(draftSummaryCardSource).toContain("preview.description");
+    // Not a backend field on AssistantDraft — must never be fabricated.
+    expect(draftSummaryCardSource).not.toContain("confidence");
+  });
+
+  it("DraftSummaryCard reuses the shared currency formatter", () => {
+    expect(draftSummaryCardSource).toContain('import { formatCurrency } from "@/lib/utils";');
+  });
+
+  it("DraftActionBar exposes Confirm and Cancel with independent loading states", () => {
+    expect(draftActionBarSource).toContain("isConfirming");
+    expect(draftActionBarSource).toContain("isCancelling");
+    expect(draftActionBarSource).toContain("onConfirm");
+    expect(draftActionBarSource).toContain("onCancel");
+  });
+
+  it("AssistantCommandForm reuses the shared form primitives, not a hand-rolled input", () => {
+    expect(commandFormSource).toContain('import { FormField } from "@/components/ui/form-field";');
+    // The plain single-line Input was replaced by the shared chat composer
+    // primitive (auto-growing textarea + send button); it still reuses a
+    // components/ui primitive rather than hand-rolling the field, and the send
+    // Button lives inside ChatPromptInput.
+    expect(commandFormSource).toContain('import { ChatPromptInput } from "@/components/ui/chat-prompt-input";');
+  });
+
+  it("ClarificationOptions never fabricates options — only renders the backend-provided list", () => {
+    expect(clarificationOptionsSource).toContain("options: ClarificationOption[]");
+    expect(clarificationOptionsSource).not.toContain("generateOption");
+  });
+
+  it("ClarificationCard reuses ClarificationOptions instead of a second selection UI", () => {
+    expect(clarificationCardSource).toContain(
+      'import { ClarificationOptions } from "./ClarificationOptions";'
+    );
+  });
+
+  it("AssistantResultState renders only the server-provided renderedText, nothing fabricated", () => {
+    expect(resultStateSource).toContain("renderedText: string");
+    for (const forbidden of ["transactionId:", "balance:", "confidence:"]) {
+      expect(resultStateSource).not.toContain(forbidden);
+    }
+  });
+});
+
+describe("assistant clarification and error utilities", () => {
+  it("isClarificationRequest accepts a real backend clarification payload", () => {
+    expect(isClarificationRequest(VALID_CLARIFICATION)).toBe(true);
+  });
+
+  it("isClarificationRequest rejects an option missing its token — never trust an untokened option", () => {
+    const malformed = {
+      ...VALID_CLARIFICATION,
+      options: [{ label: "BCA" }],
+    };
+    expect(isClarificationRequest(malformed)).toBe(false);
+  });
+
+  it("isClarificationRequest rejects an unknown entityType or missing fields", () => {
+    expect(isClarificationRequest({ ...VALID_CLARIFICATION, entityType: "unknown" })).toBe(false);
+    expect(isClarificationRequest({ clarificationId: "x" })).toBe(false);
+    expect(isClarificationRequest(null)).toBe(false);
+  });
+
+  it("readAssistantErrorMessage maps known backend codes to a localized message", () => {
+    const t = (key: string) => `translated:${key}`;
+    const error = { response: { data: { error: { code: "ASSISTANT_CLARIFICATION_EXPIRED", message: "raw" } } } };
+    expect(readAssistantErrorMessage(error, t)).toBe("translated:clarificationExpired");
+  });
+
+  it("readAssistantErrorMessage falls back to the backend's own safe message for unmapped codes", () => {
+    const t = (key: string) => `translated:${key}`;
+    const error = { response: { data: { error: { code: "ASSISTANT_TOOL_DISABLED", message: "Tool is disabled" } } } };
+    expect(readAssistantErrorMessage(error, t)).toBe("Tool is disabled");
+  });
+
+  it("readAssistantErrorMessage falls back to a generic localized message for network/unknown failures", () => {
+    const t = (key: string) => `translated:${key}`;
+    expect(readAssistantErrorMessage({}, t)).toBe("translated:generic");
+  });
+});
+
+describe("assistant provider-unavailable copy is friendly, never raw backend text", () => {
+  it("maps the 503 provider code to a localized friendly message key instead of the backend string", () => {
+    expect(errorsSource).toContain('ASSISTANT_PROVIDER_UNAVAILABLE: "providerUnavailable"');
+    const t = (key: string) => `translated:${key}`;
+    const error = {
+      response: { data: { error: { code: "ASSISTANT_PROVIDER_UNAVAILABLE", message: "Assistant provider is unavailable" } } },
+    };
+    // The raw backend string "Assistant provider is unavailable" never reaches the user.
+    expect(readAssistantErrorMessage(error, t)).toBe("translated:providerUnavailable");
+  });
+
+  it("defines friendly, non-raw provider-unavailable and too-long copy in both locales", () => {
+    for (const messages of [idMessages, enMessages]) {
+      const errors = messages.assistant.errors as Record<string, string>;
+      expect(errors.providerUnavailable).toBeTruthy();
+      expect(errors.tooLong).toBeTruthy();
+      expect(errors.providerUnavailable.toLowerCase()).not.toContain("provider is unavailable");
+    }
+    expect(enMessages.assistant.errors.providerUnavailable).toBe(
+      "Assistant is temporarily unavailable. Please try again shortly.",
+    );
+    expect(idMessages.assistant.errors.providerUnavailable).toBe(
+      "Asisten sedang tidak tersedia. Silakan coba lagi sebentar lagi.",
+    );
+  });
+});
+
+describe("assistant clarification i18n", () => {
+  it("English and Indonesian catalogs define matching command/clarification/completion/error keys", () => {
+    for (const messages of [idMessages, enMessages]) {
+      expect(messages.assistant.command.label).toBeTruthy();
+      expect(messages.assistant.command.placeholder).toBeTruthy();
+      expect(messages.assistant.command.submit).toBeTruthy();
+      expect(messages.assistant.command.submitting).toBeTruthy();
+      expect(messages.assistant.clarification.cancelling).toBeTruthy();
+      expect(messages.assistant.completion.newInstruction).toBeTruthy();
+      const errors = messages.assistant.errors as Record<string, string>;
+      for (const key of [
+        "invalidInput",
+        "clarificationExpired",
+        "clarificationConsumed",
+        "invalidOption",
+        "draftConflict",
+        "idempotencyConflict",
+        "generic",
+      ]) {
+        expect(errors[key]).toBeTruthy();
+      }
+    }
+  });
+});
+
+describe("assistant auth protection", () => {
+  it("relies on the existing deny-by-default middleware — no per-route auth check", () => {
+    expect(pageSource).not.toContain("requireUser");
+    expect(pageSource).not.toContain("getUser(");
+    expect(libApiSource).toContain("Authorization");
+  });
+});
+
+describe("assistant resilience/recovery — draft confirm idempotency key reuse", () => {
+  it("keys the idempotency key by draftId and reuses it instead of minting one per call", () => {
+    expect(draftHookSource).toContain("idempotencyKeysRef.current.get(draftId)");
+    expect(draftHookSource).toContain("idempotencyKeysRef.current.set(draftId, key)");
+    // Only ONE call site creates a fresh key — inside the reuse-or-create helper — never
+    // inline in mutationFn (which would mint a new key on every retry).
+    expect(draftHookSource.match(/createIdempotencyKey\(\)/g)?.length).toBe(1);
+  });
+
+  it("clears the key once a draftId is resolved (confirmed, or cancelled via the flow hook) so it can't grow unbounded", () => {
+    expect(draftHookSource).toContain("clearIdempotencyKey");
+    expect(draftHookSource).toContain("idempotencyKeysRef.current.delete(draftId)");
+    expect(flowHookSource).toContain("confirmDraft.clearIdempotencyKey(draft.draftId)");
+  });
+
+  it("stores the key in-memory only (a ref/Map) — never localStorage/sessionStorage", () => {
+    expect(draftHookSource).toContain("useRef(new Map<string, string>())");
+    expect(draftHookSource).not.toMatch(/\blocalStorage\.(setItem|getItem)/);
+    expect(draftHookSource).not.toMatch(/\bsessionStorage\.(setItem|getItem)/);
+  });
+});
+
+describe("assistant resilience/recovery — ambiguous vs definite error classification", () => {
+  it("classifies a no-response Axios-shaped error as ambiguous", () => {
+    expect(classifyAssistantMutationError({ message: "Network Error" })).toBe("ambiguous");
+    expect(classifyAssistantMutationError({ response: undefined })).toBe("ambiguous");
+  });
+
+  it("classifies a real HTTP error response as definite", () => {
+    expect(classifyAssistantMutationError({ response: { status: 409, data: {} } })).toBe("definite");
+    expect(classifyAssistantMutationError({ response: { status: 500, data: {} } })).toBe("definite");
+  });
+
+  it("classifies a 401 / AuthenticationRequiredError as definite, not ambiguous — auth has its own handling", () => {
+    expect(classifyAssistantMutationError(new AuthenticationRequiredError())).toBe("definite");
+    expect(classifyAssistantMutationError({ response: { status: 401, data: {} } })).toBe("definite");
+  });
+
+  it("classifies 409 ASSISTANT_REQUEST_IN_PROGRESS as ambiguous, not definite (Phase 27 fix)", () => {
+    // The original submission (same Idempotency-Key) is still running server-side —
+    // clearing the key here would hand a manual retry a fresh key and let it start a
+    // genuine second turn/draft while the first is still in flight.
+    expect(
+      classifyAssistantMutationError({
+        response: { status: 409, data: { error: { code: "ASSISTANT_REQUEST_IN_PROGRESS" } } },
+      })
+    ).toBe("ambiguous");
+    // A different 409 (e.g. cross-operation key reuse) is still definite.
+    expect(
+      classifyAssistantMutationError({
+        response: { status: 409, data: { error: { code: "ASSISTANT_IDEMPOTENCY_CONFLICT" } } },
+      })
+    ).toBe("definite");
+  });
+});
+
+describe("assistant resilience/recovery — recovery-state API wrapper and query gating", () => {
+  it("hits the exact recovery-state endpoint with GET", () => {
+    expect(apiSource).toContain("`/assistant/conversations/${conversationId}/recovery-state`");
+    expect(apiSource).toContain("export function getAssistantRecoveryState");
+  });
+
+  it("the query hook is gated behind an explicit enabled condition, not auto-fetched alongside session", () => {
+    expect(sessionHookSource).toContain("useAssistantRecoveryState");
+    expect(sessionHookSource).toContain("enabled: !!conversationId && enabled");
+  });
+
+  it("the flow hook only enables the recovery-state fetch when there's no in-memory workflow, a URL-loaded conversation, and history", () => {
+    expect(flowHookSource).toContain("activeWorkflow === null && !!conversationId && cameFromUrl && turnCount > 0");
+  });
+
+  it("surfaces a recovery-loading state while the recovery endpoint is pending, so a delayed terminal banner is not the first recovery paint", () => {
+    expect(recoveryTypesSource).toContain('| { kind: "recoveryLoading" }');
+    expect(flowHookSource).toContain('if (recoveryStateQuery.isPending) return { kind: "recoveryLoading" };');
+    expect(conversationSource).toContain('recoveryState.kind === "recoveryLoading"');
+    expect(recoveryBannerSource).toContain('kind: "recoveryLoading"');
+  });
+});
+
+describe("assistant resilience/recovery — bounded recovery-state model", () => {
+  const draftPreview = {
+    operation: "record_transaction",
+    type: "EXPENSE" as const,
+    amount: "50000",
+    walletId: "wallet-1",
+    categoryId: "cat-1",
+    date: "2026-07-25",
+    transactionDate: "2026-07-25",
+    expiresAt: "2026-07-25T15:30:00.000Z",
+  };
+
+  it("resolves to clarificationRecovered when an active clarification is found — never usable to select (no token in the type)", () => {
+    const response: AssistantRecoveryStateResponse = {
+      activeClarification: {
+        clarificationId: "clar-1",
+        entityType: "wallet",
+        prompt: "Which wallet?",
+        options: [{ label: "BCA" }],
+        expiresAt: "2026-07-25T15:30:00.000Z",
+      },
+    };
+    const state = resolveRecoveryState(response);
+    expect(state.kind).toBe("clarificationRecovered");
+    if (state.kind === "clarificationRecovered") {
+      expect((state.clarification.options[0] as { token?: string }).token).toBeUndefined();
+    }
+    // The recovery-state type never carries a token; the recovery banner component
+    // never wires an onSelect/select call — only cancel.
+    expect(recoveryBannerSource).not.toContain("onSelect");
+    expect(recoveryBannerSource).not.toContain("selectAssistantClarification");
+  });
+
+  it("resolves to draftRecovered when a pending draft is found, mapped into the existing AssistantDraft shape", () => {
+    const response: AssistantRecoveryStateResponse = {
+      pendingDraft: { draftId: "draft-1", status: "PENDING_CONFIRMATION", preview: draftPreview },
+    };
+    const state = resolveRecoveryState(response);
+    expect(state.kind).toBe("draftRecovered");
+    if (state.kind === "draftRecovered") {
+      expect(state.draft.draftId).toBe("draft-1");
+      expect(state.draft.confirmationRequired).toBe(true);
+    }
+  });
+
+  it("carries the raw categoryId/transactionDate through the recovery mapping (Phase 34) — edit mode preselection needs them, not just the display fallback", () => {
+    const response: AssistantRecoveryStateResponse = {
+      pendingDraft: { draftId: "draft-1", status: "PENDING_CONFIRMATION", preview: draftPreview },
+    };
+    const state = resolveRecoveryState(response);
+    expect(state.kind).toBe("draftRecovered");
+    if (state.kind === "draftRecovered") {
+      expect(state.draft.preview.categoryId).toBe("cat-1");
+      expect(state.draft.preview.transactionDate).toBe("2026-07-25");
+    }
+  });
+
+  it("resolves to transientClarificationLost when neither is found", () => {
+    expect(resolveRecoveryState({}).kind).toBe("transientClarificationLost");
+  });
+
+  it("only draft confirm/cancel and clarification cancel are retry-safe — never a plain message send or a select", () => {
+    expect(isAssistantActionRetrySafe("confirmDraft")).toBe(true);
+    expect(isAssistantActionRetrySafe("cancelDraft")).toBe(true);
+    expect(isAssistantActionRetrySafe("cancelClarification")).toBe(true);
+    expect(isAssistantActionRetrySafe("sendMessage")).toBe(false);
+    expect(isAssistantActionRetrySafe("selectClarification")).toBe(false);
+  });
+
+  it("draftRecovered reuses the existing DraftSummaryCard/DraftActionBar — no parallel draft-review UI", () => {
+    expect(conversationSource).toContain('recoveryState.kind === "draftRecovered"');
+    expect(conversationSource.match(/DraftSummaryCard/g)?.length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe("assistant resilience/recovery — reconciliation never re-sends anything", () => {
+  it("compares a pre-attempt snapshot against a fresh session/recovery-state fetch, not a blind retry", () => {
+    expect(reconciliationSource).toContain("snapshot.turnCount");
+    expect(reconciliationSource).toContain("getAssistantSession");
+    expect(reconciliationSource).toContain("getAssistantRecoveryState");
+  });
+
+  it("never calls a send/select/confirm/cancel mutation from the reconciliation hook", () => {
+    for (const forbidden of ["sendAssistantMessage", "confirmAssistantDraft", "cancelAssistantDraft", "selectAssistantClarification"]) {
+      expect(reconciliationSource).not.toContain(forbidden);
+    }
+  });
+
+  it("checkOutcome is only invoked explicitly (user action / ambiguous failure) — not on an interval", () => {
+    for (const forbidden of ["setInterval", "setTimeout"]) {
+      expect(flowHookSource).not.toContain(forbidden);
+      expect(reconciliationSource).not.toContain(forbidden);
+    }
+  });
+});
+
+describe("assistant resilience/recovery — startNewConversation blocking", () => {
+  it("stays blocked while clarificationRecovered/draftRecovered/actionOutcomeUnknown are showing", () => {
+    expect(flowHookSource).toContain('recoveryState.kind !== "clarificationRecovered"');
+    expect(flowHookSource).toContain('recoveryState.kind !== "draftRecovered"');
+    expect(flowHookSource).toContain('recoveryState.kind !== "actionOutcomeUnknown"');
+  });
+
+  it("does NOT block on transientClarificationLost — nothing left to protect", () => {
+    expect(flowHookSource).not.toContain('recoveryState.kind !== "transientClarificationLost"');
+  });
+});
+
+describe("assistant resilience/recovery — outcome-unknown UI", () => {
+  it("uses role=status, not role=alert — an ambiguous outcome is not definitively an error", () => {
+    expect(outcomeUnknownSource).toMatch(/<div role="status"/);
+    expect(outcomeUnknownSource).not.toMatch(/<\w+[^>]*role="alert"/);
+  });
+
+  it("only renders a retry action when the caller supplies one — never fabricates a retry for unsafe actions", () => {
+    expect(outcomeUnknownSource).toContain("onRetry?: () => void");
+    expect(outcomeUnknownSource).toContain("{onRetry ?");
+  });
+});
+
+describe("assistant resilience/recovery — no durable storage of recovery state", () => {
+  it("recovery/reconciliation source never touches localStorage/sessionStorage/indexedDB", () => {
+    for (const source of [recoveryTypesSource, reconciliationSource, recoveryBannerSource, outcomeUnknownSource]) {
+      expect(source).not.toContain("localStorage");
+      expect(source).not.toContain("sessionStorage");
+      expect(source).not.toContain("indexedDB");
+    }
+  });
+});
+
+describe("assistant resilience/recovery i18n", () => {
+  it("English and Indonesian catalogs define matching recovery/outcome-unknown keys", () => {
+    for (const messages of [idMessages, enMessages]) {
+      const recovery = messages.assistant.recovery as Record<string, string>;
+      expect(recovery.clarificationRecoveredTitle).toBeTruthy();
+      expect(recovery.composerDisabled).toBeTruthy();
+      const outcome = messages.assistant.outcomeUnknown as Record<string, string>;
+      for (const key of ["heading", "description", "check", "checking", "retry", "retrying"]) {
+        expect(outcome[key]).toBeTruthy();
+      }
+    }
+  });
+
+  it("plain user language only — no backend terminology leaks into the new strings", () => {
+    for (const messages of [idMessages, enMessages]) {
+      const blob = JSON.stringify(messages.assistant.recovery) + JSON.stringify(messages.assistant.outcomeUnknown);
+      for (const forbidden of ["idempotency", "token", "advisory lock", "P2002", "500", "404"]) {
+        expect(blob.toLowerCase()).not.toContain(forbidden.toLowerCase());
+      }
+    }
+  });
+});
+
+describe("assistant resilience — no new dependency", () => {
+  it("package.json's dependency/devDependency sets are unchanged by this feature (no new HTTP client, state library, or nav-blocking package)", () => {
+    for (const source of [recoveryTypesSource, reconciliationSource, recoveryBannerSource, outcomeUnknownSource, errorsSource]) {
+      expect(source).not.toContain("axios.create");
+      expect(source).not.toContain("zustand");
+      expect(source).not.toContain("redux");
+    }
+  });
+});
+
+describe("assistant conversation history (Phase 23.6)", () => {
+  it("reuses the existing list endpoint/hook — no new fetch path or second API client", () => {
+    expect(sessionHookSource).toContain("useInfiniteQuery");
+    expect(sessionHookSource).toContain("listAssistantConversations");
+    expect(sessionHookSource).toContain("assistantKeys.conversations(undefined, limit)");
+    expect(historySource).not.toContain("axios.create");
+    expect(historySource).not.toMatch(/\bfetch\(["'`]/);
+  });
+
+  it("preserves backend order — pages are appended, never client-sorted", () => {
+    expect(historySource).toContain("query.data?.pages.flatMap((page) => page.items)");
+    expect(sessionHookSource).not.toContain(".sort(");
+    expect(historyListSource).toContain("items.map((item)");
+    expect(historyListSource).not.toContain(".sort(");
+    expect(historyListSource).not.toContain(".reverse(");
+  });
+
+  it("pagination follows backend hasMore — no infinite-scroll or virtualization dependency", () => {
+    expect(sessionHookSource).toContain("getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.page + 1 : undefined)");
+    expect(historySource).not.toContain("react-window");
+    expect(historySource).not.toContain("react-virtual");
+    expect(historyListSource).not.toContain("IntersectionObserver");
+  });
+
+  it("switching is gated by the same canStartNewConversation rule as starting a new conversation, and is forceable only from an explicit confirmation", () => {
+    expect(flowHookSource).toContain("function switchConversation(id: string, options: { force?: boolean } = {})");
+    expect(flowHookSource).toContain("if (!canStartNewConversation && !options.force) return false;");
+    expect(historySource).toContain("onSwitchConversation(blockedTargetId, { force: true })");
+  });
+
+  it("switching never fabricates backend cancellation — only local transient state is cleared", () => {
+    expect(flowHookSource).toMatch(/function switchConversation[\s\S]*?setActiveWorkflow\(null\)/);
+    expect(historySource).not.toMatch(/cancelAssistantDraft|cancelAssistantClarification/);
+  });
+
+  it("switching keeps the conversation id as the only URL state — no extra params, no draft/token payload", () => {
+    expect(flowHookSource).toMatch(
+      /switchConversation[\s\S]*?router\.replace\(`\/assistant\?\$\{CONVERSATION_ID_PARAM\}=\$\{encodeURIComponent\(id\)\}`\)/
+    );
+  });
+
+  it("permanent delete and restore are supported, but rename/pin/other unsupported mutations are not", () => {
+    for (const source of [historySource, historyListSource, historyTriggerSource]) {
+      for (const forbidden of [/\brename/i, /\bpin\b/i, /\bPATCH\b/]) {
+        expect(source).not.toMatch(forbidden);
+      }
+    }
+    expect(historySource).toContain("useDeleteAssistantSession");
+    expect(historySource).toContain("useRestoreAssistantSession");
+  });
+
+  it("no durable storage, polling, or streaming is introduced by the history feature", () => {
+    for (const source of [historySource, historyListSource, historyTriggerSource, sessionHookSource]) {
+      for (const forbidden of [
+        "localStorage",
+        "sessionStorage",
+        "indexedDB",
+        "setInterval",
+        "EventSource",
+        "WebSocket",
+      ]) {
+        expect(source).not.toContain(forbidden);
+      }
+    }
+  });
+
+  it("the trigger and list are presentational — no data fetching inside the leaf components", () => {
+    expect(historyTriggerSource).not.toContain("useQuery");
+    expect(historyListSource).not.toContain("useQuery");
+    expect(historyListSource).not.toContain("useInfiniteQuery");
+  });
+
+  it("the trigger has a stable accessible name and the selected item is programmatically identifiable", () => {
+    expect(historyTriggerSource).toContain("aria-label={label}");
+    expect(historyListSource).toContain('aria-current={isSelected ? "true" : undefined}');
+  });
+
+  it("the conversation label prefers the first-user-message title over the latest message — never AI-generated or parsed", () => {
+    expect(historyListSource).toContain("resolveConversationLabel");
+    // Title (original user intent) is checked before lastMessage (latest message, any role) —
+    // fixes titles like "Konfirmasi draft transaksi..." winning over the opening request.
+    expect(historyListSource).toMatch(/summary\.title\?\.trim\(\)[\s\S]*?summary\.lastMessage\?\.trim\(\)/);
+    expect(historyListSource).not.toMatch(/generateTitle|summarize/i);
+  });
+
+  it("conversation summaries carry a title field distinct from lastMessage", () => {
+    expect(typesSource).toMatch(/title\?:\s*string/);
+  });
+
+  it("the row checkbox is a compact native control, not an oversized fake button", () => {
+    expect(historyListSource).toContain('type="checkbox"');
+    expect(historyListSource).toMatch(/size-4[^"]*accent-primary/);
+    expect(historyListSource).not.toContain("size-11");
+  });
+
+  it("archived rows offer restore instead of archive, and every row can be permanently deleted", () => {
+    expect(historyListSource).toContain("onRestore(item)");
+    expect(historyListSource).toContain("onDeleteRequest(item)");
+    expect(historyListSource).toMatch(/isArchived[\s\S]{0,80}onRestore/);
+  });
+
+  it("delete calls the dedicated delete mutation/endpoint, never reusing archive", () => {
+    expect(apiSource).toContain("/assistant/conversations/${conversationId}/restore");
+    expect(apiSource).toMatch(/api\s*\.delete[\s\S]*?`\/assistant\/conversations\/\$\{conversationId\}`/);
+    expect(sessionHookSource).toContain("useDeleteAssistantSession");
+    expect(sessionHookSource).toContain("useRestoreAssistantSession");
+    expect(sessionHookSource).toContain("deleteAssistantSession");
+    expect(sessionHookSource).toContain("restoreAssistantSession");
+  });
+
+  it("permanent delete requires an explicit alertdialog confirmation naming the consequence, and is not fired straight from the row action", () => {
+    expect(historySource).toContain("deleteConfirmation");
+    expect(historySource).toContain('role={isAlertDialog ? "alertdialog" : "dialog"}');
+    expect(historySource).toContain("deleteTitle");
+    expect(historySource).toContain("deleteDescription");
+    // Clicking delete only stages a pending confirmation; it must not call the mutation directly.
+    expect(historyListSource).not.toMatch(/onDeleteRequest[\s\S]{0,20}mutateAsync/);
+  });
+
+  it("bulk delete confirms the count and clears selection/closes the dialog after success", () => {
+    expect(historySource).toMatch(/deleteConfirmation\.map\(\(item\) => item\.id\)/);
+    expect(historySource).toMatch(/setDeleteConfirmation\(null\);\s*setSelectedIds\(new Set\(\)\);/);
+  });
+
+  it("English and Indonesian catalogs define matching history keys, including delete/restore", () => {
+    for (const messages of [idMessages, enMessages]) {
+      const history = messages.assistant.history as Record<string, unknown>;
+      for (const key of [
+        "title",
+        "openLabel",
+        "listLabel",
+        "newConversation",
+        "activeConversationLabel",
+        "statusActive",
+        "conversationFromDate",
+        "loading",
+        "loadingMore",
+        "emptyAll",
+        "emptyActive",
+        "emptyArchived",
+        "error",
+        "retry",
+        "loadMore",
+        "restore",
+        "restoring",
+        "restoreSuccess",
+        "restoreError",
+        "delete",
+        "deleting",
+        "deleteTitle",
+        "deleteDescription",
+        "deleteConfirm",
+        "deleteCancel",
+        "deleteSuccess",
+        "deleteError",
+        "switchBlockedTitle",
+        "switchBlockedDescription",
+        "switchConfirm",
+        "switchCancel",
+      ]) {
+        expect(history[key]).toBeTruthy();
+      }
+    }
+  });
+});
+
+describe("deleting the currently active conversation forces a local reset, even mid-workflow (final safety audit fix)", () => {
+  it("startNewConversation accepts a force option that bypasses the canStartNewConversation guard", () => {
+    expect(flowHookSource).toContain("function startNewConversation(options: { force?: boolean } = {})");
+    expect(flowHookSource).toContain("if (!canStartNewConversation && !options.force) return;");
+  });
+
+  it("confirmDelete force-resets the active conversation when it is among the deleted ids — single or bulk", () => {
+    expect(historySource).toMatch(
+      /async function confirmDelete[\s\S]*?if \(conversationId && ids\.includes\(conversationId\)\) onStartNewConversation\(\{ force: true \}\);/
+    );
+  });
+
+  it("confirmArchive force-resets the active conversation too, matching confirmDelete (Phase 27 fix)", () => {
+    const archiveBody = historySource.slice(
+      historySource.indexOf("async function confirmArchive"),
+      historySource.indexOf("async function confirmDelete")
+    );
+    expect(archiveBody).toContain("if (conversationId && ids.includes(conversationId)) onStartNewConversation({ force: true });");
+  });
+
+  it("onStartNewConversation's prop type allows the caller to force a reset", () => {
+    expect(historySource).toContain("onStartNewConversation: (options?: { force?: boolean }) => void;");
+  });
+
+  it("the standalone 'new conversation' button still goes through the unforced guard, not a bypass", () => {
+    expect(pageSource).toContain("const handleStartNewConversation = useCallback(() => {");
+    expect(pageSource).toMatch(/handleStartNewConversation = useCallback\(\(\) => \{\s*flow\.startNewConversation\(\);/);
+    expect(pageSource).toContain("onClick={handleStartNewConversation}");
+  });
+});
+
+describe("assistant provider clarification renders as a conversational turn, not a reset (fix/assistant-conversation-response-ui)", () => {
+  // Backend contract: provider-style clarification text returns typed
+  // `{ status: "clarification_required", message, data: { kind: "provider_text" }, ... }`
+  // (pocket-mint-be provider-runtime.ts; docs/api/assistant-conversations.md). It is a
+  // persisted ASSISTANT turn answered by typing, distinct from `entity_selection`
+  // pick-an-option payloads and `guided_fields` form payloads.
+  it("branches on the presence of `data` inside the clarification_required case so a data-less provider question isn't treated as an error", () => {
+    expect(flowHookSource).toMatch(/status === "clarification_required"[\s\S]*?result\.data\?\.kind === "entity_selection"/);
+    expect(flowHookSource).toMatch(/status === "clarification_required"[\s\S]*?result\.data\?\.kind === "guided_fields"/);
+    // The structured entity-ambiguity branch stays gated behind a valid clarification payload.
+    expect(flowHookSource).toContain("isClarificationRequest(result.data.clarification)");
+  });
+
+  it("does not block the composer or set a workflow for a provider clarification — it flows into the timeline and the composer stays open", () => {
+    // The data-less branch clears any workflow/echo and returns without the "generic-error"
+    // sentinel, so no clarification/draft workflow is engaged and the composer is never disabled.
+    expect(flowHookSource).toMatch(
+      /Provider clarification[\s\S]*?setActiveWorkflow\(null\);\s*setLastResult\(null\);\s*return;/
+    );
+  });
+
+  it("a malformed successful response no longer wipes the conversation — the submit generic-error handler is a snackbar, not startNewConversation", () => {
+    expect(pageSource).toContain('() => toast(tErrors("generic"), "error")');
+    // The pre-fix destructive submit handler is gone: a successful-but-unhandled response
+    // must never null the conversation id and drop the user back to the empty state.
+    expect(pageSource).not.toContain("() => flow.startNewConversation()");
+  });
+
+  it("only echoes a deterministic result card when the backend actually sent renderedText", () => {
+    // Guards against an empty AssistantResultState for an HTTP-200 non-tool reply
+    // (e.g. `unsupported`) that carries `message` but no `renderedText`.
+    expect(flowHookSource).toContain("if (result.renderedText) setLastResult({ renderedText: result.renderedText })");
+  });
+});

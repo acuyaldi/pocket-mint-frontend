@@ -14,16 +14,20 @@ Heed deprecation notices.
 @.claude/skills/git-workflow.skill.md
 <!-- END:git-workflow -->
 
-<!-- BEGIN:api-design -->
-@skills/design.md
-<!-- END:api-design -->
+<!-- BEGIN:frontend-architecture -->
+@.claude/skills/frontend-architecture.skill.md
+<!-- END:frontend-architecture -->
+
+<!-- BEGIN:design -->
+@.claude/skills/design.md
+<!-- END:design -->
 
 <!-- BEGIN:ui-system -->
-@skills/ui-system.skill.md
+@.claude/skills/ui-system.skill.md
 <!-- END:ui-system -->
 
 <!-- BEGIN:financial-logic -->
-@skills/financial-logic.skill.md
+@.claude/skills/financial-logic.skill.md
 <!-- END:financial-logic -->
 
 ## Repository Reading Rules

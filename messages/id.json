@@ -18,6 +18,15 @@
       "loading": "Memuat...",
       "empty": "Belum ada data"
     },
+    "snackbar": {
+      "close": "Tutup notifikasi",
+      "regionLabel": "Notifikasi"
+    },
+    "errors": {
+      "requestFailed": "Terjadi kesalahan. Silakan coba lagi.",
+      "network": "Anda sepertinya sedang offline. Periksa koneksi lalu coba lagi.",
+      "timeout": "Permintaan memakan waktu terlalu lama. Silakan coba lagi."
+    },
     "currencyPrefix": "Rp"
   },
   "nav": {
@@ -39,7 +48,8 @@
     "logoutFailed": "Keluar gagal — periksa koneksi lalu coba lagi.",
     "loggingOut": "Sedang keluar…",
     "savingGoals": "Target Tabungan",
-    "budgets": "Anggaran"
+    "budgets": "Anggaran",
+    "assistant": "Asisten"
   },
   "notificationCenter": {
     "title": "Notifikasi",
@@ -209,7 +219,31 @@
       "wrongCurrentPassword": "Password saat ini salah."
     },
     "successChanged": "Password berhasil diubah. Mengarahkan ke halaman masuk...",
-    "successChangedRedirectMessage": "Password berhasil diubah. Silakan masuk dengan password baru."
+    "successChangedRedirectMessage": "Password berhasil diubah. Silakan masuk dengan password baru.",
+    "merchantMapping": {
+      "title": "Merchant Mapping",
+      "subtitle": "Kelola merchant yang selalu dipetakan ke kategori tertentu."
+    },
+    "telegram": {
+      "title": "Telegram",
+      "subtitle": "Hubungkan akun Telegram kamu untuk mengirim pesan langsung ke Assistant.",
+      "loading": "Memeriksa status koneksi...",
+      "statusLinked": "Terhubung ke Telegram",
+      "statusNotLinked": "Belum terhubung.",
+      "generate": "Buat kode penghubung",
+      "generating": "Membuat kode...",
+      "instructions": "Buka Telegram, kirim pesan ke bot Pocket Mint, lalu kirim perintah di bawah ini.",
+      "copy": "Salin perintah",
+      "expiresAt": "Berlaku sampai {time}",
+      "disconnect": "Putuskan Koneksi",
+      "disconnectConfirm": {
+        "title": "Putuskan koneksi Telegram?",
+        "description": "Assistant tidak akan lagi merespons pesan dari akun Telegram ini sampai kamu menghubungkannya kembali."
+      },
+      "errors": {
+        "generateFailed": "Gagal membuat kode penghubung. Silakan coba lagi."
+      }
+    }
   },
   "authErrors": {
     "invalidCredentials": "Email atau password salah.",
@@ -233,6 +267,7 @@
   "dashboard": {
     "financialPosition": "Posisi keuangan bersih",
     "failedToLoadSummary": "Gagal memuat ringkasan keuangan.",
+    "loadingNetWorth": "Memuat kekayaan bersih…",
     "lastUpdated": "Terakhir diperbarui: sekarang",
     "totalAssets": "Total aset",
     "totalDebts": "Total hutang",
@@ -723,11 +758,14 @@
         "transferFromCreditNotAllowed": "Transfer tidak bisa dilakukan dari kartu kredit atau paylater.",
         "incomeToDebtNotAllowed": "Pemasukan tidak bisa dicatat ke kartu kredit atau paylater.",
         "insufficientBalance": "Saldo {name} tidak cukup.",
-        "genericSaveFailed": "Transaksi gagal disimpan. Coba lagi."
+        "genericSaveFailed": "Transaksi gagal disimpan. Coba lagi.",
+        "rememberMerchantFailed": "Gagal menyimpan merchant mapping. Transaksi tetap tersimpan."
       },
       "toastTransferSuccess": "Transfer berhasil dicatat",
       "toastIncomeSuccess": "Pemasukan berhasil dicatat",
-      "toastExpenseSuccess": "Pengeluaran berhasil dicatat"
+      "toastExpenseSuccess": "Pengeluaran berhasil dicatat",
+      "rememberMerchant": "Ingat merchant ini",
+      "rememberMerchantDescription": "Transaksi berikutnya dengan deskripsi ini akan langsung disarankan ke kategori yang dipilih."
     },
     "accountPicker": {
       "noWalletsAvailable": "Tidak ada dompet transfer yang tersedia.",
@@ -775,50 +813,83 @@
   "analytics": {
     "pageTitle": "Analitik",
     "pageDescription": "Pantau tren dan performa finansial Anda",
-    "periods": {
-      "month": "Bulan ini",
-      "quarter": "3 bulan",
-      "sixMonths": "6 bulan"
-    },
+    "loading": "Memuat analitik…",
     "exportReport": "Ekspor laporan",
     "exportFailed": "Ekspor laporan gagal. Coba lagi.",
-    "realData": "Data nyata",
-    "savingsRate": "Savings rate",
-    "savingsRateHelper": "{amount} sisa arus kas periode ini",
-    "cashFlow": "Cash flow",
-    "cashFlowHelper": "{income} masuk · {expenses} keluar",
-    "debtRatio": "Debt ratio",
-    "debtRatioHelper": "{debt} dari limit {limit}",
-    "cashFlowChart": {
-      "title": "Arus kas",
-      "subtitle": "Pendapatan dan pengeluaran 6 bulan terakhir",
+    "periodSelector": {
+      "label": "Pilih periode laporan",
+      "options": {
+        "currentMonth": "Bulan ini",
+        "previousMonth": "Bulan lalu",
+        "last3Months": "3 bulan",
+        "last6Months": "6 bulan",
+        "currentYear": "Tahun ini",
+        "custom": "Kustom"
+      },
+      "startDate": "Mulai",
+      "endDate": "Akhir",
+      "apply": "Terapkan",
+      "errorStartAfterEnd": "Tanggal mulai harus sebelum tanggal akhir.",
+      "errorInvalidRange": "Masukkan tanggal mulai dan akhir yang valid."
+    },
+    "overview": {
       "income": "Pemasukan",
-      "expenses": "Pengeluaran",
-      "empty": "Belum ada transaksi untuk membentuk grafik arus kas.",
-      "incomeTooltip": "Pemasukan {month}: {amount}",
-      "expenseTooltip": "Pengeluaran {month}: {amount}"
+      "expense": "Pengeluaran",
+      "netCashFlow": "Arus kas bersih",
+      "transactionCount": "Transaksi",
+      "changeVsPrevious": "{percent} ({amount} vs periode sebelumnya)",
+      "noComparison": "Tidak ada data sebelumnya untuk dibandingkan"
     },
-    "allocation": {
-      "title": "Alokasi pengeluaran",
-      "subtitle": "Kategori terbesar pada periode terpilih",
-      "empty": "Belum ada pengeluaran pada periode ini.",
+    "trends": {
+      "title": "Arus kas",
+      "subtitle": "Tren pemasukan dan pengeluaran pada periode terpilih",
+      "income": "Pemasukan",
+      "expense": "Pengeluaran",
+      "net": "Bersih",
+      "empty": "Belum ada transaksi untuk periode ini.",
+      "summaryUp": "Arus kas naik {percent} selama periode ini.",
+      "summaryDown": "Arus kas turun {percent} selama periode ini.",
+      "summaryFlat": "Arus kas relatif stabil pada periode ini."
+    },
+    "categories": {
+      "title": "Pengeluaran per kategori",
+      "subtitle": "Kategori pengeluaran terbesar pada periode terpilih",
+      "typeLabel": "Tipe",
+      "options": {
+        "EXPENSE": "Pengeluaran",
+        "INCOME": "Pemasukan"
+      },
+      "uncategorized": "Tanpa kategori",
+      "empty": "Belum ada transaksi {type} untuk periode ini.",
+      "percentageOfTotal": "{percent} dari total"
+    },
+    "wallets": {
+      "title": "Aktivitas dompet",
+      "subtitle": "Pemasukan, pengeluaran, dan selisih per dompet",
+      "columns": {
+        "wallet": "Dompet",
+        "income": "Pemasukan",
+        "expense": "Pengeluaran",
+        "net": "Selisih"
+      },
+      "empty": "Belum ada aktivitas dompet untuk periode ini."
+    },
+    "budgetPerformance": {
+      "title": "Performa anggaran",
+      "subtitle": "Pengeluaran terhadap anggaran aktif bulan ini",
+      "empty": "Belum ada anggaran aktif.",
+      "limitLabel": "Batas {limit}",
+      "spentLabel": "{spent} terpakai",
+      "remainingLabel": "{remaining} tersisa"
+    },
+    "drillDown": {
+      "title": "Transaksi",
+      "subtitle": "{count} transaksi sesuai filter saat ini",
+      "empty": "Tidak ada transaksi yang sesuai filter saat ini.",
+      "close": "Tutup",
+      "page": "Halaman {page} dari {total}",
+      "viewAll": "Lihat semua transaksi",
       "noCategory": "Tanpa kategori"
-    },
-    "composition": {
-      "title": "Komposisi dompet",
-      "subtitle": "Aset dan liabilitas dari saldo saat ini",
-      "assets": "Aset",
-      "liabilities": "Liabilitas"
-    },
-    "insights": {
-      "title": "Insight",
-      "subtitle": "Ringkasan otomatis dari data yang tersedia",
-      "noTransactions": "Belum ada transaksi pada periode ini.",
-      "positiveCashFlow": "Arus kas periode ini positif sebesar {amount}.",
-      "negativeCashFlow": "Pengeluaran melewati pemasukan sebesar {amount}.",
-      "expenseRatio": "Rasio pengeluaran berada di {percent} dari pemasukan.",
-      "topCategory": "Kategori terbesar: {label}, senilai {amount}.",
-      "activeInstallments": "{count} cicilan aktif perlu dipantau."
     }
   },
   "changelog": {
@@ -916,6 +987,235 @@
         "help": "Bantuan",
         "contact": "Kontak"
       }
+    }
+  },
+  "merchantMappings": {
+    "pageTitle": "Merchant Mapping",
+    "pageDescription": "Petakan nama merchant ke kategori favorit Anda — saran kategori akan langsung mengikuti pemetaan ini.",
+    "addMapping": "Tambah Mapping",
+    "searchPlaceholder": "Cari merchant...",
+    "searchAria": "Cari merchant mapping",
+    "loading": "Memuat merchant mapping...",
+    "loadError": "Gagal memuat merchant mapping. Coba lagi.",
+    "empty": "Belum ada merchant mapping.",
+    "emptyDescription": "Tambahkan merchant pertama Anda agar transaksi berikutnya otomatis disarankan ke kategori yang tepat.",
+    "noSearchResults": "Tidak ada merchant yang cocok dengan \"{search}\".",
+    "edit": "Ubah",
+    "delete": "Hapus",
+    "editAria": "Ubah mapping untuk {name}",
+    "deleteAria": "Hapus mapping untuk {name}",
+    "toastCreated": "Merchant mapping berhasil dibuat.",
+    "toastUpdated": "Merchant mapping berhasil diperbarui.",
+    "toastDeleted": "Merchant mapping berhasil dihapus.",
+    "toastDeleteFailed": "Gagal menghapus merchant mapping. Silakan coba lagi.",
+    "errors": {
+      "BAD_REQUEST": "Permintaan tidak lengkap atau tidak valid. Periksa kembali formulir dan coba lagi.",
+      "INVALID_MERCHANT_NAME": "Nama merchant harus mengandung minimal satu huruf atau angka.",
+      "CATEGORY_NOT_FOUND": "Kategori ini sudah tidak tersedia.",
+      "DUPLICATE_MERCHANT": "Merchant ini sudah dipetakan ke kategori lain.",
+      "NOT_FOUND": "Merchant mapping ini sudah tidak ada atau tidak dapat diakses.",
+      "GENERIC": "Terjadi kesalahan. Silakan coba lagi."
+    }
+  },
+  "merchantMappingModals": {
+    "create": {
+      "title": "Tambah Merchant Mapping",
+      "description": "Petakan nama merchant ke kategori. Transaksi berikutnya dengan nama ini akan langsung disarankan ke kategori tersebut.",
+      "merchantName": "Nama Merchant",
+      "merchantNamePlaceholder": "Contoh: Warung Bu Siti",
+      "category": "Kategori",
+      "categoryPlaceholder": "Pilih kategori",
+      "submit": "Simpan Mapping"
+    },
+    "edit": {
+      "title": "Ubah Merchant Mapping",
+      "description": "Perbarui nama merchant atau kategori tujuan.",
+      "merchantName": "Nama Merchant",
+      "merchantNamePlaceholder": "Contoh: Warung Bu Siti",
+      "category": "Kategori",
+      "categoryPlaceholder": "Pilih kategori",
+      "submit": "Simpan Perubahan"
+    },
+    "delete": {
+      "title": "Hapus Merchant Mapping?",
+      "description": "Mapping untuk \"{name}\" akan dihapus. Transaksi yang sudah ada tidak berubah, dan saran kategori untuk merchant ini kembali mengikuti pencocokan kata kunci.",
+      "confirm": "Hapus"
+    }
+  },
+  "assistant": {
+    "pageTitle": "Asisten",
+    "pageDescription": "Asisten percakapan untuk keuangan Anda.",
+    "underDevelopment": "Asisten sedang dalam pengembangan.",
+    "conversation": {
+      "regionLabel": "Percakapan Asisten",
+      "listLabel": "Pesan percakapan",
+      "historyLoading": "Memuat percakapan...",
+      "retry": "Coba lagi",
+      "authorUser": "Anda",
+      "authorAssistant": "Asisten",
+      "authorSystem": "Sistem",
+      "channelTelegram": "Dikirim dari Telegram",
+      "deliveryDelivering": "Mengirim ke Telegram",
+      "deliverySent": "Terkirim ke Telegram",
+      "deliveryFailed": "Pengiriman ke Telegram gagal",
+      "emptyTitle": "Mulai percakapan baru",
+      "emptyDescription": "Jelaskan satu pemasukan atau pengeluaran dengan kata-kata Anda sendiri, Pocket Mint Assistant akan membantu mencatatnya.",
+      "examplesLabel": "Contoh",
+      "example1": "bayar internet 350 ribu dari BCA",
+      "example2": "gaji bulan ini masuk ke BCA 8 juta",
+      "pendingResponse": "Menunggu balasan asisten...",
+      "transientUnavailable": "Klarifikasi yang tertunda pada percakapan ini tidak dapat dipulihkan setelah dimuat ulang. Anda dapat melanjutkan dengan mengirim instruksi baru.",
+      "newConversation": "Percakapan baru",
+      "resetBlocked": "Selesaikan klarifikasi atau draf yang sedang berlangsung sebelum memulai percakapan baru.",
+      "composerDisabledClarification": "Jawab klarifikasi di atas sebelum mengirim instruksi baru.",
+      "composerDisabledDraft": "Konfirmasi atau batalkan draf di atas sebelum mengirim instruksi baru."
+    },
+    "command": {
+      "label": "Apa yang ingin Anda catat?",
+      "placeholder": "mis. bayar internet 350 ribu dari BCA",
+      "helper": "Jelaskan satu pemasukan atau pengeluaran dengan kata-kata Anda sendiri.",
+      "submit": "Kirim",
+      "submitting": "Mengirim"
+    },
+    "clarification": {
+      "cancelling": "Membatalkan",
+      "cancelSuccess": "Klarifikasi dibatalkan.",
+      "title": {
+        "wallet": "Pilih dompet",
+        "merchant": "Pilih merchant",
+        "category": "Pilih kategori"
+      },
+      "description": {
+        "wallet": "Pilih dompet yang akan digunakan untuk transaksi ini.",
+        "merchant": "Pilih merchant yang dimaksud oleh transaksi ini.",
+        "category": "Pilih salah satu kategori Anda yang sudah tersedia."
+      },
+      "guided": {
+        "field": {
+          "category": "Kategori",
+          "date": "Tanggal"
+        },
+        "submit": "Lanjutkan"
+      }
+    },
+    "completion": {
+      "newInstruction": "Instruksi baru"
+    },
+    "errors": {
+      "invalidInput": "Instruksi tersebut tidak dapat dipahami. Coba ubah kalimatnya.",
+      "tooLong": "Instruksi tersebut terlalu panjang. Mohon persingkat.",
+      "providerUnavailable": "Asisten sedang tidak tersedia. Silakan coba lagi sebentar lagi.",
+      "clarificationExpired": "Klarifikasi ini sudah kedaluwarsa. Mulai lagi.",
+      "clarificationConsumed": "Klarifikasi ini sudah digunakan. Mulai lagi.",
+      "invalidOption": "Opsi tersebut sudah tidak berlaku. Mulai lagi.",
+      "draftConflict": "Draf ini tidak bisa lagi dikonfirmasi atau dibatalkan.",
+      "idempotencyConflict": "Tindakan ini sudah pernah dikirim.",
+      "generic": "Terjadi kesalahan. Silakan coba lagi."
+    },
+    "draftReview": {
+      "income": "Pemasukan",
+      "expense": "Pengeluaran",
+      "wallet": "Dompet",
+      "category": "Kategori",
+      "merchant": "Merchant",
+      "date": "Tanggal",
+      "notes": "Catatan",
+      "expiresAt": "Kedaluwarsa",
+      "status": {
+        "PENDING_CONFIRMATION": "Menunggu konfirmasi",
+        "COMMITTED": "Dikonfirmasi",
+        "CANCELLED": "Dibatalkan",
+        "EXPIRED": "Kedaluwarsa",
+        "FAILED": "Gagal"
+      },
+      "confirm": "Konfirmasi",
+      "confirming": "Mengonfirmasi",
+      "cancel": "Batalkan",
+      "cancelling": "Membatalkan",
+      "confirmSuccess": "Transaksi berhasil disimpan.",
+      "cancelSuccess": "Draf dibatalkan.",
+      "edit": "Edit",
+      "saveChanges": "Simpan Perubahan",
+      "saving": "Menyimpan",
+      "cancelEdit": "Batal",
+      "confirmTransaction": "Simpan Transaksi",
+      "reviewHeading": "Transaction Review",
+      "genericError": "Terjadi kesalahan. Silakan coba lagi."
+    },
+    "recovery": {
+      "loading": "Memeriksa status pemulihan percakapan ini sebelum menampilkan klarifikasi atau draf yang mungkin masih tertunda setelah halaman dimuat ulang. Anda tetap berada di percakapan yang sama.",
+      "clarificationRecoveredTitle": "Masih ada pertanyaan yang belum dijawab pada percakapan ini",
+      "composerDisabled": "Periksa apa yang terjadi pada tindakan sebelumnya di atas sebelum mengirim instruksi baru.",
+      "turnRunning": "Pesan sebelumnya pada percakapan ini masih diproses. Mohon tunggu sebelum mengirim pesan lain.",
+      "composerDisabledTurnRunning": "Pesan sebelumnya masih diproses. Mohon tunggu sebelum mengirim pesan lain."
+    },
+    "outcomeUnknown": {
+      "heading": "Kami belum bisa memastikan apa yang terjadi",
+      "description": "Tindakan sebelumnya mungkin berhasil atau mungkin belum. Ini bukan kegagalan, dan belum tentu berhasil juga. Periksa percakapan untuk melihat hasil sebenarnya, atau coba lagi jika aman untuk dilakukan.",
+      "check": "Periksa percakapan",
+      "checking": "Memeriksa",
+      "retry": "Coba lagi",
+      "retrying": "Mencoba lagi",
+      "retrySuccess": "Selesai."
+    },
+    "history": {
+      "title": "Riwayat percakapan",
+      "openLabel": "Buka riwayat percakapan",
+      "listLabel": "Percakapan sebelumnya",
+      "newConversation": "Percakapan baru",
+      "activeConversationLabel": "aktif",
+      "statusActive": "Aktif",
+      "conversationFromDate": "Percakapan dari {date}",
+      "loading": "Memuat percakapan...",
+      "loadingMore": "Memuat lagi",
+      "emptyAll": "Belum ada percakapan sebelumnya.",
+      "emptyActive": "Belum ada percakapan aktif.",
+      "emptyArchived": "Belum ada percakapan yang diarsipkan.",
+      "error": "Riwayat percakapan tidak dapat dimuat.",
+      "retry": "Coba lagi",
+      "loadMore": "Muat lebih banyak",
+      "archivedStatus": "Diarsipkan",
+      "telegramBadge": "Juga digunakan dari Telegram",
+      "searchLoaded": "Cari percakapan yang sudah dimuat",
+      "searchPlaceholder": "Cari pratinjau yang sudah dimuat",
+      "filterLabel": "Filter riwayat",
+      "filterAll": "Semua",
+      "filterActive": "Aktif",
+      "filterArchived": "Diarsipkan",
+      "showingLoaded": "Memuat {loaded} dari {total} percakapan",
+      "noSearchResults": "Tidak ada percakapan yang cocok.",
+      "selectConversation": "Pilih percakapan",
+      "selectAllLoaded": "Pilih semua percakapan yang sudah dimuat",
+      "clearSelection": "Hapus pilihan",
+      "selectedCount": "{count, plural, one {# percakapan dipilih} other {# percakapan dipilih}}",
+      "actionsFor": "Aksi untuk {label}",
+      "archive": "Arsipkan",
+      "archiving": "Mengarsipkan",
+      "archiveTitle": "{count, plural, one {Arsipkan percakapan ini?} other {Arsipkan # percakapan?}}",
+      "archiveDescription": "Percakapan yang diarsipkan tetap ada di riwayat, tetapi tidak bisa dilanjutkan. {active}Data transaksi, dompet, kategori, dan catatan keuangan tidak akan berubah.",
+      "archiveActiveWarning": "Percakapan aktif akan ditutup. ",
+      "archiveConfirm": "Arsipkan",
+      "archiveCancel": "Batal",
+      "archiveSuccess": "{count, plural, one {Percakapan diarsipkan.} other {Percakapan diarsipkan.}}",
+      "archiveError": "Riwayat percakapan tidak dapat diperbarui. Silakan coba lagi.",
+      "restore": "Pulihkan",
+      "restoring": "Memulihkan",
+      "restoreSuccess": "Percakapan dipulihkan.",
+      "restoreError": "Percakapan tidak dapat dipulihkan. Silakan coba lagi.",
+      "delete": "Hapus",
+      "deleting": "Menghapus",
+      "deleteTitle": "{count, plural, one {Hapus percakapan ini?} other {Hapus # percakapan?}}",
+      "deleteDescription": "{count, plural, one {Percakapan ini akan dihapus secara permanen dan tidak dapat dipulihkan.} other {# percakapan akan dihapus secara permanen dan tidak dapat dipulihkan.}}",
+      "deleteConfirm": "{count, plural, one {Hapus} other {Hapus # percakapan}}",
+      "deleteCancel": "Batal",
+      "deleteSuccess": "{count, plural, one {Percakapan dihapus.} other {# percakapan dihapus.}}",
+      "deleteError": "Percakapan tidak dapat dihapus. Silakan coba lagi.",
+      "contractNote": "Arsip, pemulihan, dan hapus permanen tersedia sekarang.",
+      "permanentDeleteNote": "Percakapan yang dihapus akan hilang secara permanen dan tidak dapat dipulihkan.",
+      "switchBlockedTitle": "Ganti percakapan?",
+      "switchBlockedDescription": "Ada klarifikasi atau draf yang belum diselesaikan pada percakapan ini. Berganti akan menghapusnya di peramban Anda, tetapi tidak mengubah apa pun di server — Anda dapat kembali ke sana nanti.",
+      "switchConfirm": "Tetap ganti",
+      "switchCancel": "Tetap di sini"
     }
   }
 }

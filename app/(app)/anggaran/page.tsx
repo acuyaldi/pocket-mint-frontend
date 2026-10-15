@@ -26,6 +26,7 @@ import { CreateBudgetModal } from "./components/CreateBudgetModal";
 import { EditBudgetModal } from "./components/EditBudgetModal";
 import { ArchiveBudgetModal } from "./components/ArchiveBudgetModal";
 import { RestoreBudgetModal } from "./components/RestoreBudgetModal";
+import { getApiErrorMessage } from "@/lib/api-errors";
 
 function BudgetCard({
   budget,
@@ -184,8 +185,7 @@ export default function BudgetsPage() {
       setArchiveTarget(null);
       toast(t("toastArchived"));
     } catch (caught) {
-      const message = (caught as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(caught);
       toast(message ?? t("toastArchiveFailed"), "error");
     } finally {
       setIsArchiving(false);
@@ -200,8 +200,7 @@ export default function BudgetsPage() {
       setRestoreTarget(null);
       toast(t("toastRestored"));
     } catch (caught) {
-      const message = (caught as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(caught);
       toast(message ?? t("toastRestoreFailed"), "error");
     } finally {
       setIsRestoring(false);

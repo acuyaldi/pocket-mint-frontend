@@ -8,15 +8,18 @@ import idMessages from "@/messages/id.json";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const sidebar = readFileSync(root + "components/layout/app-sidebar.tsx", "utf8");
 const bottomNav = readFileSync(root + "components/layout/bottom-nav.tsx", "utf8");
+const navItems = readFileSync(root + "components/layout/navigation-items.ts", "utf8");
 const legacyRoute = readFileSync(root + "app/(app)/cicilan/page.tsx", "utf8");
 
 describe("bill navigation source contract", () => {
   it("uses the Cicilan label and route on desktop and mobile", () => {
     for (const source of [sidebar, bottomNav]) {
-      expect(source).toContain('label: t("installments")');
-      expect(source).toContain('href: "/tagihan"');
+      expect(source).toContain("getAppNavigationItems(t)");
       expect(source).not.toContain('href: "/cicilan"');
     }
+    expect(navItems).toContain('label: t("installments")');
+    expect(navItems).toContain('href: "/tagihan"');
+    expect(navItems).not.toContain('href: "/cicilan"');
     expect(idMessages.nav.installments).toBe("Cicilan");
   });
 
@@ -32,5 +35,14 @@ describe("bill navigation source contract", () => {
 
   it("redirects the legacy Cicilan route", () => {
     expect(legacyRoute).toContain('redirect("/tagihan")');
+  });
+
+  it("gives instant click feedback on the desktop primary nav without disabling prefetch", () => {
+    // A route-level loading.tsx was tried and measurably regressed navigation
+    // (Next.js narrows Link prefetch scope for routes with a loading
+    // boundary), so feedback is done via useLinkStatus instead — it only
+    // surfaces once prefetch hasn't already made the transition instant.
+    expect(sidebar).toContain("NavLinkPendingHint");
+    expect(sidebar).not.toContain("prefetch={false}");
   });
 });

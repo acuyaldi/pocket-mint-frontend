@@ -14,6 +14,7 @@ import { AppModal, ModalCancelButton, ModalSubmitButton } from "@/components/ui/
 import { FieldLabel, FormField, FormErrorMessage } from "@/components/ui/form-field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { WalletType } from "@/src/types/wallet";
+import { getApiErrorMessage } from "@/lib/api-errors";
 
 interface CreateWalletModalProps {
   isOpen: boolean;
@@ -179,8 +180,7 @@ export default function CreateWalletModal({
         ...(isLoan && { principal }),
       });
     } catch (caught) {
-      const message = (caught as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(caught);
       setError(message ?? t("genericError"));
       return;
     }

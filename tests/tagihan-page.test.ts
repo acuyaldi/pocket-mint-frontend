@@ -31,4 +31,15 @@ describe("Cicilan page source contract", () => {
       "Saldo tidak mencukupi"
     );
   });
+
+  it("renders the page heading before the bills query resolves (perf: no full-page loading gate)", () => {
+    // PageHeader must render unconditionally so the h1 isn't blocked behind
+    // useBills()'s isLoading — only the data-dependent content below it may
+    // be replaced by the loading spinner.
+    const headerIndex = page.indexOf("<PageHeader");
+    const isLoadingGateIndex = page.indexOf("isLoading ? (");
+    expect(headerIndex).toBeGreaterThan(-1);
+    expect(isLoadingGateIndex).toBeGreaterThan(-1);
+    expect(headerIndex).toBeLessThan(isLoadingGateIndex);
+  });
 });

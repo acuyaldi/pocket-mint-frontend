@@ -1,0 +1,60 @@
+import { AuthenticationRequiredError, AuthSessionError } from "@/lib/api-errors";
+
+export type AssistantErrorAmbiguity = "ambiguous" | "definite";
+
+/**
+ * Classifies a caught Assistant mutation error:
+ * - `"ambiguous"` — no HTTP response ever reached the client (network error,
+ *   timeout, `AggregateError`), OR the server explicitly said the original
+ *   submission (same Idempotency-Key) is still running
+ *   (`409 ASSISTANT_REQUEST_IN_PROGRESS`) — in both cases the mutation's real
+ *   outcome is unknown/pending, so the key must be kept: clearing it here
+ *   would hand the next retry a fresh key and let it start a genuine second
+ *   turn/draft while the first is still in flight, defeating Phase 27's
+ *   whole point.
+ * - `"definite"` — a real HTTP response came back with a terminal outcome
+ *   (including a 401, which is handled separately by `lib/api.ts`'s own
+ *   interceptor) — the backend explicitly finished handling the request.
+ */
+export function classifyAssistantMutationError(error: unknown): AssistantErrorAmbiguity {
+  if (error instanceof AuthenticationRequiredError || error instanceof AuthSessionError) return "definite";
+  if (readBackendError(error)?.code === "ASSISTANT_REQUEST_IN_PROGRESS") return "ambiguous";
+  const response = (error as { response?: unknown } | null | undefined)?.response;
+  return response === undefined ? "ambiguous" : "definite";
+}
+
+/** Maps known real `AssistantError` codes (`pocket-mint-be/src/assistant/errors.ts`) to an `assistant.errors.*` message key. */
+const ASSISTANT_ERROR_MESSAGE_KEYS: Record<string, string> = {
+  ASSISTANT_INVALID_REQUEST: "invalidInput",
+  ASSISTANT_INVALID_INPUT: "invalidInput",
+  // 503s from the provider must read as a calm "try again later", never the raw
+  // backend string "Assistant provider is unavailable".
+  ASSISTANT_PROVIDER_UNAVAILABLE: "providerUnavailable",
+  ASSISTANT_PROVIDER_CONFIGURATION_ERROR: "providerUnavailable",
+  ASSISTANT_CLARIFICATION_EXPIRED: "clarificationExpired",
+  ASSISTANT_CLARIFICATION_STALE: "clarificationExpired",
+  ASSISTANT_CLARIFICATION_ALREADY_CONSUMED: "clarificationConsumed",
+  ASSISTANT_CLARIFICATION_CANCELLED: "clarificationConsumed",
+  ASSISTANT_CLARIFICATION_INVALID_OPTION: "invalidOption",
+  ASSISTANT_DRAFT_CONFLICT: "draftConflict",
+  ASSISTANT_IDEMPOTENCY_CONFLICT: "idempotencyConflict",
+};
+
+/** Extracts the backend's safe `{error:{code,message}}` envelope from an Axios/API-boundary error. */
+function readBackendError(error: unknown): { code?: string; message?: string } | undefined {
+  return (error as { response?: { data?: { error?: { code?: string; message?: string } } } })?.response?.data?.error;
+}
+
+/**
+ * Maps an Assistant mutation error to a safe, localized message. Known codes get a
+ * translated message; anything else falls back to the backend's own already-sanitized
+ * message, then to a generic localized fallback — never a raw stack trace or token value.
+ */
+export function readAssistantErrorMessage(error: unknown, t: (key: string) => string): string {
+  const backendError = readBackendError(error);
+  const key = backendError?.code ? ASSISTANT_ERROR_MESSAGE_KEYS[backendError.code] : undefined;
+  if (key) return t(key);
+  if (backendError?.message) return backendError.message;
+  if (error instanceof Error && error.message) return error.message;
+  return t("generic");
+}

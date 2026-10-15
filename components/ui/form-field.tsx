@@ -4,6 +4,7 @@ import * as React from "react";
 import { AlertCircle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectTrigger } from "@/components/ui/select";
 
 /** Standalone label matching FormField's typography, for composite fields (pickers, button grids) that don't fit the label+single-control shape. */
 export function FieldLabel({
@@ -17,6 +18,7 @@ export function FieldLabel({
 }) {
   return (
     <label
+      id={htmlFor ? `${htmlFor}-label` : undefined}
       htmlFor={htmlFor}
       className={cn(
         "text-[12px] font-semibold uppercase tracking-[0.12em] text-muted-foreground",
@@ -62,14 +64,41 @@ export function FormField({
   // upgrade by having such fields pass their id/aria props through explicitly
   // if that pattern shows up again.
   const isLayoutWrapper = React.isValidElement(children) && children.type === "div";
-  const child =
-    React.isValidElement(children) && htmlFor && !isLayoutWrapper
-      ? React.cloneElement(children as React.ReactElement<Record<string, unknown>>, {
-          id: htmlFor,
-          "aria-invalid": error ? true : undefined,
-          "aria-describedby": describedBy,
-        })
-      : children;
+  const labelId = htmlFor ? `${htmlFor}-label` : undefined;
+  const controlProps = {
+    id: htmlFor,
+    "aria-invalid": error ? true : undefined,
+    "aria-describedby": describedBy,
+  };
+  const child = (() => {
+    if (!React.isValidElement(children) || !htmlFor || isLayoutWrapper) return children;
+    // Select's accessible name lives on its nested SelectTrigger, not on the
+    // Root — cloning straight onto <Select> would silently do nothing, which
+    // is why callers used to hand-duplicate the id onto SelectTrigger too.
+    // Its popup's `role="listbox"` is a separate element that Base UI never
+    // labels either, so SelectContent gets `aria-labelledby` too.
+    if (children.type === Select) {
+      const rootProps = children.props as { children?: React.ReactNode };
+      return React.cloneElement(children, {
+        children: React.Children.map(rootProps.children, (grandchild) => {
+          if (!React.isValidElement(grandchild)) return grandchild;
+          if (grandchild.type === SelectTrigger) {
+            return React.cloneElement(
+              grandchild as React.ReactElement<Record<string, unknown>>,
+              { ...controlProps, "aria-labelledby": labelId },
+            );
+          }
+          if (grandchild.type === SelectContent) {
+            return React.cloneElement(grandchild as React.ReactElement<Record<string, unknown>>, {
+              "aria-labelledby": labelId,
+            });
+          }
+          return grandchild;
+        }),
+      } as Record<string, unknown>);
+    }
+    return React.cloneElement(children as React.ReactElement<Record<string, unknown>>, controlProps);
+  })();
 
   return (
     <div className={cn("space-y-2", className)}>
@@ -84,7 +113,7 @@ export function FormField({
         </p>
       ) : null}
       {error ? (
-        <p id={errorId} className="text-xs text-coral">
+        <p id={errorId} className="text-xs text-coral-strong">
           {error}
         </p>
       ) : null}
@@ -98,7 +127,7 @@ export function FormErrorMessage({ message }: { message?: string | null }) {
   return (
     <p
       role="alert"
-      className="flex items-start gap-2 rounded-lg border border-coral/30 bg-coral/10 px-3 py-2 text-sm text-coral"
+      className="flex items-start gap-2 rounded-lg border border-coral/30 bg-coral/10 px-3 py-2 text-sm text-coral-strong"
     >
       <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
       <span>{message}</span>

@@ -18,6 +18,7 @@ import type { SavingGoal } from "@/src/types/savingGoal";
 import { SavingGoalModal, type SavingGoalFormValues } from "./components/SavingGoalModal";
 import { UpdateProgressModal } from "./components/UpdateProgressModal";
 import ArchiveSavingGoalModal from "./components/ArchiveSavingGoalModal";
+import { getApiErrorMessage } from "@/lib/api-errors";
 
 function formatTargetDate(value: string, intlLocale: string): string {
   return new Intl.DateTimeFormat(intlLocale, {
@@ -195,8 +196,7 @@ export default function SavingGoalsPage() {
       await archiveGoal.mutateAsync(archiveTarget.id);
       setArchiveTarget(null);
     } catch (caught) {
-      const message = (caught as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message;
+      const message = getApiErrorMessage(caught);
       toast(message ?? t("toastArchiveFailed"), "error");
     } finally {
       setIsArchiving(false);

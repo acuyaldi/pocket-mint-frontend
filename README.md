@@ -66,8 +66,18 @@ npm start          # build + start on port 4000
 
 Deploys to Vercel. Release process (versioning, changelog, checklist) lives under [`docs/releases/`](docs/releases/) — start with [`docs/releases/release-checklist.md`](docs/releases/release-checklist.md).
 
+## Storybook
+
+Component workshop for shared UI (`components/ui/`, `components/layout/`) — develop and inspect components in isolation with real app styling, no backend required. See [`docs/storybook.md`](docs/storybook.md).
+
+```bash
+npm run storybook          # http://localhost:6006
+npm run build-storybook    # static build to storybook-static/
+```
+
 ## Related docs
 
+- [`docs/storybook.md`](docs/storybook.md) — Storybook usage, story convention, provider/mocking policy
 - [`docs/releases/release-status.md`](docs/releases/release-status.md) — current feature/release status
 - [`docs/releases/known-issues.md`](docs/releases/known-issues.md) — tracked issues
 - [`docs/qa/`](docs/qa/) — manual QA evidence

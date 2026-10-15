@@ -68,12 +68,20 @@ Before opening it:
 
 ### PR Validation Checklist
 
+Matches the gates in `.github/workflows/ci.yml`:
+
 - `git status`
 - Branch base and merge-base against `origin/dev`
 - Commits in the task branch not in `dev`
 - Changed files — no accidental secrets, `.env` files, generated artifacts
   (`.next/`), or unrelated changes
-- lint / typecheck / test / `npm run build`
+- `npm run lint`
+- `npx tsc --noEmit`
+- `npx vitest run --project=unit`
+- `npm run build`
+- `npm run build-storybook`, then `npx vitest run --project=storybook`
+  (Storybook accessibility + interaction tests) when the change touches any
+  component with stories, or shared UI primitives
 
 ### PR Content
 
@@ -112,6 +120,8 @@ Before creating it:
 ### Frontend-Specific Release Validation
 
 - lint, typecheck, tests, and `npm run build` all pass.
+- Storybook build (`npm run build-storybook`) and the Storybook Vitest
+  project (accessibility + interaction tests) pass.
 - Production API URL is correct for the `main`/Production target (not
   pointing at a staging/preview backend origin).
 - Build output and routing behave correctly (no broken routes, no
