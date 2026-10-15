@@ -10,8 +10,10 @@ function isDraftPreview(value: unknown): value is AssistantDraftPreview {
     typeof v.type === "string" &&
     DRAFT_TYPES.has(v.type) &&
     (typeof v.amount === "string" || typeof v.amount === "number") &&
+    typeof v.categoryId === "string" &&
     typeof v.category === "string" &&
     typeof v.date === "string" &&
+    typeof v.transactionDate === "string" &&
     (v.wallet === undefined || typeof v.wallet === "string") &&
     (v.walletId === undefined || typeof v.walletId === "string") &&
     (v.merchant === undefined || typeof v.merchant === "string") &&

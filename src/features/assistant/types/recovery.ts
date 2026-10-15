@@ -59,8 +59,10 @@ export function mapRecoveredDraftToAssistantDraft(
       amount: preview.amount,
       wallet: preview.walletId,
       walletId: preview.walletId,
+      categoryId: preview.categoryId,
       category: preview.categoryId,
       date: preview.date,
+      transactionDate: preview.transactionDate,
       description: preview.description,
     },
   };
