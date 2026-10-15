@@ -180,8 +180,10 @@ const RECOVERED_DRAFT: AssistantDraft = {
     amount: 50000,
     wallet: "wallet-1",
     walletId: "wallet-1",
+    categoryId: "category-1",
     category: "category-1",
     date: "2026-07-25",
+    transactionDate: "2026-07-25",
   },
 };
 
@@ -196,9 +198,11 @@ const DRAFT: AssistantDraft = {
     amount: 50000,
     wallet: "BCA",
     walletId: "wallet-1",
+    categoryId: "category-1",
     category: "Makanan",
     merchant: "Indomaret",
     date: "2026-07-25",
+    transactionDate: "2026-07-25",
   },
 };
 

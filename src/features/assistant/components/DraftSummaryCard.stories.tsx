@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { expect, fireEvent, fn, within } from "storybook/test";
 import { DraftSummaryCard, type DraftSummaryCardLabels } from "./DraftSummaryCard";
+import { buildDraftEditOverrides } from "@/src/features/assistant/utils/draftEdit";
 import type { AssistantDraft } from "@/src/types/assistant";
 
 const noop = () => {};
@@ -36,9 +38,11 @@ const EXPENSE_DRAFT: AssistantDraft = {
     amount: 50000,
     wallet: "BCA",
     walletId: "wallet-1",
+    categoryId: "category-makanan",
     category: "Makanan",
     merchant: "Indomaret",
     date: "2026-07-25",
+    transactionDate: "2026-07-25",
     description: "Belanja mingguan",
   },
 };
@@ -52,8 +56,10 @@ const INCOME_DRAFT: AssistantDraft = {
     amount: 5000000,
     wallet: "BCA",
     walletId: "wallet-1",
+    categoryId: "category-gaji",
     category: "Gaji",
     date: "2026-07-25",
+    transactionDate: "2026-07-25",
   },
 };
 
@@ -90,6 +96,45 @@ export const Expense: Story = {
 
 export const EditMode: Story = {
   args: { draft: EXPENSE_DRAFT, ...BASE_ARGS, isEditing: true, overrides: { description: "Belanja bulanan" } },
+};
+
+/**
+ * Regression coverage (Phase 34): entering edit mode must preselect the
+ * draft's own category/date from the raw `categoryId`/`transactionDate`
+ * preview fields — not leave them blank — and editing an unrelated field
+ * (amount) must never clear that preselection. Seeds `overrides` exactly the
+ * way `app/(app)/assistant/page.tsx`'s `handleStartEditDraft` does via the
+ * shared `buildDraftEditOverrides` helper, so this exercises the real
+ * edit-initialization contract rather than a story-only approximation.
+ */
+export const EditModePreselected: Story = {
+  args: {
+    draft: EXPENSE_DRAFT,
+    ...BASE_ARGS,
+    isEditing: true,
+    overrides: buildDraftEditOverrides(EXPENSE_DRAFT),
+    onOverrideChange: fn(),
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+
+    // The date control is plain DOM (no network-backed options), so its
+    // preselected value is directly verifiable: it must reflect the draft's
+    // raw ISO `transactionDate`, not the display-only `date` string.
+    const dateInput = canvas.getByLabelText(LABELS.date) as HTMLInputElement;
+    expect(dateInput.value).toBe(EXPENSE_DRAFT.preview.transactionDate);
+
+    // Editing amount must merge onto the already-seeded overrides — category
+    // and date must survive untouched, proving the fix doesn't just seed
+    // correctly once but preserves the seed across unrelated edits.
+    const amountInput = canvas.getByLabelText(LABELS.expense) as HTMLInputElement;
+    fireEvent.change(amountInput, { target: { value: "75000" } });
+
+    expect(args.onOverrideChange).toHaveBeenLastCalledWith({
+      ...buildDraftEditOverrides(EXPENSE_DRAFT),
+      amount: 75000,
+    });
+  },
 };
 
 export const Income: Story = {

@@ -217,9 +217,13 @@ export interface AssistantDraftPreview {
   amount: string | number;
   wallet?: string;
   walletId?: string;
+  /** Raw Category ID (Phase 34) — additive alongside `category`; only the draft owner ever receives this. Used to preselect the category control when editing, never for display. */
+  categoryId: string;
   category: string;
   merchant?: string;
   date: string;
+  /** Unambiguous ISO (`YYYY-MM-DD`, reporting-timezone) business date (Phase 34) — additive alongside `date`. Used to preselect the date control when editing, never for display. */
+  transactionDate: string;
   description?: string;
 }
 
@@ -334,6 +338,8 @@ export interface AssistantRecoveryDraftPreview {
   walletId: string;
   categoryId: string;
   date: string;
+  /** Unambiguous ISO (`YYYY-MM-DD`, reporting-timezone) business date (Phase 34) — additive alongside `date`, which is a naive UTC slice and can be off by one day. */
+  transactionDate: string;
   description?: string;
   expiresAt: string;
 }

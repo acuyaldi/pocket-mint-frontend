@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toaster";
 import { INTL_LOCALE } from "@/i18n/config";
 import type { DraftConfirmOverrides } from "@/src/features/assistant/api/assistantApi";
+import { buildDraftEditOverrides } from "@/src/features/assistant/utils/draftEdit";
 import { useAssistantConversationFlow } from "@/src/features/assistant/hooks/useAssistantConversationFlow";
 import { readAssistantErrorMessage } from "@/src/features/assistant/utils/errors";
 import { AssistantConversation, type AssistantConversationLabels } from "@/src/features/assistant/components/AssistantConversation";
@@ -53,13 +54,7 @@ export default function AssistantPage() {
   const handleStartEditDraft = useCallback(() => {
     const draft = flow.activeWorkflow?.kind === "draft" ? flow.activeWorkflow.draft : null;
     if (!draft) return;
-    setDraftOverrides({
-      amount: draft.preview.amount ? Number(draft.preview.amount) : undefined,
-      walletId: draft.preview.walletId,
-      categoryId: undefined, // We don't have categoryId in preview, only category name
-      description: draft.preview.description,
-      date: undefined, // Date from preview is rendered, not ISO
-    });
+    setDraftOverrides(buildDraftEditOverrides(draft));
     setIsEditingDraft(true);
   }, [flow.activeWorkflow]);
 

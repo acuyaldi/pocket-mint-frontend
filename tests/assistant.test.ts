@@ -12,7 +12,8 @@ import { describe, expect, it } from "vitest";
 
 import idMessages from "@/messages/id.json";
 import enMessages from "@/messages/en.json";
-import { parseAssistantDraftParam } from "@/src/features/assistant/utils/draftParam";
+import { parseAssistantDraftParam, isAssistantDraft } from "@/src/features/assistant/utils/draftParam";
+import { buildDraftEditOverrides } from "@/src/features/assistant/utils/draftEdit";
 import { isClarificationRequest } from "@/src/features/assistant/utils/clarification";
 import { readAssistantErrorMessage, classifyAssistantMutationError } from "@/src/features/assistant/utils/errors";
 import { isAssistantActionRetrySafe, resolveRecoveryState } from "@/src/features/assistant/types/recovery";
@@ -106,9 +107,11 @@ const VALID_DRAFT: AssistantDraft = {
     amount: 50000,
     wallet: "BCA",
     walletId: "wallet-1",
+    categoryId: "cat-1",
     category: "Makanan",
     merchant: "Indomaret",
     date: "2026-07-25",
+    transactionDate: "2026-07-25",
   },
 };
 
@@ -258,6 +261,52 @@ describe("assistant draft review route (Phase 23.2)", () => {
         expect(statusLabels[status]).toBeTruthy();
       }
     }
+  });
+});
+
+describe("assistant draft edit-to-confirm overrides (Phase 34 — draft correction completion)", () => {
+  it("seeds edit-mode overrides from the draft's own raw categoryId/transactionDate — never blank, never the display-only category/date strings", () => {
+    expect(buildDraftEditOverrides(VALID_DRAFT)).toEqual({
+      amount: 50000,
+      walletId: "wallet-1",
+      categoryId: "cat-1",
+      description: undefined,
+      date: "2026-07-25",
+    });
+  });
+
+  it("regression: a draft with a different category/date than its display labels still seeds the raw ids/date, not the label text", () => {
+    const draft: AssistantDraft = {
+      ...VALID_DRAFT,
+      preview: { ...VALID_DRAFT.preview, categoryId: "cat-transport", category: "Transportasi", transactionDate: "2026-08-01", date: "2026-08-01" },
+    };
+    expect(buildDraftEditOverrides(draft)).toMatchObject({ categoryId: "cat-transport", date: "2026-08-01" });
+  });
+
+  it("page.tsx seeds edit overrides via the shared buildDraftEditOverrides helper — not an inline reconstruction that can drift out of sync with the fix", () => {
+    expect(pageSource).toContain("buildDraftEditOverrides(draft)");
+    // Regression guard for the exact prior bug: categoryId/date were hardcoded
+    // undefined because the preview didn't carry raw ids yet.
+    expect(pageSource).not.toContain("categoryId: undefined");
+    expect(pageSource).not.toContain("date: undefined, // Date from preview is rendered, not ISO");
+  });
+
+  it("forwards the exact override payload to the existing confirm mutation — no separate edit endpoint, no payload rebuilt along the way", () => {
+    // page.tsx -> flow.confirm(draftOverrides, ...)
+    expect(pageSource).toContain("flow.confirm(\n            Object.keys(draftOverrides).length > 0 ? draftOverrides : undefined,");
+    // flow.confirm -> confirmDraft.mutate({ draftId, overrides })
+    expect(flowHookSource).toContain("const confirm = (overrides: DraftConfirmOverrides | undefined");
+    expect(flowHookSource).toContain("confirmDraft.mutate({ draftId: draft.draftId, overrides }");
+    // useConfirmAssistantDraft -> confirmAssistantDraft(draftId, idempotencyKey, overrides)
+    expect(draftHookSource).toContain("confirmAssistantDraft(draftId, getIdempotencyKey(draftId), overrides)");
+    // assistantApi -> POST body is the overrides object itself, unmodified
+    expect(apiSource).toContain("overrides ?? undefined");
+    expect(apiSource).not.toMatch(/Idempotency-Key.*overrides|overrides.*filter|overrides.*map/);
+  });
+
+  it("no PATCH/PUT draft route and no separate edit endpoint exist anywhere in the API layer", () => {
+    expect(apiSource).not.toMatch(/api\.(patch|put)/i);
+    expect(apiSource).not.toMatch(/\/assistant\/drafts\/.*\/edit/);
   });
 });
 
@@ -653,6 +702,16 @@ describe("assistant draft param parsing", () => {
     const params = new URLSearchParams({ draft: JSON.stringify(VALID_DRAFT) });
     expect(parseAssistantDraftParam(params)).toEqual(VALID_DRAFT);
   });
+
+  it("rejects a preview missing the raw categoryId/transactionDate fields (Phase 34) — never waves through a stale-shaped draft as if it had them", () => {
+    const previewWithoutCategoryId: Record<string, unknown> = { ...VALID_DRAFT.preview };
+    delete previewWithoutCategoryId.categoryId;
+    expect(isAssistantDraft({ ...VALID_DRAFT, preview: previewWithoutCategoryId })).toBe(false);
+
+    const previewWithoutTransactionDate: Record<string, unknown> = { ...VALID_DRAFT.preview };
+    delete previewWithoutTransactionDate.transactionDate;
+    expect(isAssistantDraft({ ...VALID_DRAFT, preview: previewWithoutTransactionDate })).toBe(false);
+  });
 });
 
 describe("assistant draft review components", () => {
@@ -889,6 +948,7 @@ describe("assistant resilience/recovery — bounded recovery-state model", () =>
     walletId: "wallet-1",
     categoryId: "cat-1",
     date: "2026-07-25",
+    transactionDate: "2026-07-25",
     expiresAt: "2026-07-25T15:30:00.000Z",
   };
 
@@ -922,6 +982,18 @@ describe("assistant resilience/recovery — bounded recovery-state model", () =>
     if (state.kind === "draftRecovered") {
       expect(state.draft.draftId).toBe("draft-1");
       expect(state.draft.confirmationRequired).toBe(true);
+    }
+  });
+
+  it("carries the raw categoryId/transactionDate through the recovery mapping (Phase 34) — edit mode preselection needs them, not just the display fallback", () => {
+    const response: AssistantRecoveryStateResponse = {
+      pendingDraft: { draftId: "draft-1", status: "PENDING_CONFIRMATION", preview: draftPreview },
+    };
+    const state = resolveRecoveryState(response);
+    expect(state.kind).toBe("draftRecovered");
+    if (state.kind === "draftRecovered") {
+      expect(state.draft.preview.categoryId).toBe("cat-1");
+      expect(state.draft.preview.transactionDate).toBe("2026-07-25");
     }
   });
 

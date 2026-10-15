@@ -3,6 +3,14 @@ import type { AssistantDraft, AssistantDraftPreview } from "@/src/types/assistan
 const DRAFT_STATUSES = new Set(["PENDING_CONFIRMATION", "COMMITTED", "CANCELLED", "EXPIRED", "FAILED"]);
 const DRAFT_TYPES = new Set(["INCOME", "EXPENSE"]);
 
+// Same "YYYY-MM-DD" shape check already used by src/features/analytics/period.ts — client-side
+// validation only, the backend is the source of truth (and the sole authority for whether a
+// categoryId/walletId is real and owned by the caller at confirm time).
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+function isIsoDate(value: unknown): value is string {
+  return typeof value === "string" && ISO_DATE.test(value);
+}
+
 function isDraftPreview(value: unknown): value is AssistantDraftPreview {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
@@ -10,8 +18,10 @@ function isDraftPreview(value: unknown): value is AssistantDraftPreview {
     typeof v.type === "string" &&
     DRAFT_TYPES.has(v.type) &&
     (typeof v.amount === "string" || typeof v.amount === "number") &&
+    typeof v.categoryId === "string" &&
     typeof v.category === "string" &&
-    typeof v.date === "string" &&
+    isIsoDate(v.date) &&
+    isIsoDate(v.transactionDate) &&
     (v.wallet === undefined || typeof v.wallet === "string") &&
     (v.walletId === undefined || typeof v.walletId === "string") &&
     (v.merchant === undefined || typeof v.merchant === "string") &&
