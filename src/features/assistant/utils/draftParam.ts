@@ -1,7 +1,7 @@
 import type { AssistantDraft, AssistantDraftPreview } from "@/src/types/assistant";
 
 const DRAFT_STATUSES = new Set(["PENDING_CONFIRMATION", "COMMITTED", "CANCELLED", "EXPIRED", "FAILED"]);
-const DRAFT_TYPES = new Set(["INCOME", "EXPENSE"]);
+const DRAFT_TYPES = new Set(["INCOME", "EXPENSE", "TRANSFER"]);
 
 // Same "YYYY-MM-DD" shape check already used by src/features/analytics/period.ts — client-side
 // validation only, the backend is the source of truth (and the sole authority for whether a
@@ -14,12 +14,17 @@ function isIsoDate(value: unknown): value is string {
 function isDraftPreview(value: unknown): value is AssistantDraftPreview {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
+  const isTransfer = v.type === "TRANSFER";
   return (
     typeof v.type === "string" &&
     DRAFT_TYPES.has(v.type) &&
     (typeof v.amount === "string" || typeof v.amount === "number") &&
-    typeof v.categoryId === "string" &&
-    typeof v.category === "string" &&
+    // TRANSFER never carries a category; INCOME/EXPENSE always do.
+    (isTransfer ? v.categoryId === undefined : typeof v.categoryId === "string") &&
+    (isTransfer ? v.category === undefined : typeof v.category === "string") &&
+    // TRANSFER always carries a destination wallet id; INCOME/EXPENSE never do.
+    (isTransfer ? typeof v.toWalletId === "string" : v.toWalletId === undefined) &&
+    (v.toWallet === undefined || typeof v.toWallet === "string") &&
     isIsoDate(v.date) &&
     isIsoDate(v.transactionDate) &&
     (v.wallet === undefined || typeof v.wallet === "string") &&

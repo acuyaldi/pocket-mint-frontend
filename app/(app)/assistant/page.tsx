@@ -144,6 +144,9 @@ export default function AssistantPage() {
     draft: {
       income: tDraft("income"),
       expense: tDraft("expense"),
+      transfer: tDraft("transfer"),
+      from: tDraft("from"),
+      to: tDraft("to"),
       wallet: tDraft("wallet"),
       category: tDraft("category"),
       merchant: tDraft("merchant"),

@@ -9,6 +9,9 @@ const noop = () => {};
 const LABELS: DraftSummaryCardLabels = {
   income: "Income",
   expense: "Expense",
+  transfer: "Transfer",
+  from: "From",
+  to: "To",
   wallet: "Wallet",
   category: "Category",
   merchant: "Merchant",
@@ -60,6 +63,25 @@ const INCOME_DRAFT: AssistantDraft = {
     category: "Gaji",
     date: "2026-07-25",
     transactionDate: "2026-07-25",
+  },
+};
+
+const TRANSFER_DRAFT: AssistantDraft = {
+  draftId: "draft-3",
+  status: "PENDING_CONFIRMATION",
+  expiresAt: "2026-07-25T15:30:00.000Z",
+  confirmationRequired: true,
+  renderedText: "Rp500.000 transfer from Cash to BCA.",
+  preview: {
+    type: "TRANSFER",
+    amount: 500000,
+    wallet: "Cash",
+    walletId: "wallet-1",
+    toWallet: "BCA",
+    toWalletId: "wallet-2",
+    date: "2026-07-25",
+    transactionDate: "2026-07-25",
+    description: "Isi saldo rekening",
   },
 };
 
@@ -139,6 +161,44 @@ export const EditModePreselected: Story = {
 
 export const Income: Story = {
   args: { draft: INCOME_DRAFT, ...BASE_ARGS },
+};
+
+/** TRANSFER preview: "Dari"/"Ke" wallet rows, never a category or merchant row. */
+export const Transfer: Story = {
+  args: { draft: TRANSFER_DRAFT, ...BASE_ARGS },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(LABELS.from)).toBeInTheDocument();
+    expect(canvas.getByText(LABELS.to)).toBeInTheDocument();
+    expect(canvas.getByText("Cash")).toBeInTheDocument();
+    expect(canvas.getByText("BCA")).toBeInTheDocument();
+    expect(canvas.queryByText(LABELS.category)).not.toBeInTheDocument();
+    expect(canvas.queryByText(LABELS.merchant)).not.toBeInTheDocument();
+  },
+};
+
+/**
+ * TRANSFER edit mode: entering edit must pre-seed both source and destination
+ * wallet ids (never a categoryId) via the shared `buildDraftEditOverrides`
+ * helper, and must never render a category control for a transfer draft.
+ */
+export const TransferEditMode: Story = {
+  args: {
+    draft: TRANSFER_DRAFT,
+    ...BASE_ARGS,
+    isEditing: true,
+    overrides: buildDraftEditOverrides(TRANSFER_DRAFT),
+    onOverrideChange: fn(),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByLabelText(LABELS.from)).toBeInTheDocument();
+    expect(canvas.getByLabelText(LABELS.to)).toBeInTheDocument();
+    expect(canvas.queryByLabelText(LABELS.category)).not.toBeInTheDocument();
+    const seeded = buildDraftEditOverrides(TRANSFER_DRAFT);
+    expect(seeded).toMatchObject({ walletId: "wallet-1", toWalletId: "wallet-2" });
+    expect(seeded).not.toHaveProperty("categoryId");
+  },
 };
 
 export const Committed: Story = {

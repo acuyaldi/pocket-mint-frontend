@@ -14,7 +14,7 @@ export function buildDraftEditOverrides(draft: AssistantDraft): DraftConfirmOver
   return {
     amount: preview.amount ? Number(preview.amount) : undefined,
     walletId: preview.walletId,
-    categoryId: preview.categoryId,
+    ...(preview.type === "TRANSFER" ? { toWalletId: preview.toWalletId } : { categoryId: preview.categoryId }),
     description: preview.description,
     date: preview.transactionDate,
   };

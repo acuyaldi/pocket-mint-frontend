@@ -1115,6 +1115,9 @@
     "draftReview": {
       "income": "Pemasukan",
       "expense": "Pengeluaran",
+      "transfer": "Transfer",
+      "from": "Dari",
+      "to": "Ke",
       "wallet": "Dompet",
       "category": "Kategori",
       "merchant": "Merchant",

@@ -213,13 +213,16 @@ export interface AssistantErrorResult {
 export type AssistantTurnResult = AssistantSuccessResult | AssistantClarificationRequiredResult;
 
 export interface AssistantDraftPreview {
-  type: "INCOME" | "EXPENSE";
+  type: "INCOME" | "EXPENSE" | "TRANSFER";
   amount: string | number;
   wallet?: string;
   walletId?: string;
-  /** Raw Category ID (Phase 34) — additive alongside `category`; only the draft owner ever receives this. Used to preselect the category control when editing, never for display. */
-  categoryId: string;
-  category: string;
+  /** Raw Category ID (Phase 34) — additive alongside `category`; only the draft owner ever receives this. Used to preselect the category control when editing, never for display. Never present for TRANSFER. */
+  categoryId?: string;
+  category?: string;
+  /** Destination wallet — TRANSFER only (Phase 36B). Never present for INCOME/EXPENSE. */
+  toWallet?: string;
+  toWalletId?: string;
   merchant?: string;
   date: string;
   /** Unambiguous ISO (`YYYY-MM-DD`, reporting-timezone) business date (Phase 34) — additive alongside `date`. Used to preselect the date control when editing, never for display. */
@@ -333,10 +336,13 @@ export interface AssistantRecoveryClarification {
 
 export interface AssistantRecoveryDraftPreview {
   operation: string;
-  type: "INCOME" | "EXPENSE";
+  type: "INCOME" | "EXPENSE" | "TRANSFER";
   amount: string;
   walletId: string;
-  categoryId: string;
+  /** Never present for TRANSFER. */
+  categoryId?: string;
+  /** Destination wallet id — TRANSFER only (Phase 36B). */
+  toWalletId?: string;
   date: string;
   /** Unambiguous ISO (`YYYY-MM-DD`, reporting-timezone) business date (Phase 34) — additive alongside `date`, which is a naive UTC slice and can be off by one day. */
   transactionDate: string;

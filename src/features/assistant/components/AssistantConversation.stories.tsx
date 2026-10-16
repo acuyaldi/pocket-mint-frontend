@@ -50,6 +50,9 @@ const LABELS: AssistantConversationLabels = {
   draft: {
     income: "Income",
     expense: "Expense",
+    transfer: "Transfer",
+    from: "From",
+    to: "To",
     wallet: "Wallet",
     category: "Category",
     merchant: "Merchant",
