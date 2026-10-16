@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDownLeft, ArrowUpRight, Clock } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Clock } from "lucide-react";
 
 import { formatCurrency } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { useWallets } from "@/src/features/wallets/hooks/useWallets";
 import { useCategories } from "@/src/features/categories/hooks/useCategories";
+import {
+  getTransferDestinations,
+  getTransferEndpointWallets,
+  getTransferSources,
+  selectTransferEndpoint,
+} from "@/app/(app)/transactions/components/transfer-account-picker";
 import { DraftMetadata, type DraftMetadataItem } from "./DraftMetadata";
 import type { AssistantDraft, AssistantFinancialDraftStatus } from "@/src/types/assistant";
 import type { DraftConfirmOverrides } from "@/src/features/assistant/api/assistantApi";
@@ -15,7 +21,12 @@ import type { DraftConfirmOverrides } from "@/src/features/assistant/api/assista
 export interface DraftSummaryCardLabels {
   income: string;
   expense: string;
+  transfer: string;
   wallet: string;
+  /** Transfer source wallet row label (e.g. "Dari"). */
+  from: string;
+  /** Transfer destination wallet row label (e.g. "Ke"). */
+  to: string;
   category: string;
   merchant: string;
   date: string;
@@ -90,6 +101,7 @@ export function DraftSummaryCard({
   onCancelEdit,
 }: DraftSummaryCardProps) {
   const { preview } = draft;
+  const isTransfer = preview.type === "TRANSFER";
   const isIncome = preview.type === "INCOME";
   const amount = Number(preview.amount);
 
@@ -101,32 +113,50 @@ export function DraftSummaryCard({
   const effectiveWalletId = overrides.walletId ?? preview.walletId ?? "";
   const selectedWallet = wallets.find((w) => w.id === effectiveWalletId);
   const effectiveWalletLabel = selectedWallet?.name ?? preview.wallet ?? "";
+  const effectiveToWalletId = overrides.toWalletId ?? preview.toWalletId ?? "";
+  const selectedToWallet = wallets.find((w) => w.id === effectiveToWalletId);
+  const effectiveToWalletLabel = selectedToWallet?.name ?? preview.toWallet ?? "";
   const effectiveDate = overrides.date ?? preview.date;
   const effectiveDescription = overrides.description !== undefined ? overrides.description : (preview.description ?? "");
 
   // Category: from user override, or from preview (display-only — backend will re-infer on confirm)
+  // Never applicable for TRANSFER — a transfer draft has no category at all.
   const selectedCategory = categories.find((c) => c.id === overrides.categoryId);
 
-  const metadataItems: DraftMetadataItem[] = [
-    { label: labels.wallet, value: effectiveWalletLabel },
-    { label: labels.category, value: selectedCategory?.name ?? preview.category },
-    preview.merchant ? { label: labels.merchant, value: preview.merchant } : null,
-    { label: labels.date, value: formatDraftDate(effectiveDate, intlLocale) },
-    effectiveDescription ? { label: labels.notes, value: effectiveDescription } : null,
-  ].filter((item): item is DraftMetadataItem => item !== null);
+  // Transfer source/destination option lists — same same-wallet prevention and
+  // collision handling as the manual "create transfer" form (AddTransactionModal).
+  const transferSourceOptions = getTransferEndpointWallets(getTransferSources(wallets), effectiveToWalletId);
+  const transferDestinationOptions = getTransferEndpointWallets(getTransferDestinations(wallets, effectiveWalletId), effectiveWalletId);
+
+  const metadataItems: DraftMetadataItem[] = isTransfer
+    ? [
+        { label: labels.from, value: effectiveWalletLabel },
+        { label: labels.to, value: effectiveToWalletLabel },
+        { label: labels.date, value: formatDraftDate(effectiveDate, intlLocale) },
+        effectiveDescription ? { label: labels.notes, value: effectiveDescription } : null,
+      ].filter((item): item is DraftMetadataItem => item !== null)
+    : [
+        { label: labels.wallet, value: effectiveWalletLabel },
+        { label: labels.category, value: selectedCategory?.name ?? preview.category },
+        preview.merchant ? { label: labels.merchant, value: preview.merchant } : null,
+        { label: labels.date, value: formatDraftDate(effectiveDate, intlLocale) },
+        effectiveDescription ? { label: labels.notes, value: effectiveDescription } : null,
+      ].filter((item): item is DraftMetadataItem => item !== null);
 
   return (
     <article className="rounded-xl border border-border/70 bg-card p-6 shadow-sm">
       {/* Header row: type icon + type label + status badge */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-2">
-          {isIncome ? (
+          {isTransfer ? (
+            <ArrowLeftRight className="size-5 text-foreground" aria-hidden="true" />
+          ) : isIncome ? (
             <ArrowUpRight className="size-5 text-mint" aria-hidden="true" />
           ) : (
             <ArrowDownLeft className="size-5 text-foreground" aria-hidden="true" />
           )}
           <span className="text-sm font-medium text-muted-foreground">
-            {isIncome ? labels.income : labels.expense}
+            {isTransfer ? labels.transfer : isIncome ? labels.income : labels.expense}
           </span>
         </div>
         <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${STATUS_TONE[draft.status]}`}>
@@ -145,12 +175,12 @@ export function DraftSummaryCard({
               onOverrideChange({ ...overrides, amount: Number(e.target.value) || undefined } as DraftConfirmOverrides)
             }
             className="h-12 text-3xl font-semibold tabular-nums"
-            aria-label={isIncome ? labels.income : labels.expense}
+            aria-label={isTransfer ? labels.transfer : isIncome ? labels.income : labels.expense}
           />
         </div>
       ) : (
-        <p className={`mt-4 text-3xl font-semibold tabular-nums ${isIncome ? "text-mint-strong" : "text-foreground"}`}>
-          {isIncome ? "+" : "-"}
+        <p className={`mt-4 text-3xl font-semibold tabular-nums ${isTransfer ? "text-foreground" : isIncome ? "text-mint-strong" : "text-foreground"}`}>
+          {isTransfer ? "" : isIncome ? "+" : "-"}
           {formatCurrency(effectiveAmount, intlLocale)}
         </p>
       )}
@@ -159,52 +189,106 @@ export function DraftSummaryCard({
       <div className="mt-6 border-t border-border/50 pt-5">
         {isEditing ? (
           <div className="space-y-4">
-            {/* Wallet dropdown */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">{labels.wallet}</label>
-              <Select
-                value={effectiveWalletId}
-                onValueChange={(id) =>
-                  onOverrideChange({ ...overrides, walletId: id } as DraftConfirmOverrides)
-                }
-              >
+            {isTransfer ? (
+              <>
+                {/* Source wallet dropdown ("Dari") */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">{labels.from}</label>
+                  <Select
+                    value={effectiveWalletId}
+                    onValueChange={(id) => {
+                      if (!id) return;
+                      const next = selectTransferEndpoint(effectiveWalletId, effectiveToWalletId, id);
+                      onOverrideChange({ ...overrides, walletId: next.selectedId, toWalletId: next.oppositeId } as DraftConfirmOverrides);
+                    }}
+                  >
+                    <SelectTrigger className="h-10 w-full" aria-label={labels.from}>
+                      <SelectValue placeholder={labels.from} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {transferSourceOptions.map((w) => (
+                        <SelectItem key={w.id} value={w.id}>
+                          {w.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                <SelectTrigger className="h-10 w-full" aria-label={labels.wallet}>
-                  <SelectValue placeholder={labels.wallet} />
-                </SelectTrigger>
-                <SelectContent>
-                  {wallets.map((w) => (
-                    <SelectItem key={w.id} value={w.id}>
-                      {w.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                {/* Destination wallet dropdown ("Ke") */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">{labels.to}</label>
+                  <Select
+                    value={effectiveToWalletId}
+                    onValueChange={(id) => {
+                      if (!id) return;
+                      const next = selectTransferEndpoint(effectiveToWalletId, effectiveWalletId, id);
+                      onOverrideChange({ ...overrides, toWalletId: next.selectedId, walletId: next.oppositeId } as DraftConfirmOverrides);
+                    }}
+                  >
+                    <SelectTrigger className="h-10 w-full" aria-label={labels.to}>
+                      <SelectValue placeholder={labels.to} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {transferDestinationOptions.map((w) => (
+                        <SelectItem key={w.id} value={w.id}>
+                          {w.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Wallet dropdown */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">{labels.wallet}</label>
+                  <Select
+                    value={effectiveWalletId}
+                    onValueChange={(id) =>
+                      onOverrideChange({ ...overrides, walletId: id } as DraftConfirmOverrides)
+                    }
+                  >
 
-            {/* Category dropdown */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">{labels.category}</label>
-              <Select
-                value={overrides.categoryId ?? ""}
-                onValueChange={(id) =>
-                  onOverrideChange({ ...overrides, categoryId: id } as DraftConfirmOverrides)
-                }
-              >
-                <SelectTrigger className="h-10 w-full" aria-label={labels.category}>
-                  <SelectValue placeholder={selectedCategory?.name ?? preview.category} />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories
-                    .filter((c) => c.type === preview.type)
-                    .map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
+                    <SelectTrigger className="h-10 w-full" aria-label={labels.wallet}>
+                      <SelectValue placeholder={labels.wallet} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {wallets.map((w) => (
+                        <SelectItem key={w.id} value={w.id}>
+                          {w.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Category dropdown — never rendered for TRANSFER */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">{labels.category}</label>
+                  <Select
+                    value={overrides.categoryId ?? ""}
+                    onValueChange={(id) =>
+                      onOverrideChange({ ...overrides, categoryId: id } as DraftConfirmOverrides)
+                    }
+                  >
+                    <SelectTrigger className="h-10 w-full" aria-label={labels.category}>
+                      <SelectValue placeholder={selectedCategory?.name ?? preview.category} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories
+                        .filter((c) => c.type === preview.type)
+                        .map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
 
             {/* Date radio group: Hari ini / Kemarin / Pilih tanggal */}
             <div className="space-y-1.5">

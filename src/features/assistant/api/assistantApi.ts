@@ -111,6 +111,8 @@ export function deleteAssistantSession(conversationId: string): Promise<{ id: st
 export interface DraftConfirmOverrides {
   amount?: number;
   walletId?: string;
+  /** Destination wallet override — TRANSFER drafts only. */
+  toWalletId?: string;
   categoryId?: string;
   description?: string;
   /** YYYY-MM-DD */

@@ -48,6 +48,7 @@ async function api<T>(token: string, path: string, init: RequestInit = {}): Prom
 }
 
 const E2E_WALLET_NAME = "E2E Assistant Wallet";
+const E2E_TRANSFER_DESTINATION_WALLET_NAME = "E2E Assistant Transfer Destination";
 
 /** Reuses a wallet already owned by the E2E test user, or creates one. Never touches other wallets. */
 export async function ensureTestWallet(token: string): Promise<{ id: string; name: string }> {
@@ -57,6 +58,17 @@ export async function ensureTestWallet(token: string): Promise<{ id: string; nam
   return api<{ id: string; name: string }>(token, "/wallets", {
     method: "POST",
     body: JSON.stringify({ name: E2E_WALLET_NAME, type: "CASH", balance: "1000000" }),
+  });
+}
+
+/** A second asset wallet, distinct from `ensureTestWallet`'s, used as a TRANSFER destination. */
+export async function ensureTestDestinationWallet(token: string): Promise<{ id: string; name: string }> {
+  const wallets = await api<Array<{ id: string; name: string }>>(token, "/wallets");
+  const existing = wallets.find((w) => w.name === E2E_TRANSFER_DESTINATION_WALLET_NAME);
+  if (existing) return existing;
+  return api<{ id: string; name: string }>(token, "/wallets", {
+    method: "POST",
+    body: JSON.stringify({ name: E2E_TRANSFER_DESTINATION_WALLET_NAME, type: "BANK", balance: "500000" }),
   });
 }
 
@@ -93,6 +105,30 @@ export async function seedAssistantDraft(
         walletReference: opts.walletName,
         categoryId: opts.categoryId,
         merchantReference: opts.merchant ?? "Test Noodle Shop",
+        date: new Date().toISOString().slice(0, 10),
+      },
+    }),
+  });
+}
+
+/**
+ * Seeds a real Pending TRANSFER Financial Draft via `/assistant/execute`
+ * (no LLM involved — deterministic tool/intent execution). TRANSFER never
+ * carries a category or merchant.
+ */
+export async function seedAssistantTransferDraft(
+  token: string,
+  opts: { walletName: string; toWalletName: string; amount?: string }
+): Promise<AssistantExecuteResult> {
+  return api<AssistantExecuteResult>(token, "/assistant/execute", {
+    method: "POST",
+    body: JSON.stringify({
+      intent: "transaction.create",
+      arguments: {
+        type: "TRANSFER",
+        amount: opts.amount ?? "20000",
+        walletReference: opts.walletName,
+        toWalletReference: opts.toWalletName,
         date: new Date().toISOString().slice(0, 10),
       },
     }),
