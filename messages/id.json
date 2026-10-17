@@ -305,6 +305,7 @@
       "loan": "Pinjaman"
     },
     "accountMenuAria": "Menu akun {name}",
+    "akaPrefix": "Juga dikenal sebagai:",
     "editAccount": "Edit Akun",
     "deleteAccount": "Hapus Akun",
     "billing": "Tagihan",
@@ -370,7 +371,17 @@
       "paylaterDueNote": "Jatuh tempo paylater dihitung otomatis 30 hari setelah tanggal tiap transaksi.",
       "genericError": "Perubahan belum dapat disimpan. Coba lagi.",
       "toastSaved": "Perubahan akun \"{name}\" disimpan",
-      "submit": "Simpan Perubahan"
+      "submit": "Simpan Perubahan",
+      "aliases": {
+        "label": "Nama lain",
+        "hint": "Nama lain yang juga dikenali saat mencatat transaksi lewat Assistant.",
+        "placeholder": "contoh: rekening utama",
+        "add": "Tambah",
+        "empty": "Belum ada nama lain.",
+        "listAria": "Nama lain dompet",
+        "removeAria": "Hapus nama lain \"{name}\"",
+        "genericError": "Nama lain belum dapat disimpan. Coba lagi."
+      }
     },
     "delete": {
       "title": "Hapus Akun?",

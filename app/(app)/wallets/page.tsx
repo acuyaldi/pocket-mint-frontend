@@ -115,6 +115,11 @@ function WalletTile({
         </DropdownMenu>
       </div>
       <p className="mb-1 text-sm text-muted-foreground">{wallet.name}</p>
+      {wallet.aliases && wallet.aliases.length > 0 ? (
+        <p className="mb-2 truncate text-xs text-muted-foreground/80">
+          {t("akaPrefix")} {wallet.aliases.map((alias) => alias.aliasDisplay).join(", ")}
+        </p>
+      ) : null}
       {isCredit ? (
         <>
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">

@@ -1,7 +1,7 @@
 'use client';
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
-import { Wallet, WalletType } from '@/src/types/wallet';
+import { Wallet, WalletAlias, WalletType } from '@/src/types/wallet';
 
 const STALE_TIME = 5 * 60 * 1000;
 
@@ -73,6 +73,33 @@ export const useDeleteWallet = () => {
     // rejects wallets that have transaction history (409)
     mutationFn: (walletId) =>
       api.delete<{ status: string; data: { id: string } }>(`/wallets/${walletId}?force=true`).then((res) => res.data.data),
+    onSuccess: () => invalidateWalletDependents(queryClient),
+  });
+};
+
+/**
+ * Explicit wallet aliases (Phase 37) — a per-user exact-match nickname
+ * namespace, separate from `CreateWalletDto`: delete and recreate is the
+ * intended editing flow, there is no update endpoint.
+ */
+export const useCreateWalletAlias = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<WalletAlias, Error, { walletId: string; aliasDisplay: string }>({
+    mutationFn: ({ walletId, aliasDisplay }) =>
+      api
+        .post<{ status: string; data: WalletAlias }>(`/wallets/${walletId}/aliases`, { aliasDisplay })
+        .then((res) => res.data.data),
+    onSuccess: () => invalidateWalletDependents(queryClient),
+  });
+};
+
+export const useDeleteWalletAlias = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, { walletId: string; aliasId: string }>({
+    mutationFn: ({ walletId, aliasId }) =>
+      api.delete(`/wallets/${walletId}/aliases/${aliasId}`).then(() => undefined),
     onSuccess: () => invalidateWalletDependents(queryClient),
   });
 };
