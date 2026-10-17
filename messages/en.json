@@ -305,6 +305,7 @@
       "loan": "Loan"
     },
     "accountMenuAria": "{name} account menu",
+    "akaPrefix": "Also known as:",
     "editAccount": "Edit Account",
     "deleteAccount": "Delete Account",
     "billing": "Balance due",
@@ -370,7 +371,17 @@
       "paylaterDueNote": "Paylater due dates are calculated automatically, 30 days after each transaction.",
       "genericError": "Couldn't save your changes. Try again.",
       "toastSaved": "Changes to \"{name}\" saved",
-      "submit": "Save Changes"
+      "submit": "Save Changes",
+      "aliases": {
+        "label": "Also known as",
+        "hint": "Other exact names Assistant transaction capture accepts for this wallet.",
+        "placeholder": "e.g. rekening utama",
+        "add": "Add",
+        "empty": "No aliases yet.",
+        "listAria": "Wallet aliases",
+        "removeAria": "Remove alias \"{name}\"",
+        "genericError": "Couldn't save that alias. Try again."
+      }
     },
     "delete": {
       "title": "Delete Account?",

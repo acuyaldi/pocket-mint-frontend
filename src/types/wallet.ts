@@ -19,6 +19,16 @@ export const isLiabilityWallet = (type: WalletType): boolean =>
 /** Compatibility alias for existing dashboard and transaction views. */
 export const isDebtWallet = isLiabilityWallet;
 
+/**
+ * An explicit, user-created wallet nickname (Phase 37). Accepted by
+ * Assistant transaction capture as an exact match alongside the wallet's
+ * canonical name — never a fuzzy match.
+ */
+export interface WalletAlias {
+  id: string;
+  aliasDisplay: string;
+}
+
 export interface Wallet {
   id: string;
   userId: string;
@@ -39,4 +49,6 @@ export interface Wallet {
   isArchived: boolean;
   createdAt: string;
   updatedAt: string;
+  /** Present on the wallet list read DTO; absent on create/update responses. */
+  aliases?: WalletAlias[];
 }

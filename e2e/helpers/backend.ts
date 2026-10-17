@@ -144,4 +144,25 @@ export function apiHeaders(token: string) {
   return { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 }
 
+/**
+ * Phase 37 (PD-027): looks up one of a wallet's explicit aliases by its
+ * exact display text, via the same read DTO the wallets page consumes
+ * (`GET /wallets` → `aliases[]`). Used only for E2E cleanup (deleting an
+ * alias created through the browser UI during a test) — never to create
+ * one, since that's exactly the UI flow under test.
+ */
+export async function findWalletAliasId(token: string, walletId: string, aliasDisplay: string): Promise<string | undefined> {
+  const wallets = await api<Array<{ id: string; aliases?: Array<{ id: string; aliasDisplay: string }> }>>(token, "/wallets");
+  const wallet = wallets.find((w) => w.id === walletId);
+  return wallet?.aliases?.find((alias) => alias.aliasDisplay === aliasDisplay)?.id;
+}
+
+/** Deletes one wallet alias — E2E cleanup only, so a repeated run never hits the per-wallet alias cap. */
+export async function deleteWalletAlias(token: string, walletId: string, aliasId: string): Promise<void> {
+  await fetch(`${API_BASE_URL}/wallets/${walletId}/aliases/${aliasId}`, {
+    method: "DELETE",
+    headers: apiHeaders(token),
+  });
+}
+
 export { API_BASE_URL };

@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { AppModal, ModalCancelButton, ModalSubmitButton } from "@/components/ui/app-modal";
 import { FormField, FormErrorMessage } from "@/components/ui/form-field";
 import { toast } from "@/components/ui/toaster";
-import { useUpdateWallet } from "@/src/features/wallets/hooks/useWallets";
+import { useUpdateWallet, useCreateWalletAlias, useDeleteWalletAlias } from "@/src/features/wallets/hooks/useWallets";
 import { isCreditWallet, type Wallet } from "@/src/types/wallet";
 import { getApiErrorMessage } from "@/lib/api-errors";
+import { WalletAliasManager } from "./WalletAliasManager";
 
 export default function EditWalletModal({
   wallet,
@@ -26,6 +27,9 @@ function EditWalletForm({ wallet, onClose }: { wallet: Wallet; onClose: () => vo
   const t = useTranslations("walletModals.edit");
   const tCommon = useTranslations("common");
   const updateWallet = useUpdateWallet();
+  const createAlias = useCreateWalletAlias();
+  const deleteAlias = useDeleteWalletAlias();
+  const [removingAliasId, setRemovingAliasId] = useState<string | null>(null);
   const isCredit = isCreditWallet(wallet.type);
   // Hanya kartu kredit yang punya siklus cutoff/jatuh tempo; paylater otomatis 30 hari per transaksi
   const hasBillingCycle = wallet.type === "CREDIT_CARD";
@@ -87,67 +91,88 @@ function EditWalletForm({ wallet, onClose }: { wallet: Wallet; onClose: () => vo
         </>
       }
     >
-      <form id="edit-wallet-form" onSubmit={handleSubmit} className="space-y-6">
-        <FormField label={t("accountName")} htmlFor="edit-wallet-name">
-          <Input
-            type="text"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            required
-            className="h-12 border-border/70 bg-card px-3 text-sm"
+      <div className="space-y-6">
+        <form id="edit-wallet-form" onSubmit={handleSubmit} className="space-y-6">
+          <FormField label={t("accountName")} htmlFor="edit-wallet-name">
+            <Input
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              required
+              className="h-12 border-border/70 bg-card px-3 text-sm"
+            />
+          </FormField>
+
+          {isCredit ? (
+            <>
+              <FormField label={t("creditLimit")} htmlFor="edit-wallet-credit-limit">
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
+                    Rp
+                  </span>
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    value={creditLimit}
+                    onChange={(event) => setCreditLimit(event.target.value.replace(/\D/g, ""))}
+                    className="h-12 border-border/70 bg-card pl-11 text-sm tabular-nums"
+                    required
+                  />
+                </div>
+              </FormField>
+              {hasBillingCycle ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField label={t("cutoffDate")} htmlFor="edit-wallet-cutoff-day">
+                    <Input
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={cutoffDay}
+                      onChange={(event) => setCutoffDay(event.target.value)}
+                      placeholder={t("optional")}
+                      className="h-12 border-border/70 bg-card px-3 text-sm"
+                    />
+                  </FormField>
+                  <FormField label={t("dueDate")} htmlFor="edit-wallet-due-day">
+                    <Input
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={paymentDueDay}
+                      onChange={(event) => setPaymentDueDay(event.target.value)}
+                      placeholder={t("optional")}
+                      className="h-12 border-border/70 bg-card px-3 text-sm"
+                    />
+                  </FormField>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">{t("paylaterDueNote")}</p>
+              )}
+            </>
+          ) : null}
+
+          <FormErrorMessage message={error} />
+        </form>
+
+        <div className="border-t border-border/60 pt-6">
+          <WalletAliasManager
+            aliases={wallet.aliases ?? []}
+            isAdding={createAlias.isPending}
+            removingId={removingAliasId}
+            onAdd={async (aliasDisplay) => {
+              await createAlias.mutateAsync({ walletId: wallet.id, aliasDisplay });
+            }}
+            onRemove={async (aliasId) => {
+              setRemovingAliasId(aliasId);
+              try {
+                await deleteAlias.mutateAsync({ walletId: wallet.id, aliasId });
+              } finally {
+                setRemovingAliasId(null);
+              }
+            }}
           />
-        </FormField>
-
-        {isCredit ? (
-          <>
-            <FormField label={t("creditLimit")} htmlFor="edit-wallet-credit-limit">
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
-                  Rp
-                </span>
-                <Input
-                  type="text"
-                  inputMode="numeric"
-                  value={creditLimit}
-                  onChange={(event) => setCreditLimit(event.target.value.replace(/\D/g, ""))}
-                  className="h-12 border-border/70 bg-card pl-11 text-sm tabular-nums"
-                  required
-                />
-              </div>
-            </FormField>
-            {hasBillingCycle ? (
-              <div className="grid grid-cols-2 gap-3">
-                <FormField label={t("cutoffDate")} htmlFor="edit-wallet-cutoff-day">
-                  <Input
-                    type="number"
-                    min="1"
-                    max="31"
-                    value={cutoffDay}
-                    onChange={(event) => setCutoffDay(event.target.value)}
-                    placeholder={t("optional")}
-                    className="h-12 border-border/70 bg-card px-3 text-sm"
-                  />
-                </FormField>
-                <FormField label={t("dueDate")} htmlFor="edit-wallet-due-day">
-                  <Input
-                    type="number"
-                    min="1"
-                    max="31"
-                    value={paymentDueDay}
-                    onChange={(event) => setPaymentDueDay(event.target.value)}
-                    placeholder={t("optional")}
-                    className="h-12 border-border/70 bg-card px-3 text-sm"
-                  />
-                </FormField>
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground">{t("paylaterDueNote")}</p>
-            )}
-          </>
-        ) : null}
-
-        <FormErrorMessage message={error} />
-      </form>
+        </div>
+      </div>
     </AppModal>
   );
 }
