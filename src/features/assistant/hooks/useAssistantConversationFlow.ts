@@ -171,7 +171,7 @@ export function useAssistantConversationFlow() {
     if (recoveryStateQuery.data) {
       return resolveRecoveryState(recoveryStateQuery.data, {
         conversationStatus: session.data?.conversation.status,
-        latestTurnIntent: session.data?.turns.at(-1)?.intent,
+        turns: session.data?.turns,
       });
     }
     return { kind: "ready" };

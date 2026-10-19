@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { AssistantConversation, type AssistantConversationLabels } from "./AssistantConversation";
 import type { AssistantMessage, AssistantDraft, AssistantRecoveryClarification, ClarificationRequest, GuidedClarification } from "@/src/types/assistant";
-import type { AssistantRecoveryState } from "@/src/features/assistant/types/recovery";
+import { resolveRecoveryState, type AssistantRecoveryState } from "@/src/features/assistant/types/recovery";
 import en from "@/messages/en.json";
 
 const LABELS: AssistantConversationLabels = {
@@ -413,6 +413,91 @@ export const TerminalArchivedAfterRefresh: Story = {
     ...TerminalExpiredAfterRefresh.args,
     recoveryState: { kind: "terminal", condition: { kind: "notActionable", reason: "archived" } },
   },
+};
+
+/**
+ * Phase 38.1 — the recovery state is derived from a real recovery-state
+ * payload (effective status + turn link), so the terminal card shows straight
+ * after a refresh, with no stale card and no 409 first.
+ */
+const TERMINAL_TITLE = en.assistant.recovery.terminal.title;
+const REFRESH_TURNS = [{ id: "turn-1", intent: "transaction.create" }];
+const expectTerminalWithoutConfirm = (title: string) => async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+  const canvas = within(canvasElement);
+  await expect(canvas.getByText(title)).toBeInTheDocument();
+  for (const name of [en.assistant.draftReview.confirm, en.assistant.draftReview.confirmTransaction]) {
+    await expect(canvas.queryByRole("button", { name })).not.toBeInTheDocument();
+  }
+};
+
+export const UntouchedExpiredDraftAfterRefresh: Story = {
+  args: {
+    ...TerminalExpiredAfterRefresh.args,
+    recoveryState: resolveRecoveryState(
+      { latestTerminalDraft: { draftId: "draft-1", status: "EXPIRED", recordedStatus: "PENDING_CONFIRMATION", originatingTurnId: "turn-1" } },
+      { conversationStatus: "ACTIVE", turns: REFRESH_TURNS }
+    ),
+  },
+  play: expectTerminalWithoutConfirm(TERMINAL_TITLE.expired),
+};
+
+export const FailedDraftAfterRefresh: Story = {
+  args: {
+    ...TerminalExpiredAfterRefresh.args,
+    recoveryState: resolveRecoveryState(
+      { latestTerminalDraft: { draftId: "draft-1", status: "FAILED", recordedStatus: "FAILED", originatingTurnId: "turn-1" } },
+      { conversationStatus: "ACTIVE", turns: [...REFRESH_TURNS, { id: "turn-2", intent: "transaction.create.confirm" }] }
+    ),
+  },
+  play: expectTerminalWithoutConfirm(TERMINAL_TITLE.failed),
+};
+
+export const UntouchedExpiredClarificationAfterRefresh: Story = {
+  args: {
+    ...TerminalExpiredAfterRefresh.args,
+    recoveryState: resolveRecoveryState(
+      {
+        latestTerminalClarification: {
+          clarificationId: "clar-1",
+          entityType: "wallet",
+          status: "STALE",
+          terminalCode: "expired",
+          restartRequired: true,
+          recordedStatus: "PENDING",
+          originatingTurnId: "turn-1",
+        },
+      },
+      { conversationStatus: "ACTIVE", turns: REFRESH_TURNS }
+    ),
+  },
+  play: expectTerminalWithoutConfirm(TERMINAL_TITLE.expired),
+};
+
+/** A draft still pending inside an archived conversation: the backend refuses confirm until restore, so no Confirm here. */
+export const ArchivedWithPendingDraftAfterRefresh: Story = {
+  args: {
+    ...TerminalExpiredAfterRefresh.args,
+    recoveryState: resolveRecoveryState(
+      {
+        pendingDraft: {
+          draftId: "draft-1",
+          status: "PENDING_CONFIRMATION",
+          preview: {
+            operation: "transaction.create",
+            type: "EXPENSE",
+            amount: "350000",
+            walletId: "wallet-1",
+            categoryId: "category-1",
+            date: "2026-10-19",
+            transactionDate: "2026-10-19",
+            expiresAt: "2026-10-19T15:30:00.000Z",
+          },
+        },
+      },
+      { conversationStatus: "ARCHIVED", turns: REFRESH_TURNS }
+    ),
+  },
+  play: expectTerminalWithoutConfirm(TERMINAL_TITLE.notActionable),
 };
 
 /** Phase 38 — TRANSFER destination question after the source was chosen. */

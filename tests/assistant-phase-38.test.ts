@@ -104,17 +104,69 @@ describe("Phase 38 — recovery-state after refresh", () => {
     [terminal("STALE", "expired"), { kind: "expired" }],
     [terminal("STALE", "context_invalid"), { kind: "notActionable", reason: "stale" }],
   ])("latest terminal clarification %j → %j when the last turn was a clarification action", (response, condition) => {
-    expect(resolveRecoveryState(response, { conversationStatus: "ACTIVE", latestTurnIntent: "clarification.cancel" })).toEqual({
+    expect(resolveRecoveryState(response, { conversationStatus: "ACTIVE", turns: [{ id: "t1", intent: "clarification.cancel" }] })).toEqual({
       kind: "terminal",
       condition,
     });
   });
 
   it("a terminal clarification is history once the conversation moved on — not reported as the current state", () => {
-    expect(resolveRecoveryState(terminal("CANCELLED"), { conversationStatus: "ACTIVE", latestTurnIntent: "transaction.create" }).kind).toBe(
+    expect(resolveRecoveryState(terminal("CANCELLED"), { conversationStatus: "ACTIVE", turns: [{ id: "t1", intent: "transaction.create" }] }).kind).toBe(
       "transientClarificationLost"
     );
-    expect(resolveRecoveryState(terminal("CONSUMED"), { latestTurnIntent: "clarification.select" }).kind).toBe("transientClarificationLost");
+    expect(resolveRecoveryState(terminal("CONSUMED"), { turns: [{ id: "t1", intent: "clarification.select" }] }).kind).toBe("transientClarificationLost");
+  });
+});
+
+describe("Phase 38.1 — effective terminal states after refresh, without a 409 first", () => {
+  const turns = (...intents: string[]) => intents.map((intent, i) => ({ id: `turn-${i + 1}`, intent }));
+  const draft = (status: "EXPIRED" | "FAILED" | "CANCELLED", recordedStatus: string = status) => ({
+    latestTerminalDraft: { draftId: "d", status, recordedStatus: recordedStatus as "EXPIRED", originatingTurnId: "turn-1" },
+  });
+
+  it.each([
+    [draft("EXPIRED", "PENDING_CONFIRMATION"), turns("transaction.create"), { kind: "expired" }],
+    [draft("FAILED"), turns("transaction.create", "transaction.create.confirm"), { kind: "failed" }],
+    [draft("CANCELLED"), turns("transaction.create", "transaction.create.cancel"), { kind: "cancelled" }],
+  ])("latestTerminalDraft %j shows its condition while it is the latest activity", (response, history, condition) => {
+    expect(resolveRecoveryState(response, { conversationStatus: "ACTIVE", turns: history })).toEqual({ kind: "terminal", condition });
+  });
+
+  it("a terminal draft is history once a later, unrelated turn exists, or when its turn isn't loaded", () => {
+    expect(resolveRecoveryState(draft("EXPIRED"), { turns: turns("transaction.create", "analytics.monthly_summary") }).kind).toBe("transientClarificationLost");
+    expect(resolveRecoveryState(draft("EXPIRED"), { turns: [{ id: "other", intent: "transaction.create" }] }).kind).toBe("transientClarificationLost");
+  });
+
+  it("an untouched past-TTL clarification is linked by originatingTurnId and shown as expired", () => {
+    const response = {
+      latestTerminalClarification: {
+        clarificationId: "c", entityType: "wallet" as const, status: "STALE" as const, terminalCode: "expired",
+        restartRequired: true, recordedStatus: "PENDING" as const, originatingTurnId: "turn-1",
+      },
+    };
+    // The last turn is the original request, not a clarification action — the pre-38.1 heuristic missed this.
+    expect(resolveRecoveryState(response, { conversationStatus: "ACTIVE", turns: turns("transaction.create") })).toEqual({
+      kind: "terminal",
+      condition: { kind: "expired" },
+    });
+    expect(resolveRecoveryState(response, { turns: turns("transaction.create", "transaction.create") }).kind).toBe("transientClarificationLost");
+  });
+
+  it("a pending draft or clarification in an archived conversation is not actionable (confirm would be refused)", () => {
+    const archived = { kind: "terminal", condition: { kind: "notActionable", reason: "archived" } };
+    const pendingDraft = {
+      draftId: "d", status: "PENDING_CONFIRMATION" as const,
+      preview: { operation: "transaction.create", type: "EXPENSE" as const, amount: "1000", walletId: "w", categoryId: "c", date: "2026-10-19", transactionDate: "2026-10-19", expiresAt: "2026-10-19T10:15:00Z" },
+    };
+    expect(resolveRecoveryState({ pendingDraft }, { conversationStatus: "ARCHIVED" })).toEqual(archived);
+    expect(resolveRecoveryState({ pendingDraft }, { conversationStatus: "ACTIVE" }).kind).toBe("draftRecovered");
+  });
+
+  it("the archived-confirm 409 maps to archived from its code; the CONVERSATION_ARCHIVED detail needs no new branch", () => {
+    expect(readAssistantTerminalCondition(apiError("ASSISTANT_CONVERSATION_NOT_CONTINUABLE", "CONVERSATION_ARCHIVED"))).toEqual({
+      kind: "notActionable",
+      reason: "archived",
+    });
   });
 });
 

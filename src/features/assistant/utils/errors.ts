@@ -73,6 +73,11 @@ const TERMINAL_BY_DRAFT_STATUS: Record<string, AssistantTerminalCondition> = {
   COMMITTED: { kind: "notActionable", reason: "committed" },
 };
 
+/** Terminal condition for a draft status marker (409 `detail`, or recovery-state's `latestTerminalDraft.status`). */
+export function terminalConditionForDraftStatus(status: string | undefined): AssistantTerminalCondition {
+  return (status && TERMINAL_BY_DRAFT_STATUS[status]) || { kind: "notActionable", reason: "unknown" };
+}
+
 /**
  * Maps a definite backend error to a terminal condition using only the
  * structured `code` and, for `ASSISTANT_DRAFT_CONFLICT`, the `detail` status
@@ -83,7 +88,7 @@ export function readAssistantTerminalCondition(error: unknown): AssistantTermina
   const backendError = readBackendError(error);
   if (!backendError?.code) return null;
   if (backendError.code === "ASSISTANT_DRAFT_CONFLICT") {
-    return (backendError.detail && TERMINAL_BY_DRAFT_STATUS[backendError.detail]) || { kind: "notActionable", reason: "unknown" };
+    return terminalConditionForDraftStatus(backendError.detail);
   }
   return TERMINAL_BY_CODE[backendError.code] ?? null;
 }
