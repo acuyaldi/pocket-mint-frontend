@@ -262,12 +262,23 @@ export interface ClarificationOption {
   discriminator?: string;
 }
 
+/**
+ * Phase 38 — which TRANSFER wallet slot an open wallet clarification fills.
+ * Absent for every non-transfer clarification. `sourceWalletLabel` is the
+ * already-chosen source, present only on the destination question.
+ */
+export interface AssistantTransferWalletClarification {
+  field: "SOURCE_WALLET" | "DESTINATION_WALLET";
+  sourceWalletLabel?: string;
+}
+
 export interface ClarificationRequest {
   clarificationId: string;
   entityType: AssistantClarificationEntityType;
   prompt: string;
   options: ClarificationOption[];
   expiresAt: string;
+  transfer?: AssistantTransferWalletClarification;
 }
 
 /** `POST .../clarifications/:id/select` response — either another clarification, or a resolved draft. */
@@ -308,6 +319,8 @@ export interface AssistantClarificationCancelResult {
 export interface AssistantError {
   code: string;
   message: string;
+  /** Bounded machine marker (Phase 37.3) — e.g. the terminal draft status on `ASSISTANT_DRAFT_CONFLICT`. */
+  detail?: string;
   statusCode: number;
   correlationId?: string;
   conversationId?: string;
@@ -332,6 +345,7 @@ export interface AssistantRecoveryClarification {
   /** No `token` field — these options are display-only, never usable to call `select`. */
   options: AssistantRecoveryClarificationOption[];
   expiresAt: string;
+  transfer?: AssistantTransferWalletClarification;
 }
 
 export interface AssistantRecoveryDraftPreview {

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { type DraftConfirmOverrides } from "@/src/features/assistant/api/assistantApi";
 import { useConfirmAssistantDraft, useCancelAssistantDraft } from "@/src/features/assistant/hooks/useAssistantDraft";
@@ -14,7 +15,13 @@ import { useAssistantSession, useAssistantRecoveryState } from "@/src/features/a
 import { useAssistantReconciliation } from "@/src/features/assistant/hooks/useAssistantReconciliation";
 import { parseAssistantDraftParam, isAssistantDraft } from "@/src/features/assistant/utils/draftParam";
 import { isClarificationRequest, isGuidedClarification } from "@/src/features/assistant/utils/clarification";
-import { readAssistantErrorMessage, classifyAssistantMutationError } from "@/src/features/assistant/utils/errors";
+import {
+  readAssistantErrorMessage,
+  classifyAssistantMutationError,
+  readAssistantTerminalCondition,
+  type AssistantTerminalCondition,
+} from "@/src/features/assistant/utils/errors";
+import { assistantKeys } from "@/src/features/assistant/constants/queryKeys";
 import {
   resolveRecoveryState,
   isAssistantActionRetrySafe,
@@ -24,6 +31,7 @@ import {
 import type {
   AssistantClarificationSelectResult,
   AssistantDraft,
+  AssistantSession,
   AssistantTurnResult,
   ClarificationRequest,
   GuidedClarification,
@@ -57,6 +65,22 @@ export type AssistantLastResult = { renderedText: string } | null;
 const CONVERSATION_ID_PARAM = "conversationId";
 
 /**
+ * The user's own original instruction for the latest capture, for the
+ * expired/failed "send again as a new draft" action. Picked by structured
+ * fields only: a USER_PROVIDED message whose turn is not a clarification
+ * action (`clarification.*` turns persist fixed text like "Pilih opsi
+ * klarifikasi."). Null when it is not on the loaded page.
+ */
+export function findOriginalUserMessage(session: AssistantSession | undefined): string | null {
+  if (!session) return null;
+  const intentByTurn = new Map(session.turns.map((turn) => [turn.id, turn.intent]));
+  const message = session.messages.items.findLast(
+    (m) => m.role === "USER" && m.source === "USER_PROVIDED" && !intentByTurn.get(m.turnId)?.startsWith("clarification.")
+  );
+  return message?.content ?? null;
+}
+
+/**
  * Client-side guard mirroring the backend's `MAX_ASSISTANT_MESSAGE_LENGTH`
  * (`pocket-mint-be/src/assistant/persistence.ts`). An over-length instruction is
  * a genuine field-validation error — it surfaces inline on the input, never as a
@@ -75,6 +99,7 @@ const MAX_ASSISTANT_INSTRUCTION_LENGTH = 10_000;
  */
 export function useAssistantConversationFlow() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
 
   const urlConversationId = useMemo(() => {
@@ -114,6 +139,8 @@ export function useAssistantConversationFlow() {
     clarificationId?: string;
   } | null>(null);
   const [isCheckingOutcome, setIsCheckingOutcome] = useState(false);
+  // Phase 38 — set from a structured terminal marker on a definite mutation error.
+  const [terminalCondition, setTerminalCondition] = useState<AssistantTerminalCondition | null>(null);
 
   const session = useAssistantSession(conversationId);
 
@@ -141,7 +168,12 @@ export function useAssistantConversationFlow() {
     if (recoveryStateQuery.isError) {
       return latestTurnStatus === "CLARIFICATION_REQUIRED" ? { kind: "transientClarificationLost" } : { kind: "ready" };
     }
-    if (recoveryStateQuery.data) return resolveRecoveryState(recoveryStateQuery.data);
+    if (recoveryStateQuery.data) {
+      return resolveRecoveryState(recoveryStateQuery.data, {
+        conversationStatus: session.data?.conversation.status,
+        latestTurnIntent: session.data?.turns.at(-1)?.intent,
+      });
+    }
     return { kind: "ready" };
   }, [
     activeWorkflow,
@@ -151,11 +183,16 @@ export function useAssistantConversationFlow() {
     recoveryStateQuery.isError,
     recoveryStateQuery.data,
     latestTurnStatus,
+    session.data,
   ]);
 
   const recoveryState: AssistantRecoveryState = outcomeUnknownAction
     ? { kind: "actionOutcomeUnknown", action: outcomeUnknownAction }
-    : derivedRecovery;
+    : terminalCondition
+      ? { kind: "terminal", condition: terminalCondition }
+      : derivedRecovery;
+
+  const originalUserMessage = useMemo(() => findOriginalUserMessage(session.data), [session.data]);
 
   function persistConversationId(id: string) {
     if (id === conversationId) return;
@@ -242,7 +279,25 @@ export function useAssistantConversationFlow() {
       setOutcomeUnknownAction(action);
       return;
     }
+    if (enterTerminal(error)) return;
     onError(readAssistantErrorMessage(error, tErrors));
+  }
+
+  /**
+   * A definite error carrying a terminal marker replaces the dead card with
+   * the terminal recovery state (no Confirm) instead of a toast, and refetches
+   * recovery-state so the stale card can't come back (audit I4).
+   */
+  function enterTerminal(error: unknown): boolean {
+    const condition = readAssistantTerminalCondition(error);
+    if (!condition) return false;
+    setActiveWorkflow(null);
+    setTerminalCondition(condition);
+    if (conversationId) {
+      void queryClient.invalidateQueries({ queryKey: assistantKeys.recoveryState(conversationId) });
+      void queryClient.invalidateQueries({ queryKey: assistantKeys.session(conversationId) });
+    }
+    return true;
   }
 
   /**
@@ -263,7 +318,16 @@ export function useAssistantConversationFlow() {
     onGenericError: () => void,
     requestLocale: string
   ) => {
-    const message = instructionText.trim();
+    send(instructionText.trim(), tErrors, onRequestError, onGenericError, requestLocale);
+  };
+
+  function send(
+    message: string,
+    tErrors: (key: string) => string,
+    onRequestError: (message: string) => void,
+    onGenericError: () => void,
+    requestLocale: string
+  ) {
     if (!message || sendMessage.isPending || activeWorkflow || recoveryState.kind === "turnRunning") return;
     if (message.length > MAX_ASSISTANT_INSTRUCTION_LENGTH) {
       setFormError(tErrors("tooLong"));
@@ -271,6 +335,7 @@ export function useAssistantConversationFlow() {
     }
     setFormError(null);
     setOutcomeUnknownAction(null);
+    setTerminalCondition(null);
     sendMessage.mutate(
       { message, conversationId: conversationId ?? undefined, locale: requestLocale },
       {
@@ -284,10 +349,27 @@ export function useAssistantConversationFlow() {
             setOutcomeUnknownAction("sendMessage");
             return;
           }
+          if (enterTerminal(error)) return;
           onRequestError(readAssistantErrorMessage(error, tErrors));
         },
       }
     );
+  }
+
+  /**
+   * Expired/failed recovery action: sends the user's own original instruction
+   * again as a brand-new message (a new draft) — never a retry of the old
+   * draft, which stays terminal. Same path, guards and idempotency as `submit`.
+   */
+  const resendAsNewDraft = (
+    tErrors: (key: string) => string,
+    onRequestError: (message: string) => void,
+    onGenericError: () => void,
+    requestLocale: string
+  ) => {
+    if (!originalUserMessage) return;
+    setInstructionText(originalUserMessage);
+    send(originalUserMessage, tErrors, onRequestError, onGenericError, requestLocale);
   };
 
   const selectOption = (token: string, tErrors: (key: string) => string, onError: (message: string) => void) => {
@@ -457,6 +539,7 @@ export function useAssistantConversationFlow() {
     setPendingOptionToken(null);
     setOutcomeUnknownAction(null);
     setOutcomeSnapshot(null);
+    setTerminalCondition(null);
     setCameFromUrl(true);
     sendMessage.reset();
     sendMessage.clearIdempotencyKey();
@@ -478,6 +561,7 @@ export function useAssistantConversationFlow() {
     setPendingOptionToken(null);
     setOutcomeUnknownAction(null);
     setOutcomeSnapshot(null);
+    setTerminalCondition(null);
     setCameFromUrl(false);
     sendMessage.reset();
     sendMessage.clearIdempotencyKey();
@@ -507,7 +591,9 @@ export function useAssistantConversationFlow() {
     isCheckingOutcome,
     checkOutcome,
     retryOutcomeAction,
+    originalUserMessage,
     submit,
+    resendAsNewDraft,
     selectOption,
     submitGuidedFields,
     cancelActiveClarification,

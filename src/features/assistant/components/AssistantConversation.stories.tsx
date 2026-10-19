@@ -4,6 +4,7 @@ import { expect, fn, userEvent, within } from "storybook/test";
 import { AssistantConversation, type AssistantConversationLabels } from "./AssistantConversation";
 import type { AssistantMessage, AssistantDraft, AssistantRecoveryClarification, ClarificationRequest, GuidedClarification } from "@/src/types/assistant";
 import type { AssistantRecoveryState } from "@/src/features/assistant/types/recovery";
+import en from "@/messages/en.json";
 
 const LABELS: AssistantConversationLabels = {
   regionLabel: "Assistant conversation",
@@ -28,6 +29,7 @@ const LABELS: AssistantConversationLabels = {
   composerDisabledDraft: "Confirm or cancel the draft above before sending a new instruction.",
   composerDisabledOutcomeUnknown: "Check what happened with your previous action above before sending a new instruction.",
   composerDisabledTurnRunning: "Your previous message is still being processed. Please wait before sending another one.",
+  composerDisabledArchived: en.assistant.recovery.composerDisabledArchived,
   clarification: {
     cancel: "Cancel",
     cancelling: "Cancelling",
@@ -41,6 +43,7 @@ const LABELS: AssistantConversationLabels = {
       merchant: "Select the merchant Pocket Mint should use.",
       category: "Select one of your existing categories.",
     },
+    transfer: en.assistant.clarification.transfer,
   },
   guidedClarification: {
     field: { category: "Category", date: "Date" },
@@ -90,6 +93,8 @@ const LABELS: AssistantConversationLabels = {
     turnRunning: "Your previous message in this conversation is still being processed. Please wait before sending another one.",
     cancel: "Cancel",
     cancelling: "Cancelling",
+    terminal: en.assistant.recovery.terminal,
+    transfer: en.assistant.clarification.transfer,
   },
   outcomeUnknown: {
     heading: "We couldn't confirm what happened",
@@ -381,6 +386,55 @@ export const ActionOutcomeUnknownWithoutRetry: Story = {
     conversationId: "conv-1",
     messages: MESSAGES,
     recoveryState: { kind: "actionOutcomeUnknown", action: "sendMessage" },
+  },
+};
+
+/** Phase 38 — recovery terminal states: a message and an action, never a Confirm button. */
+export const TerminalExpiredAfterRefresh: Story = {
+  args: {
+    ...BASE,
+    conversationId: "conv-1",
+    messages: MESSAGES,
+    recoveryState: { kind: "terminal", condition: { kind: "expired" } },
+    onResendAsNewDraft: fn(),
+  },
+};
+
+export const TerminalFailedAfterRefresh: Story = {
+  args: { ...TerminalExpiredAfterRefresh.args, recoveryState: { kind: "terminal", condition: { kind: "failed" } } },
+};
+
+export const TerminalCancelledAfterRefresh: Story = {
+  args: { ...TerminalExpiredAfterRefresh.args, recoveryState: { kind: "terminal", condition: { kind: "cancelled" } } },
+};
+
+export const TerminalArchivedAfterRefresh: Story = {
+  args: {
+    ...TerminalExpiredAfterRefresh.args,
+    recoveryState: { kind: "terminal", condition: { kind: "notActionable", reason: "archived" } },
+  },
+};
+
+/** Phase 38 — TRANSFER destination question after the source was chosen. */
+export const WithTransferDestinationClarification: Story = {
+  args: {
+    ...BASE,
+    conversationId: "conv-1",
+    messages: MESSAGES,
+    activeWorkflow: {
+      kind: "clarification",
+      clarification: {
+        clarificationId: "clar-transfer",
+        entityType: "wallet",
+        prompt: "Dari: GoPay. Ke wallet mana? Pilih salah satu: BCA Debit (BANK), BCA Payroll (BANK).",
+        options: [
+          { token: "tok-t-1", label: "BCA Debit", discriminator: "BANK" },
+          { token: "tok-t-2", label: "BCA Payroll", discriminator: "BANK" },
+        ],
+        expiresAt: "2026-10-19T15:30:00.000Z",
+        transfer: { field: "DESTINATION_WALLET", sourceWalletLabel: "GoPay" },
+      },
+    },
   },
 };
 

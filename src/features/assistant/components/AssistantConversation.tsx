@@ -39,6 +39,7 @@ export interface AssistantConversationLabels {
   composerDisabledDraft: string;
   composerDisabledOutcomeUnknown: string;
   composerDisabledTurnRunning: string;
+  composerDisabledArchived: string;
   clarification: ClarificationCardLabels;
   guidedClarification: GuidedClarificationCardLabels;
   draft: DraftSummaryCardLabels;
@@ -90,6 +91,8 @@ interface AssistantConversationProps {
   onCheckOutcome: () => void;
   onRetryOutcome: () => void;
   onStartNewConversation: () => void;
+  /** Expired/failed terminal recovery — sends the original instruction again as a new draft. Absent when it isn't available. */
+  onResendAsNewDraft?: () => void;
   intlLocale: string;
   labels: AssistantConversationLabels;
   workflowHeadingRef?: RefObject<HTMLElement | null>;
@@ -138,6 +141,7 @@ export function AssistantConversation({
   onCheckOutcome,
   onRetryOutcome,
   onStartNewConversation,
+  onResendAsNewDraft,
   intlLocale,
   labels,
   workflowHeadingRef,
@@ -175,7 +179,11 @@ export function AssistantConversation({
           ? labels.composerDisabledOutcomeUnknown
           : recoveryState.kind === "turnRunning"
             ? labels.composerDisabledTurnRunning
-            : null;
+            : recoveryState.kind === "terminal" &&
+                recoveryState.condition.kind === "notActionable" &&
+                recoveryState.condition.reason === "archived"
+              ? labels.composerDisabledArchived
+              : null;
 
   return (
     <section aria-label={labels.regionLabel} className="flex min-h-[calc(100dvh-14rem)] flex-col">
@@ -227,6 +235,17 @@ export function AssistantConversation({
 
           {recoveryState.kind === "turnRunning" ? (
             <AssistantRecoveryBanner kind="turnRunning" labels={labels.recoveryBanner} />
+          ) : null}
+
+          {recoveryState.kind === "terminal" ? (
+            <AssistantRecoveryBanner
+              kind="terminal"
+              condition={recoveryState.condition}
+              onResend={onResendAsNewDraft}
+              isResending={isSendingMessage}
+              labels={labels.recoveryBanner}
+              headingRef={workflowHeadingRef}
+            />
           ) : null}
 
           {recoveryState.kind === "clarificationRecovered" ? (

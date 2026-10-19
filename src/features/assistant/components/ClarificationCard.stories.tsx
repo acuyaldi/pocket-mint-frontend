@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { ClarificationCard, type ClarificationCardLabels } from "./ClarificationCard";
 import type { ClarificationRequest } from "@/src/types/assistant";
+import en from "@/messages/en.json";
 
 const LABELS: ClarificationCardLabels = {
   cancel: "Cancel",
@@ -16,6 +17,7 @@ const LABELS: ClarificationCardLabels = {
     merchant: "Select the merchant Pocket Mint should use.",
     category: "Select one of your existing categories.",
   },
+  transfer: en.assistant.clarification.transfer,
 };
 
 const CLARIFICATION: ClarificationRequest = {
@@ -113,4 +115,50 @@ export const CancelInteraction: Story = {
     await userEvent.click(canvas.getByRole("button", { name: LABELS.cancel }));
     expect(args.onCancel).toHaveBeenCalledOnce();
   },
+};
+
+const TRANSFER_OPTIONS = [
+  { token: "tok-t-1", label: "BCA Debit", discriminator: "BANK" },
+  { token: "tok-t-2", label: "BCA Payroll", discriminator: "BANK" },
+];
+
+/** Phase 38 — first TRANSFER question: which wallet the money leaves. */
+export const TransferSource: Story = {
+  args: {
+    ...Default.args,
+    clarification: {
+      ...CLARIFICATION,
+      prompt: "Dari wallet mana? Pilih salah satu: BCA Debit (BANK), BCA Payroll (BANK).",
+      options: TRANSFER_OPTIONS,
+      transfer: { field: "SOURCE_WALLET" },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByRole("heading", { name: LABELS.transfer.question.SOURCE_WALLET })).toBeInTheDocument();
+  },
+};
+
+/** Phase 38 — second TRANSFER question: the chosen source is shown before asking for the destination. */
+export const TransferDestination: Story = {
+  args: {
+    ...Default.args,
+    clarification: {
+      ...CLARIFICATION,
+      clarificationId: "clar-2",
+      prompt: "Dari: GoPay. Ke wallet mana? Pilih salah satu: BCA Debit (BANK), BCA Payroll (BANK).",
+      options: TRANSFER_OPTIONS,
+      transfer: { field: "DESTINATION_WALLET", sourceWalletLabel: "GoPay" },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const heading = canvas.getByRole("heading", { name: LABELS.transfer.question.DESTINATION_WALLET });
+    expect(heading).toHaveAccessibleDescription(`${LABELS.transfer.from}: GoPay`);
+  },
+};
+
+export const TransferDestinationMobile: Story = {
+  parameters: { viewport: { defaultViewport: "mobile1" } },
+  args: TransferDestination.args,
 };

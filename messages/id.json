@@ -1107,6 +1107,17 @@
           "date": "Tanggal"
         },
         "submit": "Lanjutkan"
+      },
+      "transfer": {
+        "question": {
+          "SOURCE_WALLET": "Dari wallet mana?",
+          "DESTINATION_WALLET": "Ke wallet mana?"
+        },
+        "description": {
+          "SOURCE_WALLET": "Pilih wallet asal dana transfer ini.",
+          "DESTINATION_WALLET": "Pilih wallet yang menerima transfer ini."
+        },
+        "from": "Dari"
       }
     },
     "completion": {
@@ -1161,7 +1172,29 @@
       "clarificationRecoveredTitle": "Masih ada pertanyaan yang belum dijawab pada percakapan ini",
       "composerDisabled": "Periksa apa yang terjadi pada tindakan sebelumnya di atas sebelum mengirim instruksi baru.",
       "turnRunning": "Pesan sebelumnya pada percakapan ini masih diproses. Mohon tunggu sebelum mengirim pesan lain.",
-      "composerDisabledTurnRunning": "Pesan sebelumnya masih diproses. Mohon tunggu sebelum mengirim pesan lain."
+      "composerDisabledTurnRunning": "Pesan sebelumnya masih diproses. Mohon tunggu sebelum mengirim pesan lain.",
+      "composerDisabledArchived": "Percakapan ini sudah diarsipkan. Pulihkan dari riwayat atau mulai percakapan baru untuk mengirim instruksi.",
+      "terminal": {
+        "title": {
+          "expired": "Draf ini sudah kedaluwarsa",
+          "failed": "Transaksi ini gagal disimpan",
+          "cancelled": "Sudah dibatalkan",
+          "notActionable": "Tidak ada lagi yang bisa dilanjutkan di sini"
+        },
+        "description": {
+          "expired": "Waktu konfirmasinya sudah habis, jadi tidak ada yang disimpan. Kirim ulang pesan Anda untuk membuat draf baru.",
+          "failed": "Tidak ada yang disimpan dan saldo tidak berubah. Draf ini tidak akan dicoba ulang otomatis — kirim ulang pesan Anda untuk membuat draf baru.",
+          "cancelled": "Tidak ada yang disimpan. Anda bisa mengirim instruksi baru kapan saja.",
+          "archived": "Percakapan ini sudah diarsipkan, jadi tidak bisa menerima instruksi baru. Pulihkan dari riwayat atau mulai percakapan baru.",
+          "consumed": "Pertanyaan ini sudah dijawab sebelumnya, misalnya dari Telegram atau tab lain. Lihat percakapan untuk hasilnya.",
+          "stale": "Pertanyaan ini sudah tidak berlaku karena datanya berubah. Kirim instruksi baru untuk memulai lagi.",
+          "committed": "Transaksi ini sudah tersimpan sebelumnya, misalnya dari Telegram atau tab lain. Tidak perlu dikonfirmasi lagi.",
+          "unknown": "Draf ini sudah selesai dan tidak bisa lagi dikonfirmasi atau dibatalkan."
+        },
+        "resend": "Kirim ulang sebagai draf baru",
+        "resending": "Mengirim ulang",
+        "resendUnavailable": "Ketik ulang instruksi Anda di bawah untuk membuat draf baru."
+      }
     },
     "outcomeUnknown": {
       "heading": "Kami belum bisa memastikan apa yang terjadi",
