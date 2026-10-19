@@ -1107,6 +1107,17 @@
           "date": "Date"
         },
         "submit": "Continue"
+      },
+      "transfer": {
+        "question": {
+          "SOURCE_WALLET": "Which wallet is it from?",
+          "DESTINATION_WALLET": "Which wallet is it going to?"
+        },
+        "description": {
+          "SOURCE_WALLET": "Choose the wallet this transfer is paid from.",
+          "DESTINATION_WALLET": "Choose the wallet that receives this transfer."
+        },
+        "from": "From"
       }
     },
     "completion": {
@@ -1161,7 +1172,29 @@
       "clarificationRecoveredTitle": "You still have a pending question in this conversation",
       "composerDisabled": "Check what happened with your previous action above before sending a new instruction.",
       "turnRunning": "Your previous message in this conversation is still being processed. Please wait before sending another one.",
-      "composerDisabledTurnRunning": "Your previous message is still being processed. Please wait before sending another one."
+      "composerDisabledTurnRunning": "Your previous message is still being processed. Please wait before sending another one.",
+      "composerDisabledArchived": "This conversation is archived. Restore it from history or start a new conversation to send an instruction.",
+      "terminal": {
+        "title": {
+          "expired": "This draft has expired",
+          "failed": "This transaction couldn't be saved",
+          "cancelled": "Already cancelled",
+          "notActionable": "Nothing left to continue here"
+        },
+        "description": {
+          "expired": "Its confirmation window ran out, so nothing was saved. Send your message again to create a new draft.",
+          "failed": "Nothing was saved and no balance changed. This draft is never retried automatically — send your message again to create a new draft.",
+          "cancelled": "Nothing was saved. You can send a new instruction at any time.",
+          "archived": "This conversation is archived, so it can't take new instructions. Restore it from history or start a new conversation.",
+          "consumed": "This question was already answered, for example from Telegram or another tab. Check the conversation for the result.",
+          "stale": "This question no longer applies because its data changed. Send a new instruction to start again.",
+          "committed": "This transaction was already saved, for example from Telegram or another tab. It doesn't need confirming again.",
+          "unknown": "This draft is already finished and can no longer be confirmed or cancelled."
+        },
+        "resend": "Send again as a new draft",
+        "resending": "Sending again",
+        "resendUnavailable": "Type your instruction again below to create a new draft."
+      }
     },
     "outcomeUnknown": {
       "heading": "We couldn't confirm what happened",

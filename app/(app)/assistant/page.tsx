@@ -14,6 +14,7 @@ import { useAssistantConversationFlow } from "@/src/features/assistant/hooks/use
 import { readAssistantErrorMessage } from "@/src/features/assistant/utils/errors";
 import { AssistantConversation, type AssistantConversationLabels } from "@/src/features/assistant/components/AssistantConversation";
 import { AssistantConversationHistory } from "@/src/features/assistant/components/AssistantConversationHistory";
+import type { TransferWalletLabels } from "@/src/features/assistant/components/ClarificationCard";
 import type { AssistantFinancialDraftStatus } from "@/src/types/assistant";
 
 /**
@@ -88,6 +89,18 @@ export default function AssistantPage() {
     FAILED: tDraft("status.FAILED"),
   };
 
+  const transferLabels: TransferWalletLabels = {
+    question: {
+      SOURCE_WALLET: tClarification("transfer.question.SOURCE_WALLET"),
+      DESTINATION_WALLET: tClarification("transfer.question.DESTINATION_WALLET"),
+    },
+    description: {
+      SOURCE_WALLET: tClarification("transfer.description.SOURCE_WALLET"),
+      DESTINATION_WALLET: tClarification("transfer.description.DESTINATION_WALLET"),
+    },
+    from: tClarification("transfer.from"),
+  };
+
   const labels: AssistantConversationLabels = {
     regionLabel: tConversation("regionLabel"),
     listLabel: tConversation("listLabel"),
@@ -119,6 +132,7 @@ export default function AssistantPage() {
     composerDisabledDraft: tConversation("composerDisabledDraft"),
     composerDisabledOutcomeUnknown: tRecovery("composerDisabled"),
     composerDisabledTurnRunning: tRecovery("composerDisabledTurnRunning"),
+    composerDisabledArchived: tRecovery("composerDisabledArchived"),
     clarification: {
       cancel: tCommon("actions.cancel"),
       cancelling: tClarification("cancelling"),
@@ -132,6 +146,7 @@ export default function AssistantPage() {
         merchant: tClarification("description.merchant"),
         category: tClarification("description.category"),
       },
+      transfer: transferLabels,
     },
     guidedClarification: {
       field: {
@@ -182,6 +197,28 @@ export default function AssistantPage() {
       turnRunning: tRecovery("turnRunning"),
       cancel: tCommon("actions.cancel"),
       cancelling: tClarification("cancelling"),
+      terminal: {
+        title: {
+          expired: tRecovery("terminal.title.expired"),
+          failed: tRecovery("terminal.title.failed"),
+          cancelled: tRecovery("terminal.title.cancelled"),
+          notActionable: tRecovery("terminal.title.notActionable"),
+        },
+        description: {
+          expired: tRecovery("terminal.description.expired"),
+          failed: tRecovery("terminal.description.failed"),
+          cancelled: tRecovery("terminal.description.cancelled"),
+          archived: tRecovery("terminal.description.archived"),
+          consumed: tRecovery("terminal.description.consumed"),
+          stale: tRecovery("terminal.description.stale"),
+          committed: tRecovery("terminal.description.committed"),
+          unknown: tRecovery("terminal.description.unknown"),
+        },
+        resend: tRecovery("terminal.resend"),
+        resending: tRecovery("terminal.resending"),
+        resendUnavailable: tRecovery("terminal.resendUnavailable"),
+      },
+      transfer: transferLabels,
     },
     outcomeUnknown: {
       heading: tOutcome("heading"),
@@ -284,6 +321,11 @@ export default function AssistantPage() {
           )
         }
         onStartNewConversation={flow.startNewConversation}
+        onResendAsNewDraft={
+          flow.originalUserMessage
+            ? () => flow.resendAsNewDraft(tErrors, (message) => toast(message, "error"), () => toast(tErrors("generic"), "error"), intlLocale)
+            : undefined
+        }
         intlLocale={intlLocale}
         labels={labels}
         workflowHeadingRef={workflowHeadingRef}

@@ -12,6 +12,19 @@ function isClarificationOption(value: unknown): value is ClarificationOption {
   );
 }
 
+const TRANSFER_FIELDS = new Set(["SOURCE_WALLET", "DESTINATION_WALLET"]);
+
+function isTransferWallet(value: unknown): boolean {
+  if (value === undefined) return true;
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.field === "string" &&
+    TRANSFER_FIELDS.has(v.field) &&
+    (v.sourceWalletLabel === undefined || typeof v.sourceWalletLabel === "string")
+  );
+}
+
 /** Validates an unknown value as a real `ClarificationRequest` — a turn/select response is never trusted blindly before it drives UI or a subsequent mutation. */
 export function isClarificationRequest(value: unknown): value is ClarificationRequest {
   if (typeof value !== "object" || value === null) return false;
@@ -23,7 +36,8 @@ export function isClarificationRequest(value: unknown): value is ClarificationRe
     typeof v.prompt === "string" &&
     typeof v.expiresAt === "string" &&
     Array.isArray(v.options) &&
-    v.options.every(isClarificationOption)
+    v.options.every(isClarificationOption) &&
+    isTransferWallet(v.transfer)
   );
 }
 

@@ -40,9 +40,57 @@ const ASSISTANT_ERROR_MESSAGE_KEYS: Record<string, string> = {
   ASSISTANT_IDEMPOTENCY_CONFLICT: "idempotencyConflict",
 };
 
-/** Extracts the backend's safe `{error:{code,message}}` envelope from an Axios/API-boundary error. */
-function readBackendError(error: unknown): { code?: string; message?: string } | undefined {
-  return (error as { response?: { data?: { error?: { code?: string; message?: string } } } })?.response?.data?.error;
+/** Extracts the backend's safe `{error:{code,message,detail}}` envelope from an Axios/API-boundary error. */
+function readBackendError(error: unknown): { code?: string; message?: string; detail?: string } | undefined {
+  return (error as { response?: { data?: { error?: { code?: string; message?: string; detail?: string } } } })?.response?.data?.error;
+}
+
+/**
+ * Phase 38 — the four terminal conditions recovery distinguishes. `notActionable`
+ * carries why, so the UI can explain it instead of showing a generic error.
+ */
+export type AssistantNotActionableReason = "archived" | "consumed" | "stale" | "committed" | "unknown";
+export type AssistantTerminalCondition =
+  | { kind: "expired" }
+  | { kind: "failed" }
+  | { kind: "cancelled" }
+  | { kind: "notActionable"; reason: AssistantNotActionableReason };
+
+const TERMINAL_BY_CODE: Record<string, AssistantTerminalCondition> = {
+  ASSISTANT_CLARIFICATION_EXPIRED: { kind: "expired" },
+  ASSISTANT_CLARIFICATION_CANCELLED: { kind: "cancelled" },
+  ASSISTANT_CLARIFICATION_ALREADY_CONSUMED: { kind: "notActionable", reason: "consumed" },
+  ASSISTANT_CLARIFICATION_STALE: { kind: "notActionable", reason: "stale" },
+  ASSISTANT_CLARIFICATION_CONTEXT_INVALID: { kind: "notActionable", reason: "stale" },
+  ASSISTANT_CLARIFICATION_CONTINUATION_INVALID: { kind: "notActionable", reason: "stale" },
+  ASSISTANT_CONVERSATION_NOT_CONTINUABLE: { kind: "notActionable", reason: "archived" },
+};
+
+const TERMINAL_BY_DRAFT_STATUS: Record<string, AssistantTerminalCondition> = {
+  EXPIRED: { kind: "expired" },
+  FAILED: { kind: "failed" },
+  CANCELLED: { kind: "cancelled" },
+  COMMITTED: { kind: "notActionable", reason: "committed" },
+};
+
+/** Terminal condition for a draft status marker (409 `detail`, or recovery-state's `latestTerminalDraft.status`). */
+export function terminalConditionForDraftStatus(status: string | undefined): AssistantTerminalCondition {
+  return (status && TERMINAL_BY_DRAFT_STATUS[status]) || { kind: "notActionable", reason: "unknown" };
+}
+
+/**
+ * Maps a definite backend error to a terminal condition using only the
+ * structured `code` and, for `ASSISTANT_DRAFT_CONFLICT`, the `detail` status
+ * marker (Phase 37.3) — never the free-text `message`. Returns null for any
+ * error that is not a terminal state (the caller keeps its normal handling).
+ */
+export function readAssistantTerminalCondition(error: unknown): AssistantTerminalCondition | null {
+  const backendError = readBackendError(error);
+  if (!backendError?.code) return null;
+  if (backendError.code === "ASSISTANT_DRAFT_CONFLICT") {
+    return terminalConditionForDraftStatus(backendError.detail);
+  }
+  return TERMINAL_BY_CODE[backendError.code] ?? null;
 }
 
 /**

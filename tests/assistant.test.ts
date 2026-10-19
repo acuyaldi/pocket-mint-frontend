@@ -1073,7 +1073,7 @@ describe("assistant resilience/recovery — no durable storage of recovery state
 describe("assistant resilience/recovery i18n", () => {
   it("English and Indonesian catalogs define matching recovery/outcome-unknown keys", () => {
     for (const messages of [idMessages, enMessages]) {
-      const recovery = messages.assistant.recovery as Record<string, string>;
+      const recovery = messages.assistant.recovery as Record<string, unknown>;
       expect(recovery.clarificationRecoveredTitle).toBeTruthy();
       expect(recovery.composerDisabled).toBeTruthy();
       const outcome = messages.assistant.outcomeUnknown as Record<string, string>;

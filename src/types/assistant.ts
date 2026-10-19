@@ -262,12 +262,23 @@ export interface ClarificationOption {
   discriminator?: string;
 }
 
+/**
+ * Phase 38 — which TRANSFER wallet slot an open wallet clarification fills.
+ * Absent for every non-transfer clarification. `sourceWalletLabel` is the
+ * already-chosen source, present only on the destination question.
+ */
+export interface AssistantTransferWalletClarification {
+  field: "SOURCE_WALLET" | "DESTINATION_WALLET";
+  sourceWalletLabel?: string;
+}
+
 export interface ClarificationRequest {
   clarificationId: string;
   entityType: AssistantClarificationEntityType;
   prompt: string;
   options: ClarificationOption[];
   expiresAt: string;
+  transfer?: AssistantTransferWalletClarification;
 }
 
 /** `POST .../clarifications/:id/select` response — either another clarification, or a resolved draft. */
@@ -308,6 +319,8 @@ export interface AssistantClarificationCancelResult {
 export interface AssistantError {
   code: string;
   message: string;
+  /** Bounded machine marker (Phase 37.3) — e.g. the terminal draft status on `ASSISTANT_DRAFT_CONFLICT`. */
+  detail?: string;
   statusCode: number;
   correlationId?: string;
   conversationId?: string;
@@ -332,6 +345,7 @@ export interface AssistantRecoveryClarification {
   /** No `token` field — these options are display-only, never usable to call `select`. */
   options: AssistantRecoveryClarificationOption[];
   expiresAt: string;
+  transfer?: AssistantTransferWalletClarification;
 }
 
 export interface AssistantRecoveryDraftPreview {
@@ -362,6 +376,22 @@ export interface AssistantRecoveryTerminalClarification {
   status: "CONSUMED" | "CANCELLED" | "STALE";
   terminalCode?: string;
   restartRequired: boolean;
+  /** Phase 38.1 — the raw column; `PENDING` when `status` is an expiry lazy expiry hasn't written yet. Absent on an older backend. */
+  recordedStatus?: "PENDING" | "CONSUMED" | "CANCELLED" | "STALE";
+  /** Phase 38.1 — the turn that asked this clarification. Absent on an older backend. */
+  originatingTurnId?: string;
+}
+
+/**
+ * Phase 38.1 — the conversation's most recent draft when it is effectively
+ * terminal without being committed. `status` is effective: an untouched
+ * past-TTL draft reads `EXPIRED` while `recordedStatus` is still `PENDING_CONFIRMATION`.
+ */
+export interface AssistantRecoveryTerminalDraft {
+  draftId: string;
+  status: "EXPIRED" | "FAILED" | "CANCELLED";
+  recordedStatus: AssistantFinancialDraftStatus;
+  originatingTurnId: string;
 }
 
 /** A turn still `RUNNING` on this conversation (Phase 27) — lets the UI disable duplicate submission and show a still-processing state after a dropped request, instead of guessing. */
@@ -375,5 +405,7 @@ export interface AssistantRecoveryStateResponse {
   activeClarification?: AssistantRecoveryClarification;
   pendingDraft?: AssistantRecoveryDraft;
   latestTerminalClarification?: AssistantRecoveryTerminalClarification;
+  /** Phase 38.1 — absent on an older backend. */
+  latestTerminalDraft?: AssistantRecoveryTerminalDraft;
   activeTurn?: AssistantRecoveryActiveTurn;
 }

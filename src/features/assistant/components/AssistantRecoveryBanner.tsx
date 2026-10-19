@@ -4,6 +4,18 @@ import type { RefObject } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { AssistantRecoveryClarification } from "@/src/types/assistant";
+import type { AssistantNotActionableReason, AssistantTerminalCondition } from "@/src/features/assistant/utils/errors";
+import { TransferWalletContext, type TransferWalletLabels } from "./ClarificationCard";
+
+export interface AssistantTerminalLabels {
+  title: Record<AssistantTerminalCondition["kind"], string>;
+  /** One explanation per condition; `notActionable` is explained by its reason. */
+  description: Record<Exclude<AssistantTerminalCondition["kind"], "notActionable"> | AssistantNotActionableReason, string>;
+  resend: string;
+  resending: string;
+  /** Shown instead of the resend button when the original instruction isn't on the loaded page. */
+  resendUnavailable: string;
+}
 
 export interface AssistantRecoveryBannerLabels {
   recoveryLoading: string;
@@ -12,6 +24,8 @@ export interface AssistantRecoveryBannerLabels {
   turnRunning: string;
   cancel: string;
   cancelling: string;
+  terminal: AssistantTerminalLabels;
+  transfer: TransferWalletLabels;
 }
 
 type AssistantRecoveryBannerProps =
@@ -26,6 +40,15 @@ type AssistantRecoveryBannerProps =
   | {
       kind: "turnRunning";
       labels: AssistantRecoveryBannerLabels;
+    }
+  | {
+      kind: "terminal";
+      condition: AssistantTerminalCondition;
+      /** Expired/failed only — sends the original instruction again as a new draft. Absent when it can't be found. */
+      onResend?: () => void;
+      isResending?: boolean;
+      labels: AssistantRecoveryBannerLabels;
+      headingRef?: RefObject<HTMLElement | null>;
     }
   | {
       kind: "clarificationRecovered";
@@ -77,6 +100,35 @@ export function AssistantRecoveryBanner(props: AssistantRecoveryBannerProps) {
     );
   }
 
+  if (props.kind === "terminal") {
+    const { condition, onResend, isResending, labels, headingRef } = props;
+    const descriptionKey = condition.kind === "notActionable" ? condition.reason : condition.kind;
+    // Terminal states never offer Confirm: expired/failed offer a fresh draft, the rest are information only.
+    const offersResend = condition.kind === "expired" || condition.kind === "failed";
+    return (
+      <div role="status" className="max-w-xl rounded-xl border border-amber/30 bg-amber/10 p-6 shadow-sm">
+        <h2
+          ref={headingRef as RefObject<HTMLHeadingElement> | undefined}
+          tabIndex={-1}
+          className="text-base font-semibold text-foreground outline-none"
+        >
+          {labels.terminal.title[condition.kind]}
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">{labels.terminal.description[descriptionKey]}</p>
+        {offersResend ? (
+          onResend ? (
+            <Button type="button" onClick={onResend} disabled={isResending} className="mt-4 h-11 gap-2 px-4">
+              {isResending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
+              {isResending ? labels.terminal.resending : labels.terminal.resend}
+            </Button>
+          ) : (
+            <p className="mt-4 text-sm text-foreground">{labels.terminal.resendUnavailable}</p>
+          )
+        ) : null}
+      </div>
+    );
+  }
+
   const { clarification, isCancelling, onCancel, labels, headingRef } = props;
   return (
     <div role="status" className="max-w-xl rounded-xl border border-amber/30 bg-amber/10 p-6 shadow-sm">
@@ -87,7 +139,11 @@ export function AssistantRecoveryBanner(props: AssistantRecoveryBannerProps) {
       >
         {labels.clarificationRecoveredTitle}
       </h2>
-      <p className="mt-2 text-sm text-muted-foreground">{clarification.prompt}</p>
+      {clarification.transfer ? (
+        <TransferWalletContext transfer={clarification.transfer} labels={labels.transfer} />
+      ) : (
+        <p className="mt-2 text-sm text-muted-foreground">{clarification.prompt}</p>
+      )}
       <ul className="mt-4 flex flex-col gap-2">
         {clarification.options.map((option, index) => (
           <li
