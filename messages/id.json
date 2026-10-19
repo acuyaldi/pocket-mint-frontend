@@ -1132,6 +1132,7 @@
       "invalidOption": "Opsi tersebut sudah tidak berlaku. Mulai lagi.",
       "draftConflict": "Draf ini tidak bisa lagi dikonfirmasi atau dibatalkan.",
       "idempotencyConflict": "Tindakan ini sudah pernah dikirim.",
+      "transactionTimeout": "Belum tersimpan karena koneksi lambat. Tidak ada yang berubah — silakan coba lagi.",
       "generic": "Terjadi kesalahan. Silakan coba lagi."
     },
     "draftReview": {
