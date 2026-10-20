@@ -1132,6 +1132,7 @@
       "invalidOption": "That option is no longer valid. Start over.",
       "draftConflict": "This draft can no longer be confirmed or cancelled.",
       "idempotencyConflict": "This action was already submitted.",
+      "transactionTimeout": "Not saved yet because the connection was slow. Nothing changed — please try again.",
       "generic": "Something went wrong. Please try again."
     },
     "draftReview": {

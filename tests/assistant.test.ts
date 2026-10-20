@@ -828,6 +828,18 @@ describe("assistant provider-unavailable copy is friendly, never raw backend tex
   });
 });
 
+describe("assistant transaction-timeout copy (Phase 38.2)", () => {
+  it("maps ASSISTANT_TRANSACTION_TIMEOUT to localized copy and keeps the draft's Idempotency-Key for the retry", () => {
+    const t = (key: string) => `translated:${key}`;
+    const error = { response: { status: 503, data: { error: { code: "ASSISTANT_TRANSACTION_TIMEOUT", message: "The operation timed out before it was saved." } } } };
+    expect(readAssistantErrorMessage(error, t)).toBe("translated:transactionTimeout");
+    expect(idMessages.assistant.errors.transactionTimeout).toBe("Belum tersimpan karena koneksi lambat. Tidak ada yang berubah — silakan coba lagi.");
+    expect(enMessages.assistant.errors.transactionTimeout).toBe("Not saved yet because the connection was slow. Nothing changed — please try again.");
+    // The confirm hook only drops a draft's key on success (or a cancel via the flow) — never on error.
+    expect(draftHookSource).not.toContain("onError");
+  });
+});
+
 describe("assistant clarification i18n", () => {
   it("English and Indonesian catalogs define matching command/clarification/completion/error keys", () => {
     for (const messages of [idMessages, enMessages]) {

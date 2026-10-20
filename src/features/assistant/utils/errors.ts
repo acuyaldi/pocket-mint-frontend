@@ -38,6 +38,9 @@ const ASSISTANT_ERROR_MESSAGE_KEYS: Record<string, string> = {
   ASSISTANT_CLARIFICATION_INVALID_OPTION: "invalidOption",
   ASSISTANT_DRAFT_CONFLICT: "draftConflict",
   ASSISTANT_IDEMPOTENCY_CONFLICT: "idempotencyConflict",
+  // 503 on a Prisma transaction timeout: rolled back, nothing saved. The draft
+  // confirm hook keeps its per-draft Idempotency-Key, so a retry reuses it.
+  ASSISTANT_TRANSACTION_TIMEOUT: "transactionTimeout",
 };
 
 /** Extracts the backend's safe `{error:{code,message,detail}}` envelope from an Axios/API-boundary error. */
